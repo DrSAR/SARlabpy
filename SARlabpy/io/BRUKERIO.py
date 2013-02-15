@@ -2,6 +2,7 @@
 
 # Copyright (C) 2012-2013 Stefan A Reinsberg and SARlab members
 # full license details see LICENSE.txt
+# Random comment added by FM
 """Collection of BRUKER input routines
 
 Handy functions to read BRUKER data and header files.
@@ -103,7 +104,7 @@ def readJCAMP(filename, removebrackets=True):
  
         # use python list comprehension to split every LDR at the
         # " = " sign and turn it into a dictionary entry
-        LDRdict = dict([LDR.split(" = ") for LDR in LDRlist])
+        LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
         # with this dictionary, find all the values that contain a 
         # array index at the start of the value, e.g. "( 16 )"
