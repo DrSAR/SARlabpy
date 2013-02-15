@@ -8,8 +8,11 @@ Welcome to SARlabpy's documentation!
 
 Contents:
 
+.. automodule:: SARlabpy
 .. toctree::
    :maxdepth: 2
+
+   BRUKERIOexamples.rst
 
 
 
