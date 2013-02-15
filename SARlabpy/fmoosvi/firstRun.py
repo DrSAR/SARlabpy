@@ -8,21 +8,24 @@ Created on Fri Feb 15 13:27:34 2013
 @author: fmoosvi
 """
 
-import SARlabpy as b
+import SARlabpy as sar
 # import os as os
-import pylab as p
+import pylab as py
 
 # To get current working directory, make sure os is imported, then do os.chdir(path) or os.getcwd()
 
-path = '/Volumes/Data/brukerdata-rsync/stefan/nmr/dBlochSiegert1.gP2/38/pdata/1/'
+path = '~/dBlochSiegert1.gP2/38/pdata/1/'
+path1 = '~/Moosvi.ii2/10/pdata/1/'
 
-dataDict = b.read2dseq(path)
+dataDict = sar.read2dseq(path)
+dataDict2 = sar.read2dseq(path1)
 
 data = dataDict['data']
+data2 = dataDict['data']
 
 
-data1=b.fftbruker(data,encoding=[1, 1, 1, 0])
+py.imshow(data1.real[:,:,30])
 
-p.imshow(data1.real[:,:,30])
+print data1[10,10,10]
 
-data1[10,10,10]
+#data1=b.fftbruker(data,encoding=[1, 1, 1, 0])
