@@ -103,7 +103,7 @@ def readJCAMP(filename, removebrackets=True):
  
         # use python list comprehension to split every LDR at the
         # " = " sign and turn it into a dictionary entry
-        LDRdict = dict([LDR.split(" = ") for LDR in LDRlist])
+        LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
         # with this dictionary, find all the values that contain a 
         # array index at the start of the value, e.g. "( 16 )"
