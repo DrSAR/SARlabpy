@@ -1,6 +1,3 @@
-SARlabpy
-========
-
 This is a collection of routines useful for analysis of MRI data.
 
 A collection of tools to analyze MRI data mostly acquired on BRUKER systems.
