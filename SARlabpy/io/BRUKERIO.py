@@ -6,7 +6,7 @@
 """Collection of BRUKER input routines
 
 Handy functions to read BRUKER data and header files.
-"""
+x`"""
 
 import numpy
 import os.path
@@ -262,11 +262,18 @@ def readfid(fptr=None, untouched=False):
                 }
 
 def readfidspectro(fptr=None, untouched=False):
-    """returns BRUKER's fid file as a properly dimensioned & rearranged array
+    """
+    Returns BRUKER's fid file as a properly dimensioned & rearranged array
 
-    fptr filename of fid file or filehandle to open fid file
-    untouched = True will leave the fid in it's form as found on disk without
-    rearranging lines into slices and echos and such
+    :param fptr: filename of fid file or filehandle to open fid file
+    :type fptr: string or FileType
+    :param untouched: Do not rearrange lines into slices and echos and such
+                      in the fid in its form as found on disk 
+    :type untouched: boolean
+    :return: array of kspace data
+    :rtype: numpy.array
+    :raises: AssertError for various inconsistencies in data size or simply
+             misunderstandings of how the data is to be interpreted.
     """
 
     if isinstance(fptr, FileType):
@@ -363,7 +370,16 @@ def readfidspectro(fptr=None, untouched=False):
 
 
 def read2dseq(procdirname):
-    """returns BRUKER's 2dseq file as a properly dimensioned array
+    """
+    Returns BRUKER's 2dseq file as a properly dimensioned array
+
+    :param procdirname: filename of directory that contains the processed data
+    :type procdirname: string
+    :return: dictionary with data, and headerinformation. The data is
+             an array of BRUKER-reconstructed image data in the respecive proc
+             directory.
+    :rtype: dict with 'data':numpy array 'header':dict{'recpo':..., 'd3proc':...}
+    :raises: IOERROR if directory non-existent
 
     This relies on numpy's array functionality
     """
@@ -396,23 +412,32 @@ def read2dseq(procdirname):
     dtype = numpy.dtype(datatype)
 
     # load data
-    data = numpy.fromfile(file=procdirname+'/2dseq', dtype=dtype).reshape(RECO_size)
+    data = numpy.fromfile(file=procdirname+'/2dseq', 
+                          dtype=dtype).reshape(RECO_size)
     return {'data':data,
             'isImage':True,
             'header':{'reco': reco, 'd3proc':d3proc}}
 
 def dict2string(d):
-    ''' convert dictionary to nicely looking multi-line string
+    '''
+    convert dictionary to nicely looking multi-line string
 
+    :param d: input dictionary
+    :type: dict
+    :return: list of strings
+    :rtype: list
+    
     this might be useful when turning the JCAMP-style dictionaries
-    into something that goes into a text display'''
+    into something that goes into a text display
+    '''
     strlist = []
     for k, v in d.iteritems():
         strlist.append('%-20s:\t%s' % (k, repr(v)))
     return '\n'.join(strlist)
 
 def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
-    ''' wrapper to fft bruker FIDs
+    ''' 
+    wrapper to fft bruker FIDs
 
     returns the fft of a multi-dimensional BRUKER FID. It uses the
     parameter 'encoding' to decide over which dimensions to Fourier transform.
