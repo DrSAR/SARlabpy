@@ -18,7 +18,7 @@ def readJCAMP(filename, removebrackets=True):
     """
     Parse text file in JCAMP format
 
-    :param filename: filename of fid file 
+    :param filename: filename of fid file
     :type filename: string
     :param removebrackets: format strings without extra brackets?
     :type removebrackets: boolean
@@ -27,20 +27,20 @@ def readJCAMP(filename, removebrackets=True):
     :raises: IOERROR if opening file fails or passes on any other error
 
     The *JCAMP format* is a self-documenting, ASCII text file format
-    that is maintained by IUPAC (`see a report 
-    here <http://www.iupac.org/objID/Article/pac7108x1549>`_). 
-    It consists of labelled data records (LDR) that start with a ## 
-    and end when the next record begins. 
+    that is maintained by IUPAC (`see a report
+    here <http://www.iupac.org/objID/Article/pac7108x1549>`_).
+    It consists of labelled data records (LDR) that start with a ##
+    and end when the next record begins.
     They can span several lines. The data label is
     enclosed between '##' and '='. If it starts with a $, we are
     dealing with a private LDR.
-    
-    The issue of reading these is complicated due to the various 
+
+    The issue of reading these is complicated due to the various
     types of data (integers, floats, strings, arrays and nested
     structures) that can be present. Currently no attempt is made to
-    perform type conversion before returning a dictionary of the JCAMP 
+    perform type conversion before returning a dictionary of the JCAMP
     file.
-    
+
     """
     import re
     import sys
@@ -59,10 +59,10 @@ def readJCAMP(filename, removebrackets=True):
         print "Unexpected error:", sys.exc_info()[0]
         raise
 
-    else:  
+    else:
 
         # let's loop through the file, remove comments and put each
-        # LDR on its own line 
+        # LDR on its own line
         LDRlist = [] # start with empty list
         for line in JCAMPdata:
 
@@ -85,11 +85,11 @@ def readJCAMP(filename, removebrackets=True):
             elif re.match("##.*", line):
                 # we should remove parenthesis
                 if removebrackets:
-                    line = re.sub("\\(.*\\)", "", line) 
+                    line = re.sub("\\(.*\\)", "", line)
                 line = [line]
 
             # this must be a line that belongs to the preceeding LDR
-            # attach this to the line that was previously appended to 
+            # attach this to the line that was previously appended to
             # the LDRlist
             else:
                 LDRlist[-1] = LDRlist[-1] + " " + line
@@ -98,15 +98,15 @@ def readJCAMP(filename, removebrackets=True):
             #add this to the list of LDRs
             LDRlist.extend(line)
 
-        # use python list comprehension to strip every labelled 
-        # data record of its preceding ## or ##$. 
+        # use python list comprehension to strip every labelled
+        # data record of its preceding ## or ##$.
         LDRlist = [re.sub('##[\\$]*', '', LDR) for LDR in LDRlist]
- 
+
         # use python list comprehension to split every LDR at the
         # " = " sign and turn it into a dictionary entry
         LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
-        # with this dictionary, find all the values that contain a 
+        # with this dictionary, find all the values that contain a
         # array index at the start of the value, e.g. "( 16 )"
         #for k, v in LDRdict.iteritems():
             #matchdim = re.match(r"\([^\)]+\)", v)
@@ -117,7 +117,7 @@ def readJCAMP(filename, removebrackets=True):
 
 def readfid(fptr=None, untouched=False):
     """
-    Returns BRUKER's fid file as a properly dimensioned & rearranged array. 
+    Returns BRUKER's fid file as a properly dimensioned & rearranged array.
 
     :param fptr: filename of fid file or filehandle to open fid file
     :type fptr: string or FileType
@@ -126,8 +126,8 @@ def readfid(fptr=None, untouched=False):
     :return: Flat (untouched = True) or Rearranged and assembled array of the acquire k-space
     :rtype: numpy array
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
-    
-    """      
+
+    """
     if isinstance(fptr, FileType):
         fidname = fptr.name
     if isinstance(fptr, StringType):
@@ -135,12 +135,12 @@ def readfid(fptr=None, untouched=False):
     dirname = os.path.abspath(os.path.dirname(fidname))
     print(dirname)
     acqp = readJCAMP(dirname + "/acqp")
-    
+
     # determine array dimensions
     ACQ_size = acqp['ACQ_size'].split() # matrix size
     ACQ_size = [int(dummy) for dummy in ACQ_size]
     # we acquire complex data which requires numbers in the read direction
-    ACQ_size[0] /= 2     
+    ACQ_size[0] /= 2
     #see ho many repetitions
     NR = int(acqp['NR'])
     # find BRUKER object order
@@ -148,17 +148,17 @@ def readfid(fptr=None, untouched=False):
     ACQ_obj_order = [int(dummy) for dummy in ACQ_obj_order]
 
     # 2D vs 3D issues about slices etc.
-    if len(ACQ_size) == 2: 
+    if len(ACQ_size) == 2:
         # this is 2D
         if len(ACQ_obj_order) != int(acqp['NSLICES']):
             raise IOError, 'NSLICES not equal to number of ACQ_obj_order'
-        else:   
+        else:
             ACQ_size.append(len(ACQ_obj_order))
         encoding = [1, 1, 0, 0] # dimensions that require FFT
     else:
         encoding = [1, 1, 1, 0] # dimensions that require FFT
-    
-    
+
+
     # RARE factor sort of indicates how many PE shots are spend on one slice
     # before moving on to next object (slice?) as defined in AQ_obj_order
     ACQ_rare_factor = int(acqp['ACQ_rare_factor'])
@@ -177,44 +177,44 @@ def readfid(fptr=None, untouched=False):
     PVM_EncSteps1 = [int(dummy) for dummy in PVM_EncSteps1]
     #ensure that it runs from 0 to max
     PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
-        
+
     # load data
     data = numpy.fromfile(fptr, dtype = dtype)
 
     # convert to complex data
-    
+
     #fid = data[::2]+1j*data[1::2]
     # the following is faster by a factor of 6 to 7!!!
     fid = data.astype(numpy.float32).view(numpy.complex64)
 
     if DEBUG >= 1:
         print('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
-            format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))    
+            format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))
 
     if untouched:
-        return {'data':fid, 
-                'isImage':False,    
+        return {'data':fid,
+                'isImage':False,
                 'header':{'acqp': acqp, 'method': method}}
-    else:        
+    else:
 # ==============================================================================
 #       below code has been discussed on stackoverflow
 #       http://stackoverflow.com/questions/5422184/numpy-efficient-execution-of-a-complex-reshape-of-an-array
-#       it turned out that vectorizing the index building (numpy.vectorize) 
-#       combined  with array-based array access was actually giving some 
-#       speed improvements. The slowest part is the last assignment in the 
-#       for loop but this can be improved by reshaping to use array indices 
-#       directly.  At 1.5s per (128, 64, 1, 1200) we are stuck with what we 
+#       it turned out that vectorizing the index building (numpy.vectorize)
+#       combined  with array-based array access was actually giving some
+#       speed improvements. The slowest part is the last assignment in the
+#       for loop but this can be improved by reshaping to use array indices
+#       directly.  At 1.5s per (128, 64, 1, 1200) we are stuck with what we
 #       have and would have to resort to cython or worse to improve
 # ==============================================================================
 
-        # reshape into a large 2D array with dimensions 
+        # reshape into a large 2D array with dimensions
         # [readsize, nr(objorder)*phase*NR]
         if DEBUG >= 1:
             print('size(fid) = {0} ?=? ACQ_size*NR={1}'.
-                  format(numpy.shape(fid), ACQ_size[0] * 
+                  format(numpy.shape(fid), ACQ_size[0] *
                            ACQ_size[1] * ACQ_size[2] * NR))
         if numpy.size(fid) < (ACQ_size[0] * ACQ_size[1] * ACQ_size[2] * NR):
-            print ('''WARNING:    parameter file describes a file that is 
+            print ('''WARNING:    parameter file describes a file that is
             larger than what is actually found in */fid''')
             NR = numpy.size(fid) / (ACQ_size[0]*ACQ_size[1]*ACQ_size[2])
             print ('            NR reset to {0}'.format(NR))
@@ -224,7 +224,7 @@ def readfid(fptr=None, untouched=False):
         fid_reorder = numpy.empty((ACQ_size[0], ACQ_size[1],
                                    len(ACQ_obj_order), NR),
                             dtype = 'complex')
-                                
+
         idx = numpy.arange(ACQ_size[1] * len(ACQ_obj_order) * NR)
 
 # = =============================================================================
@@ -234,41 +234,41 @@ def readfid(fptr=None, untouched=False):
 #             # linear encoding: PEnr = (i/len(ACQ_obj_order)) % ACQ_size[1]
 #             # a more general scheme taking into account RARE PE is trickier:
 #             PEidx = ((i % (ACQ_size[1]*len(ACQ_obj_order))) /
-#                     (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor 
+#                     (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor
 #                  + (i % ACQ_rare_factor))
 #             PEnr = PVM_EncSteps1[PEidx]
 #             REPnr = i / (ACQ_size[1]*len(ACQ_obj_order))
 #             print(i, ':', PEnr, slicenr, REPnr)
 #             fid_reorder[:, PEnr, slicenr, REPnr] = tempfid[i, :]
 # = =============================================================================
-            
+
         # alternative using array-based index access
         # We are vectorizing the functions so they can eb c
         PEnr = numpy.array(PVM_EncSteps1)[(idx % (ACQ_size[1]*len(ACQ_obj_order))) /
-                    (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor 
-                 + (idx % ACQ_rare_factor)]     
+                    (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor
+                 + (idx % ACQ_rare_factor)]
         slicenr = numpy.array(ACQ_obj_order)[(idx/ACQ_rare_factor) % len(ACQ_obj_order)]
-        
+
         REPnr = idx / (ACQ_size[1] * len(ACQ_obj_order))
-                    
+
         fid_reorder[:, PEnr, slicenr, REPnr] = tempfid[idx, :].T
-        
+
         return {'data':fid_reorder,
-                'isImage':False,    
-                'header':{'acqp': acqp, 
+                'isImage':False,
+                'header':{'acqp': acqp,
                           'method': method,
                           'encoding': encoding  # indicates the dims that require FFT
                           }
                 }
-                
+
 def readfidspectro(fptr=None, untouched=False):
-    """returns BRUKER's fid file as a properly dimensioned & rearranged array 
+    """returns BRUKER's fid file as a properly dimensioned & rearranged array
 
     fptr filename of fid file or filehandle to open fid file
     untouched = True will leave the fid in it's form as found on disk without
     rearranging lines into slices and echos and such
-    """  
-    
+    """
+
     if isinstance(fptr, FileType):
         fidname = fptr.name
     if isinstance(fptr, StringType):
@@ -276,23 +276,23 @@ def readfidspectro(fptr=None, untouched=False):
     dirname = os.path.abspath(os.path.dirname(fidname))
     print(dirname)
     acqp = readJCAMP(dirname+"/acqp")
-    
+
     assert "Spectroscopic" in acqp['ACQ_dim_desc'] , "Problem: Could this be an imaging isntead of a spectro scan?"
-    
+
     # determine array dimensions
     ACQ_size = acqp['ACQ_size'].split() # matrix size
     ACQ_size = [int(dummy) for dummy in ACQ_size]
     # we acquire complex data which requires numbers in the read direction
-    ACQ_size[0] /= 2     
+    ACQ_size[0] /= 2
     #see ho many repetitions
     NR = int(acqp['NR'])
-        
+
     # number of increments are used, e.g., for inversion recovery
     NI = int(acqp['NI'])
 
     # find BRUKER object order
     ACQ_obj_order = acqp['ACQ_obj_order'].split()
-    ACQ_obj_order = [int(dummy) for dummy in ACQ_obj_order]    
+    ACQ_obj_order = [int(dummy) for dummy in ACQ_obj_order]
 
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
@@ -314,20 +314,20 @@ def readfidspectro(fptr=None, untouched=False):
     data = numpy.fromfile(fptr, dtype=dtype)
 
     # convert to complex data
-    
+
     #fid = data[::2]+1j*data[1::2]
     # the following is faster by a factor of 6 to 7!!!
     fid = data.astype(numpy.float32).view(numpy.complex64)
 
     if DEBUG >= 1:
         print('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
-            format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))    
+            format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))
 
     if untouched:
-        return {'data':fid, 
-                'isImage':False,    
+        return {'data':fid,
+                'isImage':False,
                 'header':{'acqp': acqp, 'method': method}}
-    else:        
+    else:
 
         if DEBUG >= 1:
             print(ACQ_size, ACQ_obj_order, NR)
@@ -335,48 +335,48 @@ def readfidspectro(fptr=None, untouched=False):
 
         # reshape into a large 2D array with dimensions [readsize, nr(objorder)*phase*NR]
         tempfid = fid.reshape(NR, len(ACQ_obj_order), ACQ_size[0])
-        
+
         assert NI == len(ACQ_obj_order), "I don't understand how the various acqp parameters interact\n\
         Need more coding for correct reco\n\
         workaround: use readfidspectro with option untouched"
-        
+
         fid_reorder = numpy.empty((ACQ_size[0], len(ACQ_obj_order), NR),
                             dtype = 'complex')
-                                
+
         idx = numpy.arange(len(ACQ_obj_order)*NR)
 
-        # using array-based index access        
+        # using array-based index access
         ObjNr = idx % len(ACQ_obj_order)
-                    
+
         print idx
         print ObjNr
-        
+
         fid_reorder[:, ObjNr] = tempfid[:, idx].T
-        
+
         return {'data':fid_reorder.squeeze(), # squeezing might be problematic
-                'isImage':False,    
-                'header':{'acqp': acqp, 
+                'isImage':False,
+                'header':{'acqp': acqp,
                           'method': method,
                           'encoding': None  # indicates the dims that require FFT
                           }
                 }
-                
+
 
 def read2dseq(procdirname):
-    """returns BRUKER's 2dseq file as a properly dimensioned array 
+    """returns BRUKER's 2dseq file as a properly dimensioned array
 
     This relies on numpy's array functionality
     """
 
     # get relevant information from the  reco file
-  
+
     reco = readJCAMP(procdirname+'/reco')
     d3proc = readJCAMP(procdirname+'/d3proc')
-    
+
     # determine array dimensions
-    RECO_size = [int(dummy) for dummy in (d3proc['IM_SIZ'], \
+    RECO_size = [int(dummy) for dummy in (d3proc['IM_SIX'], \
                                           d3proc['IM_SIY'], \
-                                          d3proc['IM_SIX'])]
+                                          d3proc['IM_SIZ'])]
 
     # determine ENDIANness and storage type
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
@@ -397,13 +397,13 @@ def read2dseq(procdirname):
 
     # load data
     data = numpy.fromfile(file=procdirname+'/2dseq', dtype=dtype).reshape(RECO_size)
-    return {'data':data, 
-            'isImage':True,    
+    return {'data':data,
+            'isImage':True,
             'header':{'reco': reco, 'd3proc':d3proc}}
-            
+
 def dict2string(d):
     ''' convert dictionary to nicely looking multi-line string
-    
+
     this might be useful when turning the JCAMP-style dictionaries
     into something that goes into a text display'''
     strlist = []
@@ -413,22 +413,22 @@ def dict2string(d):
 
 def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
     ''' wrapper to fft bruker FIDs
-    
-    returns the fft of a multi-dimensional BRUKER FID. It uses the 
+
+    returns the fft of a multi-dimensional BRUKER FID. It uses the
     parameter 'encoding' to decide over which dimensions to Fourier transform.
-    Typically, a 2D only needs FFT over 1st and 2nd dimension 
-    (encoding = [1, 1, 0, 0]) whereas 3D files get a FT over three dimensions 
-    (encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn't 
+    Typically, a 2D only needs FFT over 1st and 2nd dimension
+    (encoding = [1, 1, 0, 0]) whereas 3D files get a FT over three dimensions
+    (encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn't
     usually get FTed.
     '''
-    
-    #find all axes that should be FTed 
+
+    #find all axes that should be FTed
     FTaxes = []
     _encoding = encoding[:]
     for i in range(len(_encoding)):
         if _encoding.pop():
             FTaxes.append(len(_encoding))
-            
+
     img = numpy.fft.fftn(array, axes=FTaxes)
     if DCoffset:
         # remove DC offset
@@ -439,15 +439,15 @@ def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
             for i in range(img.shape[3]):
                 for j in range(img.shape[2]):
                     img[0, 0, j, i] = numpy.median(img[0:2, 0:2, j, i])
-        
+
     return numpy.fft.fftshift(img, axes = FTaxes)
-    
-    
-    
+
+
+
 def readRFshape(filename):
     '''reads BRUKERS RF shape files spnam0 etc that are stored with experiments
-    
-    returns a dictionary with ready-to-use attributes for amplitude, 
+
+    returns a dictionary with ready-to-use attributes for amplitude,
     phase, bandwidth etc.'''
     try:
         RFstringdict = readJCAMP(filename)
@@ -482,18 +482,18 @@ def readRFshape(filename):
             RFshape[tag] = float(RFstringdict[tag])
         except ValueError:
             RFshape[tag] = RFstringdict[tag]
-    
+
     # make a consecutive list of float values stored in the XYPOINTS field
     XYlist = ' '.join(RFshape['XYPOINTS'].split(', ')).split()
     RFshape['amp'] = [float(dummy) for dummy in XYlist[::2]]
     RFshape['phase'] = [float(dummy) for dummy in XYlist[1::2]]
-    
+
     return RFshape
-    
+
 # main part - run test cases if called as a module
 if __name__ == "__main__":
     print "test case for readJCAMP"
     readJCAMP('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3/acqp')
     print "test case for read2dseq"
     x = read2dseq('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3')
-    
+
