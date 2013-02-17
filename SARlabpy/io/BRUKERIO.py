@@ -390,9 +390,9 @@ def read2dseq(procdirname):
     d3proc = readJCAMP(procdirname+'/d3proc')
 
     # determine array dimensions
-    RECO_size = [int(dummy) for dummy in (d3proc['IM_SIX'], \
+    RECO_size = [int(dummy) for dummy in (d3proc['IM_SIZ'], \
                                           d3proc['IM_SIY'], \
-                                          d3proc['IM_SIZ'])]
+                                          d3proc['IM_SIX'])]
 
     # determine ENDIANness and storage type
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
