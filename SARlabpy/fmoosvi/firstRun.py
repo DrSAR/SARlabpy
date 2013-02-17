@@ -9,7 +9,7 @@ Created on Fri Feb 15 13:27:34 2013
 """
 
 import SARlabpy as sar
-import os as os
+#import os as os
 import pylab as py
 
 # To get current working directory, make sure os is imported, then do os.chdir(path) or os.getcwd()
