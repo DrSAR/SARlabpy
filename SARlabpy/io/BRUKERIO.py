@@ -6,7 +6,7 @@
 """Collection of BRUKER input routines
 
 Handy functions to read BRUKER data and header files.
-x`"""
+"""
 
 import numpy
 import os.path
@@ -28,7 +28,7 @@ def readJCAMP(filename, removebrackets=True):
 
     The *JCAMP format* is a self-documenting, ASCII text file format
     that is maintained by IUPAC (`see a report
-    here <http://www.iupac.org/objID/Article/pac7108x1549>`_).
+    here <http://iupac.org/publications/pac/78/3/0613/>`_).
     It consists of labelled data records (LDR) that start with a ##
     and end when the next record begins.
     They can span several lines. The data label is
