@@ -369,7 +369,7 @@ def readfidspectro(fptr=None, untouched=False):
                 }
 
 
-def read2dseq(procdirname):
+def read2dseq(procdirname, enhanced = 0):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
@@ -414,6 +414,12 @@ def read2dseq(procdirname):
     # load data
     data = numpy.fromfile(file=procdirname+'/2dseq',
                           dtype=dtype).reshape(RECO_size)
+
+    if enhanced == 1:
+        print 'Changing data to result in XYZ intead of ZYX'
+        data = data.transpose((2,1,0))
+
+
     return {'data':data,
             'isImage':True,
             'header':{'reco': reco, 'd3proc':d3proc}}

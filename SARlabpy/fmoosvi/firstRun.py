@@ -13,7 +13,7 @@ import SARlabpy as sar
 import pylab as py
 
 # To get current working directory, make sure os is imported, then do os.chdir(path) or os.getcwd()
-
+reload(sar)
 
 ########
 # Controlling for differences in opinion on certain things in Bruker IO
@@ -27,8 +27,6 @@ if user_name == 'fmoosvi' or user_name == 'firas':
 	print 'You are operating as Firas, the order of the matrix will be X,Y,Z instead of Z,Y,X'
 	# Other block of code
 
-
-
 ########
 # Running code on other computers
 ########
@@ -40,13 +38,20 @@ study_name = 'dBlochSiegert1.gP2' # could set this to be input by the system
 series_num = '/38'
 default_reco = '/pdata/1/'
 
-path = ''.join([your_path,study_name,series_num,default_reco])
-#path2 = '/Users/fmoosvi/data/Moosvi.ii2/22/pdata/1/'
+#path = ''.join([your_path,study_name,series_num,default_reco])
+path2 = '/Users/fmoosvi/data/Moosvi.ii2/22/pdata/1/'
 
-dataDict = sar.read2dseq(path)
-##dataDict2 = sar.read2dseq(path2)
+#dataDict = sar.read2dseq(path,1)
+dataDict2 = sar.read2dseq(path2,1)
 
-data = dataDict['data']
-##data2 = dataDict2['data']
+#data = dataDict['data']
+data2 = dataDict2['data']
 
-py.imshow(data[:,:,30])
+py.imshow(data2[:,:,2])
+
+
+## Editing jcamp
+
+filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','method'])
+
+method = sar.readJCAMP(filename_method)
