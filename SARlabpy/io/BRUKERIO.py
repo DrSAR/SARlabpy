@@ -414,6 +414,19 @@ def read2dseq(procdirname):
     # load data
     data = numpy.fromfile(file=procdirname+'/2dseq', 
                           dtype=dtype).reshape(RECO_size)
+                          
+    # Addition by FM to return the data in a way that makes sense to me
+    import 
+    
+    import getpass # Get the current username of the script executer by getpass.user()
+
+	user_name = getpass.getuser()
+
+	if user_name == 'fmoosvi' or user_name == 'firas':
+		print 'You are operating as Firas, the order of the matrix will be X,Y,Z instead of Z,Y,X'
+		data = data.transpose((2,1,0))
+
+                                                    
     return {'data':data,
             'isImage':True,
             'header':{'reco': reco, 'd3proc':d3proc}}
