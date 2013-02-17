@@ -9,8 +9,8 @@ Created on Fri Feb 15 13:27:34 2013
 """
 
 import SARlabpy as sar
-# import os as os
-#import pylab as py
+import os as os
+import pylab as py
 
 # To get current working directory, make sure os is imported, then do os.chdir(path) or os.getcwd()
 
@@ -35,18 +35,18 @@ if user_name == 'fmoosvi' or user_name == 'firas':
 
 # Change this path depending on where the symbolic link to '../brukerdata-rsync/stefan/nmr/' is located
 
-#your_path = '/Users/fmoosvi/data/'
-#study_name = 'dBlochSiegert1.gP2' # could set this to be input by the system
-#series_num = '/38'
-#default_reco = '/pdata/1/'
+your_path = '/Users/fmoosvi/data/'
+study_name = 'dBlochSiegert1.gP2' # could set this to be input by the system
+series_num = '/38'
+default_reco = '/pdata/1/'
 
-#path = ''.join([your_path,study_name,series_num,default_reco])
+path = ''.join([your_path,study_name,series_num,default_reco])
 #path2 = '/Users/fmoosvi/data/Moosvi.ii2/22/pdata/1/'
 
-#dataDict = sar.read2dseq(path)
+dataDict = sar.read2dseq(path)
 ##dataDict2 = sar.read2dseq(path2)
 
-#data = dataDict['data']
+data = dataDict['data']
 ##data2 = dataDict2['data']
 
-#py.imshow(data[:,:,30])
+py.imshow(data[:,:,30])

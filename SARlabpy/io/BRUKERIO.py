@@ -268,7 +268,7 @@ def readfidspectro(fptr=None, untouched=False):
     :param fptr: filename of fid file or filehandle to open fid file
     :type fptr: string or FileType
     :param untouched: Do not rearrange lines into slices and echos and such
-                      in the fid in its form as found on disk 
+                      in the fid in its form as found on disk
     :type untouched: boolean
     :return: array of kspace data
     :rtype: numpy.array
@@ -412,7 +412,7 @@ def read2dseq(procdirname):
     dtype = numpy.dtype(datatype)
 
     # load data
-    data = numpy.fromfile(file=procdirname+'/2dseq', 
+    data = numpy.fromfile(file=procdirname+'/2dseq',
                           dtype=dtype).reshape(RECO_size)
     return {'data':data,
             'isImage':True,
@@ -426,7 +426,7 @@ def dict2string(d):
     :type: dict
     :return: list of strings
     :rtype: list
-    
+
     this might be useful when turning the JCAMP-style dictionaries
     into something that goes into a text display
     '''
@@ -436,7 +436,7 @@ def dict2string(d):
     return '\n'.join(strlist)
 
 def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
-    ''' 
+    '''
     wrapper to fft bruker FIDs
 
     returns the fft of a multi-dimensional BRUKER FID. It uses the
