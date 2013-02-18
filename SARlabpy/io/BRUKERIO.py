@@ -369,7 +369,7 @@ def readfidspectro(fptr=None, untouched=False):
                 }
 
 
-def read2dseq(procdirname, enhanced = 0):
+def read2dseq(procdirname, array_transpose = True):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
@@ -415,7 +415,7 @@ def read2dseq(procdirname, enhanced = 0):
     data = numpy.fromfile(file=procdirname+'/2dseq',
                           dtype=dtype).reshape(RECO_size)
 
-    if enhanced == 1:
+    if array_transpose:
         print 'Changing data to result in XYZ intead of ZYX'
         data = data.transpose((2,1,0))
 
@@ -527,4 +527,8 @@ if __name__ == "__main__":
     readJCAMP('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3/acqp')
     print "test case for read2dseq"
     x = read2dseq('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3')
+
+###### Firas' added routines ######
+
+def splitParamArrays(JCampFile, searchString)
 
