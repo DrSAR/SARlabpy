@@ -268,7 +268,7 @@ def readfidspectro(fptr=None, untouched=False):
     :param fptr: filename of fid file or filehandle to open fid file
     :type fptr: string or FileType
     :param untouched: Do not rearrange lines into slices and echos and such
-                      in the fid in its form as found on disk 
+                      in the fid in its form as found on disk
     :type untouched: boolean
     :return: array of kspace data
     :rtype: numpy.array
@@ -369,7 +369,7 @@ def readfidspectro(fptr=None, untouched=False):
                 }
 
 
-def read2dseq(procdirname):
+def read2dseq(procdirname, enhanced = 0):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
@@ -412,21 +412,14 @@ def read2dseq(procdirname):
     dtype = numpy.dtype(datatype)
 
     # load data
-    data = numpy.fromfile(file=procdirname+'/2dseq', 
+    data = numpy.fromfile(file=procdirname+'/2dseq',
                           dtype=dtype).reshape(RECO_size)
-                          
-    # Addition by FM to return the data in a way that makes sense to me
-    import 
-    
-    import getpass # Get the current username of the script executer by getpass.user()
 
-	user_name = getpass.getuser()
+    if enhanced == 1:
+        print 'Changing data to result in XYZ intead of ZYX'
+        data = data.transpose((2,1,0))
 
-	if user_name == 'fmoosvi' or user_name == 'firas':
-		print 'You are operating as Firas, the order of the matrix will be X,Y,Z instead of Z,Y,X'
-		data = data.transpose((2,1,0))
 
-                                                    
     return {'data':data,
             'isImage':True,
             'header':{'reco': reco, 'd3proc':d3proc}}
@@ -439,7 +432,7 @@ def dict2string(d):
     :type: dict
     :return: list of strings
     :rtype: list
-    
+
     this might be useful when turning the JCAMP-style dictionaries
     into something that goes into a text display
     '''
@@ -449,7 +442,7 @@ def dict2string(d):
     return '\n'.join(strlist)
 
 def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
-    ''' 
+    '''
     wrapper to fft bruker FIDs
 
     returns the fft of a multi-dimensional BRUKER FID. It uses the
