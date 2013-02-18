@@ -50,8 +50,33 @@ data2 = dataDict2['data']
 py.imshow(data2[:,:,2])
 
 
-## Editing jcamp
+## Editing jcamp to split up parameters stored in the ExcPulse Array
+
+import re
 
 filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','method'])
 
 method = sar.readJCAMP(filename_method)
+
+pulse_info = method['ExcPulse'] # Sample result: '(1, 5400, 30, 9.09532362861722, 100, 0, 100, LIB_EXCITATION, < hermite.exc>, 5400, 0.1794, 50, 0.1024, conventional)'
+
+split_pulse_info = [s for s in re.split('[(), ]',pulse_info) if s] # s for s gets rid of empty strings/entries
+
+# Above results in:
+
+#['1',
+# '5400',
+# '30',
+# '9.09532362861722',
+# '100',
+# '0',
+# '100',
+# 'LIB_EXCITATION',
+# '<',
+# 'hermite.exc>',
+# '5400',
+# '0.1794',
+# '50',
+# '0.1024',
+# 'conventional']
+
