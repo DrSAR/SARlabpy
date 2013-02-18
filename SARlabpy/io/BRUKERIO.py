@@ -530,5 +530,5 @@ if __name__ == "__main__":
 
 ###### Firas' added routines ######
 
-def splitParamArrays(JCampFile, searchString)
+#def splitParamArrays(JCampFile, searchString)
 
