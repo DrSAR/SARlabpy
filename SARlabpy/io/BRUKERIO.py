@@ -14,14 +14,15 @@ from types import StringType, FileType
 
 DEBUG = 0
 
-def readJCAMP(filename, removebrackets=True):
+def readJCAMP(filename, removebrackets=True, typecast=False):
     """
     Parse text file in JCAMP format
 
-    :param filename: filename of fid file
-    :type filename: string
-    :param removebrackets: format strings without extra brackets?
-    :type removebrackets: boolean
+    :param string filename: filename of fid file
+    :param boolean removebrackets: format strings without extra brackets?
+    :param boolean typecast: 
+        attempt cast values of records to int/floats/strings/
+        a list of the above
     :return: Dictionary of labelled data records (LDR) with LDR-names as keys and their content as values.
     :rtype: dict
     :raises: IOERROR if opening file fails or passes on any other error
@@ -37,12 +38,8 @@ def readJCAMP(filename, removebrackets=True):
 
     The issue of reading these is complicated due to the various
     types of data (integers, floats, strings, arrays and nested
-    structures) that can be present. Currently no attempt is made to
-    perform type conversion before returning a dictionary of the JCAMP
-    file.
-
-    **Update** As of February 18, 2013 - FM and SAR are tackling the issue.
-
+    structures) that can be present. A currently experimental feature is the 
+    typecasting of the records into all these different datatypes.
     """
     import re
     import sys
@@ -112,58 +109,57 @@ def readJCAMP(filename, removebrackets=True):
         #
         # Case 0 - turn the lonesome strings into integers or floats
 
-        LDRdict = typecastThings(LDRdict)
+        #LDRdict = typecastThings(LDRdict)
 
-        ## Begin section of code dealing with various cases in the acqp or method file
-        #
-        # Purely one integer, or one float have already been dealt with
-        #
-        # Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
-        # Case 2: array of floats. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
-        # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
-        #
-        ##
-
-    for dict_item in LDRdict:
-
-        try:
-
-            if isinstance(LDRdict[dict_item],str):
-
-                # Case 1: Array of purely integers
-                split_string = [s for s in re.split('[(), < >]',LDRdict[dict_item]) if s]
-                split_string = typecastThings(split_string)
-
-                if all(isinstance(list_item, int) for list_item in split_string):
-                    LDRdict[dict_item] = split_string
-
-                # Case 2: Array of floats and ints
-
-
-                if all(isinstance(list_item,(int,float,long)) for list_item in split_string):
-                    LDRdict[dict_item] = split_string
-
-                # Case 3: Array of floats, ints, and strings with funny brackets and such
-                # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
-
-                # attempt something like:
-                #split_string = [s for s in re.split('[something sensible in here]',LDRdict[dict_item]) if s]
-                #split_string = typecastThings(split_string)
-
-                # if all(isinstance(list_item,(int,float,long,str)) for list_item in split_string):
-                #     LDRdict[dict_item] = split_string
-
-        except:
-            print 'string'
-
-
-
-
-
-
+        for dict_item in LDRdict:
+            try:
+                # is it just an int?
+                LDRdict[dict_item] = int(LDRdict[dict_item])
+            except ValueError:
+                try:
+                    #maybe it is just a float then?
+                    LDRdict[dict_item] = float(LDRdict[dict_item])
+                except ValueError:
+                    # no, then this is currently a string in one of three flavours
+                    # Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
+                    # Case 2: array of floats. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
+                    # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+                    split_string = [s for s in re.split(' ',
+                                                        LDRdict[dict_item]) if s]
+                    try: 
+                        #is this a homogeneous list of ints?
+                        LDRdict[dict_item] = [int(s) for 
+                                              s in split_string]
+                    except ValueError:
+                        try:
+                            #no? maybe it is a homogeneous list of floats?                        
+                            LDRdict[dict_item] = [float(s) for 
+                                                  s in split_string]
+                            #this was a homogeneous list of floats
+                        except ValueError:
+                            # Case 3: Array of floats, ints, and strings with funny brackets and such
+                            # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+                            list_level_one = [s.strip(' ()') 
+                                    for s in re.split('\) *\(', LDRdict[dict_item])]
+                            LDRdict[dict_item] = [list_element.split(',') for 
+                                    list_element in list_level_one]
+                            #sometimes we will have single element lists
+                            if len(LDRdict[dict_item]):
+                                LDRdict[dict_item]=LDRdict[dict_item][0]
+                                # to store only the inner element that is in 
+                                # this single-element list of one list
+#                                (LDRdict[dict_item],) = LDRdict[dict_item][0]
+#                            except ValueError:
+#                                print(dict_item,' : ', LDRdict[dict_item])
+#                        
         return LDRdict
 
 def typecastThings(dictionary_or_list):
+    '''
+    typecasting of dictionary or list
+    
+    TODO: remove since it is now obsolete
+    '''
 
     if isinstance(dictionary_or_list,dict):
 
@@ -505,8 +501,7 @@ def dict2string(d):
     '''
     convert dictionary to nicely looking multi-line string
 
-    :param d: input dictionary
-    :type: dict
+    :param dict d: input dictionary
     :return: list of strings
     :rtype: list
 
