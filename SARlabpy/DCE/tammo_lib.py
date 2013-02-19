@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Created on Wed Sep 19 19:19:42 2012 @author: tammo
+"""
+This library provides functions to analyze MRI data.
+Created on Wed Sep 19 19:19:42 2012 @author: tammo
 """
 from __future__ import print_function
 from __future__ import division
@@ -27,7 +29,7 @@ def AIF_from_TDM( injection, time, parms ):
     time_long = np.arange(time[0], cutoff_frac*max(time), d)
 
     freq = np.fft.fftfreq( len(time_long), d)
-#    AIF = convolve_aif( abs(np.fft.ifft(H_TDM(freq, parms))), injection ,time)
+	#AIF = convolve_aif( abs(np.fft.ifft(H_TDM(freq, parms))), injection ,time)
     AIF = convolve_aif( abs(np.fft.ifft(H_TDM(freq, parms))), injection, time_long )
     AIF = AIF[:len(time)]
     return AIF #, freq
