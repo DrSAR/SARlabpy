@@ -10,6 +10,7 @@ Handy functions to read BRUKER data and header files.
 
 import numpy
 import os.path
+import re
 from types import StringType, FileType
 
 DEBUG = 0
@@ -21,8 +22,9 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
     :param string filename: filename of fid file
     :param boolean removebrackets: format strings without extra brackets?
     :param boolean typecast: 
-        attempt cast values of records to int/floats/strings/
-        a list of the above
+        attempt to cast values of records to int/floats/strings/
+        a list of the above (Default: False) - this feature is a tad
+        experimental
     :return: Dictionary of labelled data records (LDR) with LDR-names as keys and their content as values.
     :rtype: dict
     :raises: IOERROR if opening file fails or passes on any other error
@@ -41,7 +43,6 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
     structures) that can be present. A currently experimental feature is the 
     typecasting of the records into all these different datatypes.
     """
-    import re
     import sys
 
     try:
@@ -105,88 +106,60 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
         # " = " sign and turn it into a dictionary entry
         LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
-        ## Code entered by FM - Turns dictionary items into int/float/str
-        #
-        # Case 0 - turn the lonesome strings into integers or floats
+        if typecast:
+            return typecastelements(LDRdict)
+        else:
+            return LDRdict
 
-        #LDRdict = typecastThings(LDRdict)
-
-        for dict_item in LDRdict:
-            try:
-                # is it just an int?
-                LDRdict[dict_item] = int(LDRdict[dict_item])
-            except ValueError:
-                try:
-                    #maybe it is just a float then?
-                    LDRdict[dict_item] = float(LDRdict[dict_item])
-                except ValueError:
-                    # no, then this is currently a string in one of three flavours
-                    # Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
-                    # Case 2: array of floats. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
-                    # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
-                    split_string = [s for s in re.split(' ',
-                                                        LDRdict[dict_item]) if s]
-                    try: 
-                        #is this a homogeneous list of ints?
-                        LDRdict[dict_item] = [int(s) for 
-                                              s in split_string]
-                    except ValueError:
-                        try:
-                            #no? maybe it is a homogeneous list of floats?                        
-                            LDRdict[dict_item] = [float(s) for 
-                                                  s in split_string]
-                            #this was a homogeneous list of floats
-                        except ValueError:
-                            # Case 3: Array of floats, ints, and strings with funny brackets and such
-                            # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
-                            list_level_one = [s.strip(' ()') 
-                                    for s in re.split('\) *\(', LDRdict[dict_item])]
-                            LDRdict[dict_item] = [list_element.split(',') for 
-                                    list_element in list_level_one]
-                            #sometimes we will have single element lists
-                            if len(LDRdict[dict_item]):
-                                LDRdict[dict_item]=LDRdict[dict_item][0]
-                                # to store only the inner element that is in 
-                                # this single-element list of one list
-#                                (LDRdict[dict_item],) = LDRdict[dict_item][0]
-#                            except ValueError:
-#                                print(dict_item,' : ', LDRdict[dict_item])
-#                        
-        return LDRdict
-
-def typecastThings(dictionary_or_list):
+def typecastelements(hetero_dict):
     '''
-    typecasting of dictionary or list
+    Return a dictionary of previously only string values in a typecast form
     
-    TODO: remove since it is now obsolete
+    :param dict hetero_dict: 
+        input dictionary of heteregenous type (int, float, etc.)
+    :return: dictionary with values cast to int, float etc
+    :rtype: dict
+    
+    This routine needs proper testing and is a prime candidate for some 
+    choice doctest lines pasted below.
     '''
-
-    if isinstance(dictionary_or_list,dict):
-
-        for dict_item in dictionary_or_list:
+    for dict_item in hetero_dict:
+        try:
+            # is it just an int?
+            hetero_dict[dict_item] = int(hetero_dict[dict_item])
+        except ValueError:
             try:
-                dictionary_or_list[dict_item] = int(dictionary_or_list[dict_item])
+                #maybe it is just a float then?
+                hetero_dict[dict_item] = float(hetero_dict[dict_item])
             except ValueError:
-                try:
-                    dictionary_or_list[dict_item] = float(dictionary_or_list[dict_item])
+                # no, then this is currently a string in one of three flavours
+                # Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
+                # Case 2: array of floats. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
+                # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+                split_string = [s for s in re.split(' ',
+                                                    hetero_dict[dict_item]) if s]
+                try: 
+                    #is this a homogeneous list of ints?
+                    hetero_dict[dict_item] = [int(s) for 
+                                          s in split_string]
                 except ValueError:
-                    dictionary_or_list[dict_item] = dictionary_or_list[dict_item]
+                    try:
+                        #no? maybe it is a homogeneous list of floats?                        
+                        hetero_dict[dict_item] = [float(s) for 
+                                              s in split_string]
+                        #this was a homogeneous list of floats
+                    except ValueError:
+                        # Case 3: Array of floats, ints, and strings with funny brackets and such
+                        # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+                        list_level_one = [s.strip(' ()') 
+                                for s in re.split('\) *\(', hetero_dict[dict_item])]
+                        hetero_dict[dict_item] = [list_element.split(',') for 
+                                list_element in list_level_one]
+                        #sometimes we will have single element lists
+                        if len(hetero_dict[dict_item]) == 1:
+                            hetero_dict[dict_item]=hetero_dict[dict_item][0]
 
-    elif isinstance(dictionary_or_list,list):
-
-        for list_item in range(0,len(dictionary_or_list)):
-            try:
-                dictionary_or_list[list_item] = int(dictionary_or_list[list_item])
-            except ValueError:
-                try:
-                    dictionary_or_list[list_item] = float(dictionary_or_list[list_item])
-                except ValueError:
-                    dictionary_or_list[list_item] = dictionary_or_list[list_item]
-
-    return dictionary_or_list
-
-
-
+    return hetero_dict
 
 def readfid(fptr=None, untouched=False):
     """
