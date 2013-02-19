@@ -12,7 +12,7 @@ import numpy
 import os.path
 from types import StringType, FileType
 
-DEBUG = 1
+DEBUG = 0
 
 def readJCAMP(filename, removebrackets=True):
     """
@@ -106,13 +106,15 @@ def readJCAMP(filename, removebrackets=True):
         # " = " sign and turn it into a dictionary entry
         LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
-        # with this dictionary, find all the values that contain a
-        # array index at the start of the value, e.g. "( 16 )"
-        #for k, v in LDRdict.iteritems():
-            #matchdim = re.match(r"\([^\)]+\)", v)
-            #if matchdim: # we have a match for dimension
-                #remainder = v[matchdim.end():]
-
+        ## Code entered by FM - Turns dictionary items into int/float/str
+        for dict_item in LDRdict:
+            try:
+                LDRdict[dict_item] = int(LDRdict[dict_item])
+            except ValueError:
+                try:
+                    LDRdict[dict_item] = float(LDRdict[dict_item])
+                except ValueError:
+                    LDRdict[dict_item] = LDRdict[dict_item]
         return LDRdict
 
 def readfid(fptr=None, untouched=False):
