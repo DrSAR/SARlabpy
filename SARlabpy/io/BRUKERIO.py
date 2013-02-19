@@ -41,6 +41,8 @@ def readJCAMP(filename, removebrackets=True):
     perform type conversion before returning a dictionary of the JCAMP
     file.
 
+    **Update** As of February 18, 2013 - FM and SAR are tackling the issue.
+
     """
     import re
     import sys
@@ -107,15 +109,88 @@ def readJCAMP(filename, removebrackets=True):
         LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
         ## Code entered by FM - Turns dictionary items into int/float/str
-        for dict_item in LDRdict:
+        #
+        # Case 0 - turn the lonesome strings into integers or floats
+
+        LDRdict = typecastThings(LDRdict)
+
+        ## Begin section of code dealing with various cases in the acqp or method file
+        #
+        # Purely one integer, or one float have already been dealt with
+        #
+        # Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
+        # Case 2: array of floats. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
+        # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+        #
+        ##
+
+    for dict_item in LDRdict:
+
+        try:
+
+            if isinstance(LDRdict[dict_item],str):
+
+                # Case 1: Array of purely integers
+                split_string = [s for s in re.split('[(), < >]',LDRdict[dict_item]) if s]
+                split_string = typecastThings(split_string)
+
+                if all(isinstance(list_item, int) for list_item in split_string):
+                    LDRdict[dict_item] = split_string
+
+                # Case 2: Array of floats and ints
+
+
+                if all(isinstance(list_item,(int,float,long)) for list_item in split_string):
+                    LDRdict[dict_item] = split_string
+
+                # Case 3: Array of floats, ints, and strings with funny brackets and such
+                # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+
+                # attempt something like:
+                #split_string = [s for s in re.split('[something sensible in here]',LDRdict[dict_item]) if s]
+                #split_string = typecastThings(split_string)
+
+                # if all(isinstance(list_item,(int,float,long,str)) for list_item in split_string):
+                #     LDRdict[dict_item] = split_string
+
+        except:
+            print 'string'
+
+
+
+
+
+
+        return LDRdict
+
+def typecastThings(dictionary_or_list):
+
+    if isinstance(dictionary_or_list,dict):
+
+        for dict_item in dictionary_or_list:
             try:
-                LDRdict[dict_item] = int(LDRdict[dict_item])
+                dictionary_or_list[dict_item] = int(dictionary_or_list[dict_item])
             except ValueError:
                 try:
-                    LDRdict[dict_item] = float(LDRdict[dict_item])
+                    dictionary_or_list[dict_item] = float(dictionary_or_list[dict_item])
                 except ValueError:
-                    LDRdict[dict_item] = LDRdict[dict_item]
-        return LDRdict
+                    dictionary_or_list[dict_item] = dictionary_or_list[dict_item]
+
+    elif isinstance(dictionary_or_list,list):
+
+        for list_item in range(0,len(dictionary_or_list)):
+            try:
+                dictionary_or_list[list_item] = int(dictionary_or_list[list_item])
+            except ValueError:
+                try:
+                    dictionary_or_list[list_item] = float(dictionary_or_list[list_item])
+                except ValueError:
+                    dictionary_or_list[list_item] = dictionary_or_list[list_item]
+
+    return dictionary_or_list
+
+
+
 
 def readfid(fptr=None, untouched=False):
     """
@@ -549,22 +624,13 @@ def splitParamArrays(dictionary, searchString):
                 # Sample result: '(1, 5400, 30, 9.09532362861722, 100, 0, 100,
                 #                  LIB_EXCITATION, < hermite.exc>, 5400, 0.1794,
                 #                 50, 0.1024, conventional)'
-
-
-                 # s for s gets rid of empty strings/entries
+                # s for s gets rid of empty strings/entries
             dict_split_params = [s for s in re.split('[(), < >]',pulse_info) if s]
-
-
-
 
             return dict_split_params
 
-
-
-
         else:
             print 'You suck Firas, use the right string for this function'
-
     except: # not really sure how to catch exceptions yet, will figure it out later
         print 'fail'
 
