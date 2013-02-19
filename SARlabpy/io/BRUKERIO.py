@@ -21,7 +21,7 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
 
     :param string filename: filename of fid file
     :param boolean removebrackets: format strings without extra brackets?
-    :param boolean typecast: 
+    :param boolean typecast:
         attempt to cast values of records to int/floats/strings/
         a list of the above (Default: False) - this feature is a tad
         experimental
@@ -40,7 +40,7 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
 
     The issue of reading these is complicated due to the various
     types of data (integers, floats, strings, arrays and nested
-    structures) that can be present. A currently experimental feature is the 
+    structures) that can be present. A currently experimental feature is the
     typecasting of the records into all these different datatypes.
     """
     import sys
@@ -114,13 +114,13 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
 def typecastelements(hetero_dict):
     '''
     Return a dictionary of previously only string values in a typecast form
-    
-    :param dict hetero_dict: 
+
+    :param dict hetero_dict:
         input dictionary of heteregenous type (int, float, etc.)
     :return: dictionary with values cast to int, float etc
     :rtype: dict
-    
-    This routine needs proper testing and is a prime candidate for some 
+
+    This routine needs proper testing and is a prime candidate for some
     choice doctest lines pasted below.
     '''
     for dict_item in hetero_dict:
@@ -138,22 +138,22 @@ def typecastelements(hetero_dict):
                 # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
                 split_string = [s for s in re.split(' ',
                                                     hetero_dict[dict_item]) if s]
-                try: 
+                try:
                     #is this a homogeneous list of ints?
-                    hetero_dict[dict_item] = [int(s) for 
+                    hetero_dict[dict_item] = [int(s) for
                                           s in split_string]
                 except ValueError:
                     try:
-                        #no? maybe it is a homogeneous list of floats?                        
-                        hetero_dict[dict_item] = [float(s) for 
+                        #no? maybe it is a homogeneous list of floats?
+                        hetero_dict[dict_item] = [float(s) for
                                               s in split_string]
                         #this was a homogeneous list of floats
                     except ValueError:
                         # Case 3: Array of floats, ints, and strings with funny brackets and such
                         # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
-                        list_level_one = [s.strip(' ()') 
+                        list_level_one = [s.strip(' ()')
                                 for s in re.split('\) *\(', hetero_dict[dict_item])]
-                        hetero_dict[dict_item] = [list_element.split(',') for 
+                        hetero_dict[dict_item] = [list_element.split(',') for
                                 list_element in list_level_one]
                         #sometimes we will have single element lists
                         if len(hetero_dict[dict_item]) == 1:
@@ -572,38 +572,3 @@ if __name__ == "__main__":
     readJCAMP('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3/acqp')
     print "test case for read2dseq"
     x = read2dseq('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3')
-
-###### Firas' added routines ######
-
-def splitParamArrays(dictionary, searchString):
-    '''reads a dictionary such as method or acqp and takes the search string -
-    for e.g., 'ExcPulse' and splits the array into multiple single parameters
-
-    returns a list with parameters split into entries. Unfortunately they won't
-    be labeled because the method file doesn't label them'''
-
-    import re
-
-    try:
-
-        if searchString in dictionary:
-
-            pulse_info = dictionary[searchString]
-                # Sample result: '(1, 5400, 30, 9.09532362861722, 100, 0, 100,
-                #                  LIB_EXCITATION, < hermite.exc>, 5400, 0.1794,
-                #                 50, 0.1024, conventional)'
-                # s for s gets rid of empty strings/entries
-            dict_split_params = [s for s in re.split('[(), < >]',pulse_info) if s]
-
-            return dict_split_params
-
-        else:
-            print 'You suck Firas, use the right string for this function'
-    except: # not really sure how to catch exceptions yet, will figure it out later
-        print 'fail'
-
-
-
-
-
-
