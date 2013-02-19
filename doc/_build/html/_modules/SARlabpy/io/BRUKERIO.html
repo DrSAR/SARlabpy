@@ -1,0 +1,592 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SARlabpy.io.BRUKERIO &mdash; SARlabpy 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="SARlabpy 0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SARlabpy 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for SARlabpy.io.BRUKERIO</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="c"># Copyright (C) 2012-2013 Stefan A Reinsberg and SARlab members</span>
+<span class="c"># full license details see LICENSE.txt</span>
+<span class="c"># Random comment added by FM</span>
+<span class="sd">&quot;&quot;&quot;Collection of BRUKER input routines</span>
+
+<span class="sd">Handy functions to read BRUKER data and header files.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">StringType</span><span class="p">,</span> <span class="n">FileType</span>
+
+<span class="n">DEBUG</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="readJCAMP"><a class="viewcode-back" href="../../../BRUKERIOdoc.html#SARlabpy.io.BRUKERIO.readJCAMP">[docs]</a><span class="k">def</span> <span class="nf">readJCAMP</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">removebrackets</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse text file in JCAMP format</span>
+
+<span class="sd">    :param filename: filename of fid file</span>
+<span class="sd">    :type filename: string</span>
+<span class="sd">    :param removebrackets: format strings without extra brackets?</span>
+<span class="sd">    :type removebrackets: boolean</span>
+<span class="sd">    :return: Dictionary of labelled data records (LDR) with LDR-names as keys and their content as values.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    :raises: IOERROR if opening file fails or passes on any other error</span>
+
+<span class="sd">    The *JCAMP format* is a self-documenting, ASCII text file format</span>
+<span class="sd">    that is maintained by IUPAC (`see a report</span>
+<span class="sd">    here &lt;http://www.iupac.org/objID/Article/pac7108x1549&gt;`_).</span>
+<span class="sd">    It consists of labelled data records (LDR) that start with a ##</span>
+<span class="sd">    and end when the next record begins.</span>
+<span class="sd">    They can span several lines. The data label is</span>
+<span class="sd">    enclosed between &#39;##&#39; and &#39;=&#39;. If it starts with a $, we are</span>
+<span class="sd">    dealing with a private LDR.</span>
+
+<span class="sd">    The issue of reading these is complicated due to the various</span>
+<span class="sd">    types of data (integers, floats, strings, arrays and nested</span>
+<span class="sd">    structures) that can be present. Currently no attempt is made to</span>
+<span class="sd">    perform type conversion before returning a dictionary of the JCAMP</span>
+<span class="sd">    file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">DEBUG</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;opening {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">JCAMPfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">JCAMPdata</span> <span class="o">=</span> <span class="n">JCAMPfile</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="c"># read and lose the &quot;\n&quot;</span>
+        <span class="n">JCAMPfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="p">(</span><span class="n">errno</span><span class="p">,</span> <span class="n">strerror</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">&quot;There was an I/O error({0}): {1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">errno</span><span class="p">,</span> <span class="n">strerror</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">,</span> <span class="n">strerror</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Unexpected error:&quot;</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">raise</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="c"># let&#39;s loop through the file, remove comments and put each</span>
+        <span class="c"># LDR on its own line</span>
+        <span class="n">LDRlist</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># start with empty list</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">JCAMPdata</span><span class="p">:</span>
+
+            <span class="c"># match location comment</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">$</span><span class="se">\\</span><span class="s">$ </span><span class="se">\\</span><span class="s">/.*&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">$</span><span class="se">\\</span><span class="s">$ &quot;</span><span class="p">,</span> <span class="s">&quot;##$FILE_LOCATION=&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)]</span>
+
+            <span class="c"># match date comment (assumes there is nothing else in the comments)</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">$</span><span class="se">\\</span><span class="s">$ [^@].*&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">$</span><span class="se">\\</span><span class="s">$ &quot;</span><span class="p">,</span> <span class="s">&quot;##$DATE=&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                <span class="n">uname</span> <span class="o">=</span> <span class="s">&quot;##$USERNAME=&quot;</span><span class="o">+</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;[^ ]+$&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span> <span class="c"># remove username</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">,</span> <span class="n">uname</span><span class="p">]</span>
+
+            <span class="c"># match all other comments</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">$</span><span class="se">\\</span><span class="s">$ @.*&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c"># match lists that are normal LDRs</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&quot;##.*&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+                <span class="c"># we should remove parenthesis</span>
+                <span class="k">if</span> <span class="n">removebrackets</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">(.*</span><span class="se">\\</span><span class="s">)&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">]</span>
+
+            <span class="c"># this must be a line that belongs to the preceeding LDR</span>
+            <span class="c"># attach this to the line that was previously appended to</span>
+            <span class="c"># the LDRlist</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">LDRlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">LDRlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">line</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c">#add this to the list of LDRs</span>
+            <span class="n">LDRlist</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="c"># use python list comprehension to strip every labelled</span>
+        <span class="c"># data record of its preceding ## or ##$.</span>
+        <span class="n">LDRlist</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;##[</span><span class="se">\\</span><span class="s">$]*&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">LDR</span><span class="p">)</span> <span class="k">for</span> <span class="n">LDR</span> <span class="ow">in</span> <span class="n">LDRlist</span><span class="p">]</span>
+
+        <span class="c"># use python list comprehension to split every LDR at the</span>
+        <span class="c"># &quot; = &quot; sign and turn it into a dictionary entry</span>
+        <span class="n">LDRdict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span><span class="n">LDR</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">LDR</span> <span class="ow">in</span> <span class="n">LDRlist</span><span class="p">])</span>
+
+        <span class="c"># with this dictionary, find all the values that contain a</span>
+        <span class="c"># array index at the start of the value, e.g. &quot;( 16 )&quot;</span>
+        <span class="c">#for k, v in LDRdict.iteritems():</span>
+            <span class="c">#matchdim = re.match(r&quot;\([^\)]+\)&quot;, v)</span>
+            <span class="c">#if matchdim: # we have a match for dimension</span>
+                <span class="c">#remainder = v[matchdim.end():]</span>
+
+        <span class="k">return</span> <span class="n">LDRdict</span>
+</div>
+<div class="viewcode-block" id="readfid"><a class="viewcode-back" href="../../../BRUKERIOdoc.html#SARlabpy.io.BRUKERIO.readfid">[docs]</a><span class="k">def</span> <span class="nf">readfid</span><span class="p">(</span><span class="n">fptr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">untouched</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns BRUKER&#39;s fid file as a properly dimensioned &amp; rearranged array.</span>
+
+<span class="sd">    :param fptr: filename of fid file or filehandle to open fid file</span>
+<span class="sd">    :type fptr: string or FileType</span>
+<span class="sd">    :param untouched: leave the fid as found without rearranging lines into slices and echos?</span>
+<span class="sd">    :type untouched: boolean</span>
+<span class="sd">    :return: Flat (untouched = True) or Rearranged and assembled array of the acquire k-space</span>
+<span class="sd">    :rtype: numpy array</span>
+<span class="sd">    :raises: IOERROR if filesize and matrix description appear to be inconsistent</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fptr</span><span class="p">,</span> <span class="n">FileType</span><span class="p">):</span>
+        <span class="n">fidname</span> <span class="o">=</span> <span class="n">fptr</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fptr</span><span class="p">,</span> <span class="n">StringType</span><span class="p">):</span>
+        <span class="n">fidname</span> <span class="o">=</span> <span class="n">fptr</span>
+    <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fidname</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+    <span class="n">acqp</span> <span class="o">=</span> <span class="n">readJCAMP</span><span class="p">(</span><span class="n">dirname</span> <span class="o">+</span> <span class="s">&quot;/acqp&quot;</span><span class="p">)</span>
+
+    <span class="c"># determine array dimensions</span>
+    <span class="n">ACQ_size</span> <span class="o">=</span> <span class="n">acqp</span><span class="p">[</span><span class="s">&#39;ACQ_size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="c"># matrix size</span>
+    <span class="n">ACQ_size</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="n">ACQ_size</span><span class="p">]</span>
+    <span class="c"># we acquire complex data which requires numbers in the read direction</span>
+    <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/=</span> <span class="mi">2</span>
+    <span class="c">#see ho many repetitions</span>
+    <span class="n">NR</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">acqp</span><span class="p">[</span><span class="s">&#39;NR&#39;</span><span class="p">])</span>
+    <span class="c"># find BRUKER object order</span>
+    <span class="n">ACQ_obj_order</span> <span class="o">=</span> <span class="n">acqp</span><span class="p">[</span><span class="s">&#39;ACQ_obj_order&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">ACQ_obj_order</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="n">ACQ_obj_order</span><span class="p">]</span>
+
+    <span class="c"># 2D vs 3D issues about slices etc.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c"># this is 2D</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">acqp</span><span class="p">[</span><span class="s">&#39;NSLICES&#39;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">,</span> <span class="s">&#39;NSLICES not equal to number of ACQ_obj_order&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ACQ_size</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">))</span>
+        <span class="n">encoding</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="c"># dimensions that require FFT</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">encoding</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="c"># dimensions that require FFT</span>
+
+
+    <span class="c"># RARE factor sort of indicates how many PE shots are spend on one slice</span>
+    <span class="c"># before moving on to next object (slice?) as defined in AQ_obj_order</span>
+    <span class="n">ACQ_rare_factor</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">acqp</span><span class="p">[</span><span class="s">&#39;ACQ_rare_factor&#39;</span><span class="p">])</span>
+    <span class="c"># determine data type</span>
+    <span class="k">if</span> <span class="n">acqp</span><span class="p">[</span><span class="s">&#39;GO_raw_data_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;GO_32BIT_SGN_INT&#39;</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="s">&#39;i4&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;Unknown ##$GO_raw_data_format = &#39;</span>\
+                          <span class="o">+</span> <span class="n">acqp</span><span class="p">[</span><span class="s">&#39;GO_raw_data_format&#39;</span><span class="p">])</span>
+    <span class="c"># not sure about byteorder !?</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">datatype</span><span class="p">)</span>
+
+    <span class="c">#find the sequence of k-space lines</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">readJCAMP</span><span class="p">(</span><span class="n">dirname</span> <span class="o">+</span> <span class="s">&#39;/method&#39;</span><span class="p">)</span>
+    <span class="n">PVM_EncSteps1</span> <span class="o">=</span> <span class="n">method</span><span class="p">[</span><span class="s">&#39;PVM_EncSteps1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">PVM_EncSteps1</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="n">PVM_EncSteps1</span><span class="p">]</span>
+    <span class="c">#ensure that it runs from 0 to max</span>
+    <span class="n">PVM_EncSteps1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">PVM_EncSteps1</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">PVM_EncSteps1</span><span class="p">)</span>
+
+    <span class="c"># load data</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fptr</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c"># convert to complex data</span>
+
+    <span class="c">#fid = data[::2]+1j*data[1::2]</span>
+    <span class="c"># the following is faster by a factor of 6 to 7!!!</span>
+    <span class="n">fid</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">DEBUG</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}&#39;</span><span class="o">.</span>
+            <span class="n">format</span><span class="p">(</span><span class="n">ACQ_size</span><span class="p">,</span> <span class="n">NR</span><span class="p">,</span> <span class="n">ACQ_obj_order</span><span class="p">,</span> <span class="n">PVM_EncSteps1</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">untouched</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;data&#39;</span><span class="p">:</span><span class="n">fid</span><span class="p">,</span>
+                <span class="s">&#39;isImage&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">,</span>
+                <span class="s">&#39;header&#39;</span><span class="p">:{</span><span class="s">&#39;acqp&#39;</span><span class="p">:</span> <span class="n">acqp</span><span class="p">,</span> <span class="s">&#39;method&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">}}</span>
+    <span class="k">else</span><span class="p">:</span>
+<span class="c"># ==============================================================================</span>
+<span class="c">#       below code has been discussed on stackoverflow</span>
+<span class="c">#       http://stackoverflow.com/questions/5422184/numpy-efficient-execution-of-a-complex-reshape-of-an-array</span>
+<span class="c">#       it turned out that vectorizing the index building (numpy.vectorize)</span>
+<span class="c">#       combined  with array-based array access was actually giving some</span>
+<span class="c">#       speed improvements. The slowest part is the last assignment in the</span>
+<span class="c">#       for loop but this can be improved by reshaping to use array indices</span>
+<span class="c">#       directly.  At 1.5s per (128, 64, 1, 1200) we are stuck with what we</span>
+<span class="c">#       have and would have to resort to cython or worse to improve</span>
+<span class="c"># ==============================================================================</span>
+
+        <span class="c"># reshape into a large 2D array with dimensions</span>
+        <span class="c"># [readsize, nr(objorder)*phase*NR]</span>
+        <span class="k">if</span> <span class="n">DEBUG</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;size(fid) = {0} ?=? ACQ_size*NR={1}&#39;</span><span class="o">.</span>
+                  <span class="n">format</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">fid</span><span class="p">),</span> <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span>
+                           <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">NR</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">fid</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">NR</span><span class="p">):</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&#39;&#39;&#39;WARNING:    parameter file describes a file that is</span>
+<span class="s">            larger than what is actually found in */fid&#39;&#39;&#39;</span><span class="p">)</span>
+            <span class="n">NR</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">fid</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&#39;            NR reset to {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">NR</span><span class="p">))</span>
+            <span class="n">fid</span> <span class="o">=</span> <span class="n">fid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">NR</span><span class="p">]</span>
+
+        <span class="n">tempfid</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">NR</span><span class="p">,</span> <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">fid_reorder</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                   <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">),</span> <span class="n">NR</span><span class="p">),</span>
+                            <span class="n">dtype</span> <span class="o">=</span> <span class="s">&#39;complex&#39;</span><span class="p">)</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">)</span> <span class="o">*</span> <span class="n">NR</span><span class="p">)</span>
+
+<span class="c"># = =============================================================================</span>
+<span class="c">#         for i in idx:</span>
+<span class="c">#             # work out where the rearranged matrix gets its data from</span>
+<span class="c">#             slicenr = ACQ_obj_order[(i/ACQ_rare_factor) % len(ACQ_obj_order)]</span>
+<span class="c">#             # linear encoding: PEnr = (i/len(ACQ_obj_order)) % ACQ_size[1]</span>
+<span class="c">#             # a more general scheme taking into account RARE PE is trickier:</span>
+<span class="c">#             PEidx = ((i % (ACQ_size[1]*len(ACQ_obj_order))) /</span>
+<span class="c">#                     (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor</span>
+<span class="c">#                  + (i % ACQ_rare_factor))</span>
+<span class="c">#             PEnr = PVM_EncSteps1[PEidx]</span>
+<span class="c">#             REPnr = i / (ACQ_size[1]*len(ACQ_obj_order))</span>
+<span class="c">#             print(i, &#39;:&#39;, PEnr, slicenr, REPnr)</span>
+<span class="c">#             fid_reorder[:, PEnr, slicenr, REPnr] = tempfid[i, :]</span>
+<span class="c"># = =============================================================================</span>
+
+        <span class="c"># alternative using array-based index access</span>
+        <span class="c"># We are vectorizing the functions so they can eb c</span>
+        <span class="n">PEnr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">PVM_EncSteps1</span><span class="p">)[(</span><span class="n">idx</span> <span class="o">%</span> <span class="p">(</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">)))</span> <span class="o">/</span>
+                    <span class="p">(</span><span class="n">ACQ_rare_factor</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">))</span><span class="o">*</span><span class="n">ACQ_rare_factor</span>
+                 <span class="o">+</span> <span class="p">(</span><span class="n">idx</span> <span class="o">%</span> <span class="n">ACQ_rare_factor</span><span class="p">)]</span>
+        <span class="n">slicenr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">)[(</span><span class="n">idx</span><span class="o">/</span><span class="n">ACQ_rare_factor</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">)]</span>
+
+        <span class="n">REPnr</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">/</span> <span class="p">(</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">))</span>
+
+        <span class="n">fid_reorder</span><span class="p">[:,</span> <span class="n">PEnr</span><span class="p">,</span> <span class="n">slicenr</span><span class="p">,</span> <span class="n">REPnr</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempfid</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;data&#39;</span><span class="p">:</span><span class="n">fid_reorder</span><span class="p">,</span>
+                <span class="s">&#39;isImage&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">,</span>
+                <span class="s">&#39;header&#39;</span><span class="p">:{</span><span class="s">&#39;acqp&#39;</span><span class="p">:</span> <span class="n">acqp</span><span class="p">,</span>
+                          <span class="s">&#39;method&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+                          <span class="s">&#39;encoding&#39;</span><span class="p">:</span> <span class="n">encoding</span>  <span class="c"># indicates the dims that require FFT</span>
+                          <span class="p">}</span>
+                <span class="p">}</span>
+</div>
+<div class="viewcode-block" id="readfidspectro"><a class="viewcode-back" href="../../../BRUKERIOdoc.html#SARlabpy.io.BRUKERIO.readfidspectro">[docs]</a><span class="k">def</span> <span class="nf">readfidspectro</span><span class="p">(</span><span class="n">fptr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">untouched</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;returns BRUKER&#39;s fid file as a properly dimensioned &amp; rearranged array</span>
+
+<span class="sd">    fptr filename of fid file or filehandle to open fid file</span>
+<span class="sd">    untouched = True will leave the fid in it&#39;s form as found on disk without</span>
+<span class="sd">    rearranging lines into slices and echos and such</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fptr</span><span class="p">,</span> <span class="n">FileType</span><span class="p">):</span>
+        <span class="n">fidname</span> <span class="o">=</span> <span class="n">fptr</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fptr</span><span class="p">,</span> <span class="n">StringType</span><span class="p">):</span>
+        <span class="n">fidname</span> <span class="o">=</span> <span class="n">fptr</span>
+    <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fidname</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+    <span class="n">acqp</span> <span class="o">=</span> <span class="n">readJCAMP</span><span class="p">(</span><span class="n">dirname</span><span class="o">+</span><span class="s">&quot;/acqp&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="s">&quot;Spectroscopic&quot;</span> <span class="ow">in</span> <span class="n">acqp</span><span class="p">[</span><span class="s">&#39;ACQ_dim_desc&#39;</span><span class="p">]</span> <span class="p">,</span> <span class="s">&quot;Problem: Could this be an imaging isntead of a spectro scan?&quot;</span>
+
+    <span class="c"># determine array dimensions</span>
+    <span class="n">ACQ_size</span> <span class="o">=</span> <span class="n">acqp</span><span class="p">[</span><span class="s">&#39;ACQ_size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="c"># matrix size</span>
+    <span class="n">ACQ_size</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="n">ACQ_size</span><span class="p">]</span>
+    <span class="c"># we acquire complex data which requires numbers in the read direction</span>
+    <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/=</span> <span class="mi">2</span>
+    <span class="c">#see ho many repetitions</span>
+    <span class="n">NR</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">acqp</span><span class="p">[</span><span class="s">&#39;NR&#39;</span><span class="p">])</span>
+
+    <span class="c"># number of increments are used, e.g., for inversion recovery</span>
+    <span class="n">NI</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">acqp</span><span class="p">[</span><span class="s">&#39;NI&#39;</span><span class="p">])</span>
+
+    <span class="c"># find BRUKER object order</span>
+    <span class="n">ACQ_obj_order</span> <span class="o">=</span> <span class="n">acqp</span><span class="p">[</span><span class="s">&#39;ACQ_obj_order&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">ACQ_obj_order</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="n">ACQ_obj_order</span><span class="p">]</span>
+
+    <span class="c"># determine data type</span>
+    <span class="k">if</span> <span class="n">acqp</span><span class="p">[</span><span class="s">&#39;GO_raw_data_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;GO_32BIT_SGN_INT&#39;</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="s">&#39;i4&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;Unknown ##$GO_raw_data_format = &#39;</span>\
+                          <span class="o">+</span><span class="n">acqp</span><span class="p">[</span><span class="s">&#39;GO_raw_data_format&#39;</span><span class="p">])</span>
+    <span class="c"># not sure about byteorder !?</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">datatype</span><span class="p">)</span>
+
+    <span class="c">#load the method file</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">readJCAMP</span><span class="p">(</span><span class="n">dirname</span><span class="o">+</span><span class="s">&#39;/method&#39;</span><span class="p">)</span>
+    <span class="n">PVM_EncSteps1</span> <span class="o">=</span> <span class="n">method</span><span class="p">[</span><span class="s">&#39;PVM_EncSteps1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">PVM_EncSteps1</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="n">PVM_EncSteps1</span><span class="p">]</span>
+    <span class="c">#ensure that it runs from 0 to max</span>
+    <span class="n">PVM_EncSteps1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">PVM_EncSteps1</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">PVM_EncSteps1</span><span class="p">)</span>
+
+    <span class="c"># load data</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fptr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c"># convert to complex data</span>
+
+    <span class="c">#fid = data[::2]+1j*data[1::2]</span>
+    <span class="c"># the following is faster by a factor of 6 to 7!!!</span>
+    <span class="n">fid</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">DEBUG</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}&#39;</span><span class="o">.</span>
+            <span class="n">format</span><span class="p">(</span><span class="n">ACQ_size</span><span class="p">,</span> <span class="n">NR</span><span class="p">,</span> <span class="n">ACQ_obj_order</span><span class="p">,</span> <span class="n">PVM_EncSteps1</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">untouched</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;data&#39;</span><span class="p">:</span><span class="n">fid</span><span class="p">,</span>
+                <span class="s">&#39;isImage&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">,</span>
+                <span class="s">&#39;header&#39;</span><span class="p">:{</span><span class="s">&#39;acqp&#39;</span><span class="p">:</span> <span class="n">acqp</span><span class="p">,</span> <span class="s">&#39;method&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">}}</span>
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">DEBUG</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">ACQ_size</span><span class="p">,</span> <span class="n">ACQ_obj_order</span><span class="p">,</span> <span class="n">NR</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">fid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c"># reshape into a large 2D array with dimensions [readsize, nr(objorder)*phase*NR]</span>
+        <span class="n">tempfid</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">NR</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">),</span> <span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">assert</span> <span class="n">NI</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">),</span> <span class="s">&quot;I don&#39;t understand how the various acqp parameters interact</span><span class="se">\n\</span>
+<span class="s">        Need more coding for correct reco</span><span class="se">\n\</span>
+<span class="s">        workaround: use readfidspectro with option untouched&quot;</span>
+
+        <span class="n">fid_reorder</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ACQ_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">),</span> <span class="n">NR</span><span class="p">),</span>
+                            <span class="n">dtype</span> <span class="o">=</span> <span class="s">&#39;complex&#39;</span><span class="p">)</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">)</span><span class="o">*</span><span class="n">NR</span><span class="p">)</span>
+
+        <span class="c"># using array-based index access</span>
+        <span class="n">ObjNr</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">ACQ_obj_order</span><span class="p">)</span>
+
+        <span class="k">print</span> <span class="n">idx</span>
+        <span class="k">print</span> <span class="n">ObjNr</span>
+
+        <span class="n">fid_reorder</span><span class="p">[:,</span> <span class="n">ObjNr</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempfid</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;data&#39;</span><span class="p">:</span><span class="n">fid_reorder</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="c"># squeezing might be problematic</span>
+                <span class="s">&#39;isImage&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">,</span>
+                <span class="s">&#39;header&#39;</span><span class="p">:{</span><span class="s">&#39;acqp&#39;</span><span class="p">:</span> <span class="n">acqp</span><span class="p">,</span>
+                          <span class="s">&#39;method&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+                          <span class="s">&#39;encoding&#39;</span><span class="p">:</span> <span class="bp">None</span>  <span class="c"># indicates the dims that require FFT</span>
+                          <span class="p">}</span>
+                <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="read2dseq"><a class="viewcode-back" href="../../../BRUKERIOdoc.html#SARlabpy.io.BRUKERIO.read2dseq">[docs]</a><span class="k">def</span> <span class="nf">read2dseq</span><span class="p">(</span><span class="n">procdirname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;returns BRUKER&#39;s 2dseq file as a properly dimensioned array</span>
+
+<span class="sd">    This relies on numpy&#39;s array functionality</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># get relevant information from the  reco file</span>
+
+    <span class="n">reco</span> <span class="o">=</span> <span class="n">readJCAMP</span><span class="p">(</span><span class="n">procdirname</span><span class="o">+</span><span class="s">&#39;/reco&#39;</span><span class="p">)</span>
+    <span class="n">d3proc</span> <span class="o">=</span> <span class="n">readJCAMP</span><span class="p">(</span><span class="n">procdirname</span><span class="o">+</span><span class="s">&#39;/d3proc&#39;</span><span class="p">)</span>
+
+    <span class="c"># determine array dimensions</span>
+    <span class="n">RECO_size</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="p">(</span><span class="n">d3proc</span><span class="p">[</span><span class="s">&#39;IM_SIX&#39;</span><span class="p">],</span> \
+                                          <span class="n">d3proc</span><span class="p">[</span><span class="s">&#39;IM_SIY&#39;</span><span class="p">],</span> \
+                                          <span class="n">d3proc</span><span class="p">[</span><span class="s">&#39;IM_SIZ&#39;</span><span class="p">])]</span>
+
+    <span class="c"># determine ENDIANness and storage type</span>
+    <span class="k">if</span> <span class="n">reco</span><span class="p">[</span><span class="s">&#39;RECO_wordtype&#39;</span><span class="p">]</span> <span class="o">==</span><span class="s">&#39;_16BIT_SGN_INT&#39;</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="s">&#39;i2&#39;</span>
+    <span class="k">elif</span> <span class="n">reco</span><span class="p">[</span><span class="s">&#39;RECO_wordtype&#39;</span><span class="p">]</span> <span class="o">==</span><span class="s">&#39;_32BIT_SGN_INT&#39;</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="s">&#39;i4&#39;</span>
+    <span class="k">elif</span> <span class="n">reco</span><span class="p">[</span><span class="s">&#39;RECO_wordtype&#39;</span><span class="p">]</span> <span class="o">==</span><span class="s">&#39;_32BIT_FLOAT&#39;</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="s">&#39;f&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;unknown ##$RECO_wordtype = &#39;</span><span class="o">+</span><span class="n">reco</span><span class="p">[</span><span class="s">&#39;RECO_wordtype&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">reco</span><span class="p">[</span><span class="s">&#39;RECO_byte_order&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;littleEndian&#39;</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="s">&#39;&lt;&#39;</span><span class="o">+</span><span class="n">datatype</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="s">&#39;&gt;&#39;</span><span class="o">+</span><span class="n">datatype</span>
+
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">datatype</span><span class="p">)</span>
+
+    <span class="c"># load data</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="n">procdirname</span><span class="o">+</span><span class="s">&#39;/2dseq&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">RECO_size</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;data&#39;</span><span class="p">:</span><span class="n">data</span><span class="p">,</span>
+            <span class="s">&#39;isImage&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span>
+            <span class="s">&#39;header&#39;</span><span class="p">:{</span><span class="s">&#39;reco&#39;</span><span class="p">:</span> <span class="n">reco</span><span class="p">,</span> <span class="s">&#39;d3proc&#39;</span><span class="p">:</span><span class="n">d3proc</span><span class="p">}}</span>
+</div>
+<div class="viewcode-block" id="dict2string"><a class="viewcode-back" href="../../../BRUKERIOdoc.html#SARlabpy.io.BRUKERIO.dict2string">[docs]</a><span class="k">def</span> <span class="nf">dict2string</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; convert dictionary to nicely looking multi-line string</span>
+
+<span class="sd">    this might be useful when turning the JCAMP-style dictionaries</span>
+<span class="sd">    into something that goes into a text display&#39;&#39;&#39;</span>
+    <span class="n">strlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">strlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%-20s</span><span class="s">:</span><span class="se">\t</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">strlist</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="fftbruker"><a class="viewcode-back" href="../../../BRUKERIOdoc.html#SARlabpy.io.BRUKERIO.fftbruker">[docs]</a><span class="k">def</span> <span class="nf">fftbruker</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">DCoffset</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; wrapper to fft bruker FIDs</span>
+
+<span class="sd">    returns the fft of a multi-dimensional BRUKER FID. It uses the</span>
+<span class="sd">    parameter &#39;encoding&#39; to decide over which dimensions to Fourier transform.</span>
+<span class="sd">    Typically, a 2D only needs FFT over 1st and 2nd dimension</span>
+<span class="sd">    (encoding = [1, 1, 0, 0]) whereas 3D files get a FT over three dimensions</span>
+<span class="sd">    (encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn&#39;t</span>
+<span class="sd">    usually get FTed.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c">#find all axes that should be FTed</span>
+    <span class="n">FTaxes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">_encoding</span> <span class="o">=</span> <span class="n">encoding</span><span class="p">[:]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_encoding</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">_encoding</span><span class="o">.</span><span class="n">pop</span><span class="p">():</span>
+            <span class="n">FTaxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_encoding</span><span class="p">))</span>
+
+    <span class="n">img</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">FTaxes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">DCoffset</span><span class="p">:</span>
+        <span class="c"># remove DC offset</span>
+        <span class="k">if</span> <span class="n">encoding</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="c"># do this only for central point in 3D</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]):</span>
+                <span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c"># do this for every slice separately</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+                    <span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">FTaxes</span><span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="readRFshape"><a class="viewcode-back" href="../../../BRUKERIOdoc.html#SARlabpy.io.BRUKERIO.readRFshape">[docs]</a><span class="k">def</span> <span class="nf">readRFshape</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;reads BRUKERS RF shape files spnam0 etc that are stored with experiments</span>
+
+<span class="sd">    returns a dictionary with ready-to-use attributes for amplitude,</span>
+<span class="sd">    phase, bandwidth etc.&#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">RFstringdict</span> <span class="o">=</span> <span class="n">readJCAMP</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;problem reading RF file shape&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+<span class="c">##TITLE= /camelot/PV.2.0.Devel/exp/stan/nmr/lists/wave/imaghermite</span>
+<span class="c">##JCAMP-DX= 5.00 BRUKER JCAMP library</span>
+<span class="c">##DATA TYPE= Shape Data</span>
+<span class="c">##ORIGIN= BRUKER MEDICAL GMBH</span>
+<span class="c">##OWNER= &lt;dwe&gt;</span>
+<span class="c">##DATE= 98/04/29</span>
+<span class="c">##TIME= 09:18:57</span>
+<span class="c">##MINX= 0.000000e+00</span>
+<span class="c">##MAXX= 1.000000e+02</span>
+<span class="c">##MINY= 0.000000e+00</span>
+<span class="c">##MAXY= 1.800000e+02</span>
+<span class="c">##$SHAPE_EXMODE= Excitation</span>
+<span class="c">##$SHAPE_TOTROT= 90.000000e+00</span>
+<span class="c">##$SHAPE_BWFAC= 5.4000000e+00</span>
+<span class="c">##$SHAPE_INTEGFAC= 1.794e-01</span>
+<span class="c">##$SHAPE_REPHFAC = 50</span>
+<span class="c">##$SHAPE_TYPE = conventional</span>
+<span class="c">##$SHAPE_MODE= 0</span>
+<span class="c">##NPOINTS= 1024</span>
+<span class="c">##XYPOINTS= (XY..XY)</span>
+
+    <span class="n">RFshape</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">RFstringdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">RFshape</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">RFstringdict</span><span class="p">[</span><span class="n">tag</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">RFshape</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">RFstringdict</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span>
+
+    <span class="c"># make a consecutive list of float values stored in the XYPOINTS field</span>
+    <span class="n">XYlist</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RFshape</span><span class="p">[</span><span class="s">&#39;XYPOINTS&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;, &#39;</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">RFshape</span><span class="p">[</span><span class="s">&#39;amp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="n">XYlist</span><span class="p">[::</span><span class="mi">2</span><span class="p">]]</span>
+    <span class="n">RFshape</span><span class="p">[</span><span class="s">&#39;phase&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">dummy</span><span class="p">)</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="n">XYlist</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]]</span>
+
+    <span class="k">return</span> <span class="n">RFshape</span>
+
+<span class="c"># main part - run test cases if called as a module</span></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">print</span> <span class="s">&quot;test case for readJCAMP&quot;</span>
+    <span class="n">readJCAMP</span><span class="p">(</span><span class="s">&#39;/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3/acqp&#39;</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s">&quot;test case for read2dseq&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">read2dseq</span><span class="p">(</span><span class="s">&#39;/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3&#39;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SARlabpy 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, SARlab members.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
