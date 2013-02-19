@@ -532,5 +532,44 @@ if __name__ == "__main__":
 
 ###### Firas' added routines ######
 
-#def splitParamArrays(JCampFile, searchString)
+def splitParamArrays(dictionary, searchString):
+    '''reads a dictionary such as method or acqp and takes the search string -
+    for e.g., 'ExcPulse' and splits the array into multiple single parameters
+
+    returns a list with parameters split into entries. Unfortunately they won't
+    be labeled because the method file doesn't label them'''
+
+    import re
+
+    try:
+
+        if searchString in dictionary:
+
+            pulse_info = dictionary[searchString]
+                # Sample result: '(1, 5400, 30, 9.09532362861722, 100, 0, 100,
+                #                  LIB_EXCITATION, < hermite.exc>, 5400, 0.1794,
+                #                 50, 0.1024, conventional)'
+
+
+                 # s for s gets rid of empty strings/entries
+            dict_split_params = [s for s in re.split('[(), < >]',pulse_info) if s]
+
+
+
+
+            return dict_split_params
+
+
+
+
+        else:
+            print 'You suck Firas, use the right string for this function'
+
+    except: # not really sure how to catch exceptions yet, will figure it out later
+        print 'fail'
+
+
+
+
+
 
