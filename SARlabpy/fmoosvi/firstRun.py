@@ -66,8 +66,11 @@ reco = sar.readJCAMP(filename_method)
 filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','acqp'])
 #filename_method = ''.join(['/Volumes/Data/work/dBS1/dBlochSiegert1.gP2/36/','acqp'])
 
-method = sar.readJCAMP(filename_method)
-methodO = sar.readJCAMP(filename_method)
-#newDict = sar.io.BRUKERIO.splitParamArrays(method,'ExcP1ulse')
 
-method = sar.io.BRUKERIO.typecastThings(method) # Case 0
+
+
+
+
+
+
+

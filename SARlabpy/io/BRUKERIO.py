@@ -485,7 +485,7 @@ def read2dseq(procdirname, arrayTranspose = False):
                           dtype=dtype).reshape(RECO_size)
 
 
-    if array_transpose:
+    if arrayTranspose:
         print 'Changing data to result in XYZ intead of ZYX'
         data = data.transpose((2,1,0))
 
