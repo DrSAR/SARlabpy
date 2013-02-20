@@ -62,13 +62,11 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> &#8211; input dictionary</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> (<em>dict</em>) &#8211; input dictionary</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Type :</th><td class="field-body">dict</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of strings</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of strings</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
@@ -97,7 +95,7 @@ usually get FTed.</p>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.read2dseq">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>procdirname</em>, <em>enhanced=0</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>procdirname</em>, <em>array_transpose=True</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns BRUKER&#8217;s 2dseq file as a properly dimensioned array</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -120,7 +118,7 @@ directory.</td>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.readJCAMP">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readJCAMP</tt><big>(</big><em>filename</em>, <em>removebrackets=True</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readJCAMP" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readJCAMP</tt><big>(</big><em>filename</em>, <em>removebrackets=True</em>, <em>typecast=False</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readJCAMP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse text file in JCAMP format</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -129,6 +127,9 @@ directory.</td>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>filename</strong> (<em>string</em>) &#8211; filename of fid file</li>
 <li><strong>removebrackets</strong> (<em>boolean</em>) &#8211; format strings without extra brackets?</li>
+<li><strong>typecast</strong> (<em>boolean</em>) &#8211; attempt to cast values of records to int/floats/strings/
+a list of the above (Default: False) - this feature is a tad
+experimental</li>
 </ul>
 </td>
 </tr>
@@ -153,9 +154,8 @@ enclosed between &#8216;##&#8217; and &#8216;=&#8217;. If it starts with a $, we
 dealing with a private LDR.</p>
 <p>The issue of reading these is complicated due to the various
 types of data (integers, floats, strings, arrays and nested
-structures) that can be present. Currently no attempt is made to
-perform type conversion before returning a dictionary of the JCAMP
-file.</p>
+structures) that can be present. A currently experimental feature is the
+typecasting of the records into all these different datatypes.</p>
 </dd></dl>
 
 <dl class="function">
@@ -220,6 +220,26 @@ misunderstandings of how the data is to be interpreted.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.typecastelements">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">typecastelements</tt><big>(</big><em>hetero_dict</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.typecastelements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary of previously only string values in a typecast form</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>hetero_dict</strong> (<em>dict</em>) &#8211; input dictionary of heteregenous type (int, float, etc.)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary with values cast to int, float etc</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+<p>This routine needs proper testing and is a prime candidate for some
+choice doctest lines pasted below.</p>
 </dd></dl>
 
 </div>
