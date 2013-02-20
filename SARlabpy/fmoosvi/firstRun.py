@@ -39,7 +39,10 @@ series_num = '/38'
 default_reco = '/pdata/1/'
 
 #path = ''.join([your_path,study_name,series_num,default_reco])
-path2 = '/Users/fmoosvi/data/Moosvi.ii2/22/pdata/1/'
+#path2 = '/Users/fmoosvi/data/Moosvi.ii2/22/pdata/1/'
+
+path2 = '/Users/firas/data/Moosvi.ii2/22/pdata/1/'
+
 
 #dataDict = sar.read2dseq(path,1)
 dataDict2 = sar.read2dseq(path2,1)
@@ -52,6 +55,7 @@ py.imshow(data2[:,:,2])
 
 ## Editing jcamp
 
-filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','method'])
+#filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','method'])
+filename_method = ''.join(['/Users/firas/data/Moosvi.ii2/22/pdata/1/','reco'])
 
-method = sar.readJCAMP(filename_method)
+reco = sar.readJCAMP(filename_method)
