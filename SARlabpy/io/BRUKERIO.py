@@ -126,10 +126,12 @@ def typecast_dict_elements(hetero_dict):
         {'key': 1}
         >>> typecast_dict_elements({'key':'1.31'})
         {'key': 1.31}
+        >>> typecast_dict_elements({'key':'Spam'})
+        {'key': 'Spam'}
         >>> typecast_dict_elements({'key':'1.31 123'})
         {'key': [1.31, 123.0]}
         >>> typecast_dict_elements({'key':'1.31 123 string'})
-        {'key': ['1.31 123 string']}
+        {'key': '1.31 123 string'}
         >>> typecast_dict_elements({'key':'(1, 2, <>) (3, 4, <>)'})
         {'key': [['1', ' 2', ' <>'], ['3', ' 4', ' <>']]}
 
@@ -164,11 +166,17 @@ def typecast_dict_elements(hetero_dict):
                         # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
                         list_level_one = [s.strip(' ()')
                                 for s in re.split('\) *\(', hetero_dict[dict_item])]
-                        hetero_dict[dict_item] = [list_element.split(',') for
-                                list_element in list_level_one]
-                        #sometimes we will have single element lists
-                        if len(hetero_dict[dict_item]) == 1:
-                            hetero_dict[dict_item]=hetero_dict[dict_item][0]
+                        if len(list_level_one)>1:
+                            hetero_dict[dict_item] = [list_element.split(',') for
+                                    list_element in list_level_one]
+                        else:
+                            try:
+                                # does the RH unpack to  single-element list?
+                                (hetero_dict[dict_item],) = list_level_one[0].split(',')
+                            except ValueError:
+                                # no? OK, let's keep the whole list
+                                hetero_dict[dict_item] = list_level_one[0].split(',')
+                    
 
     return hetero_dict
 
