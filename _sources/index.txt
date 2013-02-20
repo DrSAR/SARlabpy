@@ -6,6 +6,8 @@
 Welcome to SARlabpy's documentation!
 ====================================
 
+The code is hosted in the `private repository by github <https://github.com/DrSAR/SARlabpy.git>`_.
+
 .. include:: ../README.rst
 
 Contents:
