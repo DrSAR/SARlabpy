@@ -34,3 +34,7 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# path to auto documentation (sphinx)
+html/
+doctrees/

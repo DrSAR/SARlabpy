@@ -478,12 +478,18 @@ def dict2string(d):
     :return: list of strings
     :rtype: list
 
-    this might be useful when turning the JCAMP-style dictionaries
-    into something that goes into a text display
+    This might be useful when turning the JCAMP-style dictionaries
+    into something that goes into a text display. Example use would be::
+
+        >>> d={'TE':2.3, 'TR':5, 'NAME':'random name'}
+        >>> print(dict2string(d))
+                          TE : 2.3
+                          TR : 5
+                        NAME : 'random name'
     '''
     strlist = []
     for k, v in d.iteritems():
-        strlist.append('%-20s:\t%s' % (k, repr(v)))
+        strlist.append('{0!s:>20} : {1!s}'.format(k, repr(v)))
     return '\n'.join(strlist)
 
 def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
@@ -568,7 +574,5 @@ def readRFshape(filename):
 
 # main part - run test cases if called as a module
 if __name__ == "__main__":
-    print "test case for readJCAMP"
-    readJCAMP('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3/acqp')
-    print "test case for read2dseq"
-    x = read2dseq('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3')
+    import doctest
+    doctest.testmod()
