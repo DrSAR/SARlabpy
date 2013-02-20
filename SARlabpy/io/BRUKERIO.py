@@ -106,11 +106,11 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
         LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
         if typecast:
-            return typecastelements(LDRdict)
+            return typecast_dict_elements(LDRdict)
         else:
             return LDRdict
 
-def typecastelements(hetero_dict):
+def typecast_dict_elements(hetero_dict):
     '''
     Return a dictionary of previously only string values in a typecast form
 
@@ -119,8 +119,21 @@ def typecastelements(hetero_dict):
     :return: dictionary with values cast to int, float etc
     :rtype: dict
 
-    This routine needs proper testing and is a prime candidate for some
-    choice doctest lines pasted below.
+    Here are some example calls:
+        
+        >>> typecast_dict_elements({'key':'1'})
+        {'key': 1}
+        >>> typecast_dict_elements({'key':'1.31'})
+        {'key': 1.31}
+        >>> typecast_dict_elements({'key':'Spam'})
+        {'key': 'Spam'}
+        >>> typecast_dict_elements({'key':'1.31 123'})
+        {'key': [1.31, 123.0]}
+        >>> typecast_dict_elements({'key':'1.31 123 string'})
+        {'key': '1.31 123 string'}
+        >>> typecast_dict_elements({'key':'(1, 2, <>) (3, 4, <>)'})
+        {'key': [['1', ' 2', ' <>'], ['3', ' 4', ' <>']]}
+
     '''
     for dict_item in hetero_dict:
         try:
@@ -152,11 +165,17 @@ def typecastelements(hetero_dict):
                         # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
                         list_level_one = [s.strip(' ()')
                                 for s in re.split('\) *\(', hetero_dict[dict_item])]
-                        hetero_dict[dict_item] = [list_element.split(',') for
-                                list_element in list_level_one]
-                        #sometimes we will have single element lists
-                        if len(hetero_dict[dict_item]) == 1:
-                            hetero_dict[dict_item]=hetero_dict[dict_item][0]
+                        if len(list_level_one)>1:
+                            hetero_dict[dict_item] = [list_element.split(',') for
+                                    list_element in list_level_one]
+                        else:
+                            try:
+                                # does the RH unpack to  single-element list?
+                                (hetero_dict[dict_item],) = list_level_one[0].split(',')
+                            except ValueError:
+                                # no? OK, let's keep the whole list
+                                hetero_dict[dict_item] = list_level_one[0].split(',')
+                    
 
     return hetero_dict
 
@@ -477,12 +496,18 @@ def dict2string(d):
     :return: list of strings
     :rtype: list
 
-    this might be useful when turning the JCAMP-style dictionaries
-    into something that goes into a text display
+    This might be useful when turning the JCAMP-style dictionaries
+    into something that goes into a text display. Example use would be::
+
+        >>> d={'TE':2.3, 'TR':5, 'NAME':'random name'}
+        >>> print(dict2string(d))
+                          TE : 2.3
+                          TR : 5
+                        NAME : 'random name'
     '''
     strlist = []
     for k, v in d.iteritems():
-        strlist.append('%-20s:\t%s' % (k, repr(v)))
+        strlist.append('{0!s:>20} : {1!s}'.format(k, repr(v)))
     return '\n'.join(strlist)
 
 def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
@@ -567,7 +592,5 @@ def readRFshape(filename):
 
 # main part - run test cases if called as a module
 if __name__ == "__main__":
-    print "test case for readJCAMP"
-    readJCAMP('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3/acqp')
-    print "test case for read2dseq"
-    x = read2dseq('/home/stefan/data/HPGS3/HPGS3Tb1.4s1/3')
+    import doctest
+    doctest.testmod()
