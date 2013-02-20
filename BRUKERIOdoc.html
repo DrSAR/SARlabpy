@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -15,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -60,7 +58,7 @@
 <p>Handy functions to read BRUKER data and header files.</p>
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.dict2string">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">dict2string</tt><big>(</big><em>d</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.dict2string" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">dict2string</tt><big>(</big><em>d</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.dict2string" title="Permalink to this definition">¶</a></dt>
 <dd><p>convert dictionary to nicely looking multi-line string</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -87,7 +85,7 @@ into something that goes into a text display. Example use would be:</p>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.fftbruker">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">fftbruker</tt><big>(</big><em>array, encoding=[1, 1, 0, 0], DCoffset=False</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.fftbruker" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">fftbruker</tt><big>(</big><em>array, encoding=[1, 1, 0, 0], DCoffset=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.fftbruker" title="Permalink to this definition">¶</a></dt>
 <dd><p>wrapper to fft bruker FIDs</p>
 <p>returns the fft of a multi-dimensional BRUKER FID. It uses the
 parameter &#8216;encoding&#8217; to decide over which dimensions to Fourier transform.
@@ -99,7 +97,7 @@ usually get FTed.</p>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.read2dseq">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>procdirname</em>, <em>array_transpose=True</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>procdirname</em>, <em>array_transpose=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns BRUKER&#8217;s 2dseq file as a properly dimensioned array</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -122,7 +120,7 @@ directory.</td>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.readJCAMP">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readJCAMP</tt><big>(</big><em>filename</em>, <em>removebrackets=True</em>, <em>typecast=False</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readJCAMP" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readJCAMP</tt><big>(</big><em>filename</em>, <em>removebrackets=True</em>, <em>typecast=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readJCAMP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse text file in JCAMP format</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -164,7 +162,7 @@ typecasting of the records into all these different datatypes.</p>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.readRFshape">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readRFshape</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readRFshape" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readRFshape</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readRFshape" title="Permalink to this definition">¶</a></dt>
 <dd><p>reads BRUKERS RF shape files spnam0 etc that are stored with experiments</p>
 <p>returns a dictionary with ready-to-use attributes for amplitude,
 phase, bandwidth etc.</p>
@@ -172,7 +170,7 @@ phase, bandwidth etc.</p>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.readfid">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readfid</tt><big>(</big><em>fptr=None</em>, <em>untouched=False</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readfid" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readfid</tt><big>(</big><em>fptr=None</em>, <em>untouched=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readfid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns BRUKER&#8217;s fid file as a properly dimensioned &amp; rearranged array.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -199,7 +197,7 @@ phase, bandwidth etc.</p>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.readfidspectro">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readfidspectro</tt><big>(</big><em>fptr=None</em>, <em>untouched=False</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readfidspectro" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readfidspectro</tt><big>(</big><em>fptr=None</em>, <em>untouched=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readfidspectro" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns BRUKER&#8217;s fid file as a properly dimensioned &amp; rearranged array</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -228,7 +226,7 @@ misunderstandings of how the data is to be interpreted.</p>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.typecast_dict_elements">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">typecast_dict_elements</tt><big>(</big><em>hetero_dict</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.typecast_dict_elements" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">typecast_dict_elements</tt><big>(</big><em>hetero_dict</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.typecast_dict_elements" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a dictionary of previously only string values in a typecast form</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -315,7 +313,7 @@ misunderstandings of how the data is to be interpreted.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2013, SARlab members.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
     </div>
   </body>
 </html>
