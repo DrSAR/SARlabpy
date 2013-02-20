@@ -15,17 +15,17 @@ import pylab as py
 # To get current working directory, make sure os is imported, then do os.chdir(path) or os.getcwd()
 reload(sar)
 
-########
-# Controlling for differences in opinion on certain things in Bruker IO
-########
-
-import getpass # Get the current username of the script executer by getpass.user()
-
-user_name = getpass.getuser()
-
-if user_name == 'fmoosvi' or user_name == 'firas':
-	print 'You are operating as Firas, the order of the matrix will be X,Y,Z instead of Z,Y,X'
-	# Other block of code
+#########
+## Controlling for differences in opinion on certain things in Bruker IO
+#########
+#
+#import getpass # Get the current username of the script executer by getpass.user()
+#
+#user_name = getpass.getuser()
+#
+#if user_name == 'fmoosvi' or user_name == 'firas':
+#    print 'You are operating as Firas, the order of the matrix will be X,Y,Z instead of Z,Y,X'
+#    # Other block of code
 
 ########
 # Running code on other computers
@@ -50,12 +50,24 @@ dataDict2 = sar.read2dseq(path2,1)
 #data = dataDict['data']
 data2 = dataDict2['data']
 
-py.imshow(data2[:,:,2])
+#py.imshow(data2[:,:,2])
+
+#imgplot = py.imshow(data2[:,:,2],aspect=1)
+#imgplot.set_clim(2E3,5E4)
 
 
-## Editing jcamp
+## Editing jcamp to split up parameters stored in the ExcPulse Array
 
 #filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','method'])
 filename_method = ''.join(['/Users/firas/data/Moosvi.ii2/22/pdata/1/','reco'])
 
 reco = sar.readJCAMP(filename_method)
+
+filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','acqp'])
+#filename_method = ''.join(['/Volumes/Data/work/dBS1/dBlochSiegert1.gP2/36/','acqp'])
+
+method = sar.readJCAMP(filename_method)
+methodO = sar.readJCAMP(filename_method)
+#newDict = sar.io.BRUKERIO.splitParamArrays(method,'ExcP1ulse')
+
+method = sar.io.BRUKERIO.typecastThings(method) # Case 0
