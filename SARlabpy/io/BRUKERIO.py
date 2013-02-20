@@ -438,11 +438,15 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(procdirname, arrayTranspose = False):
+def read2dseq(procdirname, arrayTranspose = False, typecast=False):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
     :param procdirname: filename of directory that contains the processed data
+    :param boolean typecast:
+        attempt to cast values of records to int/floats/strings/
+        a list of the above (Default: False) - this feature is a tad
+        experimental
     :type procdirname: string
     :return: dictionary with data, and headerinformation. The data is
              an array of BRUKER-reconstructed image data in the respecive proc
@@ -453,17 +457,32 @@ def read2dseq(procdirname, arrayTranspose = False):
     This relies on numpy's array functionality
     """
 
-    # get relevant information from the  reco file
 
-    reco = readJCAMP(procdirname+'/reco')
-    d3proc = readJCAMP(procdirname+'/d3proc')
+    
+    if typecast:
+        # Only difference betwen this code and the original (in the else statement)
+        # is that the typecast is det to true and and the integer cast in 
+        # RECO_size is ignored
+        
+        # get relevant information from the  reco file
+        reco = readJCAMP(procdirname+'/reco',typecast=True)
+        d3proc = readJCAMP(procdirname+'/d3proc',typecast=True)
+        
+        RECO_size = [d3proc['IM_SIZ'], \
+                     d3proc['IM_SIY'], \
+                     d3proc['IM_SIX']]
+    else:
+        reco = readJCAMP(procdirname+'/reco')
+        d3proc = readJCAMP(procdirname+'/d3proc')
 
-    # determine array dimensions
-    RECO_size = [int(dummy) for dummy in (d3proc['IM_SIZ'], \
-                                          d3proc['IM_SIY'], \
-                                          d3proc['IM_SIX'])]
-
+            # determine array dimensions
+        
+        RECO_size = [int(dummy) for dummy in (d3proc['IM_SIZ'], \
+                      d3proc['IM_SIY'], \
+                      d3proc['IM_SIX'])]
+            
     # determine ENDIANness and storage type
+        
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
         datatype = 'i2'
     elif reco['RECO_wordtype'] =='_32BIT_SGN_INT':
