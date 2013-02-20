@@ -107,11 +107,11 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
         LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
         if typecast:
-            return typecastelements(LDRdict)
+            return typecast_dict_elements(LDRdict)
         else:
             return LDRdict
 
-def typecastelements(hetero_dict):
+def typecast_dict_elements(hetero_dict):
     '''
     Return a dictionary of previously only string values in a typecast form
 
@@ -120,8 +120,19 @@ def typecastelements(hetero_dict):
     :return: dictionary with values cast to int, float etc
     :rtype: dict
 
-    This routine needs proper testing and is a prime candidate for some
-    choice doctest lines pasted below.
+    Here are some example calls:
+        
+        >>> typecast_dict_elements({'key':'1'})
+        {'key': 1}
+        >>> typecast_dict_elements({'key':'1.31'})
+        {'key': 1.31}
+        >>> typecast_dict_elements({'key':'1.31 123'})
+        {'key': [1.31, 123.0]}
+        >>> typecast_dict_elements({'key':'1.31 123 string'})
+        {'key': ['1.31 123 string']}
+        >>> typecast_dict_elements({'key':'(1, 2, <>) (3, 4, <>)'})
+        {'key': [['1', ' 2', ' <>'], ['3', ' 4', ' <>']]}
+
     '''
     for dict_item in hetero_dict:
         try:
