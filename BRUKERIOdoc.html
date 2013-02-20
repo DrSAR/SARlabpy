@@ -223,8 +223,8 @@ misunderstandings of how the data is to be interpreted.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="SARlabpy.io.BRUKERIO.typecastelements">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">typecastelements</tt><big>(</big><em>hetero_dict</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.typecastelements" title="Permalink to this definition">¶</a></dt>
+<dt id="SARlabpy.io.BRUKERIO.typecast_dict_elements">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">typecast_dict_elements</tt><big>(</big><em>hetero_dict</em><big>)</big><a class="headerlink" href="#SARlabpy.io.BRUKERIO.typecast_dict_elements" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a dictionary of previously only string values in a typecast form</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -238,8 +238,21 @@ misunderstandings of how the data is to be interpreted.</p>
 </tr>
 </tbody>
 </table>
-<p>This routine needs proper testing and is a prime candidate for some
-choice doctest lines pasted below.</p>
+<p>Here are some example calls:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: 1.31}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;Spam&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: &#39;Spam&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31 123&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: [1.31, 123.0]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31 123 string&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: &#39;1.31 123 string&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;(1, 2, &lt;&gt;) (3, 4, &lt;&gt;)&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: [[&#39;1&#39;, &#39; 2&#39;, &#39; &lt;&gt;&#39;], [&#39;3&#39;, &#39; 4&#39;, &#39; &lt;&gt;&#39;]]}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
