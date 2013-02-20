@@ -135,7 +135,13 @@ def readfid(fptr=None, untouched=False):
     dirname = os.path.abspath(os.path.dirname(fidname))
     print(dirname)
     acqp = readJCAMP(dirname + "/acqp")
-
+    
+    ## WARNIG!!!!
+    ##
+    ## readfid is currenly broken due to the current implementation of readjcamp.    
+    ## should be fine in master branch unless changes are made
+    ##
+    
     # determine array dimensions
     ACQ_size = acqp['ACQ_size'].split() # matrix size
     ACQ_size = [int(dummy) for dummy in ACQ_size]
@@ -369,7 +375,7 @@ def readfidspectro(fptr=None, untouched=False):
                 }
 
 
-def read2dseq(procdirname, enhanced = 0):
+def read2dseq(procdirname, arrayTranspose = False):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
@@ -415,7 +421,7 @@ def read2dseq(procdirname, enhanced = 0):
     data = numpy.fromfile(file=procdirname+'/2dseq',
                           dtype=dtype).reshape(RECO_size)
 
-    if enhanced == 1:
+    if arrayTranspose == True:
         print 'Changing data to result in XYZ intead of ZYX'
         data = data.transpose((2,1,0))
 
