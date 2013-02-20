@@ -62,54 +62,7 @@ method = sar.readJCAMP(filename_method)
 methodO = sar.readJCAMP(filename_method)
 #newDict = sar.io.BRUKERIO.splitParamArrays(method,'ExcP1ulse')
 
-## Write a function that converts strings to intgers/floats or strings as appropriate
-
-## Begin section of code dealing with various cases in the acqp or method file
-#
-# Purely one integer, or one float have already been dealt with
-#
-# Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
-# Case 2: array of floats and ints. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
-# Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
-#
-##
-import re
-
 method = sar.io.BRUKERIO.typecastThings(method) # Case 0
-
-
-# Cases 1-3
-
-for dict_item in method:
-
-    try:
-
-        if isinstance(method[dict_item],str):
-
-            # Case 1: Array of purely integers
-            split_string = [s for s in re.split('[(), < >]',method[dict_item]) if s]
-            split_string = sar.io.BRUKERIO.typecastThings(split_string)
-
-            if all(isinstance(list_item, int) for list_item in split_string):
-                print('you win - integer')
-                method[dict_item] = split_string
-
-            # Case 2: Array of floats and ints
-            split_string = [s for s in re.split('[(), < >]',method[dict_item]) if s]
-            split_string = sar.io.BRUKERIO.typecastThings(split_string)
-
-            if all(isinstance(list_item,(int,float)) for list_item in split_string):
-                print('you win - float')
-                method[dict_item] = split_string
-
-            # Case 3: Array of floats, ints, and strings with funny brackets and such
-            # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
-
-    except:
-        print 'string'
-
-
-
 
 
 
