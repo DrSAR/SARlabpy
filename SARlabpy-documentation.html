@@ -1,0 +1,122 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Documenting and Testing SARlabpy &mdash; SARlabpy 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="SARlabpy 0.1 documentation" href="index.html" />
+    <link rel="prev" title="BRUKERIO documentation" href="BRUKERIOdoc.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="BRUKERIOdoc.html" title="BRUKERIO documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="documenting-and-testing-sarlabpy">
+<h1>Documenting and Testing SARlabpy<a class="headerlink" href="#documenting-and-testing-sarlabpy" title="Permalink to this headline">¶</a></h1>
+<p>To make this code usable, it needs to be documented. The easiest and at the same time most helpful way to write documentation are a few examples (copied verbatim from your interactive session) into the docstring. The amazing thing is that this docstring can be parsed by the doctest module in order to <strong>automatically</strong> run those examples and compare them to the expected output.</p>
+<p>We should do more of that!</p>
+<div class="section" id="inner-workings">
+<h2>Inner Workings<a class="headerlink" href="#inner-workings" title="Permalink to this headline">¶</a></h2>
+<p>The documentation in this package makes use of Sphinx, the automated documentation project. Essentially it harvests the docstrings of all modules and puts it together in a nice and appetizing way. The instruction for this automated compilation of HTML documentation is in the <strong>doc</strong> folder (Makefile, config.py and some static pre-written, global document pages). Simply going to that directory and issuing <em>make html</em> will recreate the documentation and store it in the <strong>html</strong> folder. The <strong>html</strong> folder is bizarrely the working copy of a different, special (orphan) branch named gh-pages. When we push the html pages to github they are processed and will be hosted on the <a class="reference external" href="http://DrSAR.github.com/SARlabpy">github pages http://DrSAR.github.com/SARlabpy</a>. That domain is also pointed to from our own domain <a class="reference external" href="http://code.sarlab.ca">code.sarlab.ca</a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Documenting and Testing SARlabpy</a><ul>
+<li><a class="reference internal" href="#inner-workings">Inner Workings</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="BRUKERIOdoc.html"
+                        title="previous chapter">BRUKERIO documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/SARlabpy-documentation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="BRUKERIOdoc.html" title="BRUKERIO documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, SARlab members.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
