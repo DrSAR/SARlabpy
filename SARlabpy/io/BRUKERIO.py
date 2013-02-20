@@ -2,7 +2,6 @@
 
 # Copyright (C) 2012-2013 Stefan A Reinsberg and SARlab members
 # full license details see LICENSE.txt
-# Random comment added by FM
 """Collection of BRUKER input routines
 
 Handy functions to read BRUKER data and header files.
@@ -10,18 +9,21 @@ Handy functions to read BRUKER data and header files.
 
 import numpy
 import os.path
+import re
 from types import StringType, FileType
 
-DEBUG = 1
+DEBUG = 0
 
-def readJCAMP(filename, removebrackets=True):
+def readJCAMP(filename, removebrackets=True, typecast=False):
     """
     Parse text file in JCAMP format
 
-    :param filename: filename of fid file
-    :type filename: string
-    :param removebrackets: format strings without extra brackets?
-    :type removebrackets: boolean
+    :param string filename: filename of fid file
+    :param boolean removebrackets: format strings without extra brackets?
+    :param boolean typecast:
+        attempt to cast values of records to int/floats/strings/
+        a list of the above (Default: False) - this feature is a tad
+        experimental
     :return: Dictionary of labelled data records (LDR) with LDR-names as keys and their content as values.
     :rtype: dict
     :raises: IOERROR if opening file fails or passes on any other error
@@ -37,12 +39,9 @@ def readJCAMP(filename, removebrackets=True):
 
     The issue of reading these is complicated due to the various
     types of data (integers, floats, strings, arrays and nested
-    structures) that can be present. Currently no attempt is made to
-    perform type conversion before returning a dictionary of the JCAMP
-    file.
-
+    structures) that can be present. A currently experimental feature is the
+    typecasting of the records into all these different datatypes.
     """
-    import re
     import sys
 
     try:
@@ -106,14 +105,79 @@ def readJCAMP(filename, removebrackets=True):
         # " = " sign and turn it into a dictionary entry
         LDRdict = dict([LDR.split("=") for LDR in LDRlist])
 
-        # with this dictionary, find all the values that contain a
-        # array index at the start of the value, e.g. "( 16 )"
-        #for k, v in LDRdict.iteritems():
-            #matchdim = re.match(r"\([^\)]+\)", v)
-            #if matchdim: # we have a match for dimension
-                #remainder = v[matchdim.end():]
+        if typecast:
+            return typecast_dict_elements(LDRdict)
+        else:
+            return LDRdict
 
-        return LDRdict
+def typecast_dict_elements(hetero_dict):
+    '''
+    Return a dictionary of previously only string values in a typecast form
+
+    :param dict hetero_dict:
+        input dictionary of heteregenous type (int, float, etc.)
+    :return: dictionary with values cast to int, float etc
+    :rtype: dict
+
+    Here are some example calls:
+        
+        >>> typecast_dict_elements({'key':'1'})
+        {'key': 1}
+        >>> typecast_dict_elements({'key':'1.31'})
+        {'key': 1.31}
+        >>> typecast_dict_elements({'key':'Spam'})
+        {'key': 'Spam'}
+        >>> typecast_dict_elements({'key':'1.31 123'})
+        {'key': [1.31, 123.0]}
+        >>> typecast_dict_elements({'key':'1.31 123 string'})
+        {'key': '1.31 123 string'}
+        >>> typecast_dict_elements({'key':'(1, 2, <>) (3, 4, <>)'})
+        {'key': [['1', ' 2', ' <>'], ['3', ' 4', ' <>']]}
+
+    '''
+    for dict_item in hetero_dict:
+        try:
+            # is it just an int?
+            hetero_dict[dict_item] = int(hetero_dict[dict_item])
+        except ValueError:
+            try:
+                #maybe it is just a float then?
+                hetero_dict[dict_item] = float(hetero_dict[dict_item])
+            except ValueError:
+                # no, then this is currently a string in one of three flavours
+                # Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
+                # Case 2: array of floats. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
+                # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+                split_string = [s for s in re.split(' ',
+                                                    hetero_dict[dict_item]) if s]
+                try:
+                    #is this a homogeneous list of ints?
+                    hetero_dict[dict_item] = [int(s) for
+                                          s in split_string]
+                except ValueError:
+                    try:
+                        #no? maybe it is a homogeneous list of floats?
+                        hetero_dict[dict_item] = [float(s) for
+                                              s in split_string]
+                        #this was a homogeneous list of floats
+                    except ValueError:
+                        # Case 3: Array of floats, ints, and strings with funny brackets and such
+                        # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+                        list_level_one = [s.strip(' ()')
+                                for s in re.split('\) *\(', hetero_dict[dict_item])]
+                        if len(list_level_one)>1:
+                            hetero_dict[dict_item] = [list_element.split(',') for
+                                    list_element in list_level_one]
+                        else:
+                            try:
+                                # does the RH unpack to  single-element list?
+                                (hetero_dict[dict_item],) = list_level_one[0].split(',')
+                            except ValueError:
+                                # no? OK, let's keep the whole list
+                                hetero_dict[dict_item] = list_level_one[0].split(',')
+                    
+
+    return hetero_dict
 
 def readfid(fptr=None, untouched=False):
     """
@@ -135,7 +199,13 @@ def readfid(fptr=None, untouched=False):
     dirname = os.path.abspath(os.path.dirname(fidname))
     print(dirname)
     acqp = readJCAMP(dirname + "/acqp")
-
+    
+    ## WARNIG!!!!
+    ##
+    ## readfid is currenly broken due to the current implementation of readjcamp.    
+    ## should be fine in master branch unless changes are made
+    ##
+    
     # determine array dimensions
     ACQ_size = acqp['ACQ_size'].split() # matrix size
     ACQ_size = [int(dummy) for dummy in ACQ_size]
@@ -368,8 +438,7 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-
-def read2dseq(procdirname, enhanced = 0):
+def read2dseq(procdirname, arrayTranspose = False):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
@@ -415,7 +484,8 @@ def read2dseq(procdirname, enhanced = 0):
     data = numpy.fromfile(file=procdirname+'/2dseq',
                           dtype=dtype).reshape(RECO_size)
 
-    if enhanced == 1:
+
+    if arrayTranspose:
         print 'Changing data to result in XYZ intead of ZYX'
         data = data.transpose((2,1,0))
 
@@ -428,8 +498,7 @@ def dict2string(d):
     '''
     convert dictionary to nicely looking multi-line string
 
-    :param d: input dictionary
-    :type: dict
+    :param dict d: input dictionary
     :return: list of strings
     :rtype: list
 
