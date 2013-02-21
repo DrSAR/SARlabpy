@@ -123,7 +123,7 @@ def typecast_dict_elements(hetero_dict):
     :rtype: dict
 
     Here are some example calls:
-        
+
         >>> typecast_dict_elements({'key':'1'})
         {'key': 1}
         >>> typecast_dict_elements({'key':'1.31'})
@@ -374,14 +374,23 @@ def readfid(fptr=None, untouched=False):
     # before moving on to next object (slice?) as defined in AQ_obj_order
     ACQ_rare_factor = acqp['ACQ_rare_factor']
     #find the sequence of k-space lines
+    # this information should be stored in the PVM_EncSteps1
+    # parameter of the methods file. It appears to be missing from
+    # EPI data
+    EncSteps = numpy.array(acqp['ACQ_spatial_phase_1'])*acqp[
+                                                       'ACQ_spatial_size_1']/2
+    EncSteps = (EncSteps - min(EncSteps)).astype('int')
     method = readJCAMP(dirname + '/method', typecast=True)
-    try:
-        PVM_EncSteps1 = method['PVM_EncSteps1']
-        #ensure that it runs from 0 to max
-        PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
-    except KeyError:
-        print('Warning: PVM_EncSteps1 missing from method parameter file')
-        PVM_EncSteps1 = numpy.arange(ACQ_size[1])
+#    try:
+#        PVM_EncSteps1 = method['PVM_EncSteps1']
+#        #ensure that it runs from 0 to max
+#        PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
+#    except KeyError:
+#        print('Warning: PVM_EncSteps1 missing from method parameter file')
+#        PVM_EncSteps1 = numpy.arange(ACQ_size[1])
+#
+#    print EncSteps
+#    print PVM_EncSteps1
 
     # load data
     data = numpy.fromfile(fptr, dtype = dtype)
@@ -395,7 +404,7 @@ def readfid(fptr=None, untouched=False):
 
     if DEBUG >= 1:
         print('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
-            format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))
+            format(ACQ_size, NR, ACQ_obj_order, EncSteps))
 
     if untouched:
         return {'data':fid,
@@ -450,7 +459,7 @@ def readfid(fptr=None, untouched=False):
 
         # alternative using array-based index access
         # We are vectorizing the functions so they can eb c
-        PEnr = numpy.array(PVM_EncSteps1)[(idx % (ACQ_size[1]*len(ACQ_obj_order))) /
+        PEnr = numpy.array(EncSteps)[(idx % (ACQ_size[1]*len(ACQ_obj_order))) /
                     (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor
                  + (idx % ACQ_rare_factor)]
         slicenr = numpy.array(ACQ_obj_order)[(idx/ACQ_rare_factor) % len(ACQ_obj_order)]
@@ -490,7 +499,7 @@ def readfidspectro(fptr=None, untouched=False):
     print(dirname)
     acqp = readJCAMP(dirname+"/acqp", typecast=True)
 
-    assert "Spectroscopic" in acqp['ACQ_dim_desc'] ,( 
+    assert "Spectroscopic" in acqp['ACQ_dim_desc'] ,(
             "Problem: Could this be an imaging instead of a spectro scan?")
 
     # determine data type
@@ -515,10 +524,10 @@ def readfidspectro(fptr=None, untouched=False):
     NI = acqp['NI']
     # find BRUKER object order
     ACQ_obj_order = acqp['ACQ_obj_order']
-    ACQ_phase_factor = acqp['ACQ_phase_factor']
-    ACQ_phase_enc_mode = acqp['ACQ_phase_enc_mode']
-    ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
-    ACQ_rare_factor = acqp['ACQ_rare_factor']
+#    ACQ_phase_factor = acqp['ACQ_phase_factor']
+#    ACQ_phase_encoding_mode = acqp['ACQ_phase_encoding_mode']
+#    ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
+#    ACQ_rare_factor = acqp['ACQ_rare_factor']
     #see ho many repetitions
     NR = acqp['NR']
 
