@@ -7,18 +7,16 @@ some examples on how to do this:
 >>> import SARlabpy
 >>> fname = 'SARlabpy/test/test-data/Moosvi.ii1/2/acqp'
 >>> header = SARlabpy.readJCAMP(fname)
-opening SARlabpy/test/test-data/Moosvi.ii1/2/acqp
 
 The header is a dictionary with parameter names as the keys:
 
 >>> type(header)
 <type 'dict'>
 
-All of the BRUKER header files are in this JCAMP format. So the method stuff can be loaded as well:
+All of the BRUKER header files are in this JCAMP format. So the *method* parameter file can be loaded as well:
 
 >>> fname = 'SARlabpy/test/test-data/Moosvi.ii1/2/method'
 >>> header = SARlabpy.readJCAMP(fname)
-opening SARlabpy/test/test-data/Moosvi.ii1/2/method
 >>> header['ExcPulse']
 '(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, < hermite.exc>, 5400, 0.1794, 50, 0.1024, conventional)'
 
