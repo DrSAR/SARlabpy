@@ -14,6 +14,7 @@ from types import StringType, FileType
 
 DEBUG = 0
 
+
 def readJCAMP(filename, removebrackets=True, typecast=False):
     """
     Parse text file in JCAMP format
@@ -24,7 +25,9 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
         attempt to cast values of records to int/floats/strings/
         a list of the above (Default: False) - this feature is a tad
         experimental
-    :return: Dictionary of labelled data records (LDR) with LDR-names as keys and their content as values.
+    :return:
+        Dictionary of labelled data records (LDR) with LDR-names as keys
+        and their content as values.
     :rtype: dict
     :raises: IOERROR if opening file fails or passes on any other error
 
@@ -144,10 +147,12 @@ def typecast_dict_elements(hetero_dict):
                 #maybe it is just a float then?
                 hetero_dict[dict_item] = float(hetero_dict[dict_item])
             except ValueError:
-                # no, then this is currently a string in one of three flavours
-                # Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
-                # Case 2: array of floats. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
-                # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
+# no, then this is currently a string in one of three flavours
+# Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
+# Case 2: array of floats. 'ACQ_spatial_phase_1': 
+#                ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
+# Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) 
+#                 (<fermi.exc>, 115.8030276379, 0)
                 split_string = [s for s in re.split(' ',
                                                     hetero_dict[dict_item]) if s]
                 try:
@@ -169,15 +174,45 @@ def typecast_dict_elements(hetero_dict):
                             hetero_dict[dict_item] = [list_element.split(',') for
                                     list_element in list_level_one]
                         else:
-                            try:
-                                # does the RH unpack to  single-element list?
-                                (hetero_dict[dict_item],) = list_level_one[0].split(',')
-                            except ValueError:
-                                # no? OK, let's keep the whole list
-                                hetero_dict[dict_item] = list_level_one[0].split(',')
-                    
+                            hetero_dict[dict_item] = inner_value(
+                                                     hetero_dict[dict_item])
 
     return hetero_dict
+
+def inner_value(somelist):
+    '''
+    Return somelist[0] a one-element list or the whole list otherwise
+    
+    :param list somelist: list that might contain only one element
+    :returns: element of somelist of somelist
+    
+    >>> inner_value([42])
+    42
+    >>> inner_value([42,43])
+    [42, 43]
+    >>> inner_value([[42]])
+    42
+    >>> inner_value([[42,43]])
+    [42, 43]
+    >>> inner_value('spam')
+    'spam'
+    >>> inner_value(['spam'])
+    'spam'
+    >>> inner_value(['spam','eggs','bacon'])
+    ['spam', 'eggs', 'bacon']
+    
+    .. warning::
+       This method does not work for dictionaries (KeyError) 
+       or single character strings (infinite recursion)!
+
+    '''
+    try:
+        if len(somelist) == 1:
+            return inner_value(somelist[0])
+        else:
+            return somelist
+    except TypeError:
+        return somelist
 
 def readfid(fptr=None, untouched=False):
     """
@@ -192,80 +227,83 @@ def readfid(fptr=None, untouched=False):
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
 
     >>> import os
-    >>> fname = os.path.expanduser('~/data/Moosvi.ii1/3/fid')
+    >>> fname = os.path.expanduser('~/datalink/Moosvi.ii1/3/fid')
     >>> fid = readfid(fname)
-    /Users/stefan/data/Moosvi.ii1/3
     >>> fid['data'].shape
     (128, 128, 3, 1)
-    
-    This is what the manual D.14 File Formats (Raw data files)
 
-The reconstruction assumes that the raw data to be reconstructed will be 
-located in a file named either fid or ser in the EXPNO directory. Any averaging 
-of the raw data must be done before the data is written to the file, no 
-post-acquisition averag- ing is done by the reconstruction.
+    **BRUKER manual D.14 File Formats (Raw data files)**
 
-K-format
-  The raw data file must be written in K-format to be processed by the TOPSPIN 
-  processing software.  This means that every profile must be written
-  to the file at a posi- tion which is a multiple of 1K-bytes (1024 bytes). 
-  Datasets which are imported may need to be reformatted. Both little-endian 
-  and big-endian word formats are sup- ported, the BYTORDA parameter in the 
-  acqp parameter file is assumed to correctly specify the format of the 
-  raw data file. Finally, the raw data file is assumed to contain data only,
-  without any headers.
+        The reconstruction assumes that the raw data to be reconstructed will
+        be located in a file named either fid or ser in the EXPNO directory.
+        Any averaging of the raw data must be done before the data is written
+        to the file, no post-acquisition averag- ing is done by the
+        reconstruction.
 
-Packed format 
-  Data to be processed with ParaVision can also be stored in packed format. 
-  For this purpose the parameter GO_block_size must be set to continuous.
+        K-format
+          The raw data file must be written in K-format to be processed by the TOPSPIN
+          processing software.  This means that every profile must be written
+          to the file at a posi- tion which is a multiple of 1K-bytes (1024 bytes).
+          Datasets which are imported may need to be reformatted. Both little-endian
+          and big-endian word formats are sup- ported, the BYTORDA parameter in the
+          acqp parameter file is assumed to correctly specify the format of the
+          raw data file. Finally, the raw data file is assumed to contain data only,
+          without any headers.
 
-Integer formats 
-  By default, raw data is stored in 32-bit signed integer format, real and 
-  imaginary points of the complex signal interleaved. For applications where 
-  the data range may not exceed 16-bit, e.g. when accumulation and oversampling 
-  are disabled in analog mode, data can be stored as 16-bit short integers, 
-  setting the parameter GO_raw_data_format to GO_16BIT_SGN_INT. A warning 
-  message is displayed if an overflow occurs during data acquisition.
+        Packed format
+          Data to be processed with ParaVision can also be stored in packed format.
+          For this purpose the parameter GO_block_size must be set to continuous.
 
-Floating point format
-  Alternatively, data can be stored in floating point format: 
-  GO_raw_data_format = GO_32BIT_FLOAT. Note, that data not acquired in the 
-  default 32-bit signed integer format cannot be processed with TOPSPIN but 
-  only by the ParaVision reconstruction.
-  
-Order of data storage
-  The raw data file usually contains the data in the order of acquisition. 
-  There is only one exception: in case a pipeline filter (AU) is used to 
-  process the raw data, the order of data storage is defined by the output 
-  order of the filter.
-  
-  For raw datasets acquired by ParaVision methods, ordering and size of the 
-  data are described by the ACQP parameters contained in the file acqp:
+        Integer formats
+          By default, raw data is stored in 32-bit signed integer format, real and
+          imaginary points of the complex signal interleaved. For applications where
+          the data range may not exceed 16-bit, e.g. when accumulation and oversampling
+          are disabled in analog mode, data can be stored as 16-bit short integers,
+          setting the parameter GO_raw_data_format to GO_16BIT_SGN_INT. A warning
+          message is displayed if an overflow occurs during data acquisition.
 
-   * ACQ_dim - Spatial/spectroscopic dimension of the experiment.
-   * ACQ_size[ ] - Array of length ACQ_dim with length of the given dimensions.
-     ACQ_size[0] counts real valued data and for this it must be an even number. 
-     Real and imaginary data is stored shuffled. For experiments acquired with 
-     multiple receivers (ACQ_experiment_mode == ParallelExperiment) the scans 
-     from different receivers are appended. The number of active receivers is 
-     derived from the number of selected receivers in the parameter array 
-     GO_ReceiverSelect.
-   * NI - Number of objects.
-   * ACQ_obj_order - Permutation of the order of the acquired objects. 
-   * ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
-     to the same Object. Typically, this parameter is set to 1 which will keep 
-     the cod- ing constant within a Multiplex step. If ACQ_phase_factor > 1, 
-     this parameter will give the number of consecutively acquired phase encoding 
-     steps that belong to a single Object. Concerning phase increment: 
-     see ACQ_rare_factor.
-   * ACQ_phase_enc_mode[ ] - Ordering scheme for scans within the k-space. 
-   * ACQ_phase_enc_start[ ] - For positioning of first scan in phase encoding 
-     scheme. 
-   * ACQ_rare_factor - For positioning of the ACQ_phase_factor scans within the
-     k-space. In the case of ACQ_phase_factor > 1 the phase encoding increment 
-     is determined by ACQ_size[1] / ACQ_rare_factor. 
-     ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments. 
-   * NR - Number of repeated experiments within the dataset.
+        Floating point format
+          Alternatively, data can be stored in floating point format:
+          GO_raw_data_format = GO_32BIT_FLOAT. Note, that data not acquired in the
+          default 32-bit signed integer format cannot be processed with TOPSPIN but
+          only by the ParaVision reconstruction.
+
+        Order of data storage
+          The raw data file usually contains the data in the order of acquisition.
+          There is only one exception: in case a pipeline filter (AU) is used to
+          process the raw data, the order of data storage is defined by the output
+          order of the filter.
+
+          For raw datasets acquired by ParaVision methods, ordering and size of the
+          data are described by the ACQP parameters contained in the file acqp:
+
+           * ACQ_dim - Spatial/spectroscopic dimension of the experiment.
+           * ACQ_size[ ] - Array of length ACQ_dim with length of the given dimensions.
+             ACQ_size[0] counts real valued data and for this it must be an even number.
+             Real and imaginary data is stored shuffled. For experiments acquired with
+             multiple receivers (ACQ_experiment_mode == ParallelExperiment) the scans
+             from different receivers are appended. The number of active receivers is
+             derived from the number of selected receivers in the parameter array
+             GO_ReceiverSelect.
+           * NI - Number of objects.
+           * ACQ_obj_order - Permutation of the order of the acquired objects.
+           * ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
+             to the same Object. Typically, this parameter is set to 1 which will keep
+             the cod- ing constant within a Multiplex step. If ACQ_phase_factor > 1,
+             this parameter will give the number of consecutively acquired phase encoding
+             steps that belong to a single Object. Concerning phase increment:
+             see ACQ_rare_factor.
+           * ACQ_phase_enc_mode[ ] - Ordering scheme for scans within the k-space.
+
+                .. note::  parameter seems to be renamed to ACQ_phase_encoding_mode      
+          
+           * ACQ_phase_enc_start[ ] - For positioning of first scan in phase encoding
+             scheme.
+           * ACQ_rare_factor - For positioning of the ACQ_phase_factor scans within the
+             k-space. In the case of ACQ_phase_factor > 1 the phase encoding increment
+             is determined by ACQ_size[1] / ACQ_rare_factor.
+             ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.
+           * NR - Number of repeated experiments within the dataset.
 
 
     """
@@ -274,9 +312,8 @@ Order of data storage
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
-    print(dirname)
     acqp = readJCAMP(dirname + "/acqp", typecast=True)
-    
+
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
         datatype = 'i4'
@@ -296,11 +333,11 @@ Order of data storage
     assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
             'I am not clever enough to read Parallel acquired data, yet')
     assert ACQ_dim == len(ACQ_size),(
-            'Not enough/too much information about the size of length in\n'+ 
-            'each dim imae dimension')
+            'Not enough/too much information about the size of length in\n'+
+            'each dim image dimension')
 
-    
-    #There is the possibility of 'zero filling' since objects (aka kspace 
+
+    #There is the possibility of 'zero filling' since objects (aka kspace
     # lines) are written n 1Kb blocks if GO_block_size != continuous
     if acqp['GO_block_size'] == 'continuous':
         # we acquire complex data which requires numbers in the read direction
@@ -311,13 +348,13 @@ Order of data storage
         ACQ_size[0] = obj_blocksize/2/int(datatype[1])
     else:
         raise IOError, 'Unexpected value for GO_block_size in acqp'
-        
+
     #see ho many repetitions
     NR = acqp['NR']
     # find BRUKER object order
     ACQ_obj_order = acqp['ACQ_obj_order']
     ACQ_phase_factor = acqp['ACQ_phase_factor']
-    ACQ_phase_enc_mode = acqp['ACQ_phase_enc_mode']
+    ACQ_phase_encoding_mode = acqp['ACQ_phase_encoding_mode']
     ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
     ACQ_rare_factor = acqp['ACQ_rare_factor']
 
@@ -624,7 +661,7 @@ def dict2string(d):
         strlist.append('{0!s:>20} : {1!s}'.format(k, repr(v)))
     return '\n'.join(strlist)
 
-def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
+def fftbruker(array, encoding=None, DCoffset=False):
     '''
     wrapper to fft bruker FIDs
 
@@ -635,6 +672,8 @@ def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
     (encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn't
     usually get FTed.
     '''
+    
+    encoding = encoding or [1, 1, 0, 0]
 
     #find all axes that should be FTed
     FTaxes = []
@@ -707,7 +746,7 @@ def readRFshape(filename):
 # main part - run test cases if called as a module
 if __name__ == "__main__":
     import os
-    fname = os.path.expanduser('~/data/Moosvi.ii1/3/fid')
-    fid = readfid(fname)
+    fname = os.path.expanduser('/srv/brukerdata/stefan/nmr/Moosvi.ii1/3/fid')
+    kspace = readfid(fname)
     import doctest
     doctest.testmod()
