@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Suggested Workflow for the Code Repository &mdash; SARlabpy 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="SARlabpy 0.1 documentation" href="index.html" />
+    <link rel="next" title="Documenting and Testing SARlabpy" href="SARlabpy-documentation.html" />
+    <link rel="prev" title="SARlabpy’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="SARlabpy-documentation.html" title="Documenting and Testing SARlabpy"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="SARlabpy’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="suggested-workflow-for-the-code-repository">
+<h1>Suggested Workflow for the Code Repository<a class="headerlink" href="#suggested-workflow-for-the-code-repository" title="Permalink to this headline">¶</a></h1>
+<p><em>Wherein I lay down the law on how to git it done.</em></p>
+<p>There are a great many good suggested workflows, e.g. the <a class="reference external" href="http://nvie.com/posts/a-successful-git-branching-model/">Successful git branching model</a>. A slightly opposing view is discussed by Randy Fay where he favours <a class="reference external" href="http://randyfay.com/content/rebase-workflow-git">a Rebase workflow</a>. One might want to look at both article and try to understand them.</p>
+<p>I suggest we do the following:</p>
+<ul>
+<li><p class="first">Branch master is a branch that should in most situations have (almost) fully functional code. This branch can have tags attached so that you can go back and reproduce your work.</p>
+</li>
+<li><p class="first">Any given feature, bugfix, enhancement should be worked on in a (local) branch. Feel free to push them to the central repo (as that branch) but nobody has any right to expect to find workable code in there.</p>
+<div class="highlight-bash"><div class="highlight"><pre>git checkout master
+git branch mynewfeature
+<span class="c"># do work ...</span>
+git commit <span class="c"># maybe even a few times</span>
+git push origin mynewfeature  <span class="c"># if you want a backup</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>If time comes to make the feature, bugfix, whatever available:</li>
+</ul>
+<div class="highlight-bash"><div class="highlight"><pre>git checkout master
+git merge --no-ff -m <span class="s1">&#39;feature solves #33&#39;</span> mynewfeature
+git push
+</pre></div>
+</div>
+</li>
+<li><p class="first">This is more or less following the merge workflow. According to Randy Fay, this might get messy. If it becomes a problem we might switch to the rebase workflow.</p>
+</li>
+<li><p class="first">As a convention for the use of branches I suggest:</p>
+<ul class="simple">
+<li><em>master</em> the slighlty more sacrosanct branch</li>
+<li><em>hg-pages</em> do not touch! this is a special orphan branch that is used for auto-documentation</li>
+<li><em>firas-xxx</em> replace firas with your name and xxx if you find that there is a feature that you are working on at the moment</li>
+<li><em>xxx</em> branch dedicated to feature xxx</li>
+</ul>
+</li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">SARlabpy&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="SARlabpy-documentation.html"
+                        title="next chapter">Documenting and Testing SARlabpy</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Workflow.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="SARlabpy-documentation.html" title="Documenting and Testing SARlabpy"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="SARlabpy’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, SARlab members.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
+    </div>
+  </body>
+</html>

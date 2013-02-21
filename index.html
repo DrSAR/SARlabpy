@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="SARlabpy 0.1 documentation" href="#" />
-    <link rel="next" title="Examples for BRUKERIO" href="BRUKERIOexamples.html" /> 
+    <link rel="next" title="Suggested Workflow for the Code Repository" href="Workflow.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,7 +37,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
+          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
              accesskey="N">next</a> |</li>
         <li><a href="#">SARlabpy 0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -50,19 +50,29 @@
             
   <div class="section" id="sarlabpy-s-documentation">
 <h1>SARlabpy&#8217;s documentation!<a class="headerlink" href="#sarlabpy-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>The code is hosted in the <a class="reference external" href="https://github.com/DrSAR/SARlabpy.git">private repository by github</a>.</p>
+<p>The code is hosted in the <a class="reference external" href="https://github.com/DrSAR/SARlabpy.git">private repository by github</a>.
+If you are stuck with branches and commits, try this quickstart: (assuming you have no uncommitted local changes or local commits not pushed to the central repo that you care about):</p>
+<div class="highlight-bash"><div class="highlight"><pre>rm -rf SARlabpy <span class="c"># remove any traces of the local copy of the repository</span>
+git clone git@pfeifer.phas.ubc.ca:SARlabpy <span class="c"># make a new fresh clone</span>
+<span class="nb">cd </span>SARlabpy <span class="c"># you will now be on the master branch</span>
+git checkout --track origin/thatbranchthatIusedbefore <span class="c"># if you are continuing on an old existing branch</span>
+git checkout -b newfeaturebranch <span class="c"># if you are starting on something new</span>
+</pre></div>
+</div>
 <div class="section" id="sarlabpy-a-collection-of-routines-used-for-analysis-of-mri-data">
 <h2>SARlabpy &#8211; A collection of routines used for analysis of MRI data.<a class="headerlink" href="#sarlabpy-a-collection-of-routines-used-for-analysis-of-mri-data" title="Permalink to this headline">¶</a></h2>
 <p>The code is organized in a standard python package layout as <a class="reference external" href="http://guide.python-distribute.org/creation.html">discussed here</a>. More handy tips on organizing this can be had from <a class="reference external" href="http://infinitemonkeycorps.net/docs/pph/">infinite monkeys</a>.</p>
-<blockquote>
-<div><p>The root directory contains</p>
+<p>The root directory contains</p>
 <ul>
-<li><p class="first">the doc directory (which contains files used for the automated documenation creation),</p>
+<li><p class="first"><em>doc</em>: directory of files used for the automated documenation creation,</p>
 </li>
-<li><p class="first">the html directory: this directory contains the orphan branch hg-pages which is pushed to the
-documentation that&#8217;s hosted on <a class="reference external" href="http://code.sarlab.ca">code.sarlab.ca</a></p>
+<li><dl class="first docutils">
+<dt><em>html</em>: directory that contains the orphan branch hg-pages which is pushed to the</dt>
+<dd><p class="first last">documentation that&#8217;s hosted on <a class="reference external" href="http://code.sarlab.ca">code.sarlab.ca</a></p>
+</dd>
+</dl>
 </li>
-<li><p class="first">the SARlabpy directory contains:</p>
+<li><p class="first"><em>SARlabpy</em> contains:</p>
 <blockquote>
 <div><ul class="simple">
 <li>__init__.py which is used to initialize the packageo (see <a class="reference external" href="http://docs.python.org/2/tutorial/modules.html#packages">here for more information</a>)</li>
@@ -74,7 +84,6 @@ documentation that&#8217;s hosted on <a class="reference external" href="http://
 </div></blockquote>
 </li>
 </ul>
-</div></blockquote>
 <p>The main objectives for this code is</p>
 <blockquote>
 <div><ul class="simple">
@@ -84,26 +93,29 @@ documentation that&#8217;s hosted on <a class="reference external" href="http://
 <li>Integration and analysis of immunohistochemistry data</li>
 </ul>
 </div></blockquote>
-<p>Contents:</p>
+</div>
+<div class="section" id="contents">
+<h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="BRUKERIOexamples.html">Examples for BRUKERIO</a></li>
-<li class="toctree-l1"><a class="reference internal" href="BRUKERIOdoc.html">BRUKERIO documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Workflow.html">Suggested Workflow for the Code Repository</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SARlabpy-documentation.html">Documenting and Testing SARlabpy</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="SARlabpy-documentation.html#inner-workings">Inner Workings</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="BRUKERIOexamples.html">Examples for BRUKERIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BRUKERIOdoc.html">BRUKERIO documentation</a></li>
 </ul>
 </div>
 </div>
-</div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
 <li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
 <li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
 </ul>
+</div>
 </div>
 
 
@@ -115,17 +127,18 @@ documentation that&#8217;s hosted on <a class="reference external" href="http://
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">SARlabpy&#8217;s documentation!</a><ul>
-<li><a class="reference internal" href="#sarlabpy-a-collection-of-routines-used-for-analysis-of-mri-data">SARlabpy &#8211; A collection of routines used for analysis of MRI data.</a><ul>
-</ul>
-</li>
+<li><a class="reference internal" href="#sarlabpy-a-collection-of-routines-used-for-analysis-of-mri-data">SARlabpy &#8211; A collection of routines used for analysis of MRI data.</a></li>
+<li><a class="reference internal" href="#contents">Contents:</a><ul>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
+</li>
+</ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="BRUKERIOexamples.html"
-                        title="next chapter">Examples for BRUKERIO</a></p>
+  <p class="topless"><a href="Workflow.html"
+                        title="next chapter">Suggested Workflow for the Code Repository</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/index.txt"
@@ -158,7 +171,7 @@ documentation that&#8217;s hosted on <a class="reference external" href="http://
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
+          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
              >next</a> |</li>
         <li><a href="#">SARlabpy 0.1 documentation</a> &raquo;</li> 
       </ul>
