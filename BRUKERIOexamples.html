@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="SARlabpy 0.1 documentation" href="index.html" />
     <link rel="next" title="BRUKERIO documentation" href="BRUKERIOdoc.html" />
-    <link rel="prev" title="SARlabpy’s documentation!" href="index.html" /> 
+    <link rel="prev" title="Documenting and Testing SARlabpy" href="SARlabpy-documentation.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,7 +41,7 @@
           <a href="BRUKERIOdoc.html" title="BRUKERIO documentation"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="SARlabpy’s documentation!"
+          <a href="SARlabpy-documentation.html" title="Documenting and Testing SARlabpy"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -59,7 +59,6 @@ some examples on how to do this:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">SARlabpy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;SARlabpy/test/test-data/Moosvi.ii1/2/acqp&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">header</span> <span class="o">=</span> <span class="n">SARlabpy</span><span class="o">.</span><span class="n">readJCAMP</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
-<span class="go">opening SARlabpy/test/test-data/Moosvi.ii1/2/acqp</span>
 </pre></div>
 </div>
 <p>The header is a dictionary with parameter names as the keys:</p>
@@ -67,10 +66,9 @@ some examples on how to do this:</p>
 <span class="go">&lt;type &#39;dict&#39;&gt;</span>
 </pre></div>
 </div>
-<p>All of the BRUKER header files are in this JCAMP format. So the method stuff can be loaded as well:</p>
+<p>All of the BRUKER header files are in this JCAMP format. So the <em>method</em> parameter file can be loaded as well:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;SARlabpy/test/test-data/Moosvi.ii1/2/method&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">header</span> <span class="o">=</span> <span class="n">SARlabpy</span><span class="o">.</span><span class="n">readJCAMP</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
-<span class="go">opening SARlabpy/test/test-data/Moosvi.ii1/2/method</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">header</span><span class="p">[</span><span class="s">&#39;ExcPulse&#39;</span><span class="p">]</span>
 <span class="go">&#39;(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, &lt; hermite.exc&gt;, 5400, 0.1794, 50, 0.1024, conventional)&#39;</span>
 </pre></div>
@@ -121,8 +119,8 @@ some examples on how to do this:</p>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">SARlabpy&#8217;s documentation!</a></p>
+  <p class="topless"><a href="SARlabpy-documentation.html"
+                        title="previous chapter">Documenting and Testing SARlabpy</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="BRUKERIOdoc.html"
                         title="next chapter">BRUKERIO documentation</a></p>
@@ -161,7 +159,7 @@ some examples on how to do this:</p>
           <a href="BRUKERIOdoc.html" title="BRUKERIO documentation"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="SARlabpy’s documentation!"
+          <a href="SARlabpy-documentation.html" title="Documenting and Testing SARlabpy"
              >previous</a> |</li>
         <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
       </ul>

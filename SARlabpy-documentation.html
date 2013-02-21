@@ -24,8 +24,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="SARlabpy 0.1 documentation" href="index.html" />
-    <link rel="next" title="Suggested Workflow for the Code Repository" href="Workflow.html" />
-    <link rel="prev" title="BRUKERIO documentation" href="BRUKERIOdoc.html" /> 
+    <link rel="next" title="Examples for BRUKERIO" href="BRUKERIOexamples.html" />
+    <link rel="prev" title="Suggested Workflow for the Code Repository" href="Workflow.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,10 +38,10 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
+          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="BRUKERIOdoc.html" title="BRUKERIO documentation"
+          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -61,6 +61,27 @@
 <h2>Inner Workings<a class="headerlink" href="#inner-workings" title="Permalink to this headline">¶</a></h2>
 <p>The documentation in this package makes use of Sphinx, the automated documentation project. Essentially it harvests the docstrings of all modules and puts it together in a nice and appetizing way. The instruction for this automated compilation of HTML documentation is in the <strong>doc</strong> folder (Makefile, config.py and some static pre-written, global document pages). Simply going to that directory and issuing <em>make html</em> will recreate the documentation and store it in the <strong>html</strong> folder. The <strong>html</strong> folder is bizarrely the working copy of a different, special (orphan) branch named gh-pages. When we push the html pages to github they are processed and will be hosted on the <a class="reference external" href="http://DrSAR.github.com/SARlabpy">github pages http://DrSAR.github.com/SARlabpy</a>. That domain is also pointed to from our own domain <a class="reference external" href="http://code.sarlab.ca">code.sarlab.ca</a></p>
 </div>
+<div class="section" id="working-with-sphinx-if-you-really-must">
+<h2>Working with Sphinx &#8211; If you really must<a class="headerlink" href="#working-with-sphinx-if-you-really-must" title="Permalink to this headline">¶</a></h2>
+<p>If you want to work with the documentation (outside of the in-file documentation of your code) do the following in your local repository root:</p>
+<div class="highlight-bash"><div class="highlight"><pre>mkdir html <span class="c">#</span>
+<span class="nb">cd </span>html
+git clone git@pfeifer.phas.ubc.ca:SARlabpy .
+git checkout --track origin/gh-pages
+rm -rf * <span class="c"># yes really, delete everything in html/</span>
+</pre></div>
+</div>
+<p>You have now created a directory that contains a repository (in a repository so to say). The orphan branch (i.e. not based off of anything) is checkout out. Note how you change branches simply by entereing and leaving that directory. (Not sure how this works on a gui client...). Now recreate the documentation:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># modify the ReSTructured text files in doc/</span>
+<span class="c"># modify the documentation in the source code</span>
+<span class="nb">cd</span> ../doc <span class="c"># this is the directory where the doc setup script is</span>
+make html <span class="c"># this will recompile the html files, store them in html/</span>
+<span class="nb">cd</span> ../html <span class="c"># go back where the html files are</span>
+git add newfiles <span class="c"># if any</span>
+git commit -a -m <span class="s1">&#39;documentation updated&#39;</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -73,16 +94,17 @@
   <ul>
 <li><a class="reference internal" href="#">Documenting and Testing SARlabpy</a><ul>
 <li><a class="reference internal" href="#inner-workings">Inner Workings</a></li>
+<li><a class="reference internal" href="#working-with-sphinx-if-you-really-must">Working with Sphinx &#8211; If you really must</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="BRUKERIOdoc.html"
-                        title="previous chapter">BRUKERIO documentation</a></p>
-  <h4>Next topic</h4>
   <p class="topless"><a href="Workflow.html"
-                        title="next chapter">Suggested Workflow for the Code Repository</a></p>
+                        title="previous chapter">Suggested Workflow for the Code Repository</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="BRUKERIOexamples.html"
+                        title="next chapter">Examples for BRUKERIO</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/SARlabpy-documentation.txt"
@@ -115,10 +137,10 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
+          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
              >next</a> |</li>
         <li class="right" >
-          <a href="BRUKERIOdoc.html" title="BRUKERIO documentation"
+          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
              >previous</a> |</li>
         <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
       </ul>
