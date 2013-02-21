@@ -25,6 +25,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   SARlabpy-layout
    Workflow
    SARlabpy-documentation
 

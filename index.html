@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="SARlabpy 0.1 documentation" href="#" />
-    <link rel="next" title="Suggested Workflow for the Code Repository" href="Workflow.html" /> 
+    <link rel="next" title="Package Organization for SARlabpy" href="SARlabpy-layout.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,7 +37,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
+          <a href="SARlabpy-layout.html" title="Package Organization for SARlabpy"
              accesskey="N">next</a> |</li>
         <li><a href="#">SARlabpy 0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -61,29 +61,6 @@ git checkout -b newfeaturebranch <span class="c"># if you are starting on someth
 </div>
 <div class="section" id="sarlabpy-a-collection-of-routines-used-for-analysis-of-mri-data">
 <h2>SARlabpy &#8211; A collection of routines used for analysis of MRI data.<a class="headerlink" href="#sarlabpy-a-collection-of-routines-used-for-analysis-of-mri-data" title="Permalink to this headline">¶</a></h2>
-<p>The code is organized in a standard python package layout as <a class="reference external" href="http://guide.python-distribute.org/creation.html">discussed here</a>. More handy tips on organizing this can be had from <a class="reference external" href="http://infinitemonkeycorps.net/docs/pph/">infinite monkeys</a>.</p>
-<p>The root directory contains</p>
-<ul>
-<li><p class="first"><em>doc</em>: directory of files used for the automated documenation creation,</p>
-</li>
-<li><dl class="first docutils">
-<dt><em>html</em>: directory that contains the orphan branch hg-pages which is pushed to the</dt>
-<dd><p class="first last">documentation that&#8217;s hosted on <a class="reference external" href="http://code.sarlab.ca">code.sarlab.ca</a></p>
-</dd>
-</dl>
-</li>
-<li><p class="first"><em>SARlabpy</em> contains:</p>
-<blockquote>
-<div><ul class="simple">
-<li>__init__.py which is used to initialize the packageo (see <a class="reference external" href="http://docs.python.org/2/tutorial/modules.html#packages">here for more information</a>)</li>
-<li><strong>test</strong> a directory containing unit tests for code in all the other directories</li>
-<li><strong>io</strong> &#8211; input output routines to read BRUKER data and other things</li>
-<li><strong>fmoosvi</strong> Firas&#8217; sandbox</li>
-<li><strong>DCE</strong> DCE fitting and AIF simulations - mostly Tammo&#8217;s work</li>
-</ul>
-</div></blockquote>
-</li>
-</ul>
 <p>The main objectives for this code is</p>
 <blockquote>
 <div><ul class="simple">
@@ -98,6 +75,7 @@ git checkout -b newfeaturebranch <span class="c"># if you are starting on someth
 <h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="SARlabpy-layout.html">Package Organization for SARlabpy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Workflow.html">Suggested Workflow for the Code Repository</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SARlabpy-documentation.html">Documenting and Testing SARlabpy</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="SARlabpy-documentation.html#inner-workings">Inner Workings</a></li>
@@ -138,8 +116,8 @@ git checkout -b newfeaturebranch <span class="c"># if you are starting on someth
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="Workflow.html"
-                        title="next chapter">Suggested Workflow for the Code Repository</a></p>
+  <p class="topless"><a href="SARlabpy-layout.html"
+                        title="next chapter">Package Organization for SARlabpy</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/index.txt"
@@ -172,7 +150,7 @@ git checkout -b newfeaturebranch <span class="c"># if you are starting on someth
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
+          <a href="SARlabpy-layout.html" title="Package Organization for SARlabpy"
              >next</a> |</li>
         <li><a href="#">SARlabpy 0.1 documentation</a> &raquo;</li> 
       </ul>
