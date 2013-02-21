@@ -197,6 +197,76 @@ def readfid(fptr=None, untouched=False):
     /Users/stefan/data/Moosvi.ii1/3
     >>> fid['data'].shape
     (128, 128, 3, 1)
+    
+    This is what the manual D.14 File Formats (Raw data files)
+
+The reconstruction assumes that the raw data to be reconstructed will be 
+located in a file named either fid or ser in the EXPNO directory. Any averaging 
+of the raw data must be done before the data is written to the file, no 
+post-acquisition averag- ing is done by the reconstruction.
+
+K-format
+  The raw data file must be written in K-format to be processed by the TOPSPIN 
+  processing software.  This means that every profile must be written
+  to the file at a posi- tion which is a multiple of 1K-bytes (1024 bytes). 
+  Datasets which are imported may need to be reformatted. Both little-endian 
+  and big-endian word formats are sup- ported, the BYTORDA parameter in the 
+  acqp parameter file is assumed to correctly specify the format of the 
+  raw data file. Finally, the raw data file is assumed to contain data only,
+  without any headers.
+
+Packed format 
+  Data to be processed with ParaVision can also be stored in packed format. 
+  For this purpose the parameter GO_block_size must be set to continuous.
+
+Integer formats 
+  By default, raw data is stored in 32-bit signed integer format, real and 
+  imaginary points of the complex signal interleaved. For applications where 
+  the data range may not exceed 16-bit, e.g. when accumulation and oversampling 
+  are disabled in analog mode, data can be stored as 16-bit short integers, 
+  setting the parameter GO_raw_data_format to GO_16BIT_SGN_INT. A warning 
+  message is displayed if an overflow occurs during data acquisition.
+
+Floating point format
+  Alternatively, data can be stored in floating point format: 
+  GO_raw_data_format = GO_32BIT_FLOAT. Note, that data not acquired in the 
+  default 32-bit signed integer format cannot be processed with TOPSPIN but 
+  only by the ParaVision reconstruction.
+  
+Order of data storage
+  The raw data file usually contains the data in the order of acquisition. 
+  There is only one exception: in case a pipeline filter (AU) is used to 
+  process the raw data, the order of data storage is defined by the output 
+  order of the filter.
+  
+  For raw datasets acquired by ParaVision methods, ordering and size of the 
+  data are described by the ACQP parameters contained in the file acqp:
+
+   * ACQ_dim - Spatial/spectroscopic dimension of the experiment.
+   * ACQ_size[ ] - Array of length ACQ_dim with length of the given dimensions.
+     ACQ_size[0] counts real valued data and for this it must be an even number. 
+     Real and imaginary data is stored shuffled. For experiments acquired with 
+     multiple receivers (ACQ_experiment_mode == ParallelExperiment) the scans 
+     from different receivers are appended. The number of active receivers is 
+     derived from the number of selected receivers in the parameter array 
+     GO_ReceiverSelect.
+   * NI - Number of objects.
+   * ACQ_obj_order - Permutation of the order of the acquired objects. 
+   * ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
+     to the same Object. Typically, this parameter is set to 1 which will keep 
+     the cod- ing constant within a Multiplex step. If ACQ_phase_factor > 1, 
+     this parameter will give the number of consecutively acquired phase encoding 
+     steps that belong to a single Object. Concerning phase increment: 
+     see ACQ_rare_factor.
+   * ACQ_phase_enc_mode[ ] - Ordering scheme for scans within the k-space. 
+   * ACQ_phase_enc_start[ ] - For positioning of first scan in phase encoding 
+     scheme. 
+   * ACQ_rare_factor - For positioning of the ACQ_phase_factor scans within the
+     k-space. In the case of ACQ_phase_factor > 1 the phase encoding increment 
+     is determined by ACQ_size[1] / ACQ_rare_factor. 
+     ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments. 
+   * NR - Number of repeated experiments within the dataset.
+
 
     """
     if isinstance(fptr, FileType):
@@ -221,7 +291,15 @@ def readfid(fptr=None, untouched=False):
     # byteorder: 'little' don't swap, 'big' do swap
     BYTORDA = acqp['BYTORDA']
     # determine array dimensions
-    ACQ_size = acqp['ACQ_size']
+    ACQ_dim = acqp['ACQ_dim'] #Spatial/spectroscopic dimension
+    ACQ_size = acqp['ACQ_size'] #ACQ_size[0] should be even (real valued counts)
+    assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
+            'I am not clever enough to read Parallel acquired data, yet')
+    assert ACQ_dim == len(ACQ_size),(
+            'Not enough/too much information about the size of length in\n'+ 
+            'each dim imae dimension')
+
+    
     #There is the possibility of 'zero filling' since objects (aka kspace 
     # lines) are written n 1Kb blocks if GO_block_size != continuous
     if acqp['GO_block_size'] == 'continuous':
@@ -238,14 +316,18 @@ def readfid(fptr=None, untouched=False):
     NR = acqp['NR']
     # find BRUKER object order
     ACQ_obj_order = acqp['ACQ_obj_order']
+    ACQ_phase_factor = acqp['ACQ_phase_factor']
+    ACQ_phase_enc_mode = acqp['ACQ_phase_enc_mode']
+    ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
+    ACQ_rare_factor = acqp['ACQ_rare_factor']
 
     # 2D vs 3D issues about slices etc.
-    if len(ACQ_size) == 2:
+    if ACQ_dim == 2:
         # this is 2D
-        if len(ACQ_obj_order) != acqp['NSLICES']:
-            raise IOError, 'NSLICES not equal to number of ACQ_obj_order'
-        else:
-            ACQ_size.append(len(ACQ_obj_order))
+        assert len(ACQ_obj_order) == acqp['NSLICES'],(
+                'NSLICES not equal to number of ACQ_obj_order')
+
+        ACQ_size.append(len(ACQ_obj_order))
         encoding = [1, 1, 0, 0] # dimensions that require FFT
     else:
         encoding = [1, 1, 1, 0] # dimensions that require FFT
@@ -256,9 +338,13 @@ def readfid(fptr=None, untouched=False):
     ACQ_rare_factor = acqp['ACQ_rare_factor']
     #find the sequence of k-space lines
     method = readJCAMP(dirname + '/method', typecast=True)
-    PVM_EncSteps1 = method['PVM_EncSteps1']
-    #ensure that it runs from 0 to max
-    PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
+    try:
+        PVM_EncSteps1 = method['PVM_EncSteps1']
+        #ensure that it runs from 0 to max
+        PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
+    except KeyError:
+        print('Warning: PVM_EncSteps1 missing from method parameter file')
+        PVM_EncSteps1 = numpy.arange(ACQ_size[1])
 
     # load data
     data = numpy.fromfile(fptr, dtype = dtype)
@@ -365,43 +451,52 @@ def readfidspectro(fptr=None, untouched=False):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
     print(dirname)
-    acqp = readJCAMP(dirname+"/acqp")
+    acqp = readJCAMP(dirname+"/acqp", typecast=True)
 
-    assert "Spectroscopic" in acqp['ACQ_dim_desc'] , "Problem: Could this be an imaging isntead of a spectro scan?"
-
-    # determine array dimensions
-    ACQ_size = acqp['ACQ_size'].split() # matrix size
-    ACQ_size = [int(dummy) for dummy in ACQ_size]
-    # we acquire complex data which requires numbers in the read direction
-    ACQ_size[0] /= 2
-    #see ho many repetitions
-    NR = int(acqp['NR'])
-
-    # number of increments are used, e.g., for inversion recovery
-    NI = int(acqp['NI'])
-
-    # find BRUKER object order
-    ACQ_obj_order = acqp['ACQ_obj_order'].split()
-    ACQ_obj_order = [int(dummy) for dummy in ACQ_obj_order]
+    assert "Spectroscopic" in acqp['ACQ_dim_desc'] ,( 
+            "Problem: Could this be an imaging instead of a spectro scan?")
 
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
         datatype = 'i4'
+    elif acqp['GO_raw_data_format'] == 'GO_16BIT_SGN_INT':
+        datatype = 'i2'
+    elif acqp['GO_raw_data_format'] == 'GO_32BIT_FLOAT':
+        datatype = 'f4'
     else:
         raise IOError('Unknown ##$GO_raw_data_format = '\
-                          +acqp['GO_raw_data_format'])
-    # not sure about byteorder !?
+                          + acqp['GO_raw_data_format'])
+    dtype = numpy.dtype(datatype)
+    # byteorder: 'little' don't swap, 'big' do swap
+    BYTORDA = acqp['BYTORDA']
+
+    # determine array dimensions
+    ACQ_size = acqp['ACQ_size']
+    # we acquire complex data which requires numbers in the read direction
+    ACQ_size[0] /= 2
+    # number of objects (increments? e.g., for inversion recovery?)
+    NI = acqp['NI']
+    # find BRUKER object order
+    ACQ_obj_order = acqp['ACQ_obj_order']
+    ACQ_phase_factor = acqp['ACQ_phase_factor']
+    ACQ_phase_enc_mode = acqp['ACQ_phase_enc_mode']
+    ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
+    ACQ_rare_factor = acqp['ACQ_rare_factor']
+    #see ho many repetitions
+    NR = acqp['NR']
+
     dtype = numpy.dtype(datatype)
 
     #load the method file
     method = readJCAMP(dirname+'/method')
     PVM_EncSteps1 = method['PVM_EncSteps1'].split()
-    PVM_EncSteps1 = [int(dummy) for dummy in PVM_EncSteps1]
     #ensure that it runs from 0 to max
     PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
 
     # load data
     data = numpy.fromfile(fptr, dtype=dtype)
+    if BYTORDA =='big':
+        data.byteswap(True)  # swap ENDIANness in place
 
     # convert to complex data
 
@@ -426,9 +521,9 @@ def readfidspectro(fptr=None, untouched=False):
         # reshape into a large 2D array with dimensions [readsize, nr(objorder)*phase*NR]
         tempfid = fid.reshape(NR, len(ACQ_obj_order), ACQ_size[0])
 
-        assert NI == len(ACQ_obj_order), "I don't understand how the various acqp parameters interact\n\
-        Need more coding for correct reco\n\
-        workaround: use readfidspectro with option untouched"
+        assert NI == len(ACQ_obj_order), (
+                "I don't understand how the various acqp parameters interact\n\
+                workaround: use readfidspectro with option untouched")
 
         fid_reorder = numpy.empty((ACQ_size[0], len(ACQ_obj_order), NR),
                             dtype = 'complex')
