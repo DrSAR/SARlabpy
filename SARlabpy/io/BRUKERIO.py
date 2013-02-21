@@ -191,6 +191,13 @@ def readfid(fptr=None, untouched=False):
     :rtype: numpy array
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
 
+    >>> import os
+    >>> fname = os.path.expanduser('~/data/Moosvi.ii1/3/fid')
+    >>> fid = readfid(fname)
+    /Users/stefan/data/Moosvi.ii1/3
+    >>> fid['data'].shape
+    (128, 128, 3, 1)
+
     """
     if isinstance(fptr, FileType):
         fidname = fptr.name
@@ -198,29 +205,44 @@ def readfid(fptr=None, untouched=False):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
     print(dirname)
-    acqp = readJCAMP(dirname + "/acqp")
+    acqp = readJCAMP(dirname + "/acqp", typecast=True)
     
-    ## WARNIG!!!!
-    ##
-    ## readfid is currenly broken due to the current implementation of readjcamp.    
-    ## should be fine in master branch unless changes are made
-    ##
-    
+    # determine data type
+    if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
+        datatype = 'i4'
+    elif acqp['GO_raw_data_format'] == 'GO_16BIT_SGN_INT':
+        datatype = 'i2'
+    elif acqp['GO_raw_data_format'] == 'GO_32BIT_FLOAT':
+        datatype = 'f4'
+    else:
+        raise IOError('Unknown ##$GO_raw_data_format = '\
+                          + acqp['GO_raw_data_format'])
+    dtype = numpy.dtype(datatype)
+    # byteorder: 'little' don't swap, 'big' do swap
+    BYTORDA = acqp['BYTORDA']
     # determine array dimensions
-    ACQ_size = acqp['ACQ_size'].split() # matrix size
-    ACQ_size = [int(dummy) for dummy in ACQ_size]
-    # we acquire complex data which requires numbers in the read direction
-    ACQ_size[0] /= 2
+    ACQ_size = acqp['ACQ_size']
+    #There is the possibility of 'zero filling' since objects (aka kspace 
+    # lines) are written n 1Kb blocks if GO_block_size != continuous
+    if acqp['GO_block_size'] == 'continuous':
+        # we acquire complex data which requires numbers in the read direction
+        ACQ_size[0] /= 2
+    elif acqp['GO_block_size'] == 'Standard_KBlock_Format':
+        true_obj_blocksize = (int(datatype[1])*ACQ_size[0])
+        obj_blocksize = 1024 * ((true_obj_blocksize-1) // 1024 + 1)
+        ACQ_size[0] = obj_blocksize/2/int(datatype[1])
+    else:
+        raise IOError, 'Unexpected value for GO_block_size in acqp'
+        
     #see ho many repetitions
-    NR = int(acqp['NR'])
+    NR = acqp['NR']
     # find BRUKER object order
-    ACQ_obj_order = acqp['ACQ_obj_order'].split()
-    ACQ_obj_order = [int(dummy) for dummy in ACQ_obj_order]
+    ACQ_obj_order = acqp['ACQ_obj_order']
 
     # 2D vs 3D issues about slices etc.
     if len(ACQ_size) == 2:
         # this is 2D
-        if len(ACQ_obj_order) != int(acqp['NSLICES']):
+        if len(ACQ_obj_order) != acqp['NSLICES']:
             raise IOError, 'NSLICES not equal to number of ACQ_obj_order'
         else:
             ACQ_size.append(len(ACQ_obj_order))
@@ -231,28 +253,19 @@ def readfid(fptr=None, untouched=False):
 
     # RARE factor sort of indicates how many PE shots are spend on one slice
     # before moving on to next object (slice?) as defined in AQ_obj_order
-    ACQ_rare_factor = int(acqp['ACQ_rare_factor'])
-    # determine data type
-    if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
-        datatype = 'i4'
-    else:
-        raise IOError('Unknown ##$GO_raw_data_format = '\
-                          + acqp['GO_raw_data_format'])
-    # not sure about byteorder !?
-    dtype = numpy.dtype(datatype)
-
+    ACQ_rare_factor = acqp['ACQ_rare_factor']
     #find the sequence of k-space lines
-    method = readJCAMP(dirname + '/method')
-    PVM_EncSteps1 = method['PVM_EncSteps1'].split()
-    PVM_EncSteps1 = [int(dummy) for dummy in PVM_EncSteps1]
+    method = readJCAMP(dirname + '/method', typecast=True)
+    PVM_EncSteps1 = method['PVM_EncSteps1']
     #ensure that it runs from 0 to max
     PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
 
     # load data
     data = numpy.fromfile(fptr, dtype = dtype)
+    if BYTORDA =='big':
+        data.byteswap(True)  # swap ENDIANness in place
 
     # convert to complex data
-
     #fid = data[::2]+1j*data[1::2]
     # the following is faster by a factor of 6 to 7!!!
     fid = data.astype(numpy.float32).view(numpy.complex64)
@@ -598,5 +611,8 @@ def readRFshape(filename):
 
 # main part - run test cases if called as a module
 if __name__ == "__main__":
+    import os
+    fname = os.path.expanduser('~/data/Moosvi.ii1/3/fid')
+    fid = readfid(fname)
     import doctest
     doctest.testmod()
