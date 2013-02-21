@@ -33,41 +33,27 @@ reload(sar)
 
 # Change this path depending on where the symbolic link to '../brukerdata-rsync/stefan/nmr/' is located
 
-your_path = '/Users/fmoosvi/data/'
-study_name = 'dBlochSiegert1.gP2' # could set this to be input by the system
-series_num = '/38'
-default_reco = '/pdata/1/'
+#your_path = '/Users/fmoosvi/data/'
+#study_name = 'dBlochSiegert1.gP2' # could set this to be input by the system
+#series_num = '/38'
+#default_reco = '/pdata/1/'
 
 #path = ''.join([your_path,study_name,series_num,default_reco])
 #path2 = '/Users/fmoosvi/data/Moosvi.ii2/22/pdata/1/'
 
-path2 = '/Users/firas/data/Moosvi.ii2/22/pdata/1/'
+#path2 = '/Users/firas/data/Moosvi.ii2/22/pdata/1/'
 
 
 #dataDict = sar.read2dseq(path,1)
-dataDict2 = sar.read2dseq(path2,1)
+#dataDict2 = sar.read2dseq(path2,1)
 
 #data = dataDict['data']
-data2 = dataDict2['data']
+#data2 = dataDict2['data']
 
 #py.imshow(data2[:,:,2])
 
 #imgplot = py.imshow(data2[:,:,2],aspect=1)
 #imgplot.set_clim(2E3,5E4)
-
-
-## Editing jcamp to split up parameters stored in the ExcPulse Array
-
-#filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','method'])
-filename_method = ''.join(['/Users/firas/data/Moosvi.ii2/22/pdata/1/','reco'])
-
-reco = sar.readJCAMP(filename_method)
-
-filename_method = ''.join(['/Users/fmoosvi/data/Moosvi.ii2/22/','acqp'])
-#filename_method = ''.join(['/Volumes/Data/work/dBS1/dBlochSiegert1.gP2/36/','acqp'])
-
-
-
 
 
 
