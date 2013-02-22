@@ -31,6 +31,7 @@ Contents:
 
    BRUKERIOexamples
    BRUKERIOdoc
+   SARlabpytestdoc
 
 Indices and tables
 -------------------
