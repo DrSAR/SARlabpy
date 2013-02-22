@@ -81,7 +81,7 @@ into something that goes into a text display. Example use would be:</p>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.fftbruker">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">fftbruker</tt><big>(</big><em>array, encoding=[1, 1, 0, 0], DCoffset=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.fftbruker" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">fftbruker</tt><big>(</big><em>array</em>, <em>encoding=None</em>, <em>DCoffset=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.fftbruker" title="Permalink to this definition">¶</a></dt>
 <dd><p>wrapper to fft bruker FIDs</p>
 <p>returns the fft of a multi-dimensional BRUKER FID. It uses the
 parameter &#8216;encoding&#8217; to decide over which dimensions to Fourier transform.
@@ -89,6 +89,43 @@ Typically, a 2D only needs FFT over 1st and 2nd dimension
 (encoding = [1, 1, 0, 0]) whereas 3D files get a FT over three dimensions
 (encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn&#8217;t
 usually get FTed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.inner_value">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">inner_value</tt><big>(</big><em>somelist</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.inner_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return somelist[0] a one-element list or the whole list otherwise</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>somelist</strong> (<em>list</em>) &#8211; list that might contain only one element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">element of somelist of somelist</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="mi">42</span><span class="p">])</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="mi">42</span><span class="p">,</span><span class="mi">43</span><span class="p">])</span>
+<span class="go">[42, 43]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([[</span><span class="mi">42</span><span class="p">]])</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([[</span><span class="mi">42</span><span class="p">,</span><span class="mi">43</span><span class="p">]])</span>
+<span class="go">[42, 43]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">(</span><span class="s">&#39;spam&#39;</span><span class="p">)</span>
+<span class="go">&#39;spam&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="s">&#39;spam&#39;</span><span class="p">])</span>
+<span class="go">&#39;spam&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="s">&#39;spam&#39;</span><span class="p">,</span><span class="s">&#39;eggs&#39;</span><span class="p">,</span><span class="s">&#39;bacon&#39;</span><span class="p">])</span>
+<span class="go">[&#39;spam&#39;, &#39;eggs&#39;, &#39;bacon&#39;]</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This method does not work for dictionaries (KeyError) 
+or single character strings (infinite recursion)!</p>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -131,7 +168,8 @@ experimental</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary of labelled data records (LDR) with LDR-names as keys and their content as values.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary of labelled data records (LDR) with LDR-names as keys
+and their content as values.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict</p>
@@ -189,6 +227,98 @@ phase, bandwidth etc.</p>
 </tr>
 </tbody>
 </table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/datalink/Moosvi.ii1/3/fid&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(128, 128, 3, 1)</span>
+</pre></div>
+</div>
+<p><strong>BRUKER manual D.14 File Formats (Raw data files)</strong></p>
+<blockquote>
+<div><p>The reconstruction assumes that the raw data to be reconstructed will
+be located in a file named either fid or ser in the EXPNO directory.
+Any averaging of the raw data must be done before the data is written
+to the file, no post-acquisition averag- ing is done by the
+reconstruction.</p>
+<dl class="docutils">
+<dt>K-format</dt>
+<dd>The raw data file must be written in K-format to be processed by the TOPSPIN
+processing software.  This means that every profile must be written
+to the file at a posi- tion which is a multiple of 1K-bytes (1024 bytes).
+Datasets which are imported may need to be reformatted. Both little-endian
+and big-endian word formats are sup- ported, the BYTORDA parameter in the
+acqp parameter file is assumed to correctly specify the format of the
+raw data file. Finally, the raw data file is assumed to contain data only,
+without any headers.</dd>
+<dt>Packed format</dt>
+<dd>Data to be processed with ParaVision can also be stored in packed format.
+For this purpose the parameter GO_block_size must be set to continuous.</dd>
+<dt>Integer formats</dt>
+<dd>By default, raw data is stored in 32-bit signed integer format, real and
+imaginary points of the complex signal interleaved. For applications where
+the data range may not exceed 16-bit, e.g. when accumulation and oversampling
+are disabled in analog mode, data can be stored as 16-bit short integers,
+setting the parameter GO_raw_data_format to GO_16BIT_SGN_INT. A warning
+message is displayed if an overflow occurs during data acquisition.</dd>
+<dt>Floating point format</dt>
+<dd>Alternatively, data can be stored in floating point format:
+GO_raw_data_format = GO_32BIT_FLOAT. Note, that data not acquired in the
+default 32-bit signed integer format cannot be processed with TOPSPIN but
+only by the ParaVision reconstruction.</dd>
+<dt>Order of data storage</dt>
+<dd><p class="first">The raw data file usually contains the data in the order of acquisition.
+There is only one exception: in case a pipeline filter (AU) is used to
+process the raw data, the order of data storage is defined by the output
+order of the filter.</p>
+<p>For raw datasets acquired by ParaVision methods, ordering and size of the
+data are described by the ACQP parameters contained in the file acqp:</p>
+<blockquote class="last">
+<div><ul>
+<li><p class="first">ACQ_dim - Spatial/spectroscopic dimension of the experiment.</p>
+</li>
+<li><p class="first">ACQ_size[ ] - Array of length ACQ_dim with length of the given dimensions.
+ACQ_size[0] counts real valued data and for this it must be an even number.
+Real and imaginary data is stored shuffled. For experiments acquired with
+multiple receivers (ACQ_experiment_mode == ParallelExperiment) the scans
+from different receivers are appended. The number of active receivers is
+derived from the number of selected receivers in the parameter array
+GO_ReceiverSelect.</p>
+</li>
+<li><p class="first">NI - Number of objects.</p>
+</li>
+<li><p class="first">ACQ_obj_order - Permutation of the order of the acquired objects.</p>
+</li>
+<li><p class="first">ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
+to the same Object. Typically, this parameter is set to 1 which will keep
+the cod- ing constant within a Multiplex step. If ACQ_phase_factor &gt; 1,
+this parameter will give the number of consecutively acquired phase encoding
+steps that belong to a single Object. Concerning phase increment:
+see ACQ_rare_factor.</p>
+</li>
+<li><p class="first">ACQ_phase_enc_mode[ ] - Ordering scheme for scans within the k-space.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">parameter seems to be renamed to ACQ_phase_encoding_mode</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">ACQ_phase_enc_start[ ] - For positioning of first scan in phase encoding
+scheme.</p>
+</li>
+<li><p class="first">ACQ_rare_factor - For positioning of the ACQ_phase_factor scans within the
+k-space. In the case of ACQ_phase_factor &gt; 1 the phase encoding increment
+is determined by ACQ_size[1] / ACQ_rare_factor.
+ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.</p>
+</li>
+<li><p class="first">NR - Number of repeated experiments within the dataset.</p>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="function">
