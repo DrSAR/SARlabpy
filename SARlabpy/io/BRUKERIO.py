@@ -9,10 +9,16 @@ Handy functions to read BRUKER data and header files.
 
 import numpy
 import os.path
+from datetime import datetime
 import re
 from types import StringType, FileType
 
-DEBUG = 0
+# setup logging
+import SARlogger
+logger=SARlogger.setup_custom_logger('root')
+
+#logging.basicConfig(format='{0}:%(levelname)s:%(message)s'.format(__name__),
+#                    level=logging.DEBUG)
 
 
 def readJCAMP(filename, removebrackets=True, typecast=False):
@@ -48,8 +54,7 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
     import sys
 
     try:
-        if DEBUG >= 1:
-            print "opening {0}".format(filename)
+        logger.debug("opening {0}".format(filename))
         JCAMPfile = open(filename, "r")
         JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
         JCAMPfile.close()
@@ -312,6 +317,7 @@ def readfid(fptr=None, untouched=False):
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
+    logger.debug('loading %s' % fidname)
     acqp = readJCAMP(dirname + "/acqp", typecast=True)
 
     # determine data type
@@ -327,18 +333,21 @@ def readfid(fptr=None, untouched=False):
     dtype = numpy.dtype(datatype)
     # byteorder: 'little' don't swap, 'big' do swap
     BYTORDA = acqp['BYTORDA']
+    logger.debug('BYTORDA={0}'.format(BYTORDA))
     # determine array dimensions
     ACQ_dim = acqp['ACQ_dim'] #Spatial/spectroscopic dimension
+    logger.debug('ACQ_dim={0}'.format(ACQ_dim))
     ACQ_size = acqp['ACQ_size'] #ACQ_size[0] should be even (real valued counts)
+    logger.debug('ACQ_size={0}'.format(ACQ_size))
     assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
             'I am not clever enough to read Parallel acquired data, yet')
     assert ACQ_dim == len(ACQ_size),(
             'Not enough/too much information about the size of length in\n'+
             'each dim image dimension')
 
-
     #There is the possibility of 'zero filling' since objects (aka kspace
     # lines) are written n 1Kb blocks if GO_block_size != continuous
+    logger.debug('GO_block_size={0}'.format(acqp['GO_block_size']))
     if acqp['GO_block_size'] == 'continuous':
         # we acquire complex data which requires numbers in the read direction
         ACQ_size[0] /= 2
@@ -402,9 +411,8 @@ def readfid(fptr=None, untouched=False):
     # the following is faster by a factor of 6 to 7!!!
     fid = data.astype(numpy.float32).view(numpy.complex64)
 
-    if DEBUG >= 1:
-        print('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
-            format(ACQ_size, NR, ACQ_obj_order, EncSteps))
+    logger.debug('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
+                   format(ACQ_size, NR, ACQ_obj_order, EncSteps))
 
     if untouched:
         return {'data':fid,
@@ -424,13 +432,12 @@ def readfid(fptr=None, untouched=False):
 
         # reshape into a large 2D array with dimensions
         # [readsize, nr(objorder)*phase*NR]
-        if DEBUG >= 1:
-            print('size(fid) = {0} ?=? ACQ_size*NR={1}'.
-                  format(numpy.shape(fid), ACQ_size[0] *
-                           ACQ_size[1] * ACQ_size[2] * NR))
+        logger.debug('size(fid) = {0} ?=? ACQ_size*NR={1}'.
+                      format(numpy.shape(fid), ACQ_size[0] *
+                             ACQ_size[1] * ACQ_size[2] * NR))
         if numpy.size(fid) < (ACQ_size[0] * ACQ_size[1] * ACQ_size[2] * NR):
-            print ('''WARNING:    parameter file describes a file that is
-            larger than what is actually found in */fid''')
+            logger.warning('''WARNING:    parameter file describes a file that is
+                            larger than what is actually found in */fid''')
             NR = numpy.size(fid) / (ACQ_size[0]*ACQ_size[1]*ACQ_size[2])
             print ('            NR reset to {0}'.format(NR))
             fid = fid[0:ACQ_size[0]*ACQ_size[1]*ACQ_size[2]*NR]
@@ -550,9 +557,8 @@ def readfidspectro(fptr=None, untouched=False):
     # the following is faster by a factor of 6 to 7!!!
     fid = data.astype(numpy.float32).view(numpy.complex64)
 
-    if DEBUG >= 1:
-        print('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
-            format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))
+    logger.debug('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
+                  format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))
 
     if untouched:
         return {'data':fid,
@@ -560,9 +566,8 @@ def readfidspectro(fptr=None, untouched=False):
                 'header':{'acqp': acqp, 'method': method}}
     else:
 
-        if DEBUG >= 1:
-            print(ACQ_size, ACQ_obj_order, NR)
-            print(fid.shape)
+        logger.debug('{0}\n{1}\n{2}\n{3}}'.
+                      format(ACQ_size, ACQ_obj_order, NR, fid.shape))
 
         # reshape into a large 2D array with dimensions [readsize, nr(objorder)*phase*NR]
         tempfid = fid.reshape(NR, len(ACQ_obj_order), ACQ_size[0])
