@@ -30,8 +30,9 @@ Contents:
    SARlabpy-documentation
 
    BRUKERIOexamples
-   BRUKERIOdoc
-   SARlabpytestdoc
+
+   Module-Documentation
+
 
 Indices and tables
 -------------------
