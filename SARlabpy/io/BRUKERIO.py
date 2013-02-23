@@ -14,7 +14,6 @@ from types import StringType, FileType
 
 DEBUG = 0
 
-
 def readJCAMP(filename, removebrackets=True, typecast=False):
     """
     Parse text file in JCAMP format
@@ -25,9 +24,7 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
         attempt to cast values of records to int/floats/strings/
         a list of the above (Default: False) - this feature is a tad
         experimental
-    :return:
-        Dictionary of labelled data records (LDR) with LDR-names as keys
-        and their content as values.
+    :return: Dictionary of labelled data records (LDR) with LDR-names as keys and their content as values.
     :rtype: dict
     :raises: IOERROR if opening file fails or passes on any other error
 
@@ -123,7 +120,7 @@ def typecast_dict_elements(hetero_dict):
     :rtype: dict
 
     Here are some example calls:
-
+        
         >>> typecast_dict_elements({'key':'1'})
         {'key': 1}
         >>> typecast_dict_elements({'key':'1.31'})
@@ -147,12 +144,10 @@ def typecast_dict_elements(hetero_dict):
                 #maybe it is just a float then?
                 hetero_dict[dict_item] = float(hetero_dict[dict_item])
             except ValueError:
-# no, then this is currently a string in one of three flavours
-# Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
-# Case 2: array of floats. 'ACQ_spatial_phase_1': 
-#                ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
-# Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) 
-#                 (<fermi.exc>, 115.8030276379, 0)
+                # no, then this is currently a string in one of three flavours
+                # Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
+                # Case 2: array of floats. 'ACQ_spatial_phase_1': ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
+                # Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
                 split_string = [s for s in re.split(' ',
                                                     hetero_dict[dict_item]) if s]
                 try:
@@ -174,45 +169,15 @@ def typecast_dict_elements(hetero_dict):
                             hetero_dict[dict_item] = [list_element.split(',') for
                                     list_element in list_level_one]
                         else:
-                            hetero_dict[dict_item] = inner_value(
-                                                     hetero_dict[dict_item])
+                            try:
+                                # does the RH unpack to  single-element list?
+                                (hetero_dict[dict_item],) = list_level_one[0].split(',')
+                            except ValueError:
+                                # no? OK, let's keep the whole list
+                                hetero_dict[dict_item] = list_level_one[0].split(',')
+                    
 
     return hetero_dict
-
-def inner_value(somelist):
-    '''
-    Return somelist[0] a one-element list or the whole list otherwise
-    
-    :param list somelist: list that might contain only one element
-    :returns: element of somelist of somelist
-    
-    >>> inner_value([42])
-    42
-    >>> inner_value([42,43])
-    [42, 43]
-    >>> inner_value([[42]])
-    42
-    >>> inner_value([[42,43]])
-    [42, 43]
-    >>> inner_value('spam')
-    'spam'
-    >>> inner_value(['spam'])
-    'spam'
-    >>> inner_value(['spam','eggs','bacon'])
-    ['spam', 'eggs', 'bacon']
-    
-    .. warning::
-       This method does not work for dictionaries (KeyError) 
-       or single character strings (infinite recursion)!
-
-    '''
-    try:
-        if len(somelist) == 1:
-            return inner_value(somelist[0])
-        else:
-            return somelist
-    except TypeError:
-        return somelist
 
 def readfid(fptr=None, untouched=False):
     """
@@ -226,145 +191,39 @@ def readfid(fptr=None, untouched=False):
     :rtype: numpy array
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
 
-    >>> import os
-    >>> fname = os.path.expanduser('~/datalink/Moosvi.ii1/3/fid')
-    >>> fid = readfid(fname)
-    >>> fid['data'].shape
-    (128, 128, 3, 1)
-
-    **BRUKER manual D.14 File Formats (Raw data files)**
-
-        The reconstruction assumes that the raw data to be reconstructed will
-        be located in a file named either fid or ser in the EXPNO directory.
-        Any averaging of the raw data must be done before the data is written
-        to the file, no post-acquisition averag- ing is done by the
-        reconstruction.
-
-        K-format
-          The raw data file must be written in K-format to be processed by the TOPSPIN
-          processing software.  This means that every profile must be written
-          to the file at a posi- tion which is a multiple of 1K-bytes (1024 bytes).
-          Datasets which are imported may need to be reformatted. Both little-endian
-          and big-endian word formats are sup- ported, the BYTORDA parameter in the
-          acqp parameter file is assumed to correctly specify the format of the
-          raw data file. Finally, the raw data file is assumed to contain data only,
-          without any headers.
-
-        Packed format
-          Data to be processed with ParaVision can also be stored in packed format.
-          For this purpose the parameter GO_block_size must be set to continuous.
-
-        Integer formats
-          By default, raw data is stored in 32-bit signed integer format, real and
-          imaginary points of the complex signal interleaved. For applications where
-          the data range may not exceed 16-bit, e.g. when accumulation and oversampling
-          are disabled in analog mode, data can be stored as 16-bit short integers,
-          setting the parameter GO_raw_data_format to GO_16BIT_SGN_INT. A warning
-          message is displayed if an overflow occurs during data acquisition.
-
-        Floating point format
-          Alternatively, data can be stored in floating point format:
-          GO_raw_data_format = GO_32BIT_FLOAT. Note, that data not acquired in the
-          default 32-bit signed integer format cannot be processed with TOPSPIN but
-          only by the ParaVision reconstruction.
-
-        Order of data storage
-          The raw data file usually contains the data in the order of acquisition.
-          There is only one exception: in case a pipeline filter (AU) is used to
-          process the raw data, the order of data storage is defined by the output
-          order of the filter.
-
-          For raw datasets acquired by ParaVision methods, ordering and size of the
-          data are described by the ACQP parameters contained in the file acqp:
-
-           * ACQ_dim - Spatial/spectroscopic dimension of the experiment.
-           * ACQ_size[ ] - Array of length ACQ_dim with length of the given dimensions.
-             ACQ_size[0] counts real valued data and for this it must be an even number.
-             Real and imaginary data is stored shuffled. For experiments acquired with
-             multiple receivers (ACQ_experiment_mode == ParallelExperiment) the scans
-             from different receivers are appended. The number of active receivers is
-             derived from the number of selected receivers in the parameter array
-             GO_ReceiverSelect.
-           * NI - Number of objects.
-           * ACQ_obj_order - Permutation of the order of the acquired objects.
-           * ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
-             to the same Object. Typically, this parameter is set to 1 which will keep
-             the cod- ing constant within a Multiplex step. If ACQ_phase_factor > 1,
-             this parameter will give the number of consecutively acquired phase encoding
-             steps that belong to a single Object. Concerning phase increment:
-             see ACQ_rare_factor.
-           * ACQ_phase_enc_mode[ ] - Ordering scheme for scans within the k-space.
-
-                .. note::  parameter seems to be renamed to ACQ_phase_encoding_mode      
-          
-           * ACQ_phase_enc_start[ ] - For positioning of first scan in phase encoding
-             scheme.
-           * ACQ_rare_factor - For positioning of the ACQ_phase_factor scans within the
-             k-space. In the case of ACQ_phase_factor > 1 the phase encoding increment
-             is determined by ACQ_size[1] / ACQ_rare_factor.
-             ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.
-           * NR - Number of repeated experiments within the dataset.
-
-
     """
     if isinstance(fptr, FileType):
         fidname = fptr.name
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
-    acqp = readJCAMP(dirname + "/acqp", typecast=True)
-
-    # determine data type
-    if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
-        datatype = 'i4'
-    elif acqp['GO_raw_data_format'] == 'GO_16BIT_SGN_INT':
-        datatype = 'i2'
-    elif acqp['GO_raw_data_format'] == 'GO_32BIT_FLOAT':
-        datatype = 'f4'
-    else:
-        raise IOError('Unknown ##$GO_raw_data_format = '\
-                          + acqp['GO_raw_data_format'])
-    dtype = numpy.dtype(datatype)
-    # byteorder: 'little' don't swap, 'big' do swap
-    BYTORDA = acqp['BYTORDA']
+    print(dirname)
+    acqp = readJCAMP(dirname + "/acqp")
+    
+    ## WARNIG!!!!
+    ##
+    ## readfid is currenly broken due to the current implementation of readjcamp.    
+    ## should be fine in master branch unless changes are made
+    ##
+    
     # determine array dimensions
-    ACQ_dim = acqp['ACQ_dim'] #Spatial/spectroscopic dimension
-    ACQ_size = acqp['ACQ_size'] #ACQ_size[0] should be even (real valued counts)
-    assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
-            'I am not clever enough to read Parallel acquired data, yet')
-    assert ACQ_dim == len(ACQ_size),(
-            'Not enough/too much information about the size of length in\n'+
-            'each dim image dimension')
-
-
-    #There is the possibility of 'zero filling' since objects (aka kspace
-    # lines) are written n 1Kb blocks if GO_block_size != continuous
-    if acqp['GO_block_size'] == 'continuous':
-        # we acquire complex data which requires numbers in the read direction
-        ACQ_size[0] /= 2
-    elif acqp['GO_block_size'] == 'Standard_KBlock_Format':
-        true_obj_blocksize = (int(datatype[1])*ACQ_size[0])
-        obj_blocksize = 1024 * ((true_obj_blocksize-1) // 1024 + 1)
-        ACQ_size[0] = obj_blocksize/2/int(datatype[1])
-    else:
-        raise IOError, 'Unexpected value for GO_block_size in acqp'
-
+    ACQ_size = acqp['ACQ_size'].split() # matrix size
+    ACQ_size = [int(dummy) for dummy in ACQ_size]
+    # we acquire complex data which requires numbers in the read direction
+    ACQ_size[0] /= 2
     #see ho many repetitions
-    NR = acqp['NR']
+    NR = int(acqp['NR'])
     # find BRUKER object order
-    ACQ_obj_order = acqp['ACQ_obj_order']
-    ACQ_phase_factor = acqp['ACQ_phase_factor']
-    ACQ_phase_encoding_mode = acqp['ACQ_phase_encoding_mode']
-    ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
-    ACQ_rare_factor = acqp['ACQ_rare_factor']
+    ACQ_obj_order = acqp['ACQ_obj_order'].split()
+    ACQ_obj_order = [int(dummy) for dummy in ACQ_obj_order]
 
     # 2D vs 3D issues about slices etc.
-    if ACQ_dim == 2:
+    if len(ACQ_size) == 2:
         # this is 2D
-        assert len(ACQ_obj_order) == acqp['NSLICES'],(
-                'NSLICES not equal to number of ACQ_obj_order')
-
-        ACQ_size.append(len(ACQ_obj_order))
+        if len(ACQ_obj_order) != int(acqp['NSLICES']):
+            raise IOError, 'NSLICES not equal to number of ACQ_obj_order'
+        else:
+            ACQ_size.append(len(ACQ_obj_order))
         encoding = [1, 1, 0, 0] # dimensions that require FFT
     else:
         encoding = [1, 1, 1, 0] # dimensions that require FFT
@@ -372,39 +231,35 @@ def readfid(fptr=None, untouched=False):
 
     # RARE factor sort of indicates how many PE shots are spend on one slice
     # before moving on to next object (slice?) as defined in AQ_obj_order
-    ACQ_rare_factor = acqp['ACQ_rare_factor']
+    ACQ_rare_factor = int(acqp['ACQ_rare_factor'])
+    # determine data type
+    if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
+        datatype = 'i4'
+    else:
+        raise IOError('Unknown ##$GO_raw_data_format = '\
+                          + acqp['GO_raw_data_format'])
+    # not sure about byteorder !?
+    dtype = numpy.dtype(datatype)
+
     #find the sequence of k-space lines
-    # this information should be stored in the PVM_EncSteps1
-    # parameter of the methods file. It appears to be missing from
-    # EPI data
-    EncSteps = numpy.array(acqp['ACQ_spatial_phase_1'])*acqp[
-                                                       'ACQ_spatial_size_1']/2
-    EncSteps = (EncSteps - min(EncSteps)).astype('int')
-    method = readJCAMP(dirname + '/method', typecast=True)
-#    try:
-#        PVM_EncSteps1 = method['PVM_EncSteps1']
-#        #ensure that it runs from 0 to max
-#        PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
-#    except KeyError:
-#        print('Warning: PVM_EncSteps1 missing from method parameter file')
-#        PVM_EncSteps1 = numpy.arange(ACQ_size[1])
-#
-#    print EncSteps
-#    print PVM_EncSteps1
+    method = readJCAMP(dirname + '/method')
+    PVM_EncSteps1 = method['PVM_EncSteps1'].split()
+    PVM_EncSteps1 = [int(dummy) for dummy in PVM_EncSteps1]
+    #ensure that it runs from 0 to max
+    PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
 
     # load data
     data = numpy.fromfile(fptr, dtype = dtype)
-    if BYTORDA =='big':
-        data.byteswap(True)  # swap ENDIANness in place
 
     # convert to complex data
+
     #fid = data[::2]+1j*data[1::2]
     # the following is faster by a factor of 6 to 7!!!
     fid = data.astype(numpy.float32).view(numpy.complex64)
 
     if DEBUG >= 1:
         print('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
-            format(ACQ_size, NR, ACQ_obj_order, EncSteps))
+            format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))
 
     if untouched:
         return {'data':fid,
@@ -459,7 +314,7 @@ def readfid(fptr=None, untouched=False):
 
         # alternative using array-based index access
         # We are vectorizing the functions so they can eb c
-        PEnr = numpy.array(EncSteps)[(idx % (ACQ_size[1]*len(ACQ_obj_order))) /
+        PEnr = numpy.array(PVM_EncSteps1)[(idx % (ACQ_size[1]*len(ACQ_obj_order))) /
                     (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor
                  + (idx % ACQ_rare_factor)]
         slicenr = numpy.array(ACQ_obj_order)[(idx/ACQ_rare_factor) % len(ACQ_obj_order)]
@@ -497,52 +352,43 @@ def readfidspectro(fptr=None, untouched=False):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
     print(dirname)
-    acqp = readJCAMP(dirname+"/acqp", typecast=True)
+    acqp = readJCAMP(dirname+"/acqp")
 
-    assert "Spectroscopic" in acqp['ACQ_dim_desc'] ,(
-            "Problem: Could this be an imaging instead of a spectro scan?")
+    assert "Spectroscopic" in acqp['ACQ_dim_desc'] , "Problem: Could this be an imaging isntead of a spectro scan?"
+
+    # determine array dimensions
+    ACQ_size = acqp['ACQ_size'].split() # matrix size
+    ACQ_size = [int(dummy) for dummy in ACQ_size]
+    # we acquire complex data which requires numbers in the read direction
+    ACQ_size[0] /= 2
+    #see ho many repetitions
+    NR = int(acqp['NR'])
+
+    # number of increments are used, e.g., for inversion recovery
+    NI = int(acqp['NI'])
+
+    # find BRUKER object order
+    ACQ_obj_order = acqp['ACQ_obj_order'].split()
+    ACQ_obj_order = [int(dummy) for dummy in ACQ_obj_order]
 
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
         datatype = 'i4'
-    elif acqp['GO_raw_data_format'] == 'GO_16BIT_SGN_INT':
-        datatype = 'i2'
-    elif acqp['GO_raw_data_format'] == 'GO_32BIT_FLOAT':
-        datatype = 'f4'
     else:
         raise IOError('Unknown ##$GO_raw_data_format = '\
-                          + acqp['GO_raw_data_format'])
-    dtype = numpy.dtype(datatype)
-    # byteorder: 'little' don't swap, 'big' do swap
-    BYTORDA = acqp['BYTORDA']
-
-    # determine array dimensions
-    ACQ_size = acqp['ACQ_size']
-    # we acquire complex data which requires numbers in the read direction
-    ACQ_size[0] /= 2
-    # number of objects (increments? e.g., for inversion recovery?)
-    NI = acqp['NI']
-    # find BRUKER object order
-    ACQ_obj_order = acqp['ACQ_obj_order']
-#    ACQ_phase_factor = acqp['ACQ_phase_factor']
-#    ACQ_phase_encoding_mode = acqp['ACQ_phase_encoding_mode']
-#    ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
-#    ACQ_rare_factor = acqp['ACQ_rare_factor']
-    #see ho many repetitions
-    NR = acqp['NR']
-
+                          +acqp['GO_raw_data_format'])
+    # not sure about byteorder !?
     dtype = numpy.dtype(datatype)
 
     #load the method file
     method = readJCAMP(dirname+'/method')
     PVM_EncSteps1 = method['PVM_EncSteps1'].split()
+    PVM_EncSteps1 = [int(dummy) for dummy in PVM_EncSteps1]
     #ensure that it runs from 0 to max
     PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
 
     # load data
     data = numpy.fromfile(fptr, dtype=dtype)
-    if BYTORDA =='big':
-        data.byteswap(True)  # swap ENDIANness in place
 
     # convert to complex data
 
@@ -567,9 +413,9 @@ def readfidspectro(fptr=None, untouched=False):
         # reshape into a large 2D array with dimensions [readsize, nr(objorder)*phase*NR]
         tempfid = fid.reshape(NR, len(ACQ_obj_order), ACQ_size[0])
 
-        assert NI == len(ACQ_obj_order), (
-                "I don't understand how the various acqp parameters interact\n\
-                workaround: use readfidspectro with option untouched")
+        assert NI == len(ACQ_obj_order), "I don't understand how the various acqp parameters interact\n\
+        Need more coding for correct reco\n\
+        workaround: use readfidspectro with option untouched"
 
         fid_reorder = numpy.empty((ACQ_size[0], len(ACQ_obj_order), NR),
                             dtype = 'complex')
@@ -592,11 +438,15 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(procdirname, arrayTranspose = False):
+def read2dseq(procdirname, typecast=False):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
     :param procdirname: filename of directory that contains the processed data
+    :param boolean typecast:
+        attempt to cast values of records to int/floats/strings/
+        a list of the above (Default: False) - this feature is a tad
+        experimental
     :type procdirname: string
     :return: dictionary with data, and headerinformation. The data is
              an array of BRUKER-reconstructed image data in the respecive proc
@@ -606,18 +456,31 @@ def read2dseq(procdirname, arrayTranspose = False):
 
     This relies on numpy's array functionality
     """
+    
+    if typecast:
+        # Only difference betwen this code and the original (in the else statement)
+        # is that the typecast is det to true and and the integer cast in 
+        # RECO_size is ignored
+        
+        # get relevant information from the  reco file
+        reco = readJCAMP(procdirname+'/reco',typecast=True)
+        d3proc = readJCAMP(procdirname+'/d3proc',typecast=True)
+        
+        RECO_size = [d3proc['IM_SIZ'], \
+                     d3proc['IM_SIY'], \
+                     d3proc['IM_SIX']]
+    else:
+        reco = readJCAMP(procdirname+'/reco')
+        d3proc = readJCAMP(procdirname+'/d3proc')
 
-    # get relevant information from the  reco file
-
-    reco = readJCAMP(procdirname+'/reco')
-    d3proc = readJCAMP(procdirname+'/d3proc')
-
-    # determine array dimensions
-    RECO_size = [int(dummy) for dummy in (d3proc['IM_SIZ'], \
-                                          d3proc['IM_SIY'], \
-                                          d3proc['IM_SIX'])]
-
+            # determine array dimensions
+        
+        RECO_size = [int(dummy) for dummy in (d3proc['IM_SIZ'], \
+                      d3proc['IM_SIY'], \
+                      d3proc['IM_SIX'])]
+            
     # determine ENDIANness and storage type
+        
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
         datatype = 'i2'
     elif reco['RECO_wordtype'] =='_32BIT_SGN_INT':
@@ -637,13 +500,11 @@ def read2dseq(procdirname, arrayTranspose = False):
     # load data
     data = numpy.fromfile(file=procdirname+'/2dseq',
                           dtype=dtype).reshape(RECO_size)
-
-
-    if arrayTranspose:
-        print 'Changing data to result in XYZ intead of ZYX'
-        data = data.transpose((2,1,0))
-
-
+                          
+    # Deal with RECO_slope (added by FM)
+    RECO_map_slope = reco['RECO_map_slope']
+    data = data/RECO_map_slope
+                          
     return {'data':data,
             'isImage':True,
             'header':{'reco': reco, 'd3proc':d3proc}}
@@ -670,7 +531,7 @@ def dict2string(d):
         strlist.append('{0!s:>20} : {1!s}'.format(k, repr(v)))
     return '\n'.join(strlist)
 
-def fftbruker(array, encoding=None, DCoffset=False):
+def fftbruker(array, encoding=[1, 1, 0, 0], DCoffset=False):
     '''
     wrapper to fft bruker FIDs
 
@@ -681,8 +542,6 @@ def fftbruker(array, encoding=None, DCoffset=False):
     (encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn't
     usually get FTed.
     '''
-    
-    encoding = encoding or [1, 1, 0, 0]
 
     #find all axes that should be FTed
     FTaxes = []
@@ -754,8 +613,5 @@ def readRFshape(filename):
 
 # main part - run test cases if called as a module
 if __name__ == "__main__":
-    import os
-    fname = os.path.expanduser('/srv/brukerdata/stefan/nmr/Moosvi.ii1/3/fid')
-    kspace = readfid(fname)
     import doctest
     doctest.testmod()
