@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Examples for BRUKERIO &mdash; SARlabpy 0.1 documentation</title>
+    <title>Examples for BRUKERIO &mdash; SARlabpy 0.1alpha documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1',
+        VERSION:     '0.1alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,9 +23,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="SARlabpy 0.1 documentation" href="index.html" />
-    <link rel="next" title="BRUKERIO documentation" href="BRUKERIOdoc.html" />
-    <link rel="prev" title="Documenting and Testing SARlabpy" href="SARlabpy-documentation.html" /> 
+    <link rel="top" title="SARlabpy 0.1alpha documentation" href="index.html" />
+    <link rel="next" title="SARlabpy Documentation" href="modules.html" />
+    <link rel="prev" title="Documenting and Testing SARlabpy" href="Documenting-Testing.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,12 +38,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="BRUKERIOdoc.html" title="BRUKERIO documentation"
+          <a href="modules.html" title="SARlabpy Documentation"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="SARlabpy-documentation.html" title="Documenting and Testing SARlabpy"
+          <a href="Documenting-Testing.html" title="Documenting and Testing SARlabpy"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">SARlabpy 0.1alpha documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -61,7 +61,7 @@ some examples on how to do this:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">header</span> <span class="o">=</span> <span class="n">SARlabpy</span><span class="o">.</span><span class="n">readJCAMP</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The header is a dictionary with parameter names as the keys:</p>
+<p>The header returned by <a class="reference internal" href="SARlabpy.io.html#SARlabpy.io.BRUKERIO.readJCAMP" title="SARlabpy.io.BRUKERIO.readJCAMP"><tt class="xref py py-func docutils literal"><span class="pre">SARlabpy.io.BRUKERIO.readJCAMP()</span></tt></a> is a dictionary with parameter names as the keys:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 <span class="go">&lt;type &#39;dict&#39;&gt;</span>
 </pre></div>
@@ -73,7 +73,13 @@ some examples on how to do this:</p>
 <span class="go">&#39;(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, &lt; hermite.exc&gt;, 5400, 0.1794, 50, 0.1024, conventional)&#39;</span>
 </pre></div>
 </div>
-<p>Loading k-space data (BRUKER calls the file fid) is also doable:</p>
+<p>Here is a little python string kung-fu to turn this structure into a list of strings for further processing:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s">&#39;header&#39;</span><span class="p">][</span><span class="s">&#39;method&#39;</span><span class="p">][</span><span class="s">&#39;ExcPulse&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;()&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+<span class="go">[&#39;1&#39;, &#39; 5400&#39;, &#39; 30&#39;, &#39; 9.02336512447152&#39;, &#39; 100&#39;, &#39; 0&#39;, &#39; 100&#39;, &#39; LIB_EXCITATION&#39;, &#39; &lt; hermite.exc&gt;&#39;, &#39; 5400&#39;, &#39; 0.1794&#39;, &#39; 50&#39;, &#39; 0.1024&#39;, &#39; conventional&#39;]</span>
+</pre></div>
+</div>
+<p>It turns out that option <cite>typecast=True</cite> to <a class="reference internal" href="SARlabpy.io.html#SARlabpy.io.BRUKERIO.readJCAMP" title="SARlabpy.io.BRUKERIO.readJCAMP"><tt class="xref py py-func docutils literal"><span class="pre">BRUKERIO.readJCAMP()</span></tt></a> will already return nicely typecas and split values.</p>
+<p>Loading k-space data (BRUKER calls the file fid) is also doable using <a class="reference internal" href="SARlabpy.io.html#SARlabpy.io.BRUKERIO.readfid" title="SARlabpy.io.BRUKERIO.readfid"><tt class="xref py py-func docutils literal"><span class="pre">SARlabpy.io.BRUKERIO.readfid()</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;SARlabpy/test/test-data/Moosvi.ii1/2/fid&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">SARlabpy</span><span class="o">.</span><span class="n">readfid</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
 <span class="go">/tmp/SARlabpy/SARlabpy/test/test-data/Moosvi.ii1/2</span>
@@ -91,7 +97,7 @@ some examples on how to do this:</p>
 <span class="go">size(fid) = (245760,) ?=? ACQ_size*NR=245760</span>
 </pre></div>
 </div>
-<p>Function readfid returns another dictionary that bundles the actual data and header information:</p>
+<p>Function <a class="reference internal" href="SARlabpy.io.html#SARlabpy.io.BRUKERIO.readfid" title="SARlabpy.io.BRUKERIO.readfid"><tt class="xref py py-func docutils literal"><span class="pre">SARlabpy.io.BRUKERIO.readfid()</span></tt></a> returns another dictionary that bundles the actual data and header information:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
 <span class="go">[&#39;isImage&#39;, &#39;header&#39;, &#39;data&#39;]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
@@ -105,11 +111,6 @@ some examples on how to do this:</p>
 <span class="go">&#39;(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, &lt; hermite.exc&gt;, 5400, 0.1794, 50, 0.1024, conventional)&#39;</span>
 </pre></div>
 </div>
-<p>Here is a little python string kung-fu to turn this structure into a list of strings for further processing:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s">&#39;header&#39;</span><span class="p">][</span><span class="s">&#39;method&#39;</span><span class="p">][</span><span class="s">&#39;ExcPulse&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;()&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
-<span class="go">[&#39;1&#39;, &#39; 5400&#39;, &#39; 30&#39;, &#39; 9.02336512447152&#39;, &#39; 100&#39;, &#39; 0&#39;, &#39; 100&#39;, &#39; LIB_EXCITATION&#39;, &#39; &lt; hermite.exc&gt;&#39;, &#39; 5400&#39;, &#39; 0.1794&#39;, &#39; 50&#39;, &#39; 0.1024&#39;, &#39; conventional&#39;]</span>
-</pre></div>
-</div>
 </div>
 
 
@@ -119,11 +120,11 @@ some examples on how to do this:</p>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="SARlabpy-documentation.html"
+  <p class="topless"><a href="Documenting-Testing.html"
                         title="previous chapter">Documenting and Testing SARlabpy</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="BRUKERIOdoc.html"
-                        title="next chapter">BRUKERIO documentation</a></p>
+  <p class="topless"><a href="modules.html"
+                        title="next chapter">SARlabpy Documentation</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/BRUKERIOexamples.txt"
@@ -156,12 +157,12 @@ some examples on how to do this:</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="BRUKERIOdoc.html" title="BRUKERIO documentation"
+          <a href="modules.html" title="SARlabpy Documentation"
              >next</a> |</li>
         <li class="right" >
-          <a href="SARlabpy-documentation.html" title="Documenting and Testing SARlabpy"
+          <a href="Documenting-Testing.html" title="Documenting and Testing SARlabpy"
              >previous</a> |</li>
-        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">SARlabpy 0.1alpha documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
