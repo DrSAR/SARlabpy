@@ -27,11 +27,11 @@ Contents:
 
    SARlabpy-layout
    Workflow
-   SARlabpy-documentation
+   Documenting-Testing
 
    BRUKERIOexamples
-   BRUKERIOdoc
-   SARlabpytestdoc
+
+   modules
 
 Indices and tables
 -------------------

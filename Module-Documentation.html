@@ -1,0 +1,499 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Documentation &mdash; SARlabpy 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="SARlabpy 0.1 documentation" href="index.html" />
+    <link rel="prev" title="Examples for BRUKERIO" href="BRUKERIOexamples.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="documentation">
+<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-SARlabpy.io.BRUKERIO">
+<span id="brukerio-documentation"></span><h2>BRUKERIO documentation<a class="headerlink" href="#module-SARlabpy.io.BRUKERIO" title="Permalink to this headline">¶</a></h2>
+<p>Collection of BRUKER input routines</p>
+<p>Handy functions to read BRUKER data and header files.</p>
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.dict2string">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">dict2string</tt><big>(</big><em>d</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.dict2string" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert dictionary to nicely looking multi-line string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> (<em>dict</em>) &#8211; input dictionary</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of strings</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+<p>This might be useful when turning the JCAMP-style dictionaries
+into something that goes into a text display. Example use would be:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;TE&#39;</span><span class="p">:</span><span class="mf">2.3</span><span class="p">,</span> <span class="s">&#39;TR&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;NAME&#39;</span><span class="p">:</span><span class="s">&#39;random name&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">dict2string</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+<span class="go">                  TE : 2.3</span>
+<span class="go">                  TR : 5</span>
+<span class="go">                NAME : &#39;random name&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.fftbruker">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">fftbruker</tt><big>(</big><em>array</em>, <em>encoding=None</em>, <em>DCoffset=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.fftbruker" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrapper to fft bruker FIDs</p>
+<p>returns the fft of a multi-dimensional BRUKER FID. It uses the
+parameter &#8216;encoding&#8217; to decide over which dimensions to Fourier transform.
+Typically, a 2D only needs FFT over 1st and 2nd dimension
+(encoding = [1, 1, 0, 0]) whereas 3D files get a FT over three dimensions
+(encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn&#8217;t
+usually get FTed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.inner_value">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">inner_value</tt><big>(</big><em>somelist</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.inner_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return somelist[0] a one-element list or the whole list otherwise</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>somelist</strong> (<em>list</em>) &#8211; list that might contain only one element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">element of somelist of somelist</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="mi">42</span><span class="p">])</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="mi">42</span><span class="p">,</span><span class="mi">43</span><span class="p">])</span>
+<span class="go">[42, 43]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([[</span><span class="mi">42</span><span class="p">]])</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([[</span><span class="mi">42</span><span class="p">,</span><span class="mi">43</span><span class="p">]])</span>
+<span class="go">[42, 43]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">(</span><span class="s">&#39;spam&#39;</span><span class="p">)</span>
+<span class="go">&#39;spam&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="s">&#39;spam&#39;</span><span class="p">])</span>
+<span class="go">&#39;spam&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="s">&#39;spam&#39;</span><span class="p">,</span><span class="s">&#39;eggs&#39;</span><span class="p">,</span><span class="s">&#39;bacon&#39;</span><span class="p">])</span>
+<span class="go">[&#39;spam&#39;, &#39;eggs&#39;, &#39;bacon&#39;]</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This method does not work for dictionaries (KeyError) 
+or single character strings (infinite recursion)!</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.read2dseq">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>procdirname</em>, <em>arrayTranspose=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns BRUKER&#8217;s 2dseq file as a properly dimensioned array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>procdirname</strong> (<em>string</em>) &#8211; filename of directory that contains the processed data</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary with data, and headerinformation. The data is
+an array of BRUKER-reconstructed image data in the respecive proc
+directory.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict with &#8216;data&#8217;:numpy array &#8216;header&#8217;:dict{&#8216;recpo&#8217;:..., &#8216;d3proc&#8217;:...}</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body">IOERROR if directory non-existent</td>
+</tr>
+</tbody>
+</table>
+<p>This relies on numpy&#8217;s array functionality</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.readJCAMP">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readJCAMP</tt><big>(</big><em>filename</em>, <em>removebrackets=True</em>, <em>typecast=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readJCAMP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse text file in JCAMP format</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> (<em>string</em>) &#8211; filename of fid file</li>
+<li><strong>removebrackets</strong> (<em>boolean</em>) &#8211; format strings without extra brackets?</li>
+<li><strong>typecast</strong> (<em>boolean</em>) &#8211; attempt to cast values of records to int/floats/strings/
+a list of the above (Default: False) - this feature is a tad
+experimental</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary of labelled data records (LDR) with LDR-names as keys
+and their content as values.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">IOERROR if opening file fails or passes on any other error</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The <em>JCAMP format</em> is a self-documenting, ASCII text file format
+that is maintained by IUPAC (<a class="reference external" href="http://iupac.org/publications/pac/78/3/0613/">see a report
+here</a>).
+It consists of labelled data records (LDR) that start with a ##
+and end when the next record begins.
+They can span several lines. The data label is
+enclosed between &#8216;##&#8217; and &#8216;=&#8217;. If it starts with a $, we are
+dealing with a private LDR.</p>
+<p>The issue of reading these is complicated due to the various
+types of data (integers, floats, strings, arrays and nested
+structures) that can be present. A currently experimental feature is the
+typecasting of the records into all these different datatypes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.readRFshape">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readRFshape</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readRFshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>reads BRUKERS RF shape files spnam0 etc that are stored with experiments</p>
+<p>returns a dictionary with ready-to-use attributes for amplitude,
+phase, bandwidth etc.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.readfid">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readfid</tt><big>(</big><em>fptr=None</em>, <em>untouched=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readfid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns BRUKER&#8217;s fid file as a properly dimensioned &amp; rearranged array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fptr</strong> (<em>string or FileType</em>) &#8211; filename of fid file or filehandle to open fid file</li>
+<li><strong>untouched</strong> (<em>boolean</em>) &#8211; leave the fid as found without rearranging lines into slices and echos?</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Flat (untouched = True) or Rearranged and assembled array of the acquire k-space</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">numpy array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">IOERROR if filesize and matrix description appear to be inconsistent</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/datalink/Moosvi.ii1/3/fid&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(128, 128, 3, 1)</span>
+</pre></div>
+</div>
+<p><strong>BRUKER manual D.14 File Formats (Raw data files)</strong></p>
+<blockquote>
+<div><p>The reconstruction assumes that the raw data to be reconstructed will
+be located in a file named either fid or ser in the EXPNO directory.
+Any averaging of the raw data must be done before the data is written
+to the file, no post-acquisition averag- ing is done by the
+reconstruction.</p>
+<dl class="docutils">
+<dt>K-format</dt>
+<dd>The raw data file must be written in K-format to be processed by the TOPSPIN
+processing software.  This means that every profile must be written
+to the file at a posi- tion which is a multiple of 1K-bytes (1024 bytes).
+Datasets which are imported may need to be reformatted. Both little-endian
+and big-endian word formats are sup- ported, the BYTORDA parameter in the
+acqp parameter file is assumed to correctly specify the format of the
+raw data file. Finally, the raw data file is assumed to contain data only,
+without any headers.</dd>
+<dt>Packed format</dt>
+<dd>Data to be processed with ParaVision can also be stored in packed format.
+For this purpose the parameter GO_block_size must be set to continuous.</dd>
+<dt>Integer formats</dt>
+<dd>By default, raw data is stored in 32-bit signed integer format, real and
+imaginary points of the complex signal interleaved. For applications where
+the data range may not exceed 16-bit, e.g. when accumulation and oversampling
+are disabled in analog mode, data can be stored as 16-bit short integers,
+setting the parameter GO_raw_data_format to GO_16BIT_SGN_INT. A warning
+message is displayed if an overflow occurs during data acquisition.</dd>
+<dt>Floating point format</dt>
+<dd>Alternatively, data can be stored in floating point format:
+GO_raw_data_format = GO_32BIT_FLOAT. Note, that data not acquired in the
+default 32-bit signed integer format cannot be processed with TOPSPIN but
+only by the ParaVision reconstruction.</dd>
+<dt>Order of data storage</dt>
+<dd><p class="first">The raw data file usually contains the data in the order of acquisition.
+There is only one exception: in case a pipeline filter (AU) is used to
+process the raw data, the order of data storage is defined by the output
+order of the filter.</p>
+<p>For raw datasets acquired by ParaVision methods, ordering and size of the
+data are described by the ACQP parameters contained in the file acqp:</p>
+<blockquote class="last">
+<div><ul>
+<li><p class="first">ACQ_dim - Spatial/spectroscopic dimension of the experiment.</p>
+</li>
+<li><p class="first">ACQ_size[ ] - Array of length ACQ_dim with length of the given dimensions.
+ACQ_size[0] counts real valued data and for this it must be an even number.
+Real and imaginary data is stored shuffled. For experiments acquired with
+multiple receivers (ACQ_experiment_mode == ParallelExperiment) the scans
+from different receivers are appended. The number of active receivers is
+derived from the number of selected receivers in the parameter array
+GO_ReceiverSelect.</p>
+</li>
+<li><p class="first">NI - Number of objects.</p>
+</li>
+<li><p class="first">ACQ_obj_order - Permutation of the order of the acquired objects.</p>
+</li>
+<li><p class="first">ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
+to the same Object. Typically, this parameter is set to 1 which will keep
+the cod- ing constant within a Multiplex step. If ACQ_phase_factor &gt; 1,
+this parameter will give the number of consecutively acquired phase encoding
+steps that belong to a single Object. Concerning phase increment:
+see ACQ_rare_factor.</p>
+</li>
+<li><p class="first">ACQ_phase_enc_mode[ ] - Ordering scheme for scans within the k-space.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">parameter seems to be renamed to ACQ_phase_encoding_mode</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">ACQ_phase_enc_start[ ] - For positioning of first scan in phase encoding
+scheme.</p>
+</li>
+<li><p class="first">ACQ_rare_factor - For positioning of the ACQ_phase_factor scans within the
+k-space. In the case of ACQ_phase_factor &gt; 1 the phase encoding increment
+is determined by ACQ_size[1] / ACQ_rare_factor.
+ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.</p>
+</li>
+<li><p class="first">NR - Number of repeated experiments within the dataset.</p>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.readfidspectro">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readfidspectro</tt><big>(</big><em>fptr=None</em>, <em>untouched=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readfidspectro" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns BRUKER&#8217;s fid file as a properly dimensioned &amp; rearranged array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fptr</strong> (<em>string or FileType</em>) &#8211; filename of fid file or filehandle to open fid file</li>
+<li><strong>untouched</strong> (<em>boolean</em>) &#8211; Do not rearrange lines into slices and echos and such
+in the fid in its form as found on disk</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">array of kspace data</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">numpy.array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">AssertError for various inconsistencies in data size or simply
+misunderstandings of how the data is to be interpreted.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.typecast_dict_elements">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">typecast_dict_elements</tt><big>(</big><em>hetero_dict</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.typecast_dict_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary of previously only string values in a typecast form</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>hetero_dict</strong> (<em>dict</em>) &#8211; input dictionary of heteregenous type (int, float, etc.)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary with values cast to int, float etc</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+<p>Here are some example calls:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: 1.31}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;Spam&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: &#39;Spam&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31 123&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: [1.31, 123.0]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31 123 string&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: &#39;1.31 123 string&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;(1, 2, &lt;&gt;) (3, 4, &lt;&gt;)&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key&#39;: [[&#39;1&#39;, &#39; 2&#39;, &#39; &lt;&gt;&#39;], [&#39;3&#39;, &#39; 4&#39;, &#39; &lt;&gt;&#39;]]}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-test.test_BRUKERIO">
+<span id="test-documentation"></span><h2>Test documentation<a class="headerlink" href="#module-test.test_BRUKERIO" title="Permalink to this headline">¶</a></h2>
+<p>Test Routines for BRUKERIO</p>
+<dl class="class">
+<dt id="test.test_BRUKERIO.Test">
+<em class="property">class </em><tt class="descclassname">test.test_BRUKERIO.</tt><tt class="descname">Test</tt><big>(</big><em>methodName='runTest'</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/test/test_BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_BRUKERIO.Test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unit tests for readfid.</p>
+<dl class="method">
+<dt id="test.test_BRUKERIO.Test.test_doctests">
+<tt class="descname">test_doctests</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/test/test_BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_BRUKERIO.Test.test_doctests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the doctests</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="test.test_BRUKERIO.Test.test_readfid">
+<tt class="descname">test_readfid</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/test/test_BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_BRUKERIO.Test.test_readfid" title="Permalink to this definition">¶</a></dt>
+<dd><p>BRUKERIO.io.readfid()</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-SARlabpy.io.SARlogger">
+<span id="sarlogger-documentation"></span><h2>SARlogger documentation<a class="headerlink" href="#module-SARlabpy.io.SARlogger" title="Permalink to this headline">¶</a></h2>
+<p>Custom Logger to be used across modules</p>
+<p>To setup logging in your code. Your module needs to initiate logging using
+the custom SARlogger.Good info to be found at the 
+<a class="reference external" href="http://docs.python.org/2/howto/logging.html#logging-basic-tutorial">Logging Tutorial</a>.</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="c"># setup logging</span>
+<span class="kn">import</span> <span class="nn">SARlogger</span>
+<span class="n">logger</span><span class="o">=</span><span class="n">SARlogger</span><span class="o">.</span><span class="n">setup_custom_logger</span><span class="p">(</span><span class="s">&#39;root&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Currently BRUKERIO instantiates such a logger. You can get access to it through 
+the module variable: BRUKERIO.logger or you can access it by finding where the
+&#8216;root&#8217; logger is:</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;root&#39;</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In either case you can then emit messages in your code 
+(whereever logger is accessible):</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;this is a debug message&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Documentation</a><ul>
+<li><a class="reference internal" href="#module-SARlabpy.io.BRUKERIO">BRUKERIO documentation</a></li>
+<li><a class="reference internal" href="#module-test.test_BRUKERIO">Test documentation</a></li>
+<li><a class="reference internal" href="#module-SARlabpy.io.SARlogger">SARlogger documentation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="BRUKERIOexamples.html"
+                        title="previous chapter">Examples for BRUKERIO</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Module-Documentation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
+             >previous</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, SARlab members.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
+    </div>
+  </body>
+</html>

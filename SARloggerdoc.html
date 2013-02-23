@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SARlogger documentation &mdash; SARlabpy 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="SARlabpy 0.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="sarlogger-documentation">
+<h1>SARlogger documentation<a class="headerlink" href="#sarlogger-documentation" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-SARlabpy.io.SARlogger"></span><p>Custom Logger to be used across modules</p>
+<p>To setup logging in your code. Your module needs to initiate logging using
+the custom SARlogger.Good info to be found at the 
+<a class="reference external" href="http://docs.python.org/2/howto/logging.html#logging-basic-tutorial">Logging Tutorial</a>.</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="c"># setup logging</span>
+<span class="kn">import</span> <span class="nn">SARlogger</span>
+<span class="n">logger</span><span class="o">=</span><span class="n">SARlogger</span><span class="o">.</span><span class="n">setup_custom_logger</span><span class="p">(</span><span class="s">&#39;root&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Currently BRUKERIO instantiates such a logger. You can get access to it through 
+the module variable: BRUKERIO.logger or you can access it by finding where the
+&#8216;root&#8217; logger is:</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;root&#39;</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In either case you can then emit messages in your code 
+(whereever logger is accessible):</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;this is a debug message&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/SARloggerdoc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, SARlab members.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
+    </div>
+  </body>
+</html>
