@@ -501,6 +501,10 @@ def read2dseq(procdirname, typecast=False):
     data = numpy.fromfile(file=procdirname+'/2dseq',
                           dtype=dtype).reshape(RECO_size)
                           
+    # Deal with RECO_slope (added by FM)
+    RECO_map_slope = reco['RECO_map_slope']
+    data = data/RECO_map_slope
+                          
     return {'data':data,
             'isImage':True,
             'header':{'reco': reco, 'd3proc':d3proc}}
