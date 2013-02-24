@@ -20,7 +20,7 @@ if __name__ == '__main__':
       description='Data Analysis of MR data acquired on BRUKER and other systems',
       long_description=long_description, 
       package_dir={'': 'SARlabpy'},
-      py_modules=['SARlabpy','BRUKERIO],
+      py_modules=['SARlabpy','BRUKERIO'],
       provides=['SARlabpy'],
       keywords='MRI image processing data analysis',
       license='General Public License v3',
