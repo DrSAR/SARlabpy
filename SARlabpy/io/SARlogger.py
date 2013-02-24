@@ -32,10 +32,13 @@ In either case you can then emit messages in your code
    logger.debug('this is a debug message')
 """
 
+print('SARlogger imported: %s' % __name__)
 import logging
 
-def setup_custom_logger(name):
-    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+def setup_custom_logger(name, level=None):
+    level = level or logging.DEBUG
+    formatter = logging.Formatter(fmt=
+            '%(asctime)s - %(levelname)s - %(module)s - %(message)s')
 
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
@@ -43,4 +46,6 @@ def setup_custom_logger(name):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)
+    while len(logger.handlers)>1:
+        logger.removeHandler(logger.handlers[0])
     return logger

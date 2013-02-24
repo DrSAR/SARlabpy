@@ -6,6 +6,7 @@
 
 Handy functions to read BRUKER data and header files.
 """
+print('BRUKERIO imported: %s' % __name__)
 
 import numpy
 import os.path
@@ -15,9 +16,6 @@ from types import StringType, FileType
 # setup logging
 import SARlogger
 logger=SARlogger.setup_custom_logger('root')
-
-#logging.basicConfig(format='{0}:%(levelname)s:%(message)s'.format(__name__),
-#                    level=logging.DEBUG)
 
 from itertools import tee, izip
 def pairwise(iterable):
@@ -31,12 +29,11 @@ def pairwise(iterable):
     next(b, None)
     return izip(a, b)
 
-def readJCAMP(filename, removebrackets=True, typecast=False):
+def readJCAMP(filename):
     """
     Parse text file in JCAMP format
 
     :param string filename: filename of fid file
-    :param boolean removebrackets: format strings without extra brackets?
     :param boolean typecast:
         attempt to cast values of records to int/floats/strings/
         a list of the above (Default: False) - this feature is a tad
@@ -75,8 +72,8 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
     # LDR on its own line
     LDRlist = [] # start with empty list
 #    LDRmetadict = {} # meta info about array dimensions for each entry
-    JCAMPline_iterator = pairwise(JCAMPdata)
-    for line, next_line in JCAMPline_iterator:
+    JCAMPdata_iterator = pairwise(JCAMPdata)
+    for line, next_line in JCAMPdata_iterator:
         # match location comment (of the form "$$ /*")
         if re.match("\\$\\$ \\/", line):
             line = [re.sub("\\$\\$ ", "##$FILE_LOCATION=", line)]
@@ -95,7 +92,7 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
             # the LDR
             while not re.match(r'[#\$]{2}', next_line):
                 line=line+' '+ next_line
-                newline, next_line = JCAMPline_iterator.next()
+                newline, next_line = JCAMPdata_iterator.next()
             # we should keep information about array dimensions in a
             # separate meta storage list
             line = [line]
@@ -119,54 +116,67 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
     for k, v in LDRdict.iteritems():
         # is it an array or struct? (signified by the size indicator)
         if not re.match(r'\(', v):
-            # we have an int/float/string
+            # we have an int/float/simple string
             try:
                 LDRdict[k] = int(v)
+                logger.debug('found int: {0}={1}'.format(k,LDRdict[k]))
             except ValueError:
                 try:
                     LDRdict[k] = float(v)
+                    logger.debug('found float: {0}={1}'.format(k,LDRdict[k]))
                 except ValueError:
                     LDRdict[k] = v
+                    logger.debug('found simple string: {0}={1}'.
+                            format(k,LDRdict[k]))
         else:
             # this isunfortunately harder. Let's get the array dimensions:
-            # is there a string following the 'array' definition? 
-            string_match = re.match(r'\(([^\)]*)\) *([^ ].*)', v)
-            assert string_match is not None, (
-                    'Error parsing parameter file:\n%s = %s' % k, v)
-            if re.match('<', string_match.group(2)):
-                # this is a string
-                LDRdict[k] = string_match.group(2).strip('<>')
-                continue
-            elif re.match('\(', string_match.group(2)):
-                # this is a (nested?) structure
-                list_level_one = [s.strip(' ()')
-                                  for s in re.split('\) *\(', 
-                                  string_match.group(2))]
-                if len(list_level_one) > 1:
-                    LDRdict[k] = [list_element.
-                            split(',') for list_element in list_level_one]
+            # is there something following the 'array' definition? 
+            struc_match = re.match(r'\(([^\)]*)\)$', v)
+            if struc_match:
+                # it starts and ends with a round bracket.
+                # this is actually a structure (without dimension instructions)
+                v = struc_match.group(1)
+                shape = [1]
+                logger.debug('found dim-less structure({2})): {0}={1}'.
+                            format(k,v,shape))
+            else:                
+                string_match = re.match(r'\(([^\)]*)\) *([^ ].*)', v)
+                assert string_match is not None, 'Cannot parse parameter file'
+                v = string_match.group(2)
+                shape = [int(s) for s in string_match.group(1).split(',')]
+                if re.match('<', v):
+                    # this is a string
+                    LDRdict[k] = v.strip('<>')
+                    logger.debug('found string): {0}={1}'.
+                                format(k,LDRdict[k]))
+                    continue
+                elif re.match('\(', v):
+                    # this is a (nested?) structure
+                    list_level_one = [s.strip(' ()')
+                                      for s in re.split('\) *\(', 
+                                      v)]
+                    if len(list_level_one) > 1:
+                        LDRdict[k] = [list_element.
+                                split(',') for list_element in list_level_one]
+                    else:
+                        LDRdict[k] = inner_value(v)
+                    logger.debug('found comlex structure): {0}={1}'.
+                                format(k,LDRdict[k]))
                 else:
-                    LDRdict[k] = inner_value(v)
-            else:
-                # this is a proper array
-                split_string = [s for s in re.split(' ',string_match.group(2))]
-                try:
-                    # is this a homogeneous list of ints?
-                    LDRdict[k] = [int(s) for s in split_string if s]
-                except ValueError:
+                    # this is a proper array
+                    split_string = [s for s in re.split(' ',v)]
                     try:
-                        #no? maybe it's a list of floats?
-                        LDRdict[k] = [float(s) for s in split_string if s]
+                        # is this a homogeneous list of ints?
+                        LDRdict[k] = [int(s) for s in split_string if s]
                     except ValueError:
-                        # no? has got to be a list of strings (enumeration?)
-                        LDRdict[k] = split_string
-            shape = [int(s) for s in string_match.group(1).split(',')]
-            try:
-                LDRdict[k]=numpy.array(LDRdict[k]).reshape(shape)
-            except ValueError:
-                logger.warning('reshaping parameter {0} differently ..'.format(
-                        k))
-
+                        try:
+                            #no? maybe it's a list of floats?
+                            LDRdict[k] = [float(s) for s in split_string if s]
+                        except ValueError:
+                            # no? has got to be a list of strings (enumeration?)
+                            LDRdict[k] = split_string
+                    logger.debug('found array({1}): {0}={2}'.
+                                format(k,shape,LDRdict[k]))
     return LDRdict
 
 def inner_value(somelist):
@@ -302,8 +312,9 @@ def readfid(fptr=None, untouched=False):
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
-    logger.debug('loading %s' % fidname)
-    acqp = readJCAMP(dirname + "/acqp", typecast=True)
+    logger.info('loading %s' % fidname)
+    acqp = readJCAMP(dirname + "/acqp")
+    method = readJCAMP(dirname + '/method')
 
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
@@ -350,6 +361,8 @@ def readfid(fptr=None, untouched=False):
     ACQ_phase_factor = acqp['ACQ_phase_factor']
     ACQ_phase_encoding_mode = acqp['ACQ_phase_encoding_mode']
     ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
+    # RARE factor sort of indicates how many PE shots are spend on one slice
+    # before moving on to next object (slice?) as defined in AQ_obj_order
     ACQ_rare_factor = acqp['ACQ_rare_factor']
 
     # 2D vs 3D issues about slices etc.
@@ -363,28 +376,24 @@ def readfid(fptr=None, untouched=False):
     else:
         encoding = [1, 1, 1, 0] # dimensions that require FFT
 
-
-    # RARE factor sort of indicates how many PE shots are spend on one slice
-    # before moving on to next object (slice?) as defined in AQ_obj_order
-    ACQ_rare_factor = acqp['ACQ_rare_factor']
     #find the sequence of k-space lines
     # this information should be stored in the PVM_EncSteps1
     # parameter of the methods file. It appears to be missing from
     # EPI data
-    EncSteps = numpy.array(acqp['ACQ_spatial_phase_1'])*acqp[
-                                                       'ACQ_spatial_size_1']/2
-    EncSteps = (EncSteps - min(EncSteps)).astype('int')
-    method = readJCAMP(dirname + '/method', typecast=True)
-#    try:
-#        PVM_EncSteps1 = method['PVM_EncSteps1']
-#        #ensure that it runs from 0 to max
-#        PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
-#    except KeyError:
-#        print('Warning: PVM_EncSteps1 missing from method parameter file')
-#        PVM_EncSteps1 = numpy.arange(ACQ_size[1])
-#
-#    print EncSteps
-#    print PVM_EncSteps1
+    try:
+        EncSteps = numpy.array(acqp['ACQ_spatial_phase_1']
+                    )*acqp['ACQ_spatial_size_1']/2
+        EncSteps = (EncSteps - min(EncSteps)).astype('int')
+    except KeyError:
+        logger.info('ACQ_spatial_phase_1 not found in acqp, '+
+                'trying PVM_EncSteps1 from method')
+        try:
+            PVM_EncSteps1 = method['PVM_EncSteps1']
+            # ensure that it runs from 0 to max
+            EncSteps = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
+        except KeyError:
+            logger.warning('PVM_EncSteps1 missing from method parameter file')
+            EncSteps = numpy.arange(ACQ_size[1])
 
     # load data
     data = numpy.fromfile(fptr, dtype = dtype)
@@ -396,7 +405,7 @@ def readfid(fptr=None, untouched=False):
     # the following is faster by a factor of 6 to 7!!!
     fid = data.astype(numpy.float32).view(numpy.complex64)
 
-    logger.debug('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
+    logger.info('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
                    format(ACQ_size, NR, ACQ_obj_order, EncSteps))
 
     if untouched:
@@ -417,14 +426,12 @@ def readfid(fptr=None, untouched=False):
 
         # reshape into a large 2D array with dimensions
         # [readsize, nr(objorder)*phase*NR]
-        logger.debug('size(fid) = {0} ?=? ACQ_size*NR={1}'.
-                      format(numpy.shape(fid), ACQ_size[0] *
-                             ACQ_size[1] * ACQ_size[2] * NR))
-        if numpy.size(fid) < (ACQ_size[0] * ACQ_size[1] * ACQ_size[2] * NR):
-            logger.warning('''WARNING:    parameter file describes a file that is
-                            larger than what is actually found in */fid''')
+        if numpy.size(fid) != (ACQ_size[0] * ACQ_size[1] * ACQ_size[2] * NR):
+            logger.warning('size(fid) = {0} != {1} = ACQ_size*NR'.
+                      format(numpy.shape(fid)[0], ACQ_size[0] *
+                             ACQ_size[1] * ACQ_size[2] * NR))             
             NR = numpy.size(fid) / (ACQ_size[0]*ACQ_size[1]*ACQ_size[2])
-            print ('            NR reset to {0}'.format(NR))
+            logger.warning('NR reset to {0}'.format(NR))
             fid = fid[0:ACQ_size[0]*ACQ_size[1]*ACQ_size[2]*NR]
 
         tempfid = fid.reshape(ACQ_size[1]*ACQ_size[2]*NR, ACQ_size[0])
@@ -489,7 +496,7 @@ def readfidspectro(fptr=None, untouched=False):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
     print(dirname)
-    acqp = readJCAMP(dirname+"/acqp", typecast=True)
+    acqp = readJCAMP(dirname+"/acqp")
 
     assert "Spectroscopic" in acqp['ACQ_dim_desc'] ,(
             "Problem: Could this be an imaging instead of a spectro scan?")
@@ -747,4 +754,4 @@ if __name__ == "__main__":
 #    import doctest
 #    doctest.testmod()
     fn = os.path.expanduser('~/datalink/readfidTest.ix1/1/acqp')
-    hdr=readJCAMP(fn,typecast=True)
+    hdr=readJCAMP(fn)
