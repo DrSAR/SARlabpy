@@ -61,7 +61,7 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
 
     except IOError as (errno, strerror):
         print "There was an I/O error({0}): {1}".format(errno, strerror)
-        raise IOError, strerror
+        raise IOError, (strerror+' '+filename)
     except:
         print "Unexpected error:", sys.exc_info()[0]
         raise
