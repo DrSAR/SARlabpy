@@ -9,7 +9,6 @@ Handy functions to read BRUKER data and header files.
 
 import numpy
 import os.path
-from datetime import datetime
 import re
 from types import StringType, FileType
 
@@ -20,6 +19,17 @@ logger=SARlogger.setup_custom_logger('root')
 #logging.basicConfig(format='{0}:%(levelname)s:%(message)s'.format(__name__),
 #                    level=logging.DEBUG)
 
+from itertools import tee, izip
+def pairwise(iterable):
+    """
+    This is a solution to the problem of looking ahead in a for loop
+    mentioned in on `stackoverflow: 
+        <http://stackoverflow.com/questions/4197805/python-for-loop-look-ahead>`_
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    """
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)
 
 def readJCAMP(filename, removebrackets=True, typecast=False):
     """
@@ -51,138 +61,106 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
     structures) that can be present. A currently experimental feature is the
     typecasting of the records into all these different datatypes.
     """
-    import sys
 
     try:
         logger.debug("opening {0}".format(filename))
         JCAMPfile = open(filename, "r")
         JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
         JCAMPfile.close()
-
     except IOError as (errno, strerror):
         print "There was an I/O error({0}): {1}".format(errno, strerror)
         raise IOError, strerror
-    except:
-        print "Unexpected error:", sys.exc_info()[0]
-        raise
 
-    else:
-
-        # let's loop through the file, remove comments and put each
-        # LDR on its own line
-        LDRlist = [] # start with empty list
-        for line in JCAMPdata:
-
-            # match location comment
-            if re.match("\\$\\$ \\/.*", line):
-                line = [re.sub("\\$\\$ ", "##$FILE_LOCATION=", line)]
-
-            # match date comment (assumes there is nothing else in the comments)
-            elif re.match("\\$\\$ [^@].*", line):
-                line = re.sub("\\$\\$ ", "##$DATE=", line)
-                uname = "##$USERNAME="+(line.split(' '))[-1]
-                line = re.sub("[^ ]+$", "", line) # remove username
-                line = [line, uname]
-
-            # match all other comments
-            elif re.match("\\$\\$ @.*", line):
-                line = []
-
-            # match lists that are normal LDRs
-            elif re.match("##.*", line):
-                # we should remove parenthesis
-                if removebrackets:
-                    line = re.sub("\\(.*\\)", "", line)
-                line = [line]
-
-            # this must be a line that belongs to the preceeding LDR
-            # attach this to the line that was previously appended to
-            # the LDRlist
-            else:
-                LDRlist[-1] = LDRlist[-1] + " " + line
-                line = []
-
-            #add this to the list of LDRs
-            LDRlist.extend(line)
-
-        # use python list comprehension to strip every labelled
-        # data record of its preceding ## or ##$.
-        LDRlist = [re.sub('##[\\$]*', '', LDR) for LDR in LDRlist]
-
-        # use python list comprehension to split every LDR at the
-        # " = " sign and turn it into a dictionary entry
-        LDRdict = dict([LDR.split("=") for LDR in LDRlist])
-
-        if typecast:
-            return typecast_dict_elements(LDRdict)
+    # let's loop through the file, remove comments and put each
+    # LDR on its own line
+    LDRlist = [] # start with empty list
+#    LDRmetadict = {} # meta info about array dimensions for each entry
+    JCAMPline_iterator = pairwise(JCAMPdata)
+    for line, next_line in JCAMPline_iterator:
+        # match location comment (of the form "$$ /*")
+        if re.match("\\$\\$ \\/", line):
+            line = [re.sub("\\$\\$ ", "##$FILE_LOCATION=", line)]
+        # match date comment (assumes there is nothing else in the comments)
+        elif re.match("\\$\\$ [^@]", line):
+            line = re.sub("\\$\\$ ", "##$DATE=", line)
+            uname = "##$USERNAME="+(line.split(' '))[-1]
+            line = re.sub("[^ ]+$", "", line) # remove username
+            line = [line, uname]
+        # match all other comments
+        elif re.match("\\$\\$ @", line):
+            line = []
+        # match lists that are normal LDRs
+        elif re.match("##", line):
+            # we also need to append the next line(s) if they are part of
+            # the LDR
+            while not re.match(r'[#\$]{2}', next_line):
+                line=line+' '+ next_line
+                newline, next_line = JCAMPline_iterator.next()
+            # we should keep information about array dimensions in a
+            # separate meta storage list
+            line = [line]
+        # this must be a line that belongs to the preceeding LDR
+        # attach this to the line that was previously appended to
+        # the LDRlist
         else:
-            return LDRdict
+            raise IOError('encountered line that cannot be here:\n{0}'.
+            format(line,next_line))
+#            LDRlist[-1] = LDRlist[-1] + " " + line
+#            line = []
+        #add this to the list of LDRs
+        LDRlist.extend(line)
 
-def typecast_dict_elements(hetero_dict):
-    '''
-    Return a dictionary of previously only string values in a typecast form
+    # strip every labelled data record of its preceding ## or ##$.
+    LDRlist = [re.sub('##[\\$]*', '', LDR) for LDR in LDRlist]
 
-    :param dict hetero_dict:
-        input dictionary of heteregenous type (int, float, etc.)
-    :return: dictionary with values cast to int, float etc
-    :rtype: dict
-
-    Here are some example calls:
-
-        >>> typecast_dict_elements({'key':'1'})
-        {'key': 1}
-        >>> typecast_dict_elements({'key':'1.31'})
-        {'key': 1.31}
-        >>> typecast_dict_elements({'key':'Spam'})
-        {'key': 'Spam'}
-        >>> typecast_dict_elements({'key':'1.31 123'})
-        {'key': [1.31, 123.0]}
-        >>> typecast_dict_elements({'key':'1.31 123 string'})
-        {'key': '1.31 123 string'}
-        >>> typecast_dict_elements({'key':'(1, 2, <>) (3, 4, <>)'})
-        {'key': [['1', ' 2', ' <>'], ['3', ' 4', ' <>']]}
-
-    '''
-    for dict_item in hetero_dict:
-        try:
-            # is it just an int?
-            hetero_dict[dict_item] = int(hetero_dict[dict_item])
-        except ValueError:
+    # split every LDR at the " = " sign and turn it into a dictionary entry
+    LDRdict = dict([LDR.split("=") for LDR in LDRlist])
+    
+    for k, v in LDRdict.iteritems():
+        # is it an array or struct? (signified by the size indicator)
+        if not re.match(r'\(', v):
+            # we have an int/float/string
             try:
-                #maybe it is just a float then?
-                hetero_dict[dict_item] = float(hetero_dict[dict_item])
+                LDRdict[k] = int(v)
             except ValueError:
-# no, then this is currently a string in one of three flavours
-# Case 1: array of ints. 'ACQ_phase_enc_start': ' -1 -1',
-# Case 2: array of floats. 'ACQ_spatial_phase_1': 
-#                ' -1 -0.9583 -0.9166 -0.875 -0.8333 ...
-# Case 3: weird combo. 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) 
-#                 (<fermi.exc>, 115.8030276379, 0)
-                split_string = [s for s in re.split(' ',
-                                                    hetero_dict[dict_item]) if s]
                 try:
-                    #is this a homogeneous list of ints?
-                    hetero_dict[dict_item] = [int(s) for
-                                          s in split_string]
+                    LDRdict[k] = float(v)
+                except ValueError:
+                    LDRdict[k] = v
+        else:
+            # this isunfortunately harder. Let's get the array dimensions:
+            # is there a string following the 'array' definition? 
+            string_match = re.match(r'\(([^\)]*)\) *([^ ].*)', v)
+            assert string_match is not None, (
+                    'Error parsing parameter file:\n%s = %s' % k, v)
+            if re.match('<', string_match.group(2)):
+                # this is a string
+                LDRdict[k] = string_match.group(2).strip('<>')
+                continue
+            elif re.match('\(', string_match.group(2)):
+                # this is a (nested?) structure
+                list_level_one = [s.strip(' ()')
+                                  for s in re.split('\) *\(', 
+                                  string_match.group(2))]
+                if len(list_level_one) > 1:
+                    LDRdict[k] = [list_element.
+                            split(',') for list_element in list_level_one]
+                else:
+                    LDRdict[k] = inner_value(v)
+            else:
+                # this is a proper array
+                split_string = [s for s in re.split(' ',string_match.group(2))]
+                try:
+                    # is this a homogeneous list of ints?
+                    LDRdict[k] = [int(s) for s in split_string if s]
                 except ValueError:
                     try:
-                        #no? maybe it is a homogeneous list of floats?
-                        hetero_dict[dict_item] = [float(s) for
-                                              s in split_string]
-                        #this was a homogeneous list of floats
+                        #no? maybe it's a list of floats?
+                        LDRdict[k] = [float(s) for s in split_string if s]
                     except ValueError:
-                        # Case 3: Array of floats, ints, and strings with funny brackets and such
-                        # Example: 'TPQQ': ' (<hermite.exc>, 16.4645986123031, 0) (<fermi.exc>, 115.8030276379, 0)
-                        list_level_one = [s.strip(' ()')
-                                for s in re.split('\) *\(', hetero_dict[dict_item])]
-                        if len(list_level_one)>1:
-                            hetero_dict[dict_item] = [list_element.split(',') for
-                                    list_element in list_level_one]
-                        else:
-                            hetero_dict[dict_item] = inner_value(
-                                                     hetero_dict[dict_item])
+                        LDRdict[k] = split_string
 
-    return hetero_dict
+    return LDRdict
 
 def inner_value(somelist):
     '''
@@ -759,8 +737,7 @@ def readRFshape(filename):
 
 # main part - run test cases if called as a module
 if __name__ == "__main__":
-    import os
-    fname = os.path.expanduser('/srv/brukerdata/stefan/nmr/Moosvi.ii1/3/fid')
-    kspace = readfid(fname)
-    import doctest
-    doctest.testmod()
+#    import doctest
+#    doctest.testmod()
+    fn = os.path.expanduser('~/datalink/readfidTest.ix1/1/acqp')
+    hdr=readJCAMP(fn,typecast=True)
