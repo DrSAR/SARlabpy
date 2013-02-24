@@ -158,7 +158,14 @@ def readJCAMP(filename, removebrackets=True, typecast=False):
                         #no? maybe it's a list of floats?
                         LDRdict[k] = [float(s) for s in split_string if s]
                     except ValueError:
+                        # no? has got to be a list of strings (enumeration?)
                         LDRdict[k] = split_string
+            shape = [int(s) for s in string_match.group(1).split(',')]
+            try:
+                LDRdict[k]=numpy.array(LDRdict[k]).reshape(shape)
+            except ValueError:
+                logger.warning('reshaping parameter {0} differently ..'.format(
+                        k))
 
     return LDRdict
 
