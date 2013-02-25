@@ -12,33 +12,9 @@ import logging
 import pylab
 import numpy
 logger = logging.getLogger('root')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 print('test_BRUKERIO run: %s' % __name__)
-
-class Test(unittest.TestCase):
-    '''
-    Unit tests for readfid.
-    '''
-    
-    def test_doctests(self):
-        '''Run the doctests'''
-        logger.info('Running the doctests')
-        doctest.testmod(BRUKERIO)
-        
-    def test_readfid(self):
-        '''BRUKERIO.io.readfid()'''
-        logger.info('test_readfid')
-        fname = os.path.expanduser('~/datalink/readfidTest.ix1/3/fid')   
-        data = BRUKERIO.readfid(fname)
-        filesize = os.stat(fname).st_size
-        kspace = data['data']
-        logger.info('file size is {0}, and shape {1} '.format(filesize, kspace.shape))
-        for i in range(kspace.shape[2]):
-            arr = abs(kspace[:,:,i,0])
-            pylab.imshow('a', arr / arr.max()*10)
-            
-        self.assertEqual(kspace.shape, (128,64,11,1))
 
 fnameroot = os.path.expanduser('~/datalink/readfidTest.ix1/')
 scan_labels = {1:'Tripilot multi', 
@@ -61,6 +37,79 @@ scan_labels = {1:'Tripilot multi',
                17:'UTE 3D',
                18:'ZTE 3D'}
 
+ACQ_size_dict = {1: [256, 128],
+                10: [64, 32],
+                11: [64, 32],
+                12: [8192, 1],
+                13: [10094, 16],
+                14: [266, 105],
+                15: [1024],
+                16: [128, 402],
+                17: [128, 51360, 1],
+                18: [1024, 51896, 1],
+                2: [266, 105],
+                3: [266, 105, 25],
+                4: [266, 105],
+                5: [266, 105, 25],
+                6: [512, 256],
+                7: [266, 105],
+                8: [266, 105],
+                9: [266, 105],
+                99: [266, 105]}
+
+class Test(unittest.TestCase):
+    '''
+    Unit tests for readfid.
+    '''
+    
+    def test_doctests(self):
+        '''Run the doctests'''
+        logger.info('Running the doctests')
+        doctest.testmod(BRUKERIO)
+        
+    def test_readfid(self):
+        '''BRUKERIO.io.readfid()'''
+        logger.info('UNIT TEST: test_readfid')
+#        fname = os.path.expanduser('~/datalink/readfidTest.ix1/3/fid')   
+#        data = BRUKERIO.readfid(fname)
+#        kspace = data['data']
+#        self.assertEqual(kspace.shape, (256,105,1,1))
+#        # reshape array by stacking them together
+#        nslices = kspace.shape[2]
+#        kspace_stack = abs(numpy.hstack(
+#                        kspace[:,:,i,0] for i in range(0, nslices)))
+#        pylab.imshow(numpy.log(kspace_stack+100))
+#        pylab.show()
+        
+    def test_readJCAMP(self,skip=None):
+        '''
+        Test readJCAMP for exceptions by reading variety of acqp 
+        and method files
+        '''
+        logger.info('UNIT TEST: test_readJCAMP')
+        skip = skip or [] # default if sentry is None
+     
+        for k in [keys for keys in scan_labels.keys() if keys not in skip]:
+            logger.info('opening scan {0} which is "{1}"'.
+                         format(k,scan_labels[k]))
+            fname_acqp = fnameroot+str(k)+'/acqp'
+            fname_method = fnameroot+str(k)+'/method'
+    
+            acqp = BRUKERIO.readJCAMP(fname_acqp)
+            logger.info('ACQ_size = {0}'.format(acqp['ACQ_size']))
+            self.assertEqual(acqp['ACQ_O2_list'], [0])
+            ACQ_size = acqp['ACQ_size']
+            self.assertEqual(ACQ_size, ACQ_size_dict[k])
+
+            meth = BRUKERIO.readJCAMP(fname_method)
+            try:
+               PVM_EncMatrix = meth['PVM_EncMatrix']
+               PVM_EncMatrix[0] = 2*PVM_EncMatrix[0]
+               if k not in (12,13,16,17,18):
+                   self.assertEqual(ACQ_size, PVM_EncMatrix)
+            except KeyError:
+                logger.info('scan {0} has no PVM_EncMatrix'.format(k))
+    
 def stresstest_readfid(skip=None):
     '''
     test.test_BRUKERIO.stresstest_readfid(skip=[9,13,15])
@@ -92,35 +141,6 @@ def stresstest_readfid(skip=None):
         pylab.imshow(numpy.log(abs(panel)+abs(panel).max()/1000))
         pylab.show()
 
-def stresstest_readJCAMP(skip=None):
-    '''
-    Test readJCAMP for exceptions by reading variety of acqp 
-    and method files
-    '''
-    skip = skip or [] # default if sentry is None
-    logger.setLevel(logging.INFO)
- 
-    for k in [keys for keys in scan_labels.keys() if keys not in skip]:
-        logger.info('opening scan {0} which is "{1}"'.
-                     format(k,scan_labels[k]))
-        fname_acqp = fnameroot+str(k)+'/acqp'
-        fname_method = fnameroot+str(k)+'/method'
-
-        hdr = BRUKERIO.readJCAMP(fname_acqp)
-        try:
-#            print('ACQ_obj_order = {0}'.format(hdr['ACQ_obj_order']))
-#            print('ACQ_phase_factor = {0}'.format(hdr['ACQ_phase_factor']))
-#            print('ACQ_phase_encoding_mode = {0}'.
-#                                format(hdr['ACQ_phase_encoding_mode']))
-#            print('ACQ_phase_enc_start = {0}'.
-#                                format(hdr['ACQ_phase_enc_start']))
-#            print('ACQ_rare_factor = {0}'.format(hdr['ACQ_rare_factor']))
-            print('ACQ_spatial_phase_1 = {0}'.
-                    format((hdr['ACQ_spatial_phase_1'])))
-        except KeyError:
-            print('key not found!')
-        hdr = BRUKERIO.readJCAMP(fname_method)
-    
 if __name__ == "__main__":
-#    unittest.main()
-    stresstest_readfid(skip=[6,9,13,14,15])
+    unittest.main()
+#    stresstest_readfid(skip=[6,9,13,14,15])
