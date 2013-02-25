@@ -21,8 +21,8 @@ from itertools import tee, izip
 def pairwise(iterable):
     """
     This is a solution to the problem of looking ahead in a for loop
-    mentioned in on `stackoverflow: 
-        <http://stackoverflow.com/questions/4197805/python-for-loop-look-ahead>`_
+    mentioned in on `stackoverflow: <http://stackoverflow.com/questions/4197805/python-for-loop-look-ahead>`_
+    
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     """
     a, b = tee(iterable)
