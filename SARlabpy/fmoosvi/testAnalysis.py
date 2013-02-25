@@ -15,7 +15,7 @@ import pylab as py
 
 reload(sar)
 
-dir_name = '/Users/firas/data/NecS1/NecS1Hs02.hi1/8/pdata/1/';
+dir_name = os.path.expanduser('~/data/NecS1Hs02.hi1/8/pdata/1/');
 
 data_dict = sar.read2dseq(dir_name,typecast=True)
 

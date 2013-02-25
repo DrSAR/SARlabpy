@@ -466,6 +466,19 @@ def read2dseq(procdirname, typecast=False):
         reco = readJCAMP(procdirname+'/reco',typecast=True)
         d3proc = readJCAMP(procdirname+'/d3proc',typecast=True)
         
+        
+        ## Enhancement by Firas M. to also read in acqp and mehod files
+        # Currently non-pythonic because it requres inefficient code
+        
+        scandirname = os.path.split(procdirname)
+        scandirname = os.path.split(scandirname[0])
+        scandirname = os.path.split(scandirname[0])
+        
+        acqp = readJCAMP(scandirname[0]+'/acqp',typecast=True)
+        method = readJCAMP(scandirname[0]+'/method',typecast=True)
+
+        
+        
         RECO_size = [d3proc['IM_SIZ'], \
                      d3proc['IM_SIY'], \
                      d3proc['IM_SIX']]
@@ -502,12 +515,28 @@ def read2dseq(procdirname, typecast=False):
                           dtype=dtype).reshape(RECO_size)
                           
     # Deal with RECO_slope (added by FM)
-    RECO_map_slope = reco['RECO_map_slope']
-    data = data/RECO_map_slope
-                          
+    RECO_map_slope = reco['RECO_map_slope']    
+    #TODO - Fix this so that it divides it slice by slice in case reco slope is different
+    data = data/RECO_map_slope[0] # assues the reco map slope is the same for all slices
+    
+    # sort data properly if 4D data (e.g., DCE) 
+    
+    num_slices = int(method['PVM_SPackArrNSlices'])
+    reps = int(method['PVM_NRepetitions'])
+    
+    new_data = numpy.empty([d3proc['IM_SIZ']/reps, d3proc['IM_SIY'],d3proc['IM_SIX'],reps])
+    
+    if num_slices> 1: # have a 4D case:
+        
+        for slice in range(0,num_slices-1):
+        
+            new_data[slice,:,:,:] = data[slice::num_slices,:,:].transpose(1,2,0)
+        
+        data = new_data
+                                  
     return {'data':data,
             'isImage':True,
-            'header':{'reco': reco, 'd3proc':d3proc}}
+            'header':{'reco': reco, 'd3proc':d3proc, 'acqp': acqp, 'method': method}}
 
 def dict2string(d):
     '''
