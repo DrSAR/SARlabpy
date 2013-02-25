@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+BSanalysis.py # -*- coding: utf-8 -*-
 """
 Created on Tue Feb 19 11:36:19 2013
 
@@ -37,8 +37,8 @@ n_slice = current_data_dict['header']['d3proc']['IM_SIZ']
 
 currslice = math.floor(n_slice/2);
  
-TPQQ_BS = 20.24;
-pulse_width = 2E-3
+TPQQ_BS = float(data_dict['scan2']['header']['method']['BSPulse'][3]); # 20.24
+pulse_width = float(data_dict['scan2']['header']['method']['ExcPulse'][0])*1E-3 # actually it's 1e-3, AY had it 2E-3,
 integral_ratio = 0.071941
 TPQQ_POI = 5.00591
 KBS = 71.16
@@ -53,25 +53,17 @@ phase_diff = data_dict['scan2']['data'] - data_dict['scan3']['data'] + offset
 #phase_diff_unwrapped = numpy.unwrap(phase_diff,discont=2*numpy.pi)
 
 # Calculate B1 peak
-B1peak = numpy.sqrt(numpy.absolute(phase_diff)//(2*KBS))
+B1peak = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
 
-# Calculate the flip angle for the pulse of interest 
+# Calculate the flip angle for the pulse of interest
 gamma = 267.513e6
 
 #alpha_BS = gamma*B1peak/10000*10^((TPQQ_BS-TPQQ_POI)/20)*IntegRatio*Pulsewidth*180/pi;
-alpha_BS = (gamma*B1peak/10000) * (math.pow(10,TPQQ_BS-TPQQ_POI)/20) * integral_ratio*pulse_width*180/numpy.pi
+alpha_BS = (gamma*B1peak/10000) * (math.pow(10,(TPQQ_BS-TPQQ_POI)/20)) * integral_ratio*pulse_width*180/numpy.pi
 
 #py.imshow(data[40,:,:],cmap='Greys')
 
-
-
-
-
-
-
-
-
-
+py.imshow(alpha_BS[20,:,:])
 
 
 
