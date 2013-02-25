@@ -1,6 +1,14 @@
 io Package
 ==========
 
+:mod:`io` Package
+-----------------
+
+.. automodule:: SARlabpy.io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`BRUKERIO` Module
 ----------------------
 
@@ -13,6 +21,14 @@ io Package
 -----------------------
 
 .. automodule:: SARlabpy.io.SARlogger
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`congrid` Module
+---------------------
+
+.. automodule:: SARlabpy.io.congrid
     :members:
     :undoc-members:
     :show-inheritance:

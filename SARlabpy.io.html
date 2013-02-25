@@ -57,6 +57,9 @@
             
   <div class="section" id="io-package">
 <h1>io Package<a class="headerlink" href="#io-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">io</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-SARlabpy.io"></span></div>
 <div class="section" id="module-SARlabpy.io.BRUKERIO">
 <span id="brukerio-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">BRUKERIO</span></tt> Module<a class="headerlink" href="#module-SARlabpy.io.BRUKERIO" title="Permalink to this headline">¶</a></h2>
 <p>Collection of BRUKER input routines</p>
@@ -138,6 +141,14 @@ or single character strings (infinite recursion)!</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="SARlabpy.io.BRUKERIO.pairwise">
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">pairwise</tt><big>(</big><em>iterable</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.pairwise" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a solution to the problem of looking ahead in a for loop
+mentioned in on <a class="reference external" href="http://stackoverflow.com/questions/4197805/python-for-loop-look-ahead">stackoverflow:</a></p>
+<p>&#8220;s -&gt; (s0,s1), (s1,s2), (s2, s3), ...&#8221;</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.read2dseq">
 <tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>procdirname</em>, <em>arrayTranspose=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns BRUKER&#8217;s 2dseq file as a properly dimensioned array</p>
@@ -162,7 +173,7 @@ directory.</td>
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.readJCAMP">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readJCAMP</tt><big>(</big><em>filename</em>, <em>removebrackets=True</em>, <em>typecast=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readJCAMP" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">readJCAMP</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.readJCAMP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse text file in JCAMP format</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -170,7 +181,6 @@ directory.</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>filename</strong> (<em>string</em>) &#8211; filename of fid file</li>
-<li><strong>removebrackets</strong> (<em>boolean</em>) &#8211; format strings without extra brackets?</li>
 <li><strong>typecast</strong> (<em>boolean</em>) &#8211; attempt to cast values of records to int/floats/strings/
 a list of the above (Default: False) - this feature is a tad
 experimental</li>
@@ -359,39 +369,6 @@ misunderstandings of how the data is to be interpreted.</p>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="SARlabpy.io.BRUKERIO.typecast_dict_elements">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">typecast_dict_elements</tt><big>(</big><em>hetero_dict</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.typecast_dict_elements" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a dictionary of previously only string values in a typecast form</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>hetero_dict</strong> (<em>dict</em>) &#8211; input dictionary of heteregenous type (int, float, etc.)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary with values cast to int, float etc</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
-</tr>
-</tbody>
-</table>
-<p>Here are some example calls:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1&#39;</span><span class="p">})</span>
-<span class="go">{&#39;key&#39;: 1}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31&#39;</span><span class="p">})</span>
-<span class="go">{&#39;key&#39;: 1.31}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;Spam&#39;</span><span class="p">})</span>
-<span class="go">{&#39;key&#39;: &#39;Spam&#39;}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31 123&#39;</span><span class="p">})</span>
-<span class="go">{&#39;key&#39;: [1.31, 123.0]}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;1.31 123 string&#39;</span><span class="p">})</span>
-<span class="go">{&#39;key&#39;: &#39;1.31 123 string&#39;}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">typecast_dict_elements</span><span class="p">({</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="s">&#39;(1, 2, &lt;&gt;) (3, 4, &lt;&gt;)&#39;</span><span class="p">})</span>
-<span class="go">{&#39;key&#39;: [[&#39;1&#39;, &#39; 2&#39;, &#39; &lt;&gt;&#39;], [&#39;3&#39;, &#39; 4&#39;, &#39; &lt;&gt;&#39;]]}</span>
-</pre></div>
-</div>
-</dd></dl>
-
 </div>
 <div class="section" id="module-SARlabpy.io.SARlogger">
 <span id="sarlogger-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">SARlogger</span></tt> Module<a class="headerlink" href="#module-SARlabpy.io.SARlogger" title="Permalink to this headline">¶</a></h2>
@@ -419,8 +396,46 @@ the module variable: BRUKERIO.logger or you can access it by finding where the
 </div>
 <dl class="function">
 <dt id="SARlabpy.io.SARlogger.setup_custom_logger">
-<tt class="descclassname">SARlabpy.io.SARlogger.</tt><tt class="descname">setup_custom_logger</tt><big>(</big><em>name</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.SARlogger.setup_custom_logger" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.SARlogger.</tt><tt class="descname">setup_custom_logger</tt><big>(</big><em>name</em>, <em>level=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.SARlogger.setup_custom_logger" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</div>
+<div class="section" id="module-SARlabpy.io.congrid">
+<span id="congrid-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">congrid</span></tt> Module<a class="headerlink" href="#module-SARlabpy.io.congrid" title="Permalink to this headline">¶</a></h2>
+<p>Rebinnin example from he SciPy.org Cookbook</p>
+<dl class="function">
+<dt id="SARlabpy.io.congrid.congrid">
+<tt class="descclassname">SARlabpy.io.congrid.</tt><tt class="descname">congrid</tt><big>(</big><em>a</em>, <em>newdims</em>, <em>method='linear'</em>, <em>centre=False</em>, <em>minusone=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/congrid.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.congrid.congrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arbitrary resampling of source array to new dimension sizes.
+Currently only supports maintaining the same number of dimensions.
+To use 1-D arrays, first promote them to shape (x,1).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>a</strong> (<em>numpy.ndarray</em>) &#8211; input array</li>
+<li><strong>newdims</strong> (<em>list</em>) &#8211; new dimensions</li>
+<li><strong>method</strong> (<em>string</em>) &#8211; <cite>neighbour</cite> - closest value from original data
+<cite>nearest</cite> and <cite>linear</cite> - uses n x 1-D interpolations using 
+scipy.interpolate.interp1d
+(see Numerical Recipes for validity of use of n 1-D interpolations)
+<cite>spline</cite> - uses ndimage.map_coordinates</li>
+<li><strong>centre</strong> (<em>boolean</em>) &#8211; True - interpolation points are at the centres of the bins
+False - points are at the front edge of the bin</li>
+<li><strong>minusone</strong> (<em>boolean</em>) &#8211; For example- inarray.shape = (i,j) &amp; new dimensions = (x,y)
+False - inarray is resampled by factors of (i/x) * (j/y)
+True - inarray is resampled by(i-1)/(x-1) * (j-1)/(y-1)
+This prevents extrapolation one element beyond bounds of input array.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Uses the same parameters and creates the same co-ordinate lookup points
+as IDL&#8217;&#8217;s congrid routine, which apparently originally came from a VAX/VMS
+routine of the same name.</p>
+</dd></dl>
 
 </div>
 </div>
@@ -434,8 +449,10 @@ the module variable: BRUKERIO.logger or you can access it by finding where the
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">io Package</a><ul>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">io</span></tt> Package</a></li>
 <li><a class="reference internal" href="#module-SARlabpy.io.BRUKERIO"><tt class="docutils literal"><span class="pre">BRUKERIO</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-SARlabpy.io.SARlogger"><tt class="docutils literal"><span class="pre">SARlogger</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-SARlabpy.io.congrid"><tt class="docutils literal"><span class="pre">congrid</span></tt> Module</a></li>
 </ul>
 </li>
 </ul>
