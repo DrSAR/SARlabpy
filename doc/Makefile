@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = ../
+BUILDDIR      = ..
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -18,8 +18,9 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  gh-docs    to make standalone HTML files (html) and push gh-pages branch"
 	@echo "  html       to make standalone HTML files"
+	@echo "  apidoc     make rst files for recursive harvesting of docstrings from all modules"
+	@echo "  gh-docs    apidoc + html and push gh-pages branch"
 	@echo "  dirhtml    to make HTML files named index.html in directories"
 	@echo "  singlehtml to make a single large HTML file"
 	@echo "  pickle     to make pickle files"
@@ -47,8 +48,17 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-gh-docs: html
-	cd ../html; git add -A; git commit -m 'documenation updated'; git push
+apidoc:
+	sphinx-apidoc -f -o . --doc-project='SARlabpy Documentation' ./..
+	@echo "apidoc traversal done"
+
+gh-docs-checkedout:
+	cd ../html; git checkout -f gh-pages
+	@echo "git checkout -f gh-paged in the ../html directory"
+
+gh-docs: gh-docs-checkedout apidoc html
+	cd ../html; git add -A; git commit -m 'documenation updated, automatic push'; git push
+	@echo "gh-docs have been created and pushed"
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
