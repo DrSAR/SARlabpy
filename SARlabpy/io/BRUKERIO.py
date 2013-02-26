@@ -14,9 +14,9 @@ import re
 from types import StringType, FileType
 
 # setup logging
-import SARlogger
+import SARlogger, logging
 logger=SARlogger.setup_custom_logger('root')
-
+logger.setLevel(logging.WARNING)
 from itertools import tee, izip
 def pairwise(iterable):
     """
@@ -34,10 +34,6 @@ def readJCAMP(filename):
     Parse text file in JCAMP format
 
     :param string filename: filename of fid file
-    :param boolean typecast:
-        attempt to cast values of records to int/floats/strings/
-        a list of the above (Default: False) - this feature is a tad
-        experimental
     :return:
         Dictionary of labelled data records (LDR) with LDR-names as keys
         and their content as values.
@@ -589,15 +585,11 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(procdirname, typecast=False):
+def read2dseq(procdirname):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
     :param procdirname: filename of directory that contains the processed data
-    :param boolean typecast:
-        attempt to cast values of records to int/floats/strings/
-        a list of the above (Default: False) - this feature is a tad
-        experimental
     :type procdirname: string
     :return: dictionary with data, and headerinformation. The data is
              an array of BRUKER-reconstructed image data in the respecive proc
@@ -607,42 +599,28 @@ def read2dseq(procdirname, typecast=False):
 
     This relies on numpy's array functionality
     """
+  
+    # get relevant information from the  reco file
+    reco = readJCAMP(procdirname+'/reco')
+    d3proc = readJCAMP(procdirname+'/d3proc')
     
-    if typecast:
-        # Only difference betwen this code and the original (in the else statement)
-        # is that the typecast is det to true and and the integer cast in 
-        # RECO_size is ignored
-        
-        # get relevant information from the  reco file
-        reco = readJCAMP(procdirname+'/reco',typecast=True)
-        d3proc = readJCAMP(procdirname+'/d3proc',typecast=True)
-        
-        
-        ## Enhancement by Firas M. to also read in acqp and mehod files
-        # Currently non-pythonic because it requres inefficient code
-        
-        scandirname = os.path.split(procdirname)
-        scandirname = os.path.split(scandirname[0])
-        scandirname = os.path.split(scandirname[0])
-        
-        acqp = readJCAMP(scandirname[0]+'/acqp',typecast=True)
-        method = readJCAMP(scandirname[0]+'/method',typecast=True)
-
-        
-        
-        RECO_size = [d3proc['IM_SIZ'], \
-                     d3proc['IM_SIY'], \
-                     d3proc['IM_SIX']]
-    else:
-        reco = readJCAMP(procdirname+'/reco')
-        d3proc = readJCAMP(procdirname+'/d3proc')
-
-            # determine array dimensions
-        
-        RECO_size = [int(dummy) for dummy in (d3proc['IM_SIZ'], \
-                      d3proc['IM_SIY'], \
-                      d3proc['IM_SIX'])]
-            
+    
+    ## Enhancement by Firas M. to also read in acqp and mehod files
+    # Currently non-pythonic because it requres inefficient code
+    
+    scandirname = os.path.split(procdirname)
+    scandirname = os.path.split(scandirname[0])
+    scandirname = os.path.split(scandirname[0])
+    
+    acqp = readJCAMP(scandirname[0]+'/acqp')
+    method = readJCAMP(scandirname[0]+'/method')
+    
+    
+    
+    RECO_size = [d3proc['IM_SIZ'], \
+                 d3proc['IM_SIY'], \
+                 d3proc['IM_SIX']]
+    
     # determine ENDIANness and storage type
         
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
@@ -672,11 +650,13 @@ def read2dseq(procdirname, typecast=False):
     
     # sort data properly if 4D data (e.g., DCE) 
     
-    num_slices = int(method['PVM_SPackArrNSlices'])
-    reps = int(method['PVM_NRepetitions'])
+    num_slices = method['PVM_SPackArrNSlices'][0]
+    #TODO - deal with slices in multiple packages
+    assert len(method['PVM_SPackArrNSlices']) == 1, 'Something wrong in num_slices'
+    reps = method['PVM_NRepetitions']
     
     new_data = numpy.empty([d3proc['IM_SIZ']/reps, d3proc['IM_SIY'],d3proc['IM_SIX'],reps])
-    
+
     if num_slices> 1: # have a 4D case:
         
         for slice in range(0,num_slices-1):
