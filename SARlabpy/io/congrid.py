@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Rebinnin example from he SciPy.org Cookbook
+Rebinning example from he SciPy.org Cookbook
 """
+
 import numpy as n
 import scipy.interpolate
 import scipy.ndimage
+
+# setup logging -> if the library user does nothing all will be
+# silent
+import logging
+logger=logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+logger.info('congrid imported: %s' % __name__)
 
 def congrid(a, newdims, method='linear', centre=False, minusone=False):
     '''Arbitrary resampling of source array to new dimension sizes.

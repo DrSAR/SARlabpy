@@ -5,18 +5,21 @@
 """Collection of BRUKER input routines
 
 Handy functions to read BRUKER data and header files.
+
+The logging is set up so that if the library user does nothing,
+all will be silent. Details in :py:mod: SARlogger
 """
-print('BRUKERIO imported: %s' % __name__)
+import logging
+logger=logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+logger.info('BRUKERIO imported: %s' % __name__)
 
 import numpy
 import os.path
 import re
 from types import StringType, FileType
 
-# setup logging
-import SARlogger, logging
-logger=SARlogger.setup_custom_logger('root')
-logger.setLevel(logging.WARNING)
+
 from itertools import tee, izip
 def pairwise(iterable):
     """
