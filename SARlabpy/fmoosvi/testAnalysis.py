@@ -17,14 +17,11 @@ reload(sar)
 
 dir_name = os.path.expanduser('~/data/NecS1Hs02.hi1/8/pdata/1/');
 
-data_dict = sar.read2dseq(dir_name,typecast=True)
+data_dict = sar.read2dseq(dir_name)
 
 sar.enhancementCurve(data_dict)
 
+   
+    py.imshow(data_dict['data'][4,:,:,50])
 
-for t in range(0,99):
-    
-    py.imshow(data_dict['data'][4,:,:,t])
-    time.sleep(0.4)
-    
 
