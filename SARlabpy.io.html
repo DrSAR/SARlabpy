@@ -150,7 +150,7 @@ mentioned in on <a class="reference external" href="http://stackoverflow.com/que
 
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.read2dseq">
-<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>procdirname</em>, <em>arrayTranspose=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>procdirname</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns BRUKER&#8217;s 2dseq file as a properly dimensioned array</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -179,23 +179,14 @@ directory.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>filename</strong> (<em>string</em>) &#8211; filename of fid file</li>
-<li><strong>typecast</strong> (<em>boolean</em>) &#8211; attempt to cast values of records to int/floats/strings/
-a list of the above (Default: False) - this feature is a tad
-experimental</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) &#8211; filename of fid file</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary of labelled data records (LDR) with LDR-names as keys
-and their content as values.</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary of labelled data records (LDR) with LDR-names as keys
+and their content as values.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">IOERROR if opening file fails or passes on any other error</p>
-</td>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body">IOERROR if opening file fails or passes on any other error</td>
 </tr>
 </tbody>
 </table>
@@ -482,6 +473,7 @@ routine of the same name.</p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
 <h4><a href="https://github.com/DrSAR/SARlabpy">Link to Github repository</a></h4>
+<h4><a href="https://github.com/DrSAR/SARlabpy/issues">Issues, Milestones, Bugs</a></h4>
         </div>
       </div>
       <div class="clearer"></div>
