@@ -12,7 +12,6 @@ all will be silent. Details in :py:mod: SARlogger
 import logging
 logger=logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-logger.info('BRUKERIO imported: %s' % __name__)
 
 import numpy
 import os.path
