@@ -32,11 +32,12 @@ In either case you can then emit messages in your code
    logger.debug('this is a debug message')
 """
 
-print('SARlogger imported: %s' % __name__)
 import logging
 from logging import (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     
-def initiate_logging(module, formatter=None, handler=None, level=None):
+def initiate_logging(module, formatter=None, 
+                     handler=None, handler_level=None,
+                     logger_level=None):
     '''
     Initiate logging for a module (in the SARlabpy package). This assumes 
     a module has been imported.
@@ -44,8 +45,12 @@ def initiate_logging(module, formatter=None, handler=None, level=None):
     :param module module:
         Module object that points to module in the SARlabpy package 
         framework (collection of libraries? modules?).
-    :param int level: 
+    :param int handler_level: 
         log level, default logging.DEBUG(=10)
+        this will be ignored if there is no handler provided and one or 
+        more handlers pre-exist. in other words, the level can only be set 
+        for the default (console) handler. Use :py:func: change_logger_level:
+        to change the overall level
         
     The module in question will have set up minimal logging. A NullHandler 
     has been set so the default logging (methods in the libraries should
@@ -53,44 +58,63 @@ def initiate_logging(module, formatter=None, handler=None, level=None):
     handlers is overwritten, logging can commence.
     '''
     if formatter is None:
-        formatter = logging.Formatter(fmt=
-            '%(asctime)s - %(levelname)s - %(module)s - %(message)s')
-    if handler is None:
+        formatter = logging.Formatter(
+                fmt='%(asctime)s %(levelname)s: %(module)s  - %(message)s',
+                datefmt='%H:%M')
+
+    handler_level = None or WARNING
+    logger_level = None or DEBUG
+            
+    # remove all NullHandlers:
+    handlers_to_be_removed = []
+    for hdlr in module.logger.handlers:
+        if isinstance(hdlr, logging.NullHandler):
+            handlers_to_be_removed.append(hdlr)
+    for hdlr in handlers_to_be_removed[:]:
+        module.logger.removeHandler(hdlr)
+
+    if (handler is None and len(module.logger.handlers) == 0):
+        # no handler provided and the previously defined
+        # handlers are NullHandler -> adding default console handler
         handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-    if level is None:
-        level = DEBUG
+        handler.setFormatter(formatter)
+        handler.setLevel(handler_level)
+    if handler is not None:
+        handler.setFormatter(formatter)
+        handler.setLevel(handler_level)
+
     try:
-        module.logger.setLevel(level)
-        print module.logger.handlers
-        if len(module.logger.handlers)<1:
-            module.logger.addHandler(handler)
+        module.logger.addHandler(handler)
+        module.logger.setLevel(logger_level)
     except AttributeError, exc:
+        # TODO reformat output
         print('Initiation of logging for module {0} failed'.
                 format(module))
         print('Presumably logging has not been prepared.')
         raise AttributeError(exc)
+    
         
-def add_file_logging_handler(module, formatter=None, handler=None, level=None):
+           
+def add_file_handler(module, formatter=None, handler=None, level=None):
     '''
     add handler for logging to file. typically with lower level and timestamps
     '''
     if formatter is None:
         formatter = logging.Formatter(fmt=
-                        '%(asctime)s %(name)-12s %(levelname)-8s '+
-                        '%(module)s - %(message)s',
-                        datefmt='%m-%d %H:%M')
+                        '%(asctime)s %(levelname)s: %(name)s  - %(message)s',
+                        datefmt='%y-%m-%d %H:%M')
     
     if handler is None:
         handler = logging.FileHandler('/tmp/SARlabpy.log')
     if level is None:
         level = DEBUG
-    logging.getLogger(module.__name__).addHandler(handler)    
+    handler.setFormatter(formatter)
+    handler.setLevel(level)
+    module.logger.addHandler(handler)    
 
-def change_logging_level(module, level=None):
+def change_logger_level(module, level=None):
     '''
-    Since the :py:func: initiate_logging method is careful not toadd a handler if
-    one already exists, changing log levels can de done directly there ...
-    initiate_loggin(module, level=level)
+    This changes the overall logger level. Above in :py:func: initiate_logging,
+    the level for the individual handler was being set.
     '''
-    initiate_logging(module, level=level)
+    module.logger.setLevel(level=level)
