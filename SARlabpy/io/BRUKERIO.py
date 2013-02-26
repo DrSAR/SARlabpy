@@ -58,14 +58,10 @@ def readJCAMP(filename):
     typecasting of the records into all these different datatypes.
     """
 
-    try:
-        logger.debug("opening {0}".format(filename))
-        JCAMPfile = open(filename, "r")
-        JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
-        JCAMPfile.close()
-    except IOError as (errno, strerror):
-        print "There was an I/O error({0}): {1}".format(errno, strerror)
-        raise IOError, strerror
+    logger.debug("opening {0}".format(filename))
+    JCAMPfile = open(filename, "r")
+    JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
+    JCAMPfile.close()
 
     # let's loop through the file, remove comments and put each
     # LDR on its own line
@@ -100,7 +96,7 @@ def readJCAMP(filename):
         # the LDRlist
         else:
             raise IOError('encountered line that cannot be here:\n{0}'.
-            format(line,next_line))
+                    format(line,next_line))
 #            LDRlist[-1] = LDRlist[-1] + " " + line
 #            line = []
         #add this to the list of LDRs
@@ -735,11 +731,7 @@ def readRFshape(filename):
 
     returns a dictionary with ready-to-use attributes for amplitude,
     phase, bandwidth etc.'''
-    try:
-        RFstringdict = readJCAMP(filename)
-    except IOError:
-        print('problem reading RF file shape')
-        return None
+    RFstringdict = readJCAMP(filename)
 
 ##TITLE= /camelot/PV.2.0.Devel/exp/stan/nmr/lists/wave/imaghermite
 ##JCAMP-DX= 5.00 BRUKER JCAMP library
