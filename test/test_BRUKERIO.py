@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 
 print('test_BRUKERIO run: %s' % __name__)
 
-fnameroot = os.path.expanduser('~/datalink/readfidTest.ix1/')
+fnameroot = os.path.expanduser('~/data/readfidTest.ix1/')
 scan_labels = {1:'Tripilot multi', 
                2:'FLASH 2D', 
                3:'FLASH 3D', 
@@ -70,7 +70,7 @@ class Test(unittest.TestCase):
     def test_readfid(self):
         '''BRUKERIO.io.readfid()'''
         logger.info('UNIT TEST: test_readfid')
-#        fname = os.path.expanduser('~/datalink/readfidTest.ix1/3/fid')   
+#        fname = os.path.expanduser('~/data/readfidTest.ix1/3/fid')   
 #        data = BRUKERIO.readfid(fname)
 #        kspace = data['data']
 #        self.assertEqual(kspace.shape, (256,105,1,1))

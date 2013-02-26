@@ -223,7 +223,7 @@ def readfid(fptr=None, untouched=False):
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
 
     >>> import os
-    >>> fname = os.path.expanduser('~/datalink/Moosvi.ii1/3/fid')
+    >>> fname = os.path.expanduser('~/data/Moosvi.ii1/3/fid')
     >>> fid = readfid(fname)
     >>> fid['data'].shape
     (128, 128, 3, 1)
