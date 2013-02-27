@@ -62,8 +62,8 @@ def initiate_logging(module, formatter=None,
                 fmt='%(asctime)s %(levelname)s: %(module)s  - %(message)s',
                 datefmt='%H:%M')
 
-    handler_level = None or WARNING
-    logger_level = None or DEBUG
+    handler_level = handler_level or WARNING
+    logger_level = handler_level or DEBUG
             
     # remove all NullHandlers:
     handlers_to_be_removed = []

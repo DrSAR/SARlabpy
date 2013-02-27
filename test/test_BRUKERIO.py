@@ -14,8 +14,7 @@ import numpy
 from SARlabpy import SARlogger
 #test logging for BRUKERIO
 from SARlabpy.io import BRUKERIO
-SARlogger.initiate_logging(BRUKERIO, handler_level=SARlogger.DEBUG,
-                           logger_level=SARlogger.DEBUG)
+SARlogger.initiate_logging(BRUKERIO, handler_level=SARlogger.INFO)
 
 print('test_BRUKERIO run: %s' % __name__)
 
