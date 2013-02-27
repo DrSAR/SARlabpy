@@ -606,15 +606,9 @@ def read2dseq(scandirname, pdata_num = 1):
     # get relevant information from the reco and d3proc files
 
     procdirname = os.path.join(scandirname,'pdata',str(pdata_num))  
-    
-    try:
-        reco = readJCAMP(procdirname+'/reco')
-        d3proc = readJCAMP(procdirname+'/d3proc')
-        
-    except IOError:
-        
-        print('Aborting. Please enter a valid scan dir, could not find any processed files in ./pdata/')
-        raise IOError
+    reco = readJCAMP(procdirname+'/reco')
+    d3proc = readJCAMP(procdirname+'/d3proc')
+
 
     ## Enhancement by Firas M. to also read in acqp and mehod files
 
