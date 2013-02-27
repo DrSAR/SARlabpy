@@ -8,7 +8,7 @@ some examples on how to do this:
 >>> fname = 'SARlabpy/test/test-data/Moosvi.ii1/2/acqp'
 >>> header = SARlabpy.readJCAMP(fname)
 
-The header returned by :py:func:`SARlabpy.io.BRUKERIO.readJCAMP` is a dictionary with parameter names as the keys:
+The header is a dictionary with parameter names as the keys:
 
 >>> type(header)
 <type 'dict'>
@@ -20,14 +20,7 @@ All of the BRUKER header files are in this JCAMP format. So the *method* paramet
 >>> header['ExcPulse']
 '(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, < hermite.exc>, 5400, 0.1794, 50, 0.1024, conventional)'
 
-Here is a little python string kung-fu to turn this structure into a list of strings for further processing:
-
->>> data['header']['method']['ExcPulse'].strip('()').split(',')
-['1', ' 5400', ' 30', ' 9.02336512447152', ' 100', ' 0', ' 100', ' LIB_EXCITATION', ' < hermite.exc>', ' 5400', ' 0.1794', ' 50', ' 0.1024', ' conventional']
-
-It turns out that option `typecast=True` to :py:func:`.BRUKERIO.readJCAMP` will already return nicely typecas and split values.
-
-Loading k-space data (BRUKER calls the file fid) is also doable using :py:func:`SARlabpy.io.BRUKERIO.readfid`:
+Loading k-space data (BRUKER calls the file fid) is also doable:
 
 >>> fname = 'SARlabpy/test/test-data/Moosvi.ii1/2/fid'
 >>> data = SARlabpy.readfid(fname)
@@ -45,7 +38,7 @@ ACQ_size = [128, 128, 15], NR=1, ACQ_obj_order=[0, 2, 4, 6, 8, 10, 12, 14, 1, 3,
  126 127]
 size(fid) = (245760,) ?=? ACQ_size*NR=245760
 
-Function :py:func:`SARlabpy.io.BRUKERIO.readfid` returns another dictionary that bundles the actual data and header information:
+Function readfid returns another dictionary that bundles the actual data and header information:
 
 >>> data.keys()
 ['isImage', 'header', 'data']
@@ -58,4 +51,9 @@ Because we are now dealing with these dictionaries nested in dictionaries, there
 
 >>> data['header']['method']['ExcPulse']
 '(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, < hermite.exc>, 5400, 0.1794, 50, 0.1024, conventional)'
+
+Here is a little python string kung-fu to turn this structure into a list of strings for further processing:
+
+>>> data['header']['method']['ExcPulse'].strip('()').split(',')
+['1', ' 5400', ' 30', ' 9.02336512447152', ' 100', ' 0', ' 100', ' LIB_EXCITATION', ' < hermite.exc>', ' 5400', ' 0.1794', ' 50', ' 0.1024', ' conventional']
 
