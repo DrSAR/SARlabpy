@@ -369,28 +369,41 @@ misunderstandings of how the data is to be interpreted.</p>
 <p>To setup logging in your code. Your module needs to initiate logging using
 the custom SARlogger.Good info to be found at the 
 <a class="reference external" href="http://docs.python.org/2/howto/logging.html#logging-basic-tutorial">Logging Tutorial</a>.</p>
-<div class="highlight-py"><div class="highlight"><pre><span class="c"># setup logging</span>
-<span class="kn">import</span> <span class="nn">SARlogger</span>
-<span class="n">logger</span><span class="o">=</span><span class="n">SARlogger</span><span class="o">.</span><span class="n">setup_custom_logger</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">SARlogger</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+<div class="highlight-py"><div class="highlight"><pre><span class="c">#make the SARlogger features available</span>
+<span class="kn">from</span> <span class="nn">SARlabpy</span> <span class="kn">import</span> <span class="n">SARlogger</span>
+<span class="c">#test logging for BRUKERIO</span>
+<span class="kn">import</span> <span class="nn">BRUKERIO</span>
+<span class="n">SARlogger</span><span class="o">.</span><span class="n">initiate_logging</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Currently BRUKERIO instantiates such a logger. You can get access to it through 
-the module variable: BRUKERIO.logger or you can access it by finding where the
-&#8216;root&#8217; logger is:</p>
-<div class="highlight-py"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">logging</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;root&#39;</span><span class="p">)</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>In either case you can then emit messages in your code 
-(whereever logger is accessible):</p>
-<div class="highlight-py"><div class="highlight"><pre><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;this is a debug message&#39;</span><span class="p">)</span>
+<p>At this point, a console handler that issues anything that&#8217;s a WARNING or 
+more severe (higher level) will be written to to the console. 
+If you  also desire output to 
+a file, another convenience function in SARlogger can be used
+to attach another handler (with another log level and formatter):</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="n">SARlogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="function">
 <dt id="SARlabpy.io.SARlogger.add_file_handler">
 <tt class="descclassname">SARlabpy.io.SARlogger.</tt><tt class="descname">add_file_handler</tt><big>(</big><em>module</em>, <em>formatter=None</em>, <em>handler=None</em>, <em>level=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.SARlogger.add_file_handler" title="Permalink to this definition">¶</a></dt>
-<dd><p>add handler for logging to file. typically with lower level and timestamps</p>
+<dd><p>Add handler for logging to file. typically with lower level and timestamps</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> (<em>module</em>) &#8211; module whose logger to add the handler to</li>
+<li><strong>level</strong> (<em>int</em>) &#8211; log level for the entire logger, default logging.DEBUG(=10)
+This is equivalent to handler_level option in
+<a class="reference internal" href="#SARlabpy.io.SARlogger.initiate_logging" title="SARlabpy.io.SARlogger.initiate_logging"><tt class="xref py py-func docutils literal"><span class="pre">initiate_logging()</span></tt></a></li>
+<li><strong>formatter</strong> &#8211; default provides date, time, level, module and message</li>
+<li><strong>handler</strong> &#8211; default provides a FileHandler (that prints to /tmp/SARlabpy.log)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -398,6 +411,20 @@ the module variable: BRUKERIO.logger or you can access it by finding where the
 <tt class="descclassname">SARlabpy.io.SARlogger.</tt><tt class="descname">change_logger_level</tt><big>(</big><em>module</em>, <em>level=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.SARlogger.change_logger_level" title="Permalink to this definition">¶</a></dt>
 <dd><p>This changes the overall logger level. Above in :py:func: initiate_logging,
 the level for the individual handler was being set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> (<em>module</em>) &#8211; module whose logger to change the logger level for</li>
+<li><strong>level</strong> (<em>int</em>) &#8211; log level for the entire logger, default logging.DEBUG(=10)
+This is equivalent to logger_level option in
+<a class="reference internal" href="#SARlabpy.io.SARlogger.initiate_logging" title="SARlabpy.io.SARlogger.initiate_logging"><tt class="xref py py-func docutils literal"><span class="pre">initiate_logging()</span></tt></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -412,11 +439,11 @@ a module has been imported.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>module</strong> (<em>module</em>) &#8211; Module object that points to module in the SARlabpy package 
 framework (collection of libraries? modules?).</li>
-<li><strong>handler_level</strong> (<em>int</em>) &#8211; log level, default logging.DEBUG(=10)
-this will be ignored if there is no handler provided and one or 
-more handlers pre-exist. in other words, the level can only be set 
-for the default (console) handler. Use :py:func: change_logger_level:
-to change the overall level</li>
+<li><strong>handler_level</strong> (<em>int</em>) &#8211; log level for the handler, default logging.DEBUG(=10)</li>
+<li><strong>logger_level</strong> (<em>int</em>) &#8211; log level for the entire logger, default logging.DEBUG(=10)
+Use <a class="reference internal" href="#SARlabpy.io.SARlogger.change_logger_level" title="SARlabpy.io.SARlogger.change_logger_level"><tt class="xref py py-meth docutils literal"><span class="pre">change_logger_level()</span></tt></a> to change the overall level</li>
+<li><strong>formatter</strong> &#8211; default provides time, level, module and message</li>
+<li><strong>handler</strong> &#8211; default provides a StreamHandler (that prints to the console)</li>
 </ul>
 </td>
 </tr>
