@@ -17,6 +17,7 @@ import numpy
 import os.path
 import re
 from types import StringType, FileType
+import sys
 
 
 from itertools import tee, izip
@@ -583,12 +584,14 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(procdirname):
+def read2dseq(scandirname, pdata_num = 1):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
-    :param procdirname: filename of directory that contains the processed data
-    :type procdirname: string
+    :param scandirname: filename of the scan directory
+    :type scanirname: string
+    :param pdata_num: the reconstruction number in cases of multiple recons (/pdata/1/)
+    :type pdata_num: integer of the processed data
     :return: dictionary with data, and headerinformation. The data is
              an array of BRUKER-reconstructed image data in the respecive proc
              directory.
@@ -596,25 +599,25 @@ def read2dseq(procdirname):
     :raises: IOERROR if directory non-existent
 
     This relies on numpy's array functionality
-    """
-  
-    # get relevant information from the  reco file
+    """ 
+
+    # get relevant information from the reco and d3proc files
+
+    procdirname = os.path.join(scandirname,'pdata',str(pdata_num))  
     reco = readJCAMP(procdirname+'/reco')
     d3proc = readJCAMP(procdirname+'/d3proc')
-    
-    
+
+
     ## Enhancement by Firas M. to also read in acqp and mehod files
-    # Currently non-pythonic because it requres inefficient code
-    
-    scandirname = os.path.split(procdirname)
-    scandirname = os.path.split(scandirname[0])
-    scandirname = os.path.split(scandirname[0])
-    
-    acqp = readJCAMP(scandirname[0]+'/acqp')
-    method = readJCAMP(scandirname[0]+'/method')
-    
-    
-    
+
+    try:
+        acqp = readJCAMP(scandirname+'/acqp')
+        method = readJCAMP(scandirname+'/method')
+        
+    except IOError:
+        
+        print('Could not find acqp or method files, continuing on...')
+       
     RECO_size = [d3proc['IM_SIZ'], \
                  d3proc['IM_SIY'], \
                  d3proc['IM_SIX']]

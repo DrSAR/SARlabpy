@@ -10,18 +10,30 @@ Created on Mon Feb 25 00:24:57 2013
 import numpy
 import os
 import SARlabpy as sar
-import time
-import pylab as py
+import pylab
+import operator
 
 reload(sar)
 
-dir_name = os.path.expanduser('~/data/NecS1Hs02.hi1/8/pdata/1/');
+dir_name = os.path.expanduser('~/data/NecS1Hs02.hi1/8/');
+scandirname = os.path.expanduser('~/data/NecS1Hs02.hi1/');
 
 data_dict = sar.read2dseq(dir_name)
 
-sar.enhancementCurve(data_dict)
+fig1 = pylab.figure();
+sar.calculateAUC(scandirname,'8')
 
-   
-    py.imshow(data_dict['data'][4,:,:,50])
+cur = sar.enhancementCurve(data_dict)
+
+
+fig2 = pylab.figure();
+pylab.imshow(data_dict['data'][4,:,:,50])
+
+##
+
+a,b = sar.determineInjectionPoint(data_dict)
+
+#fig3 = pylab.figure()
+
 
 
