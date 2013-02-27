@@ -28,29 +28,56 @@ def calculateAUC(study_path, series_num = 0):
     reps = data_dict['header']['method']['PVM_NRepetitions']
         
     # Determine point of injection by averaging one slice in the entire image
-    whole_tumour_curve = enhancementCurve(data_dict)
-    pylab.plot(whole_tumour_curve[round(num_slices/2),:], '-bx')
+    tumour_curve = enhancementCurve(data_dict)
+    pylab.plot(tumour_curve[round(num_slices/2),:], '-bx')
+    
+    inj_point = sar.determineInjectionPoint(data_dict)
 
-    #TODO Complete this to actually get the point of injection
+    # Now calculate the Normalized Intesity AUC voxel by voxel
 
-    # Now calculate the AUC voxel by voxel
+    auc_data = data_dict['data'] # initialize auc_data
+    
+    x_size = data_dict['data'].shape[0]
+    y_size = data_dict['data'].shape[1]
+    
+    baseline = numean(a[:,:,0:inj_point],axis=2)
+    result = a[:,:,inj_point:]/tile(baseline.reshape(x_size,y_size,1),40)    
+    
+    
+    # Time this code block and compare it with the vectorized form to convince
+        # yourelf that the above is faster
+    
+#    for x in range(0,data_dict['data'].shape[0]):
+#    
+#        for y in range(0, data_dict['data'].shape[1]):
+#
+#            for z in range(0,data_dict['data'].shape[2]):
+#            
+#                auc_data[x,y,z,inj_point:] = ( data_dict['data'][x,y,z,inj_point:] / numpy.mean(data_dict['data'][x,y,z,0:inj_point])) -1
+#                
+    return auc_data
 
 
 def enhancementCurve(data_dict, mask=False):
 
     if mask:
         print "I don't know how to deal with masks quite yet"
+        
+        #TODO: Complete this to read in an ROI somehow
+        
     else:
         
-        img_mean = data_dict['data'][:,:,:,:].sum(1).sum(1)
+        img_mean = data_dict['data'][:,:,:,:].sum(0).sum(0)
             
         return img_mean
 
 def determineInjectionPoint(data_dict):
+    
+    from collections import Counter
 
     try:      
         # Pool all the data together
-        img_mean = data_dict['data'][:,:,:,:].sum(1).sum(1)
+        img_mean = data_dict['data'][:,:,:,:].sum(0).sum(0)
 
     except IndexError:
         print "You might only have 2D or 3D data, check data source"
@@ -69,8 +96,12 @@ def determineInjectionPoint(data_dict):
         except StopIteration:
             print "Could not find the injection point, possibly okay"
             injection_point.append(0)
+            
+    # look through the list of elements in injection pont and report the most common (mode)
+    injection_point_counter = Counter(injection_point)
+    injection_point = injection_point_counter.most_common(1)
 
-    return injection_point, diff_slice
+    return injection_point[0][0]
 
 
 
