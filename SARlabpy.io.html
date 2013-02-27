@@ -64,6 +64,8 @@
 <span id="brukerio-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">BRUKERIO</span></tt> Module<a class="headerlink" href="#module-SARlabpy.io.BRUKERIO" title="Permalink to this headline">¶</a></h2>
 <p>Collection of BRUKER input routines</p>
 <p>Handy functions to read BRUKER data and header files.</p>
+<p>The logging is set up so that if the library user does nothing,
+all will be silent. Details in :py:mod: SARlogger</p>
 <dl class="function">
 <dt id="SARlabpy.io.BRUKERIO.dict2string">
 <tt class="descclassname">SARlabpy.io.BRUKERIO.</tt><tt class="descname">dict2string</tt><big>(</big><em>d</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.BRUKERIO.dict2string" title="Permalink to this definition">¶</a></dt>
@@ -238,7 +240,7 @@ phase, bandwidth etc.</p>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/datalink/Moosvi.ii1/3/fid&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/Moosvi.ii1/3/fid&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(128, 128, 3, 1)</span>
@@ -369,7 +371,7 @@ the custom SARlogger.Good info to be found at the
 <a class="reference external" href="http://docs.python.org/2/howto/logging.html#logging-basic-tutorial">Logging Tutorial</a>.</p>
 <div class="highlight-py"><div class="highlight"><pre><span class="c"># setup logging</span>
 <span class="kn">import</span> <span class="nn">SARlogger</span>
-<span class="n">logger</span><span class="o">=</span><span class="n">SARlogger</span><span class="o">.</span><span class="n">setup_custom_logger</span><span class="p">(</span><span class="s">&#39;root&#39;</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">=</span><span class="n">SARlogger</span><span class="o">.</span><span class="n">setup_custom_logger</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">SARlogger</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Currently BRUKERIO instantiates such a logger. You can get access to it through 
@@ -386,14 +388,50 @@ the module variable: BRUKERIO.logger or you can access it by finding where the
 </pre></div>
 </div>
 <dl class="function">
-<dt id="SARlabpy.io.SARlogger.setup_custom_logger">
-<tt class="descclassname">SARlabpy.io.SARlogger.</tt><tt class="descname">setup_custom_logger</tt><big>(</big><em>name</em>, <em>level=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.SARlogger.setup_custom_logger" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="SARlabpy.io.SARlogger.add_file_handler">
+<tt class="descclassname">SARlabpy.io.SARlogger.</tt><tt class="descname">add_file_handler</tt><big>(</big><em>module</em>, <em>formatter=None</em>, <em>handler=None</em>, <em>level=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.SARlogger.add_file_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>add handler for logging to file. typically with lower level and timestamps</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.SARlogger.change_logger_level">
+<tt class="descclassname">SARlabpy.io.SARlogger.</tt><tt class="descname">change_logger_level</tt><big>(</big><em>module</em>, <em>level=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.SARlogger.change_logger_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>This changes the overall logger level. Above in :py:func: initiate_logging,
+the level for the individual handler was being set.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="SARlabpy.io.SARlogger.initiate_logging">
+<tt class="descclassname">SARlabpy.io.SARlogger.</tt><tt class="descname">initiate_logging</tt><big>(</big><em>module</em>, <em>formatter=None</em>, <em>handler=None</em>, <em>handler_level=None</em>, <em>logger_level=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.SARlogger.initiate_logging" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initiate logging for a module (in the SARlabpy package). This assumes 
+a module has been imported.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> (<em>module</em>) &#8211; Module object that points to module in the SARlabpy package 
+framework (collection of libraries? modules?).</li>
+<li><strong>handler_level</strong> (<em>int</em>) &#8211; log level, default logging.DEBUG(=10)
+this will be ignored if there is no handler provided and one or 
+more handlers pre-exist. in other words, the level can only be set 
+for the default (console) handler. Use :py:func: change_logger_level:
+to change the overall level</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The module in question will have set up minimal logging. A NullHandler 
+has been set so the default logging (methods in the libraries should
+emit appropriate log message at opportune times) is swallowed. If this
+handlers is overwritten, logging can commence.</p>
+</dd></dl>
 
 </div>
 <div class="section" id="module-SARlabpy.io.congrid">
 <span id="congrid-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">congrid</span></tt> Module<a class="headerlink" href="#module-SARlabpy.io.congrid" title="Permalink to this headline">¶</a></h2>
-<p>Rebinnin example from he SciPy.org Cookbook</p>
+<p>Rebinning example from he SciPy.org Cookbook</p>
 <dl class="function">
 <dt id="SARlabpy.io.congrid.congrid">
 <tt class="descclassname">SARlabpy.io.congrid.</tt><tt class="descname">congrid</tt><big>(</big><em>a</em>, <em>newdims</em>, <em>method='linear'</em>, <em>centre=False</em>, <em>minusone=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/SARlabpy/io/congrid.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SARlabpy.io.congrid.congrid" title="Permalink to this definition">¶</a></dt>

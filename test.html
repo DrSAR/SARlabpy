@@ -52,6 +52,17 @@
             
   <div class="section" id="test-package">
 <h1>test Package<a class="headerlink" href="#test-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-test.logtest_module">
+<span id="logtest-module-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">logtest_module</span></tt> Module<a class="headerlink" href="#module-test.logtest_module" title="Permalink to this headline">¶</a></h2>
+<p>Test module for SARlogger features</p>
+<p>The logging is set up so that if the library user does nothing,
+all will be silent. Details in :py:mod: SARlogger</p>
+<dl class="function">
+<dt id="test.logtest_module.foo">
+<tt class="descclassname">test.logtest_module.</tt><tt class="descname">foo</tt><big>(</big><em>msg='message from foo'</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/test/logtest_module.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.logtest_module.foo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
 <div class="section" id="module-test.test_BRUKERIO">
 <span id="test-brukerio-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_BRUKERIO</span></tt> Module<a class="headerlink" href="#module-test.test_BRUKERIO" title="Permalink to this headline">¶</a></h2>
 <p>Test Routines for BRUKERIO</p>
@@ -68,7 +79,7 @@
 
 <dl class="method">
 <dt id="test.test_BRUKERIO.Test.test_readJCAMP">
-<tt class="descname">test_readJCAMP</tt><big>(</big><em>skip=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/test/test_BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_BRUKERIO.Test.test_readJCAMP" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">test_readJCAMP</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/test/test_BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_BRUKERIO.Test.test_readJCAMP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test readJCAMP for exceptions by reading variety of acqp 
 and method files</p>
 </dd></dl>
@@ -98,7 +109,10 @@ and method files</p>
 <dl class="method">
 <dt id="test.test_SARlogger.Test.test_SARlogger">
 <tt class="descname">test_SARlogger</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/test/test_SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_SARlogger.Test.test_SARlogger" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>This should setup the logger for a test module.
+You will notive how the levels for the console and the file logging
+can be independent.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -114,6 +128,7 @@ and method files</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">test Package</a><ul>
+<li><a class="reference internal" href="#module-test.logtest_module"><tt class="docutils literal"><span class="pre">logtest_module</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-test.test_BRUKERIO"><tt class="docutils literal"><span class="pre">test_BRUKERIO</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-test.test_SARlogger"><tt class="docutils literal"><span class="pre">test_SARlogger</span></tt> Module</a></li>
 </ul>

@@ -19,8 +19,8 @@ If you are stuck with branches and commits, try this quickstart: (assuming you h
 
 .. include:: ../README.rst
 
-Contents:
------------
+Howto, Guides, Examples
+----------------------------------
 
 .. toctree::
    :maxdepth: 2
@@ -28,8 +28,14 @@ Contents:
    SARlabpy-layout
    Workflow
    Documenting-Testing
-
    BRUKERIOexamples
+   SARloggerexamples
+
+Doc's harvested from source code
+----------------------------------
+
+.. toctree::
+   :maxdepth: 2
 
    modules
 

@@ -54,33 +54,11 @@
             
   <div class="section" id="documenting-and-testing-sarlabpy">
 <h1>Documenting and Testing SARlabpy<a class="headerlink" href="#documenting-and-testing-sarlabpy" title="Permalink to this headline">¶</a></h1>
-<p><em>Wherein I say unto you: verily document and test thy code</em></p>
 <p>To make this code usable, it needs to be documented. The easiest and at the same time most helpful way to write documentation are a few examples (copied verbatim from your interactive session) into the docstring. The amazing thing is that this docstring can be parsed by the doctest module in order to <strong>automatically</strong> run those examples and compare them to the expected output.</p>
 <p>We should do more of that!</p>
 <div class="section" id="inner-workings">
 <h2>Inner Workings<a class="headerlink" href="#inner-workings" title="Permalink to this headline">¶</a></h2>
 <p>The documentation in this package makes use of Sphinx, the automated documentation project. Essentially it harvests the docstrings of all modules and puts it together in a nice and appetizing way. The instruction for this automated compilation of HTML documentation is in the <strong>doc</strong> folder (Makefile, config.py and some static pre-written, global document pages). Simply going to that directory and issuing <em>make html</em> will recreate the documentation and store it in the <strong>html</strong> folder. The <strong>html</strong> folder is bizarrely the working copy of a different, special (orphan) branch named gh-pages. When we push the html pages to github they are processed and will be hosted on the <a class="reference external" href="http://DrSAR.github.com/SARlabpy">github pages http://DrSAR.github.com/SARlabpy</a>. That domain is also pointed to from our own domain <a class="reference external" href="http://code.sarlab.ca">code.sarlab.ca</a></p>
-</div>
-<div class="section" id="working-with-sphinx-if-you-really-must">
-<h2>Working with Sphinx &#8211; If you really must<a class="headerlink" href="#working-with-sphinx-if-you-really-must" title="Permalink to this headline">¶</a></h2>
-<p>If you want to work with the documentation (outside of the in-file documentation of your code) do the following in your local repository root:</p>
-<div class="highlight-bash"><div class="highlight"><pre>mkdir html <span class="c">#</span>
-<span class="nb">cd </span>html
-git clone git@pfeifer.phas.ubc.ca:SARlabpy .
-git checkout --track origin/gh-pages
-rm -rf * <span class="c"># yes really, delete everything in html/</span>
-</pre></div>
-</div>
-<p>You have now created a directory that contains a repository (in a repository so to say). The orphan branch (i.e. not based off of anything) is checkout out. Note how you change branches simply by entereing and leaving that directory. (Not sure how this works on a gui client...). Now recreate the documentation:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="c"># modify the ReSTructured text files in doc/</span>
-<span class="c"># modify the documentation in the source code</span>
-<span class="nb">cd</span> ../doc <span class="c"># this is the directory where the doc setup script is</span>
-make html <span class="c"># this will recompile the html files, store them in html/</span>
-<span class="nb">cd</span> ../html <span class="c"># go back where the html files are</span>
-git add newfiles <span class="c"># if any</span>
-git commit -a -m <span class="s1">&#39;documentation updated&#39;</span>
-</pre></div>
-</div>
 </div>
 </div>
 
@@ -94,7 +72,6 @@ git commit -a -m <span class="s1">&#39;documentation updated&#39;</span>
   <ul>
 <li><a class="reference internal" href="#">Documenting and Testing SARlabpy</a><ul>
 <li><a class="reference internal" href="#inner-workings">Inner Workings</a></li>
-<li><a class="reference internal" href="#working-with-sphinx-if-you-really-must">Working with Sphinx &#8211; If you really must</a></li>
 </ul>
 </li>
 </ul>
@@ -123,6 +100,8 @@ git commit -a -m <span class="s1">&#39;documentation updated&#39;</span>
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<h4><a href="https://github.com/DrSAR/SARlabpy">Link to Github repository</a></h4>
+<h4><a href="https://github.com/DrSAR/SARlabpy/issues">Issues, Milestones, Bugs</a></h4>
         </div>
       </div>
       <div class="clearer"></div>

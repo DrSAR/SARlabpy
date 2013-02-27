@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>How to use Module Logging &mdash; SARlabpy 0.1alpha documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="SARlabpy 0.1alpha documentation" href="index.html" />
+    <link rel="next" title="SARlabpy Documentation" href="modules.html" />
+    <link rel="prev" title="Examples for BRUKERIO" href="BRUKERIOexamples.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="SARlabpy Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1alpha documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="how-to-use-module-logging">
+<h1>How to use Module Logging<a class="headerlink" href="#how-to-use-module-logging" title="Permalink to this headline">¶</a></h1>
+<p>Modules in this package (should) provide a thin layer to the python
+logging module. The idea is to emit messages inside the library and
+let the user of said library decide on whether they want to see it.</p>
+<div class="section" id="module-setup">
+<h2>Module setup<a class="headerlink" href="#module-setup" title="Permalink to this headline">¶</a></h2>
+<p>Any module interested in logging should include the following header:</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Inside the module being watch, statements of the kind:</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Variable x={0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;File not found, using random data instead. Good luck&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will lead to debug messages. With the default setting the first will be swallowed
+(since it is not severe enough, i.e. low enough log level), while the second should
+be visible.</p>
+</div>
+<div class="section" id="configuration-by-the-module-user">
+<h2>Configuration by the Module User<a class="headerlink" href="#configuration-by-the-module-user" title="Permalink to this headline">¶</a></h2>
+<p>The importer of the module (e.g. BRUKERIO) needs to issue the following
+statement in addition to the actual import statement:</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="c">#make the SARlogger features available</span>
+<span class="kn">from</span> <span class="nn">SARlabpy</span> <span class="kn">import</span> <span class="n">SARlogger</span>
+<span class="c">#test logging for BRUKERIO</span>
+<span class="kn">import</span> <span class="nn">BRUKERIO</span>
+<span class="n">SARlogger</span><span class="o">.</span><span class="n">initiate_logging</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>At this point, a console handler that issues anything that&#8217;s a WARNING or
+more sever will be written to to the console.
+Without the call to py:func::SARlogger.initiate_logging ,
+logging messages will be ignored alltogether.</p>
+<p>If you desire output to a file, another convenience function in SARlogger can be used
+to attach another handler (with another log level and formatter):</p>
+<div class="highlight-py"><div class="highlight"><pre><span class="n">SARlogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By default, this will lead to logging at the DEBUG level to file /tmp/SARlabpy.log.</p>
+</div>
+<div class="section" id="log-levels">
+<h2>Log levels<a class="headerlink" href="#log-levels" title="Permalink to this headline">¶</a></h2>
+<p>Log levels can be changed both at the logger level and the handler level. Note that no
+log messages are handed on to the handlers if they are above the logger log level.
+Each individual handler in turn decides whether to publish a received log message or
+not. This way it is possible to reduce console output to the more severe messages
+and log every little fart in a log file.</p>
+</div>
+<div class="section" id="more-sophisticated-log-control">
+<h2>More sophisticated log control<a class="headerlink" href="#more-sophisticated-log-control" title="Permalink to this headline">¶</a></h2>
+<p>Since the module will expose access to the logger through module attribute <cite>logger</cite>,
+logging is as configurable as the python logging module itself. You can attach
+further handlers, change the levels, come up with new formatters and filters
+as you desire....</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">How to use Module Logging</a><ul>
+<li><a class="reference internal" href="#module-setup">Module setup</a></li>
+<li><a class="reference internal" href="#configuration-by-the-module-user">Configuration by the Module User</a></li>
+<li><a class="reference internal" href="#log-levels">Log levels</a></li>
+<li><a class="reference internal" href="#more-sophisticated-log-control">More sophisticated log control</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="BRUKERIOexamples.html"
+                        title="previous chapter">Examples for BRUKERIO</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="next chapter">SARlabpy Documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/SARloggerexamples.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<h4><a href="https://github.com/DrSAR/SARlabpy">Link to Github repository</a></h4>
+<h4><a href="https://github.com/DrSAR/SARlabpy/issues">Issues, Milestones, Bugs</a></h4>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="SARlabpy Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
+             >previous</a> |</li>
+        <li><a href="index.html">SARlabpy 0.1alpha documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, SARlab members.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
+    </div>
+  </body>
+</html>
