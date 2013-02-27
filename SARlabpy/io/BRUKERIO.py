@@ -658,11 +658,16 @@ def read2dseq(procdirname):
 
     if num_slices> 1: # have a 4D case:
         
-        for slice in range(0,num_slices-1):
+        for slice in range(0,num_slices):
         
             new_data[slice,:,:,:] = data[slice::num_slices,:,:].transpose(1,2,0)
         
-        data = new_data
+        # Return data as X,Y,Z,time
+        data = new_data.transpose(2,1,0,3)
+        
+        
+    else:
+        data = new_data.transpose(2,1,0)
                                   
     return {'data':data,
             'isImage':True,
