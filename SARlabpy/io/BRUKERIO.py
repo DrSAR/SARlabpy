@@ -17,6 +17,7 @@ import numpy
 import os.path
 import re
 from types import StringType, FileType
+import sys
 
 
 from itertools import tee, izip
