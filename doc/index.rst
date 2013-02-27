@@ -29,6 +29,7 @@ Howto, Guides, Examples
    Workflow
    Documenting-Testing
    BRUKERIOexamples
+   SARloggerexamples
 
 Doc's harvested from source code
 ----------------------------------

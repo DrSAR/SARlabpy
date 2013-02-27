@@ -8,7 +8,6 @@ all will be silent. Details in :py:mod: SARlogger
 import logging
 logger=logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-logger.info('test module imported: %s' % __name__)
 
 def foo(msg='message from foo'):
     logger.debug(msg)

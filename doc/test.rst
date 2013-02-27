@@ -1,6 +1,14 @@
 test Package
 ============
 
+:mod:`logtest_module` Module
+----------------------------
+
+.. automodule:: test.logtest_module
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`test_BRUKERIO` Module
 ---------------------------
 
