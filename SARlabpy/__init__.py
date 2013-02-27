@@ -8,4 +8,4 @@ from io import SARlogger
 
 #from io.congrid import congrid
 
-from fmoosvi.analysis import (calculateAUC, enhancementCurve)
+from fmoosvi.analysis import (calculateAUC, enhancementCurve, determineInjectionPoint)
