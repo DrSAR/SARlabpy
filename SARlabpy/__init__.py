@@ -4,8 +4,8 @@ release = version + 'alpha'
 from io.BRUKERIO import (readJCAMP, readfid, readfidspectro, read2dseq,
                         dict2string, fftbruker, readRFshape)
                         
-from io.SARlogger import setup_custom_logger
+from io import SARlogger
 
-from io.congrid import congrid
+#from io.congrid import congrid
 
 from fmoosvi.analysis import (calculateAUC, enhancementCurve)

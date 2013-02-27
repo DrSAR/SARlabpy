@@ -7,12 +7,14 @@ import doctest
 import os
 
 #import matplotlib.pyplot as plt
-from SARlabpy.io import BRUKERIO
-import logging
 import pylab
 import numpy
-logger = logging.getLogger('root')
-logger.setLevel(logging.INFO)
+
+#make the SARlogger features available
+from SARlabpy import SARlogger
+#test logging for BRUKERIO
+from SARlabpy.io import BRUKERIO
+SARlogger.initiate_logging(BRUKERIO, handler_level=SARlogger.INFO)
 
 print('test_BRUKERIO run: %s' % __name__)
 
@@ -64,12 +66,10 @@ class Test(unittest.TestCase):
     
     def test_doctests(self):
         '''Run the doctests'''
-        logger.info('Running the doctests')
         doctest.testmod(BRUKERIO)
         
     def test_readfid(self):
         '''BRUKERIO.io.readfid()'''
-        logger.info('UNIT TEST: test_readfid')
 #        fname = os.path.expanduser('~/data/readfidTest.ix1/3/fid')   
 #        data = BRUKERIO.readfid(fname)
 #        kspace = data['data']
@@ -81,22 +81,21 @@ class Test(unittest.TestCase):
 #        pylab.imshow(numpy.log(kspace_stack+100))
 #        pylab.show()
         
-    def test_readJCAMP(self,skip=None):
+    def test_readJCAMP(self):
         '''
         Test readJCAMP for exceptions by reading variety of acqp 
         and method files
         '''
-        logger.info('UNIT TEST: test_readJCAMP')
-        skip = skip or [] # default if sentry is None
+        skip = [] # default 
      
         for k in [keys for keys in scan_labels.keys() if keys not in skip]:
-            logger.info('opening scan {0} which is "{1}"'.
+            BRUKERIO.logger.info('opening scan {0} which is "{1}"'.
                          format(k,scan_labels[k]))
             fname_acqp = fnameroot+str(k)+'/acqp'
             fname_method = fnameroot+str(k)+'/method'
     
             acqp = BRUKERIO.readJCAMP(fname_acqp)
-            logger.info('ACQ_size = {0}'.format(acqp['ACQ_size']))
+            BRUKERIO.logger.info('ACQ_size = {0}'.format(acqp['ACQ_size']))
             self.assertEqual(acqp['ACQ_O2_list'], [0])
             ACQ_size = acqp['ACQ_size']
             self.assertEqual(ACQ_size, ACQ_size_dict[k])
@@ -108,17 +107,16 @@ class Test(unittest.TestCase):
                if k not in (12,13,16,17,18):
                    self.assertEqual(ACQ_size, PVM_EncMatrix)
             except KeyError:
-                logger.info('scan {0} has no PVM_EncMatrix'.format(k))
+                BRUKERIO.logger.info('scan {0} has no PVM_EncMatrix'.format(k))
     
 def stresstest_readfid(skip=None):
     '''
     test.test_BRUKERIO.stresstest_readfid(skip=[9,13,15])
     '''
     skip = skip or [] # default if sentry is None
-    logger.setLevel(logging.INFO)
  
     for k in [keys for keys in scan_labels.keys() if keys not in skip]:
-        logger.info('opening scan {0} which is "{1}"'.
+        BRUKERIO.logger.info('opening scan {0} which is "{1}"'.
                      format(k,scan_labels[k]))
         fname = fnameroot+str(k)+'/fid'
 
@@ -128,7 +126,7 @@ def stresstest_readfid(skip=None):
         imgspace = BRUKERIO.fftbruker(kspace, 
                                       encoding=data['header']['encoding'])
         acqp = data['header']['acqp']
-        logger.debug('filesize={0}\ndata shape={1}\nACQ_size = {2}'.
+        BRUKERIO.logger.debug('filesize={0}\ndata shape={1}\nACQ_size = {2}'.
                      format(filesize, kspace.shape,acqp['ACQ_size']))
                      
         # reshape array by stacking them together

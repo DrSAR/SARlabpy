@@ -3,7 +3,14 @@
 Testing the Logger
 """
 import unittest
-from datetime import datetime
+
+#make the SARlogger features available
+from SARlabpy import SARlogger
+
+#test logging for BRUKERIO
+import test.logtest_module
+SARlogger.initiate_logging(test.logtest_module)
+
 
 class Test(unittest.TestCase):
     '''
@@ -11,29 +18,33 @@ class Test(unittest.TestCase):
     '''
     
     def test_SARlogger(self):
-
-        #setup this module should be using a logger
-        from SARlabpy.io import BRUKERIO
-        self.assertIsNotNone(BRUKERIO.logger)
-        
-        #or we should be able to query it
-        import logging
-        logger = logging.getLogger('root')
-        self.assertIsNotNone(logger)
-        
-        #let us do some logging
-        
-        logger.debug('debug message on {0}'.
-                      format(datetime.now().strftime('%c')))
-        logger.info('confirming that all is working well')
-        logger.warning('there are no warnings yet')
-        logger.error('nor are there any errors')
-        logger.critical('not to mention something critical that would make us wheep')
-
-        logger.setLevel(logging.CRITICAL)
-        logger.debug('this message goes unheeded')    
-        logger.critical('whereas this one is loud enough')
-
+        '''
+        This should setup the logger for a test module.
+        You will notive how the levels for the console and the file logging
+        can be independent.
+        '''
+        test.logtest_module.foo()
+        #switch to INFO only
+        print('\nswitch to INFO level')
+        SARlogger.change_logger_level(
+                test.logtest_module,
+                level=SARlogger.INFO)
+        test.logtest_module.foo()
+        #switch to WARNING only
+        print('\nswitch to WARNING level')
+        SARlogger.change_logger_level(
+                test.logtest_module,
+                level=SARlogger.WARNING)
+        test.logtest_module.foo()
+                
+        # Now, let's see some file action
+        print('\nadd file logger and switch to DEBUG level (for logger)')
+        SARlogger.change_logger_level(
+                test.logtest_module,
+                level=SARlogger.DEBUG)
+    
+        SARlogger.add_file_handler(test.logtest_module)
+        test.logtest_module.foo(msg='file logging?')
 
 if __name__ == "__main__":
     unittest.main()

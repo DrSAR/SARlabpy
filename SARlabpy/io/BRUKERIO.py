@@ -5,18 +5,20 @@
 """Collection of BRUKER input routines
 
 Handy functions to read BRUKER data and header files.
+
+The logging is set up so that if the library user does nothing,
+all will be silent. Details in :py:mod: SARlogger
 """
-print('BRUKERIO imported: %s' % __name__)
+import logging
+logger=logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 import numpy
 import os.path
 import re
 from types import StringType, FileType
 
-# setup logging
-import SARlogger, logging
-logger=SARlogger.setup_custom_logger('root')
-logger.setLevel(logging.WARNING)
+
 from itertools import tee, izip
 def pairwise(iterable):
     """
@@ -55,14 +57,10 @@ def readJCAMP(filename):
     typecasting of the records into all these different datatypes.
     """
 
-    try:
-        logger.debug("opening {0}".format(filename))
-        JCAMPfile = open(filename, "r")
-        JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
-        JCAMPfile.close()
-    except IOError as (errno, strerror):
-        print "There was an I/O error({0}): {1}".format(errno, strerror)
-        raise IOError, strerror
+    logger.debug("opening {0}".format(filename))
+    JCAMPfile = open(filename, "r")
+    JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
+    JCAMPfile.close()
 
     # let's loop through the file, remove comments and put each
     # LDR on its own line
@@ -97,7 +95,7 @@ def readJCAMP(filename):
         # the LDRlist
         else:
             raise IOError('encountered line that cannot be here:\n{0}'.
-            format(line,next_line))
+                    format(line,next_line))
 #            LDRlist[-1] = LDRlist[-1] + " " + line
 #            line = []
         #add this to the list of LDRs
@@ -732,11 +730,7 @@ def readRFshape(filename):
 
     returns a dictionary with ready-to-use attributes for amplitude,
     phase, bandwidth etc.'''
-    try:
-        RFstringdict = readJCAMP(filename)
-    except IOError:
-        print('problem reading RF file shape')
-        return None
+    RFstringdict = readJCAMP(filename)
 
 ##TITLE= /camelot/PV.2.0.Devel/exp/stan/nmr/lists/wave/imaghermite
 ##JCAMP-DX= 5.00 BRUKER JCAMP library

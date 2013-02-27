@@ -29,6 +29,13 @@ Howto, Guides, Examples
    Workflow
    Documenting-Testing
    BRUKERIOexamples
+   SARloggerexamples
+
+Doc's harvested from source code
+----------------------------------
+
+.. toctree::
+   :maxdepth: 2
 
 Doc's harvested from source code
 ----------------------------------
