@@ -120,24 +120,28 @@ def stresstest_readfid(skip=None):
                      format(k,scan_labels[k]))
         fname = fnameroot+str(k)+'/fid'
 
-        data = BRUKERIO.readfid(fname)
-        filesize = os.stat(fname).st_size
-        kspace = data['data']
-        imgspace = BRUKERIO.fftbruker(kspace, 
-                                      encoding=data['header']['encoding'])
-        acqp = data['header']['acqp']
-        BRUKERIO.logger.debug('filesize={0}\ndata shape={1}\nACQ_size = {2}'.
-                     format(filesize, kspace.shape,acqp['ACQ_size']))
-                     
-        # reshape array by stacking them together
-        nslices = kspace.shape[2]
-        kspace_stack = numpy.hstack(
-                        kspace[:,:,i,0] for i in range(0, nslices))
-        img_stack = numpy.hstack(
-                        imgspace[:,:,i,0] for i in range(0, nslices))
-        panel = numpy.vstack((kspace_stack, img_stack))
-        pylab.imshow(numpy.log(abs(panel)+abs(panel).max()/1000))
-        pylab.show()
+        try:
+            data = BRUKERIO.readfid(fname)
+            filesize = os.stat(fname).st_size
+        except IOError:
+            print('File NOT found: '+fname)
+        else:            
+            kspace = data['data']
+            imgspace = BRUKERIO.fftbruker(kspace, 
+                                          encoding=data['header']['encoding'])
+            acqp = data['header']['acqp']
+            BRUKERIO.logger.debug('filesize={0}\ndata shape={1}\nACQ_size = {2}'.
+                         format(filesize, kspace.shape,acqp['ACQ_size']))
+                         
+            # reshape array by stacking them together
+            nslices = kspace.shape[2]
+            kspace_stack = numpy.hstack(
+                            kspace[:,:,i,0] for i in range(0, nslices))
+            img_stack = numpy.hstack(
+                            imgspace[:,:,i,0] for i in range(0, nslices))
+            panel = numpy.vstack((kspace_stack, img_stack))
+            pylab.imshow(numpy.log(abs(panel)+abs(panel).max()/1000))
+            pylab.show()
 
 if __name__ == "__main__":
     unittest.main()
