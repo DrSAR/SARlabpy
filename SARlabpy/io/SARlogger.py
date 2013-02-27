@@ -10,26 +10,21 @@ the custom SARlogger.Good info to be found at the
     
 .. code-block:: py
 
-   # setup logging
-   import SARlogger
-   logger=SARlogger.setup_custom_logger(level=SARlogger.WARNING)
+   #make the SARlogger features available
+   from SARlabpy import SARlogger
+   #test logging for BRUKERIO
+   import BRUKERIO
+   SARlogger.initiate_logging(BRUKERIO)
 
-Currently BRUKERIO instantiates such a logger. You can get access to it through 
-the module variable: BRUKERIO.logger or you can access it by finding where the
-'root' logger is:
-
-.. code-block:: py
-
-   import logging
-   logger = logging.getLogger('root')
-   logger.setLevel(logging.DEBUG)
-
-In either case you can then emit messages in your code 
-(whereever logger is accessible):
+At this point, a console handler that issues anything that's a WARNING or 
+more severe (higher level) will be written to to the console. 
+If you  also desire output to 
+a file, another convenience function in SARlogger can be used
+to attach another handler (with another log level and formatter): 
 
 .. code-block:: py
-   
-   logger.debug('this is a debug message')
+
+   SARlogger.add_file_handler(BRUKERIO)
 """
 
 import logging
@@ -46,11 +41,14 @@ def initiate_logging(module, formatter=None,
         Module object that points to module in the SARlabpy package 
         framework (collection of libraries? modules?).
     :param int handler_level: 
-        log level, default logging.DEBUG(=10)
-        this will be ignored if there is no handler provided and one or 
-        more handlers pre-exist. in other words, the level can only be set 
-        for the default (console) handler. Use :py:func: change_logger_level:
-        to change the overall level
+        log level for the handler, default logging.DEBUG(=10)
+    :param int logger_level: 
+        log level for the entire logger, default logging.DEBUG(=10)
+        Use :py:meth:`change_logger_level` to change the overall level
+    :param formatter:
+        default provides time, level, module and message
+    :param handler:
+        default provides a StreamHandler (that prints to the console)
         
     The module in question will have set up minimal logging. A NullHandler 
     has been set so the default logging (methods in the libraries should
@@ -97,7 +95,17 @@ def initiate_logging(module, formatter=None,
            
 def add_file_handler(module, formatter=None, handler=None, level=None):
     '''
-    add handler for logging to file. typically with lower level and timestamps
+    Add handler for logging to file. typically with lower level and timestamps
+    
+    :param module module: module whose logger to add the handler to
+    :param int level: 
+        log level for the entire logger, default logging.DEBUG(=10)
+        This is equivalent to handler_level option in
+        :func:`initiate_logging`
+    :param formatter:
+        default provides date, time, level, module and message
+    :param handler:
+        default provides a FileHandler (that prints to /tmp/SARlabpy.log)
     '''
     if formatter is None:
         formatter = logging.Formatter(fmt=
@@ -116,5 +124,11 @@ def change_logger_level(module, level=None):
     '''
     This changes the overall logger level. Above in :py:func: initiate_logging,
     the level for the individual handler was being set.
+
+    :param module module: module whose logger to change the logger level for
+    :param int level: 
+        log level for the entire logger, default logging.DEBUG(=10)
+        This is equivalent to logger_level option in
+        :func:`initiate_logging`
     '''
     module.logger.setLevel(level=level)
