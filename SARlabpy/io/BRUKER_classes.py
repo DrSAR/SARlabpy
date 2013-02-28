@@ -100,14 +100,30 @@ class JCAMP_file(object):
     
     Parameters become attributes in this class
     '''
-    def __init__(self, filename):
+    def __init__(self, filename, lazy=True):
         if not os.path.isfile(filename):
             raise IOError('File "%s" not found' % filename)
-        # no go and read the file
-        acqp = BRUKERIO.readJCAMP(filename)
+        self.filename = filename
+        self._yet_loaded = False
+        if not lazy:
+            self._forced_load()
+            
+    def __getattr__(self, attr):
+        '''
+        intercepts only undefined attributes. this will be used to 
+        trigger the loading of the data
+        '''
+        if not self._yet_loaded:
+            self._forced_load() 
+        return object.__getattribute__(self, attr)
+        
+    def _forced_load(self):
+        logger.info('loading %s' % self.filename)
+        acqp = BRUKERIO.readJCAMP(self.filename)
         for k,v in acqp.iteritems():
             self.__dict__[k] = v
-
+        self._yet_loaded = True
+        
 class ACQP_file(JCAMP_file):
     '''
     Thin specialization of JCAMP_file. Mostly just a place holder and
