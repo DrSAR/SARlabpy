@@ -327,7 +327,7 @@ def readfid(fptr=None, untouched=False):
     # determine array dimensions
     ACQ_dim = acqp['ACQ_dim'] #Spatial/spectroscopic dimension
     logger.debug('ACQ_dim={0}'.format(ACQ_dim))
-    ACQ_size = acqp['ACQ_size'] #ACQ_size[0] should be even (real valued counts)
+    ACQ_size = acqp['ACQ_size'][:] #ACQ_size[0] should be even (real valued counts)
     logger.debug('ACQ_size={0}'.format(ACQ_size))
     assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
             'I am not clever enough to read Parallel acquired data, yet')
@@ -510,7 +510,7 @@ def readfidspectro(fptr=None, untouched=False):
     BYTORDA = acqp['BYTORDA']
 
     # determine array dimensions
-    ACQ_size = acqp['ACQ_size']
+    ACQ_size = acqp['ACQ_size'][:]
     # we acquire complex data which requires numbers in the read direction
     ACQ_size[0] /= 2
     # number of objects (increments? e.g., for inversion recovery?)
