@@ -22,9 +22,11 @@ def calculateAUC(study_path, series_num = 0):
     print procdirname
        
     data_dict = sar.read2dseq(procdirname)
-        
-    repetition_time = data_dict['header']['method']['PVM_RepetitionTime']*1E-3
+    
+    x_size = data_dict['data'].shape[0]
+    y_size = data_dict['data'].shape[1]    
     num_slices = data_dict['header']['method']['PVM_SPackArrNSlices'][0]
+    repetition_time = data_dict['header']['method']['PVM_RepetitionTime']*1E-3
     reps = data_dict['header']['method']['PVM_NRepetitions']
         
     # Determine point of injection by averaging one slice in the entire image
@@ -33,17 +35,18 @@ def calculateAUC(study_path, series_num = 0):
     
     inj_point = sar.determineInjectionPoint(data_dict)
 
-    # Now calculate the Normalized Intesity AUC voxel by voxel
+    # Now calculate the Normalized Intesity voxel by voxel
+    
+        
+    for slice in range(num_slices):
+        baseline = numpy.mean(data_dict['data'][:,:,slice,0:inj_point],axis=3)
+        norm_data[:,:,slice,:] = data_dict['data'][:,:,slice,:] / tile(baseline.reshape(x_size,y_size,1),reps)    
 
-    auc_data = data_dict['data'] # initialize auc_data
+        # Now calculate the actual AUC
+        
+        auc_data = numpy.sum(norm_data[:,:,slice,inj_point:],axis=3) / len(norm_data[:,:,slice,inj_point])
     
-    x_size = data_dict['data'].shape[0]
-    y_size = data_dict['data'].shape[1]
-    
-    baseline = numean(a[:,:,0:inj_point],axis=2)
-    result = a[:,:,inj_point:]/tile(baseline.reshape(x_size,y_size,1),40)    
-    
-    
+
     # Time this code block and compare it with the vectorized form to convince
         # yourelf that the above is faster
     
