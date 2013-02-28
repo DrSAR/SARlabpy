@@ -131,13 +131,30 @@ class BRUKER_fid(object):
     __init__(filename) expects a directory name. It will look
     for the fid file, and the acqp and method parameter files.
     '''
-    def __init__(self, dirname, lazy=False):
-        if lazy:
-            raise NotImplementedError('lazy loading not implement yet')
-        else:
-            fid = BRUKERIO.readfid(os.path.join(dirname,'fid'))
-            self.__dict__['fid'] = fid['data']
-
+    def __init__(self, dirname, lazy=True):
+        self.dirname = dirname
+        self._yet_loaded = False
+        if not lazy:
+            self._forced_load()
+            
+    def __getattr__(self, attr):
+        '''
+        intercepts only undefined attributes. this will be used to 
+        trigger the loading of the fid data
+        '''
+        if not self._yet_loaded:
+            self._forced_load() 
+        return object.__getattribute__(self, attr)
+        
+    # TODO: currently, header files acqp and method are loaded twice.
+    #       need to remove the redundancy. Somehow provide the headers
+    #       if possible.
+    def _forced_load(self):
+        logger.info('loading %s' % self.dirname)
+        fid = BRUKERIO.readfid(os.path.join(self.dirname,'fid'))
+        self.__dict__['fid'] = fid['data']
+        self._yet_loaded = True
+        
 
 class dict2obj(object):
     '''
@@ -164,3 +181,8 @@ class PDATA_file(object):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+#    import numpy
+#    fname = os.path.expanduser('~/data/readfidTest.ix1/3')
+#    x = BRUKER_fid(fname)
+#    print('mean = {0}'.format(numpy.mean(x.fid)))
+#    print(x.kasimir)
