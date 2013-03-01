@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (C) 2012-2013 Stefan A Reinsberg and SARlab members
 # full license details see LICENSE.txt
 """Collection of analysis routines for Bruker data
@@ -12,8 +13,9 @@ import os
 import pylab
 import SARlabpy as sar
 import pdb
+import scipy
 
-def calculateAUC(data_dict, time = 60):
+def calculate_AUC(data_dict, time = 60):
 
     # Read in data and headers
     
@@ -22,55 +24,44 @@ def calculateAUC(data_dict, time = 60):
     num_slices = data_dict['header']['method']['PVM_SPackArrNSlices'][0]
     repetition_time = data_dict['header']['method']['PVM_RepetitionTime']*1E-3
     phase_encodes = data_dict['header']['method']['PVM_EncMatrix'][1] # Num phase encoding steps
-    time_per_rep = repetition_time * phase_encodes
     reps = data_dict['header']['method']['PVM_NRepetitions']
+    time_per_rep = repetition_time * phase_encodes
     auc_reps = int(numpy.round(time / time_per_rep))
-        
-    # Determine point of injection by averaging one slice in the entire image
-    tumour_curve = enhancementCurve(data_dict)
-    pylab.plot(tumour_curve[round(num_slices/2),:], '-bx')
+    time_points = numpy.arange(0,time_per_rep*auc_reps,time_per_rep)
     
-    inj_point = sar.determineInjectionPoint(data_dict)
+    # Determine point of injection by averaging one slice in the entire image
+    inj_point = sar.inj_point(data_dict)
+    
     # Now calculate the Normalized Intesity voxel by voxel
+    norm_data = normalize_dce(data_dict)
 
-    norm_data = numpy.empty([x_size,y_size,reps])
+    # Now calculate the actual AUC
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
-        
     for slice in range(num_slices):
-        
-        #pdb.set_trace()
         baseline = numpy.mean(data_dict['data'][:,:,slice,0:inj_point],axis=2)
-        norm_data = (data_dict['data'][:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps)) -1    
+        auc_data[:,:,slice] = numpy.trapz(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        #auc_data[:,:,slice] = numpy.sum(norm_data[:,:,slice,inj_point:inj_point+auc_reps],axis = 2)
 
-        # Now calculate the actual AUC    
-        auc_data[:,:,slice] = numpy.sum(norm_data[:,:,inj_point:inj_point+auc_reps],axis=2)
-    
     return auc_data
-#
-#import pylab
-#import numpy
-#x=200
-#y=400
-#s=3
-#
-#orig_data = numpy.ones([x,y,s,111])
-#orig_data[5:15,15:25,:,10:] = 101
-#orig_data[5:15,15:25,:,10] = 111
-#
-#baseline = numpy.mean(orig_data[:,:,0,0:9],axis = 2)
-#
-#norm_data = numpy.empty([x,y,s,111])
-#auc_data = numpy.empty([x,y,s])
-#
-#norm_data[:,:,0,:] = (orig_data[:,:,0,:] / numpy.tile(baseline.reshape(x,y,1),111)) -1
-#auc_data[:,:,0] = numpy.sum(norm_data[:,:,0,10:70],axis = 2)
-#
-#pylab.imshow(auc_data[:,:,0])
 
+def normalize_dce(data_dict):
 
+    x_size = data_dict['data'].shape[0]
+    y_size = data_dict['data'].shape[1]
+    inj_point = sar.inj_point(data_dict)
+    reps = data_dict['header']['method']['PVM_NRepetitions']
+    num_slices = data_dict['header']['method']['PVM_SPackArrNSlices'][0]
+    
+    norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-def enhancementCurve(data_dict, mask=False):
+    for slice in range(num_slices):
+        baseline = numpy.mean(data_dict['data'][:,:,slice,0:inj_point],axis=2)
+        norm_data[:,:,slice,:] = (data_dict['data'][:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1    
+
+    return norm_data
+
+def enhancement_curve(data_dict, mask=False):
 
     if mask:
         print "I don't know how to deal with masks quite yet"
@@ -78,12 +69,12 @@ def enhancementCurve(data_dict, mask=False):
         #TODO: Complete this to read in an ROI somehow
         
     else:
-        
-        img_mean = data_dict['data'][:,:,:,:].mean(0).mean(0)
-            
-        return img_mean
+        print "Work in progress"
 
-def determineInjectionPoint(data_dict):
+                
+        return
+
+def inj_point(data_dict):
     
     from collections import Counter
 
@@ -113,7 +104,7 @@ def determineInjectionPoint(data_dict):
     injection_point_counter = Counter(injection_point)
     injection_point = injection_point_counter.most_common(1)
 
-    return injection_point[0][0]
+    return injection_point[0][0]+1
 
 
 
