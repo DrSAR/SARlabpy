@@ -13,12 +13,10 @@ import os
 import pylab
 import SARlabpy as sar
 import pdb
-import scipy
+import scipy.integrate
 
 def calculate_AUC(data_dict, time = 60):
-
-    # Read in data and headers
-    
+    # Read in data and headers    
     x_size = data_dict['data'].shape[0]
     y_size = data_dict['data'].shape[1]    
     num_slices = data_dict['header']['method']['PVM_SPackArrNSlices'][0]
@@ -27,10 +25,10 @@ def calculate_AUC(data_dict, time = 60):
     reps = data_dict['header']['method']['PVM_NRepetitions']
     time_per_rep = repetition_time * phase_encodes
     auc_reps = int(numpy.round(time / time_per_rep))
-    time_points = numpy.arange(0,time_per_rep*auc_reps,time_per_rep)
+    time_points = numpy.arange(time_per_rep,time_per_rep*auc_reps + time_per_rep,time_per_rep)
     
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sar.inj_point(data_dict)
+    inj_point = sar.analysis.inj_point(data_dict)
     
     # Now calculate the Normalized Intesity voxel by voxel
     norm_data = normalize_dce(data_dict)
@@ -39,17 +37,14 @@ def calculate_AUC(data_dict, time = 60):
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
     for slice in range(num_slices):
-        baseline = numpy.mean(data_dict['data'][:,:,slice,0:inj_point],axis=2)
-        auc_data[:,:,slice] = numpy.trapz(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
-        #auc_data[:,:,slice] = numpy.sum(norm_data[:,:,slice,inj_point:inj_point+auc_reps],axis = 2)
-
+        auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
     return auc_data
 
 def normalize_dce(data_dict):
 
     x_size = data_dict['data'].shape[0]
     y_size = data_dict['data'].shape[1]
-    inj_point = sar.inj_point(data_dict)
+    inj_point = sar.analysis.inj_point(data_dict)
     reps = data_dict['header']['method']['PVM_NRepetitions']
     num_slices = data_dict['header']['method']['PVM_SPackArrNSlices'][0]
     

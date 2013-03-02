@@ -9,6 +9,7 @@ from io.BRUKER_classes import (natural_sort,
                         
 from io import SARlogger
 
-#from io.congrid import congrid
+from fmoosvi import analysis
+from fmoosvi import test_suite
 
-from fmoosvi.analysis import (calculate_AUC,enhancement_curve,inj_point,normalize_dce)
+#from io.congrid import congrid
