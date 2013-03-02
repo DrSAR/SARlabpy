@@ -15,6 +15,7 @@ import SARlabpy as sar
 import pdb
 import scipy.integrate
 
+def calculate_AUC(data_dict, time = 60):
 
 def describe_object(class_object):
 
@@ -98,7 +99,7 @@ def normalize_dce(data_dict):
 
     x_size = data_dict['data'].shape[0]
     y_size = data_dict['data'].shape[1]
-    inj_point = sar.analysis.inj_point(data_dict)
+    inj_point = sar.inj_point(data_dict)
     reps = data_dict['header']['method']['PVM_NRepetitions']
     num_slices = data_dict['header']['method']['PVM_SPackArrNSlices'][0]
     

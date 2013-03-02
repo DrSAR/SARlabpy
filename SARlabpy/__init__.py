@@ -1,3 +1,4 @@
+
 version = '0.1'
 release = version + 'alpha'
 from io.BRUKERIO import (readJCAMP, readfid, readfidspectro, read2dseq,
@@ -13,3 +14,5 @@ from fmoosvi import analysis
 #from fmoosvi import test_suite
 
 #from io.congrid import congrid
+
+from fmoosvi.analysis import (calculate_AUC,enhancement_curve,inj_point,normalize_dce)
