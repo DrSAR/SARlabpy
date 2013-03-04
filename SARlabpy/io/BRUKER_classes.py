@@ -3,6 +3,7 @@
 Class Definitions for BRUKER data
 """
 import os
+import re
 import glob
 import BRUKERIO
 
@@ -133,17 +134,6 @@ class PDATA_file(object):
             self.__forced_load() 
         return object.__getattribute__(self, attr)
 
-
-#TODO: Class for a Patient
-class Patient(object):
-    def __init__(self):
-        raise NotImplementedError
-        
-#TODO: Class for a Study
-class Study(object):
-    def __init__(self):
-        raise NotImplementedError
-
 class Scan(object):
     '''
     Object to represent a BRUKER scan
@@ -222,6 +212,64 @@ class Scan(object):
         for attr in ['acqp', 'method','pdata']:
             if not self.__dict__[attr]:
                 self.__delattr__(attr)
+        
+#TODO: Class for a Study
+class Study(object):
+    def __init__(self, filename, lazy=True):
+        '''
+        A study in BRUKER parlance is a collection of scans performed on
+        on subject (typically within a day, without interruption). A study
+        directory is expected to contain a JCAMP file 'subject' and have one
+        or more subdirectories which are scans/
+        
+        :param string filename: directory name for the BRUKER study
+        :param boolean lazy: 
+            do not investigate the number and validity of scans contained 
+            with the study directory
+        '''
+        if os.path.isdir(filename):
+            # good, that could be it
+            self.dirname = filename
+        elif os.path.isdir(os.path.dirname(filename)):
+            logger.warning(('Scan initialized with a filename (%s) not a' +
+                            ' directory.') % filename)
+            # did the punter point the filename to some file inside
+            # the directory?
+            self.dirname = os.path.dirname(filename)
+        else:
+            # no good
+            raise IOError(
+                'Filename "%s" is neither a directory nor a file inside one' %
+                filename)
+                
+        self.subject = JCAMP_file(os.path.join(self.dirname,'subject'), 
+                                      lazy=lazy)
+        self.__yet_loaded = False
+         
+    def __getattr__(self, attr):
+        '''
+        intercepts only undefined attributes. this will be used to 
+        trigger the loading of the data
+        '''
+        if not self.__yet_loaded:
+            self.__forced_load() 
+        return object.__getattribute__(self, attr)
+        
+    def __forced_load(self):
+        logger.info('loading %s now forced' % self.dirname)        
+        self.scans = []
+        for fname in os.listdir(self.dirname):
+            filename = os.path.join(self.dirname, fname)
+            if (os.path.isdir(filename) and
+                re.match('[0-9]+', fname)):
+                self.scans.append(Scan(filename, lazy=True))
+        self.__yet_loaded = True
+            
+        
+#TODO: Class for a Patient
+class Patient(object):
+    def __init__(self):
+        raise NotImplementedError
 
 
 if __name__ == '__main__':
