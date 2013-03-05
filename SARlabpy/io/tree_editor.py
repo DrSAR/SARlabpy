@@ -18,7 +18,7 @@ from enthought.traits.ui.wx.tree_editor \
 
 # DATA CLASSES
 
-class Employee ( HasTraits ):
+class Scan ( HasTraits ):
     name  = Str( '<unknown>' )
     title = Str
     phone = Regex( regex = r'\d\d\d-\d\d\d\d' )
@@ -26,45 +26,45 @@ class Employee ( HasTraits ):
     def default_title ( self ):
         self.title = 'Senior Engineer'
 
-class Company ( HasTraits ):
+class Scanlist ( HasTraits ):
     name        = Str( '<unknown>' )
-    employees   = List( Employee )
+    scanlist   = List( Scan )
 
 class Owner ( HasTraits ):
     name    = Str( '<unknown>' )
-    company = Instance( Company )
+    scanlist = Instance( Scanlist )
 
 # INSTANCES
 
-jason = Employee(
+jason = Scan(
      name  = 'Jason',
      title = 'Engineer',
      phone = '536-1057' )
 
-mike = Employee(
+mike = Scan(
      name  = 'Mike',
      title = 'Sr. Marketing Analyst',
      phone = '536-1057' )
 
-dave = Employee(
+dave = Scan(
      name  = 'Dave',
      title = 'Sr. Engineer',
      phone = '536-1057' )
 
-susan = Employee(
+susan = Scan(
      name  = 'Susan',
      title = 'Engineer',
      phone = '536-1057' )
 
-betty = Employee(
+betty = Scan(
      name  = 'Betty',
      title = 'Marketing Analyst' )
 
 owner = Owner(
     name    = 'wile',
-    company = Company(
+    scanlist = Scanlist(
         name = 'Acme Labs, Inc.',
-        employees = [ dave, susan, mike, betty, jason ]
+        scanlist = [ dave, susan, mike, betty, jason ]
     )
 )
 
@@ -77,7 +77,7 @@ def_title_action = Action(name='Default title',
                           action = 'object.default')
 
 # View used by tree editor
-employee_view = View(
+scanlist_view = View(
     VSplit(
         HGroup( '3', 'name' ),
         HGroup( '9', 'title' ),
@@ -89,14 +89,14 @@ employee_view = View(
 # Tree editor
 tree_editor = TreeEditor(
     nodes = [
-        TreeNode( node_for  = [ Company ],
-                  auto_open = True,
-                  children  = 'employees',
-                  label     = '=Employees',
+        TreeNode( node_for  = [ Scanlist ],
+                  auto_open = False,
+                  children  = 'scanlist',
+                  label     = '=Scans',
                   view      = no_view,
-                  add       = [ Employee ] ),
-        TreeNode( node_for  = [ Employee ],
-                  auto_open = True,
+                  add       = [ Scan ] ),
+        TreeNode( node_for  = [ Scan ],
+                  auto_open = False,
                   label     = 'name',
                   menu=Menu( NewAction,
                              Separator(),
@@ -109,7 +109,7 @@ tree_editor = TreeEditor(
                              DeleteAction,
                              Separator(),
                              RenameAction ),
-                  view = employee_view )
+                  view = scanlist_view )
     ]
 )
 
@@ -117,14 +117,14 @@ tree_editor = TreeEditor(
 view = View(
            Group(
                Item(
-                    name = 'company',
-                    id = 'company',
+                    name = 'scanlist',
+                    id = 'scanlist',
                     editor = tree_editor,
                     resizable = True ),
                 orientation = 'vertical',
                 show_labels = True,
                 show_left = True, ),
-            title = 'Company Structure',
+            title = 'View of Scans',
             id = \
              'enthought.traits.ui.tests.tree_editor_test',
             dock = 'horizontal',
