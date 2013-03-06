@@ -215,12 +215,15 @@ class Scan(object):
         
 #TODO: Class for a Study
 class Study(object):
+    '''
+    A study in BRUKER parlance is a collection of scans performed on
+    on subject (typically within a day, without interruption). A study
+    directory is expected to contain a JCAMP file 'subject' and have one
+    or more subdirectories which are scans.
+    '''
     def __init__(self, filename, lazy=True):
         '''
-        A study in BRUKER parlance is a collection of scans performed on
-        on subject (typically within a day, without interruption). A study
-        directory is expected to contain a JCAMP file 'subject' and have one
-        or more subdirectories which are scans/
+        Initialize the Study through loading metadata from the subject file.
         
         :param string filename: directory name for the BRUKER study
         :param boolean lazy: 
@@ -266,11 +269,63 @@ class Study(object):
         self.__yet_loaded = True
             
         
-#TODO: Class for a Patient
 class Patient(object):
-    def __init__(self):
-        raise NotImplementedError
+    '''
+    A patient can have multiple studies (in BRUKER speak) which can in 
+    turn have multiple scans. A patient can be initialised by pointing it 
+    to a scan or study. A patient should be able to find related studies 
+    (and their scans) from a search of files in a disk database.
+    '''
+    
+    def __init__(self, filename, lazy=True):
+        '''
+        Initialize the Patient through loading metadata from the subject file.
+        
+        :param string filename: directory name for the BRUKER study
+        :param boolean lazy: 
+            do not look for other studies, the number and validity of 
+            scans contained with the study directory ...
+        '''
+        study = Study(filename, lazy=lazy)   
+        self.lazy = lazy
+        self.SUBJECT_id = study.subject.SUBJECT_id
+        self.studies = [study]
+        self.__yet_loaded = False
+          
+    def find_all_studies(self):
+        '''search through database to see whether there are other studies
+        
+        :param string filename: search directory, defaults to the parent 
+        directory of the first initialized study.
+        '''
+        
+        # we are search directory names based on SUBJECT_id. This might
+        # fragile and we might have to improve on this. Maybe search */subject
+        # instead?
 
+        known_uids = [study.subject.SUBJECT_patient_instance_uid for study in 
+                      self.studies]        
+        
+        searchdir = (os.path.dirname(os.path.dirname(
+                     os.path.join(self.studies[0].dirname,'.'))) +
+                     os.path.sep + self.SUBJECT_id+'*')
+
+        directories = glob.glob(searchdir)
+        newfound = False
+        for dirname in directories:
+            study = Study(dirname, lazy=self.lazy)
+            if not(study.subject.SUBJECT_patient_instance_uid in known_uids):
+                if study.subject.SUBJECT_id != self.SUBJECT_id:
+                    logger.warn(('while the directory names ({0}) match, '+
+                                'the SUBJECT_id ({1})does not -> confused!').
+                                format(dirname, self.SUBJECT_id))
+                else:
+                    self.studies.append(study)
+                    newfound = True
+        
+        if not newfound:
+            logger.info('No new studies found for patient <%s>' %
+                        self.SUBJECT_id)
 
 if __name__ == '__main__':
     import doctest
