@@ -11,6 +11,7 @@ import logging
 logger=logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+dataroot = os.path.expanduser('~/data')
                             
 class JCAMP_file(object):
     '''
@@ -138,7 +139,8 @@ class FID_file(object):
 
 class Scan(object):
     '''
-    Object to represent a BRUKER scan
+    Object to represent a BRUKER scan consisting, typically, of FID_file 
+    and PDATA_file(s).
 
     The __init__() method expects the filename to be a directory. It will
     try around a bit (filenames inside the directory) before throwing an 
@@ -215,7 +217,6 @@ class Scan(object):
             if not self.__dict__[attr]:
                 self.__delattr__(attr)
         
-#TODO: Class for a Study
 class Study(object):
     '''
     A study in BRUKER parlance is a collection of scans performed on
@@ -271,96 +272,123 @@ class Study(object):
         self.__yet_loaded = True
             
         
-class Patient(object):
+class StudyCollection(object):
     '''
-    A patient can have multiple studies (in BRUKER speak) which can in 
-    turn have multiple scans. A patient can be initialised by pointing it 
-    to a scan or study. A patient should be able to find related studies 
-    (and their scans) from a search of files in a disk database.
+    A StudyCollection can have multiple studies (in BRUKER speak) which can in 
+    turn have multiple scans. It can be initialised by pointing it 
+    to a scan or study. This should be a superclass to, e.g. the Patient and 
+    the Experiment class.
     '''
     
-    def __init__(self, filename, lazy=True):
+    def __init__(self, lazy=True):
         '''
-        Initialize the Patient through loading metadata from the subject file.
+        Initialize without loading any data.
         
-        :param string filename: directory name for the BRUKER study
         :param boolean lazy: 
             do not look for other studies, the number and validity of 
-            scans contained with the study directory ...
+            scans contained with the study directory, this parameter is
+            handed onwards when adding studies
         '''
-        logger.info('attempting to load %s' % filename)
-        study = Study(filename, lazy=lazy)   
+        self.study_instance_uids = []
+        self.studies = []
         self.lazy = lazy
-        self.SUBJECT_id = study.subject.SUBJECT_id
-        self.studies = [study]
-        self.__yet_loaded = False
-          
-    def find_all_studies(self):
-        '''search through database to see whether there are other studies
         
-        :param string filename: search directory, defaults to the parent 
-        directory of the first initialized study.
+    def add_study(self, study=None, by_name=None, by_uid=None):
+        '''search through database to find anything that matches root
+        
+        :param Study study: 
+            add the indicated study
+        :param string by_name:
+            search through database with the indicated string
+        :param string by_uid:
+            search through database by UID. This is potentially very slow
         '''
-        
-        # we are search directory names based on SUBJECT_id. This might
-        # fragile and we might have to improve on this. Maybe search */subject
-        # instead?
 
-        known_uids = [study.subject.SUBJECT_patient_instance_uid for study in 
-                      self.studies]        
-        
-        searchdir = (os.path.dirname(os.path.dirname(
-                     os.path.join(self.studies[0].dirname,'.'))) +
-                     os.path.sep + self.SUBJECT_id+'*')
+        done = False
+        if study:       
+            assert isinstance(study, Study), (
+                'Object added to StudyCollection is not a Study')
+            done = True
 
+        if by_name:
+            if done:
+                raise ValueError(
+                    'Object added to StudyCollection identified by more than '+
+                    'one criterion')                    
+            raise NotImplementedError
+            done = True
+        
+        if by_uid:
+            if done:
+                raise ValueError(
+                    'Object added to StudyCollection identified by more than '+
+                    'one criterion')                    
+            raise NotImplementedError
+            done = True
+            
+        if done:
+            if (study.subject.SUBJECT_patient_instance_uid in 
+                self.study_instance_uids):
+                logger.warn('study previously added')
+            else:
+                self.studies.append(study)
+                self.study_instance_uids.append(
+                            study.subject.SUBJECT_patient_instance_uid)
+                logger.info('study "%s" added to StudyCollection' % 
+                            study.subject.SUBJECT_study_name)
+        else:
+            logger.warning('no study added to StudyCollection')
+
+    def get_SUBJECT_id(self):
+        return [x.subject.SUBJECT_id for x in self.studies]
+
+      
+class Patient(StudyCollection):
+    '''
+    A Patient is a special Collection of studies in that the subject_id
+    has to agree from one study to the next
+    '''
+    def __init__(self, patient_name, lazy=True):
+        super(Patient, self).__init__(lazy=lazy)
+        self.patient_id = None
+        
+        searchdir = os.path.join(dataroot, patient_name) + '*'
         directories = glob.glob(searchdir)
-        newfound = False
         for dirname in directories:
             study = Study(dirname, lazy=self.lazy)
-            if not(study.subject.SUBJECT_patient_instance_uid in known_uids):
-                if study.subject.SUBJECT_id != self.SUBJECT_id:
-                    logger.warn(('while the directory names ({0}) match, '+
-                                'the SUBJECT_id ({1})does not -> confused!').
-                                format(dirname, self.SUBJECT_id))
-                else:
-                    self.studies.append(study)
-                    newfound = True
+            if not self.patient_id:
+                self.patient_id = study.subject.SUBJECT_id
+            if self.patient_id != study.subject.SUBJECT_id:
+                logger.warning(
+                    'trying to load studies of different SUBJECT_id(s)')
+            else:
+                self.add_study(study)
         
-        if not newfound:
-            logger.info('No new studies found for patient <%s>' %
-                        self.SUBJECT_id)
-                        
-class Experiment(object):
+  
+class Experiment(StudyCollection):
     '''
     An Experiment is not BRUKER terminology. It is a grouping of several 
     studies (that have scans themselves) by various criteria.
     Typically, the patient name contains a root pointing to a common goal
-    of the performed scans.
+    of the performed scans. It is a bit like a patient with the relaxation
+    of the requirement of having identical SUBJECT_ids.
     '''
-    def __init__(self, root=None, lazy=True):
-        self.patients = []
-        self.lazy = lazy
-        self.study_instance_uids=[]
+    def __init__(self, lazy=True, root=None, absolute_root=False):
+        super(Experiment, self).__init__(root)
         if root:
-            self.root = root
-            self.find_patients()
+            self.find_studies(root=root, absolute_root=absolute_root)
+
+    def find_studies(self, root=None, absolute_root=False):
+        if absolute_root:
+            searchdir = root
         else:
-            self.root = ''
+            print dataroot, root
+            searchdir = os.path.join(dataroot, root) + '*'
 
-    # TODO: avoid additions of previously known patients
-    def add_patient(self, pat):
-        pat.find_all_studies()
-        
-        self.patients.append(pat)
-
-    def find_patients(self):
-        searchdir = (self.root+'*')
         directories = glob.glob(searchdir)
-        logger.info('Searching amongst {0}'.format(directories))
-        for dirname in directories:            
-            pat = Patient(dirname, lazy=self.lazy)
-            print('got %s' % pat.SUBJECT_id)
-            self.add_patient(pat)
+        for dirname in directories:
+            study = Study(dirname, lazy=self.lazy)
+            self.add_study(study)
 
 if __name__ == '__main__':
     import doctest
