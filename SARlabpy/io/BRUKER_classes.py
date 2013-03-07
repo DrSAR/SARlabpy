@@ -97,7 +97,7 @@ class PDATA_file(object):
             self.__forced_load() 
         return object.__getattribute__(self, attr)                                          
         
-class BRUKER_fid(object):
+class FID_file(object):
     '''
     Initialize an fid object whih should sit in the scan root directory.
     Really, this is a decorator class.
@@ -160,7 +160,7 @@ class Scan(object):
         'Thu Feb 21 19:01:26 2013 PST (UT-8h)  '
 
     '''
-    fid = BRUKER_fid()
+    fid = FID_file()
     def __init__(self, filename, lazy=True):
         '''
         Is the filename a direcotry and can we at least find
