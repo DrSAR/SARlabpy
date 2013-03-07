@@ -59,6 +59,43 @@ class METHOD_file(JCAMP_file):
     def __init__(self, dirname, lazy=True):
         super(METHOD_file, self).__init__(os.path.join(dirname,'method'),
                                           lazy=lazy)
+                                          
+class dict2obj(object):
+    '''
+    Helper class to turn dictionary keys into class attributes.
+    It's so much nicer to refer to them that way.
+    '''
+    def __init__(self,dictionary):
+        for k,v in dictionary.iteritems():
+            self.__dict__[k] = v
+
+class PDATA_file(object):
+    '''
+    Initialize a processed data set that usually sits in */pdata/[1-9].
+
+    __init__(filename) expects a directory name in pdata. It will look
+    for the 2dseq file, the d3proc and th reco file.
+    '''
+    def __init__(self, filename, lazy=True):
+        self.__yet_loaded = False
+        if not lazy:
+            self.__forced_load()
+    def  __forced_load(self):
+        logger.info('loading 2dseq now forced %s:' % self.filename)
+        pdata = BRUKERIO.read2dseq(self.filename)
+        self.__yet_loaded = True
+        self.__dict__['data'] = pdata['data']
+        for k,v in pdata['header'].iteritems():
+            self.__dict__[k] = dict2obj(v)
+
+    def __getattr__(self, attr):
+        '''
+        intercepts only undefined attributes. this will be used to 
+        trigger the loading of the data
+        '''
+        if not self.__yet_loaded:
+            self.__forced_load() 
+        return object.__getattribute__(self, attr)                                          
         
 class BRUKER_fid(object):
     '''
@@ -97,42 +134,7 @@ class BRUKER_fid(object):
         self.__yet_loaded = True
         
 
-class dict2obj(object):
-    '''
-    Helper class to turn dictionary keys into class attributes.
-    It's so much nicer to refer to them that way.
-    '''
-    def __init__(self,dictionary):
-        for k,v in dictionary.iteritems():
-            self.__dict__[k] = v
 
-class PDATA_file(object):
-    '''
-    Initialize a processed data set that usually sits in */pdata/[1-9].
-
-    __init__(filename) expects a directory name in pdata. It will look
-    for the 2dseq file, the d3proc and th reco file.
-    '''
-    def __init__(self, filename, lazy=True):
-        self.__yet_loaded = False
-        if not lazy:
-            self.__forced_load()
-    def  __forced_load(self):
-        logger.info('loading 2dseq now forced %s:' % self.filename)
-        pdata = BRUKERIO.read2dseq(self.filename)
-        self.__yet_loaded = True
-        self.__dict__['data'] = pdata['data']
-        for k,v in pdata['header'].iteritems():
-            self.__dict__[k] = dict2obj(v)
-
-    def __getattr__(self, attr):
-        '''
-        intercepts only undefined attributes. this will be used to 
-        trigger the loading of the data
-        '''
-        if not self.__yet_loaded:
-            self.__forced_load() 
-        return object.__getattribute__(self, attr)
 
 class Scan(object):
     '''
