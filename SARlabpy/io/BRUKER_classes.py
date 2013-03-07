@@ -286,6 +286,7 @@ class Patient(object):
             do not look for other studies, the number and validity of 
             scans contained with the study directory ...
         '''
+        logger.info('attempting to load %s' % filename)
         study = Study(filename, lazy=lazy)   
         self.lazy = lazy
         self.SUBJECT_id = study.subject.SUBJECT_id
@@ -326,6 +327,38 @@ class Patient(object):
         if not newfound:
             logger.info('No new studies found for patient <%s>' %
                         self.SUBJECT_id)
+                        
+class Experiment(object):
+    '''
+    An Experiment is not BRUKER terminology. It is a grouping of several 
+    studies (that have scans themselves) by various criteria.
+    Typically, the patient name contains a root pointing to a common goal
+    of the performed scans.
+    '''
+    def __init__(self, root=None, lazy=True):
+        self.patients = []
+        self.lazy = lazy
+        self.study_instance_uids=[]
+        if root:
+            self.root = root
+            self.find_patients()
+        else:
+            self.root = ''
+
+    # TODO: avoid additions of previously known patients
+    def add_patient(self, pat):
+        pat.find_all_studies()
+        
+        self.patients.append(pat)
+
+    def find_patients(self):
+        searchdir = (self.root+'*')
+        directories = glob.glob(searchdir)
+        logger.info('Searching amongst {0}'.format(directories))
+        for dirname in directories:            
+            pat = Patient(dirname, lazy=self.lazy)
+            print('got %s' % pat.SUBJECT_id)
+            self.add_patient(pat)
 
 if __name__ == '__main__':
     import doctest
@@ -334,4 +367,3 @@ if __name__ == '__main__':
     fname = os.path.expanduser('~/data/readfidTest.ix1/3')
     x = Scan(fname)
     print('mean = {0}'.format(numpy.mean(x.fid)))
-    print(x.kasimir)
