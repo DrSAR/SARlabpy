@@ -79,13 +79,14 @@ class PDATA_file(object):
     '''
     def __init__(self, filename, lazy=True):
         self.__yet_loaded = False
+        self.filename = filename 
         if not lazy:
             self.__forced_load()
     def  __forced_load(self):
         logger.info('loading 2dseq now forced %s:' % self.filename)
         pdata = BRUKERIO.read2dseq(self.filename)
         self.__yet_loaded = True
-        self.__dict__['data'] = pdata['data']
+        self.data = pdata['data']
         for k,v in pdata['header'].iteritems():
             self.__dict__[k] = dict2obj(v)
 
