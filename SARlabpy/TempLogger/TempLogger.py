@@ -16,40 +16,46 @@ import urllib   # Import module to check if website is up
 
 #----------------------------------------------------------------------------------------
 ## First CHECK IF SERVER IS UP 
-OneIFServerUp=1; # Assume ServerDown
-try:
-    a=urllib.urlopen("http://www.google.com").getcode() # a=200 when website can be opened
-    if a==200:
-        OneIFServerUp=1;    # Server is up (define a=1)
-except IOError: # If get an IOError (Can't connect to google)
-    #print('IOError, internet up?')
-    OneIFServerUp=0; 
-    # No msg when python can connect to google
- 
-# Setup SerialData Read     # UNCOMMENT WHEN READING SERIAL IN
-#port='/dev/tty.usbmodemfa131'
-#ser = serial.Serial("/dev/tty.usbmodemfa131",9600)
-#print ser
+def CheckServer():    
+    ServerUp=0; # ServerUp=1 if server is up, 0 if server is down
+    try:
+        a=urllib.urlopen("http://www.google.com").getcode() # a=200 when website can be opened
+        if a==200:
+            ServerUp=1;    # Server is up (define a=1)
+    except IOError: # If get an IOError (Can't connect to google)
+        #print('IOError, internet up?')
+        ServerUp=0; 
+        # No msg when python can connect to google
+    return ServerUp # Returns Var. ServerUp
+     
+    # Setup SerialData Read     # UNCOMMENT WHEN READING SERIAL IN
+    #port='/dev/tty.usbmodemfa131'
+    #ser = serial.Serial("/dev/tty.usbmodemfa131",9600)
+    #print ser
 
-# MAIN LOOP
-one=1
-while one==1: # Infinite loop (ctr-c to break)
-    #value = ser.readline();
-    #print value
-    #print value.split()[2] # This reads channel 1 (the [2] reads the 2nd col sep by white space)
+def ReadSerial():
+    try:
+        #value = ser.readline();
+        #print value
+        #print value.split()[2] # This reads channel 1 (the [2] reads the 2nd col sep by white space)
 
-    #x=float(value.split()[2])   # [2] for ch1, [3] for ch2, [4] for ch3 monitor battery
-    #x2=float(value.split()[3])
-    #T=(x-500)/10 # T is degrees in celsius
-    #T2=(x2-500)/10
-    #print x , T , x2 , T2
+        #x=float(value.split()[2])   # [2] for ch1, [3] for ch2, [4] for ch3 monitor battery
+        #x2=float(value.split()[3])
+        #T=(x-500)/10 # T is degrees in celsius
+        #T2=(x2-500)/10
+        #print x , T , x2 , T2
 
-    x=700; # x is raw voltage from TMP36 (max Vwixel=3400mV)
-    T=30; # T is temperature
-    x2=732;
-    T2=45;
+        x=700; # x is raw voltage from TMP36 (max Vwixel=3400mV)
+        T=30; # T is temperature
+        x2=732;
+        T2=45;
+        WixelAlive=1;
+    except IOError:
+        WixelAlive=0; # WIXEL PROBLEM (CAN'T READ IN)
+        return (WixelAlive, x, T, x2, T2)
 
 
+def Logger():        
     # LOGGER (31 bytes per line * 1440 lines per day * 30 days = 1.3 Mb per month)
     logger = logging.getLogger('TemperatureLogFile') # create logger instance
     hdlr = logging.handlers.TimedRotatingFileHandler("TemperatureLogFile",when="midnight") # create filehandler (handler sends log to specified destination)
@@ -59,11 +65,11 @@ while one==1: # Infinite loop (ctr-c to break)
     logger.addHandler(hdlr)         # attach handler to logger
     logger.setLevel(logging.WARNING)    # sets debug level for logger
 
-    if OneIFServerUp==1: # If Server is up..
-        logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2(V/3.3V,Temp)=' + repr(x2) + ',' + repr(T2))      # This is the message 
-    elif OneIFServerUp==0:   # Server is DOWN!!!!
-        # Log "server down" in logfile, but can't send email (since server is down)
-        logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2(V/3.3V,Temp)=' + repr(x2) + ',' + repr(T2) + ' SERVER DOWN')      # This is the message 
+    # if OneIFServerUp==1: # If Server is up..
+    #     logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2(V/3.3V,Temp)=' + repr(x2) + ',' + repr(T2))      # This is the message 
+    # elif OneIFServerUp==0:   # Server is DOWN!!!!
+    #     # Log "server down" in logfile, but can't send email (since server is down)
+    #     logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2(V/3.3V,Temp)=' + repr(x2) + ',' + repr(T2) + ' SERVER DOWN')      # This is the message 
     
 
     if T < 0:
@@ -122,5 +128,22 @@ print ("OUTSIDE WHILE LOOP")
 # 2. Stop Reading in voltage (ev 30 mins?) SEND EMAIL
 # 3. DONE Temperature too cold 
 # 4.    
+
+
+##----------------------------------------------------------------------------------------
+## MAIN LOOP
+
+# Check Server
+ServerUp=CheckServer();         # Calls Function CheckServer
+print "ServerUp is : ", ServerUp
+
+# Read Serial in
+[WixelAlive, x, T, x2, T2]=ReadSerial();    # Calls Function ReadSerial
+print "WixelAlive, x, T, x2, T2 are : ", WixelAlive
+
+# Logger
+one=10th
+while one==1: # Infinite loop (ctr-c to break)
+
 
 
