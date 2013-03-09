@@ -374,7 +374,7 @@ class Experiment(StudyCollection):
     of the performed scans. It is a bit like a patient with the relaxation
     of the requirement of having identical SUBJECT_ids.
     '''
-    def __init__(self, lazy=True, root=None, absolute_root=False):
+    def __init__(self, root=None, absolute_root=False, lazy=True):
         super(Experiment, self).__init__(root)
         if root:
             self.find_studies(root=root, absolute_root=absolute_root)
