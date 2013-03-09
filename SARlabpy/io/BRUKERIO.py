@@ -17,6 +17,7 @@ import numpy
 import os.path
 import re
 from types import StringType, FileType
+import sys
 
 
 from itertools import tee, izip
@@ -583,35 +584,40 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(procdirname):
+def read2dseq(scandirname, pdata_num = 1):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
-    :param procdirname: filename of directory that contains the processed data
-    :type procdirname: string
+    :param scandirname: filename of the scan directory
+    :type scanirname: string
+    :param pdata_num: the reconstruction number in cases of multiple recons (/pdata/1/)
+    :type pdata_num: integer of the processed data
     :return: dictionary with data, and headerinformation. The data is
              an array of BRUKER-reconstructed image data in the respecive proc
              directory.
-    :rtype: dict with 'data':
-            numpy array 'header':dict{'reco':..., 'd3proc':...}
+    :rtype: dict with 'data':numpy array 'header':dict{'recpo':..., 'd3proc':...}
     :raises: IOERROR if directory non-existent
 
     This relies on numpy's array functionality
-    """
-  
-    # get relevant information from the  reco file
+    """ 
+
+    # get relevant information from the reco and d3proc files
+
+    procdirname = os.path.join(scandirname,'pdata',str(pdata_num))  
     reco = readJCAMP(procdirname+'/reco')
     d3proc = readJCAMP(procdirname+'/d3proc')
-    
-    
+
+
     ## Enhancement by Firas M. to also read in acqp and mehod files
-    # Currently non-pythonic because it requres inefficient code
-    
-    scandirname = os.path.dirname(os.path.dirname(procdirname))
-    
-#    acqp = readJCAMP(scandirname[0]+'/acqp')
-    method = readJCAMP(os.path.join(scandirname,'method'))
-    
+
+    try:
+        acqp = readJCAMP(scandirname+'/acqp')
+        method = readJCAMP(scandirname+'/method')
+        
+    except IOError:
+        
+        print('Could not find acqp or method files, continuing on...')
+       
     RECO_size = [d3proc['IM_SIZ'], \
                  d3proc['IM_SIY'], \
                  d3proc['IM_SIX']]
@@ -650,20 +656,24 @@ def read2dseq(procdirname):
     assert len(method['PVM_SPackArrNSlices']) == 1, 'Something wrong in num_slices'
     reps = method['PVM_NRepetitions']
     
-#    new_data = numpy.empty([d3proc['IM_SIZ']/reps, d3proc['IM_SIY'],d3proc['IM_SIX'],reps])
-#
-#    if num_slices> 1: # have a 4D case:
-#        
-#        for slice in range(0,num_slices-1):
-#        
-#            new_data[slice,:,:,:] = data[slice::num_slices,:,:].transpose(1,2,0)
-#            new_data[slice,:,:,:] = data[slice::num_slices,:,:].transpose(1,2,0)
-#        
-#        data = new_data
+    new_data = numpy.empty([d3proc['IM_SIZ']/reps, d3proc['IM_SIY'],d3proc['IM_SIX'],reps])
+
+    if num_slices> 1: # have a 4D case:
+        
+        for slice in range(0,num_slices):
+        
+            new_data[slice,:,:,:] = data[slice::num_slices,:,:].transpose(1,2,0)
+        
+        # Return data as X,Y,Z,time
+        data = new_data.transpose(2,1,0,3)
+        
+        
+    else:
+        data = new_data.transpose(2,1,0)
                                   
     return {'data':data,
             'isImage':True,
-            'header':{'reco': reco, 'd3proc':d3proc}}
+            'header':{'reco': reco, 'd3proc':d3proc, 'acqp': acqp, 'method': method}}
 
 def dict2string(d):
     '''
@@ -767,7 +777,7 @@ def readRFshape(filename):
 
 # main part - run test cases if called as a module
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+#    import doctest
+#    doctest.testmod()
     fn = os.path.expanduser('~/data/readfidTest.ix1/1/acqp')
     hdr=readJCAMP(fn)
