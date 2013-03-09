@@ -104,22 +104,15 @@ class FID_file(object):
     Initialize an fid object whih should sit in the scan root directory.
     Really, this is a decorator class.
     
-    __init__(filename) expects a directory name. It will look
-    for the fid file, and the acqp and method parameter files.
+    __init__() does not expect a directory name. It will look
+    for the fid file only when the attribue is being accessed. (see __get__)
+    The expectation is that the class implementing this decorator will 
+    provide an attribute dirname to load.
     '''
     def __init__(self):
         self.__yet_loaded = False
-            
-#    def __getattr__(self, attr):
-#        '''
-#        intercepts only undefined attributes. this will be used to 
-#        trigger the loading of the fid data
-#        '''
-#        if not self._yet_loaded:
-#            self._forced_load() 
-#        return object.__getattribute__(self, attr)
-    
-    def __set__(*args): raise AttributeError
+                
+    def __set__(*args): raise AttributeError('read only!')
         
     def __get__(self, instance, value):
         if not self.__yet_loaded:
@@ -151,8 +144,7 @@ class Scan(object):
     Simple Example:
         
         >>> import os
-        >>> fname = os.path.expanduser('~/data/readfidTest.ix1/3')
-        >>> exp3 = Scan(fname)
+        >>> exp3 = Scan('readfidTest.ix1/3')
         >>> dir(exp3)
         ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'dirname', 'fid', 'method', 'pdata']
         >>> exp3.acqp.ACQ_protocol_name
@@ -164,13 +156,17 @@ class Scan(object):
 
     '''
     fid = FID_file()
-    def __init__(self, filename, lazy=True):
+    def __init__(self, root, absolute_root=False, lazy=True):
         '''
         Is the filename a direcotry and can we at least find
         one of acqp, fid, or 2dseq
         
         :param string filename: directory name for the BRUKER data set
         '''
+        if absolute_root:
+            filename = root
+        else:
+            filename = os.path.join(dataroot, root)
         if os.path.isdir(filename):
             # good, that could be it
             self.dirname = filename
@@ -225,7 +221,7 @@ class Study(object):
     directory is expected to contain a JCAMP file 'subject' and have one
     or more subdirectories which are scans.
     '''
-    def __init__(self, filename, lazy=True):
+    def __init__(self, root, absolute_root=False, lazy=True):
         '''
         Initialize the Study through loading metadata from the subject file.
         
@@ -234,6 +230,11 @@ class Study(object):
             do not investigate the number and validity of scans contained 
             with the study directory
         '''
+        if absolute_root:
+            filename = root
+        else:
+            filename = os.path.join(dataroot, root)
+
         if os.path.isdir(filename):
             # good, that could be it
             self.dirname = filename
@@ -383,7 +384,6 @@ class Experiment(StudyCollection):
         if absolute_root:
             searchdir = root
         else:
-            print dataroot, root
             searchdir = os.path.join(dataroot, root) + '*'
 
         directories = glob.glob(searchdir)
