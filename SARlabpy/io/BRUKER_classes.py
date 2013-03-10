@@ -12,6 +12,11 @@ logger=logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 dataroot = os.path.expanduser('~/data')
+
+def natural_sort(l): 
+    convert = lambda text: int(text) if text.isdigit() else text.lower() 
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+    return sorted(l, key = alphanum_key)
                             
 class JCAMP_file(object):
     '''
@@ -194,7 +199,7 @@ class Scan(object):
         
         # let's see whether any data has been processed
         self.pdata=[]
-        for f in glob.glob(os.path.join(self.dirname,'pdata','*')):
+        for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
             try:
                 self.pdata.append(PDATA_file(f))
             except IOError:
@@ -266,7 +271,8 @@ class Study(object):
     def __forced_load(self):
         logger.info('loading %s now forced' % self.dirname)        
         self.scans = []
-        for fname in os.listdir(self.dirname):
+        eligible_dirs = natural_sort(os.listdir(self.dirname))
+        for fname in eligible_dirs:
             filename = os.path.join(self.dirname, fname)
             if (os.path.isdir(filename) and
                 re.match('[0-9]+', fname)):
@@ -365,7 +371,7 @@ class Patient(StudyCollection):
         self.patient_id = None
         
         searchdir = os.path.join(dataroot, patient_name) + '*'
-        directories = glob.glob(searchdir)
+        directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
             study = Study(dirname, lazy=self.lazy)
             if not self.patient_id:
@@ -396,7 +402,7 @@ class Experiment(StudyCollection):
         else:
             searchdir = os.path.join(dataroot, root) + '*'
 
-        directories = glob.glob(searchdir)
+        directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
             study = Study(dirname, lazy=self.lazy)
             self.add_study(study)
