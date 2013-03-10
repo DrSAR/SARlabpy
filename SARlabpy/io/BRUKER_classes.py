@@ -334,10 +334,20 @@ class StudyCollection(object):
                 logger.warn('study previously added')
             else:
                 self.studies.append(study)
-                self.study_instance_uids.append(
+                try:
+                    self.study_instance_uids.append(
                             study.subject.SUBJECT_patient_instance_uid)
-                logger.info('study "%s" added to StudyCollection' % 
-                            study.subject.SUBJECT_study_name)
+                except AttributeError:
+                    logger.warning(
+                        'SUBJECT_patient_instance_uid not found in study: %s' %
+                        study.dirname)
+                try:
+                    logger.info('study "%s" added to StudyCollection' % 
+                                study.subject.SUBJECT_study_name)
+                except AttributeError:
+                    logger.warning(
+                        'SUBJECT_study_name not found in study: %s' %
+                        study.dirname)
         else:
             logger.warning('no study added to StudyCollection')
 
