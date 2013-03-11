@@ -599,24 +599,10 @@ def read2dseq(scandirname):
     """ 
 
     # get relevant information from the reco and d3proc files
-
     reco = readJCAMP(os.path.join(scandirname,'reco'))
     d3proc = readJCAMP(os.path.join(scandirname,'d3proc'))
     visu_pars = readJCAMP(os.path.join(scandirname,'visu_pars'))
-
     
-
-    ## Enhancement by Firas M. to also read in acqp and mehod files
-
-#    try:
-#        acqp = readJCAMP(scandirname+'/acqp')
-#        method = readJCAMP(scandirname+'/method')
-#        
-#    except IOError:
-#        
-#        print('Could not find acqp or method files, continuing on...')
-       
-  
     # determine ENDIANness and storage type
         
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
@@ -632,64 +618,50 @@ def read2dseq(scandirname):
         datatype = '<'+datatype
     else:
         datatype = '>'+datatype
-
     dtype = numpy.dtype(datatype)
 
     # load data
     data = numpy.fromfile(file=os.path.join(scandirname,'2dseq'),
                           dtype=dtype)
                           
-    print(data.shape)
-
     matrix_size = visu_pars['VisuCoreSize']
     x=matrix_size[0]
     y=matrix_size[1]
     
-    remaining_dims = len(data) / (x * y)
-
-    data = data.reshape((remaining_dims, y, x))
-    
-    print(data.shape)
-    
     if visu_pars['VisuCoreDim'] == 2:
-        print('this is a 2D case')
-        for VisuFGOrderDesc_Element in visu_pars['VisuFGOrderDesc']:
-            print(VisuFGOrderDesc_Element)
-            if VisuFGOrderDesc_Element[1]=='<FG_SLICE>':
-                z=VisuFGOrderDesc_Element[1][0]
-    else: 
-        z = matrix_size[2] 
-
-                          
-    # Deal with RECO_slope (added by FM)
-    RECO_map_slope = reco['RECO_map_slope']    
-    #TODO - Fix this so that it divides it slice by slice in case reco slope is different
-    data = data/RECO_map_slope[0] # assues the reco map slope is the same for all slices
-    
-    # sort data properly if 4D data (e.g., DCE) 
-    
-#    #TODO - deal with slices in multiple packages
-#    assert len(method['PVM_SPackArrNSlices']) == 1, 'Something wrong in num_slices'
-#    reps = method['PVM_NRepetitions']
-    
-    new_data = numpy.empty([d3proc['IM_SIZ']/reps, d3proc['IM_SIY'],d3proc['IM_SIX'],reps])
-
-    if num_slices> 1: # have at least a 3D case:
-        
-        for slice in range(0,num_slices):
-        
-            new_data[slice,:,:,:] = data[slice::num_slices,:,:].transpose(1,2,0)
-        
-        # Return data as X,Y,Z,time
-        data = new_data.transpose(2,1,0,3)
-        
-        
+        z = 1 # we hope this will get updated below in the case of
+              # multi-slice 2D data
     else:
-        data = new_data.transpose(2,1,0)
+        z = matrix_size[2]
+        
+    additional_dims = []
+    try:
+        VisuFGOrderDesc = visu_pars['VisuFGOrderDesc']
+    except KeyError:
+        # data missing, we should have all we need anyway
+        pass
+    else:
+        for VisuFGOrderDesc_element in VisuFGOrderDesc:
+            if VisuFGOrderDesc_element[1].strip()=='<FG_SLICE>':
+                z = int(VisuFGOrderDesc_element[0])
+            else:
+                additional_dims.append(int(VisuFGOrderDesc_element[0]))
+
+    all_dims = [x, y, z]
+    all_dims.extend(additional_dims)
+    all_dims.reverse()
+    
+    data = data.reshape(all_dims)
+    # transpose so that time, z, y, x -> x, y, z, time
+    data.transpose( numpy.arange(data.ndim,0,-1)-1)
+                          
+#    #TODO - deal with slices in multiple packages
                                   
     return {'data':data,
             'isImage':True,
-            'header':{'reco': reco, 'd3proc':d3proc}}
+            'header':{'reco': reco, 
+                      'd3proc': d3proc,
+                      'visu_pars':visu_pars}}
 
 def dict2string(d):
     '''
