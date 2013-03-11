@@ -149,7 +149,7 @@ def readJCAMP(filename):
                     list_level_one = [s.strip(' ()')
                                       for s in re.split('\) *\(', 
                                       v)]
-                    if len(list_level_one) > 1:
+                    if len(list_level_one) > 0:
                         LDRdict[k] = [list_element.
                                 split(',') for list_element in list_level_one]
                     else:
