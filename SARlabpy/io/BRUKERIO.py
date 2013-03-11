@@ -584,12 +584,11 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(procdirname):
+def read2dseq(scandirname):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
-    :param procdirname: filename of directory that contains the processed data
-    :type procdirname: string
+    :param string scandirname: filename of the scan directory
     :return: dictionary with data, and headerinformation. The data is
              an array of BRUKER-reconstructed image data in the respecive proc
              directory.
@@ -597,29 +596,27 @@ def read2dseq(procdirname):
     :raises: IOERROR if directory non-existent
 
     This relies on numpy's array functionality
-    """
-  
-    # get relevant information from the  reco file
-    reco = readJCAMP(procdirname+'/reco')
-    d3proc = readJCAMP(procdirname+'/d3proc')
+    """ 
+
+    # get relevant information from the reco and d3proc files
+
+    reco = readJCAMP(os.path.join(scandirname,'reco'))
+    d3proc = readJCAMP(os.path.join(scandirname,'d3proc'))
+    visu_pars = readJCAMP(os.path.join(scandirname,'visu_pars'))
+
     
-    
+
     ## Enhancement by Firas M. to also read in acqp and mehod files
-    # Currently non-pythonic because it requres inefficient code
-    
-    scandirname = os.path.split(procdirname)
-    scandirname = os.path.split(scandirname[0])
-    scandirname = os.path.split(scandirname[0])
-    
-    acqp = readJCAMP(scandirname[0]+'/acqp')
-    method = readJCAMP(scandirname[0]+'/method')
-    
-    
-    
-    RECO_size = [d3proc['IM_SIZ'], \
-                 d3proc['IM_SIY'], \
-                 d3proc['IM_SIX']]
-    
+
+#    try:
+#        acqp = readJCAMP(scandirname+'/acqp')
+#        method = readJCAMP(scandirname+'/method')
+#        
+#    except IOError:
+#        
+#        print('Could not find acqp or method files, continuing on...')
+       
+  
     # determine ENDIANness and storage type
         
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
@@ -639,8 +636,30 @@ def read2dseq(procdirname):
     dtype = numpy.dtype(datatype)
 
     # load data
-    data = numpy.fromfile(file=procdirname+'/2dseq',
-                          dtype=dtype).reshape(RECO_size)
+    data = numpy.fromfile(file=os.path.join(scandirname,'2dseq'),
+                          dtype=dtype)
+                          
+    print(data.shape)
+
+    matrix_size = visu_pars['VisuCoreSize']
+    x=matrix_size[0]
+    y=matrix_size[1]
+    
+    remaining_dims = len(data) / (x * y)
+
+    data = data.reshape((remaining_dims, y, x))
+    
+    print(data.shape)
+    
+    if visu_pars['VisuCoreDim'] == 2:
+        print('this is a 2D case')
+        for VisuFGOrderDesc_Element in visu_pars['VisuFGOrderDesc']:
+            print(VisuFGOrderDesc_Element)
+            if VisuFGOrderDesc_Element[1]=='<FG_SLICE>':
+                z=VisuFGOrderDesc_Element[1][0]
+    else: 
+        z = matrix_size[2] 
+
                           
     # Deal with RECO_slope (added by FM)
     RECO_map_slope = reco['RECO_map_slope']    
@@ -649,14 +668,13 @@ def read2dseq(procdirname):
     
     # sort data properly if 4D data (e.g., DCE) 
     
-    num_slices = method['PVM_SPackArrNSlices'][0]
-    #TODO - deal with slices in multiple packages
-    assert len(method['PVM_SPackArrNSlices']) == 1, 'Something wrong in num_slices'
-    reps = method['PVM_NRepetitions']
+#    #TODO - deal with slices in multiple packages
+#    assert len(method['PVM_SPackArrNSlices']) == 1, 'Something wrong in num_slices'
+#    reps = method['PVM_NRepetitions']
     
     new_data = numpy.empty([d3proc['IM_SIZ']/reps, d3proc['IM_SIY'],d3proc['IM_SIX'],reps])
 
-    if num_slices> 1: # have a 4D case:
+    if num_slices> 1: # have at least a 3D case:
         
         for slice in range(0,num_slices):
         
@@ -671,7 +689,7 @@ def read2dseq(procdirname):
                                   
     return {'data':data,
             'isImage':True,
-            'header':{'reco': reco, 'd3proc':d3proc, 'acqp': acqp, 'method': method}}
+            'header':{'reco': reco, 'd3proc':d3proc}}
 
 def dict2string(d):
     '''
