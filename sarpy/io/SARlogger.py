@@ -11,7 +11,7 @@ the custom SARlogger.Good info to be found at the
 .. code-block:: py
 
    #make the SARlogger features available
-   from SARlabpy import SARlogger
+   from sarpy import SARlogger
    #test logging for BRUKERIO
    import BRUKERIO
    SARlogger.initiate_logging(BRUKERIO)
@@ -34,11 +34,11 @@ def initiate_logging(module, formatter=None,
                      handler=None, handler_level=None,
                      logger_level=None):
     '''
-    Initiate logging for a module (in the SARlabpy package). This assumes 
+    Initiate logging for a module (in the sarpy package). This assumes 
     a module has been imported.
     
     :param module module:
-        Module object that points to module in the SARlabpy package 
+        Module object that points to module in the sarpy package 
         framework (collection of libraries? modules?).
     :param int handler_level: 
         log level for the handler, default logging.DEBUG(=10)
@@ -105,7 +105,7 @@ def add_file_handler(module, formatter=None, handler=None, level=None):
     :param formatter:
         default provides date, time, level, module and message
     :param handler:
-        default provides a FileHandler (that prints to /tmp/SARlabpy.log)
+        default provides a FileHandler (that prints to /tmp/sarpy.log)
     '''
     if formatter is None:
         formatter = logging.Formatter(fmt=
@@ -113,7 +113,7 @@ def add_file_handler(module, formatter=None, handler=None, level=None):
                         datefmt='%y-%m-%d %H:%M')
     
     if handler is None:
-        handler = logging.FileHandler('/tmp/SARlabpy.log')
+        handler = logging.FileHandler('/tmp/sarpy.log')
     if level is None:
         level = DEBUG
     handler.setFormatter(formatter)

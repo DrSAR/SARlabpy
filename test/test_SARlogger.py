@@ -5,7 +5,7 @@ Testing the Logger
 import unittest
 
 #make the SARlogger features available
-from SARlabpy import SARlogger
+from sarpy import SARlogger
 
 #test logging for BRUKERIO
 import test.logtest_module

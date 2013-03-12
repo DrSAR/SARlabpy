@@ -1,9 +1,9 @@
 from distutils.core import setup
 import os
 
-#import SARlabpy
-from SARlabpy import version
-from SARlabpy import release
+#import sarpy
+from sarpy import version
+from sarpy import release
 README = os.path.join(os.path.dirname(__file__), 'README.rst')
 long_description = open(README).read() + 'nn'
 
@@ -12,16 +12,16 @@ long_description = open(README).read() + 'nn'
 # barfs with an obstruse error
 # option -b not recognized
 if __name__ == '__main__':
-    setup(name='SARlabpy',
+    setup(name='sarpy',
       version=version,
       author='Stefan A Reinsberg and other SARlab members',
-      url='http://pfeifer.phas.ubc.ca/SARlabpy',
-      download_url='http://pfeifer.phas.ubc.ca/SARlabpy/files',
+      url='http://pfeifer.phas.ubc.ca/sarpy',
+      download_url='http://pfeifer.phas.ubc.ca/sarpy/files',
       description='Data Analysis of MR data acquired on BRUKER and other systems',
       long_description=long_description, 
-      package_dir={'': 'SARlabpy'},
-      py_modules=['SARlabpy','BRUKERIO'],
-      provides=['SARlabpy'],
+      package_dir={'': 'sarpy'},
+      py_modules=['sarpy','BRUKERIO'],
+      provides=['sarpy'],
       keywords='MRI image processing data analysis',
       license='General Public License v3',
       classifiers=['Development Status :: 2 - Pre-Alpha',

@@ -11,10 +11,10 @@ from __future__ import division
 import numpy
 import os
 import pylab
-import SARlabpy as sar
+import sarpy as sar
 import pdb
 import scipy.integrate
-import SARlabpy.fmoosvi.getters as getters
+import sarpy.fmoosvi.getters as getters
 
 
 def describe_object(class_object):

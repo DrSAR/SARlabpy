@@ -1,4 +1,4 @@
-SARlabpy -- A collection of routines used for analysis of MRI data.
+sarpy -- A collection of routines used for analysis of MRI data.
 --------------------------------------------------------------------
 
 The main objectives for this code is

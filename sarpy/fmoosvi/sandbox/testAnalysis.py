@@ -4,13 +4,13 @@ Created on Mon Feb 25 00:24:57 2013
 
 @author: firas
 """
-# Add sarlabpy to the di
+# Add sarpy to the di
 
 import numpy
 import os
-import SARlabpy as sar
+import sarpy as sar
 import pylab
-import SARlabpy.io.BRUKER_classes as cls
+import sarpy.io.BRUKER_classes as cls
 
 reload(sar)
 reload(cls)

@@ -11,9 +11,9 @@ import pylab
 import numpy
 
 #make the SARlogger features available
-from SARlabpy import SARlogger
+from sarpy import SARlogger
 #test logging for BRUKERIO
-from SARlabpy.io import BRUKERIO
+from sarpy.io import BRUKERIO
 SARlogger.initiate_logging(BRUKERIO, handler_level=SARlogger.INFO)
 
 print('test_BRUKERIO run: %s' % __name__)

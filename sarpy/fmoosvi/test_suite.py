@@ -8,7 +8,7 @@ Test Suite
 """
 import numpy
 import pylab
-import SARlabpy as sar
+import sarpy as sar
 import pdb
 import numpy.testing
 import os
