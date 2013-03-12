@@ -14,9 +14,27 @@ logger.addHandler(logging.NullHandler())
 dataroot = os.path.expanduser('~/data')
 
 def natural_sort(l): 
+    '''
+    Sort a list by a natural sort order (number ascending) and even if
+    bracketed by blocks of alpha-characters.
+    
+    This is based on code a blog post by `Jeff Atwood <http://www.codinghorror.com/blog/2007/12/sorting-for-humans-natural-sort-order.html>`_.
+    It is also discussed on `stackoverflow <http://stackoverflow.com/questions/4836710/does-python-have-a-built-in-function-for-string-natural-sort>`_.
+    '''    
     convert = lambda text: int(text) if text.isdigit() else text.lower() 
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
     return sorted(l, key = alphanum_key)
+
+def strip_all_but_classname(obj, class_str):
+    '''
+    Nicely format the class_str that is used in some of the __str__ calls
+    '''
+    m = re.search("'[^']+'", str(obj.__class__))
+    if m:
+        class_name = m.group(0).strip("'")
+    else:
+        class_name = class_str
+    return class_name
                             
 class JCAMP_file(object):
     '''
@@ -225,9 +243,11 @@ class Scan(object):
             
             >>> a=Scan('readfidTest.ix1/5')
             >>> print(a)
-            <object: Scan("readfidTest.ix1/5") >
+            __main__.Scan("readfidTest.ix1/5")
         '''
-        return '<object: Scan("{0}") >'.format(self.shortdirname)
+        return '{0}("{1}")'.format(
+                    strip_all_but_classname(self, 'Scan'),
+                    self.shortdirname)
         
     def __repr__(self):
         '''
@@ -328,39 +348,40 @@ class Study(object):
         
             >>> a=Study('readfidTest.ix1')
             >>> print(a)
-            <object: Study("readfidTest.ix1") >
+            __main__.Study("readfidTest.ix1")
         '''
-        return '<object: Study("{0}") >'.format(self.shortdirname)
+        return '{0}("{1}")'.format(
+                    strip_all_but_classname(self, 'Study'),
+                    self.shortdirname)
         
     def __repr__(self):
         '''
         More elaborate string representation of the Study object:
 
->>> a=Study('readfidTest.ix1')
->>> a
-Study object: Study("readfidTest.ix1")
-   subject: Moosvi, readfidTest
-   scans: 1-TriPilot-multi
-          FLASH_bas(modified)
-          FLASH_bas(modified)
-          MSME_bas
-          MSME_bas
-          MSME_turbo_bas
-          FLASH_bas(modified)
-          FLASH_bas(modified)
-          FLASH_bas(modified)
-          FLASH_bas(modified)
-          MSME_bas
-          EPI_bas
-          EPI_nav_bas
-          DtiStandard_bas
-          DtiSpiral_bas
-          UTE2D
-          UTE3D
-          ZTE
-          FLASH_bas(modified)
-          FLASH_bas(modified)
-            
+        >>> a=Study('readfidTest.ix1')
+        >>> a
+        Study object: Study("readfidTest.ix1")
+           subject: Moosvi, readfidTest
+           scans: 1-TriPilot-multi
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+                  MSME_bas
+                  MSME_bas
+                  MSME_turbo_bas
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+                  MSME_bas
+                  EPI_bas
+                  EPI_nav_bas
+                  DtiStandard_bas
+                  DtiSpiral_bas
+                  UTE2D
+                  UTE3D
+                  ZTE
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
         '''
         try:
             scan_list_repr = [scan.acqp.ACQ_protocol_name for 
@@ -396,6 +417,29 @@ class StudyCollection(object):
         self.study_instance_uids = []
         self.studies = []
         self.lazy = lazy
+    
+    def __str__(self):
+        '''
+        Simple print representation of the Study object
+        
+            >>> a=StudyCollection('readfidTest')
+            >>> print(a)
+            __main__.StudyCollection()
+        '''
+        return '{0}()'.format(
+                    strip_all_but_classname(self, 'StudyCollection'))
+                    
+    def __repr__(self):
+        '''
+        More elaborate string representation of the StudyCollection object:
+
+            >>> a=StudyCollection('readfidTest.ix1')
+            >>> a
+            __main__.StudyCollection()
+        '''
+        lines_to_print = [self.__str__()]
+        lines_to_print.extend([str(s) for s in self.studies])
+        return  '\n'.join(lines_to_print)
         
     def add_study(self, study=None, by_name=None, by_uid=None):
         '''search through database to find anything that matches root
@@ -477,7 +521,57 @@ class Patient(StudyCollection):
                     'trying to load studies of different SUBJECT_id(s)')
             else:
                 self.add_study(study)
+                
+    def __str__(self):
+        '''
+        Simple print representation of the Patient object
         
+            >>> a=Patient('readfidTest')
+            >>> print(a)
+            __main__.Patient("readfidTest")
+        '''        
+        return '{0}("{1}")'.format(
+                strip_all_but_classname(self, 'Patient'),
+                self.patient_id)
+                
+    def __repr__(self):
+        '''
+        More elaborate string representation of the Patient object:
+
+        >>> a=Patient('readfidTest')
+        >>> a
+        Patient object: Patient("readfidTest")
+           studies: Study object: Study("readfidTest.ix1")
+           subject: Moosvi, readfidTest
+           scans: 1-TriPilot-multi
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+                  MSME_bas
+                  MSME_bas
+                  MSME_turbo_bas
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+                  MSME_bas
+                  EPI_bas
+                  EPI_nav_bas
+                  DtiStandard_bas
+                  DtiSpiral_bas
+                  UTE2D
+                  UTE3D
+                  ZTE
+                  FLASH_bas(modified)
+                  FLASH_bas(modified)
+        '''
+        try:
+            study_list_repr = [study.__repr__() for study in self.studies]
+            return ('Patient object: Patient("{0}")\n'+ 
+                    '   studies: {1}').format(
+                                self.patient_id,
+                                '\n          '.join(study_list_repr))
+        except AttributeError:
+            return self.__str__()
   
 class Experiment(StudyCollection):
     '''
@@ -491,6 +585,18 @@ class Experiment(StudyCollection):
         super(Experiment, self).__init__(root)
         if root:
             self.find_studies(root=root, absolute_root=absolute_root)
+            
+    def __str__(self):
+        '''
+        Simple print representation of Experiment object
+        
+        >>> d=Experiment('NecS3Hs10')
+        >>> print(d)
+        __main__.Experiment("NecS3Hs10")
+        '''
+        return '{0}("{1}")'.format(
+                strip_all_but_classname(self, 'Experiment'),
+                self.root)
 
     def find_studies(self, root=None, absolute_root=False):
         if absolute_root:
@@ -498,6 +604,7 @@ class Experiment(StudyCollection):
         else:
             searchdir = os.path.join(dataroot, root) + '*'
 
+        self.root = root
         directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
             study = Study(dirname, lazy=self.lazy)
@@ -506,7 +613,3 @@ class Experiment(StudyCollection):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-    import numpy
-#    fname = os.path.expanduser('~/data/readfidTest.ix1/3')
-#    x = Scan(fname)
-#    print('mean = {0}'.format(numpy.mean(x.fid)))
