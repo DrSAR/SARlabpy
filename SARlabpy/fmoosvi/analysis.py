@@ -29,7 +29,7 @@ def describe_object(class_object):
                     print("  "+scan.acqp.ACQ_protocol_name)
         except: 
             try: #if single study, print scan names             
-                for scan in class_object:
+                for scan in class_object.scans:
                     print("  "+scan.acqp.ACQ_protocol_name)      
             except: #otherwise print useless error message
                 print("I don't know what's going on")
