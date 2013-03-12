@@ -1,1 +1,0 @@
-print('BRUKERIO/__init__.py run: %s' % __name__)
