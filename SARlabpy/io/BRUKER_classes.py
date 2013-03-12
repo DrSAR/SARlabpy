@@ -582,7 +582,7 @@ class Experiment(StudyCollection):
     of the requirement of having identical SUBJECT_ids.
     '''
     def __init__(self, root=None, absolute_root=False, lazy=True):
-        super(Experiment, self).__init__(root)
+        super(Experiment, self).__init__()
         if root:
             self.find_studies(root=root, absolute_root=absolute_root)
             
