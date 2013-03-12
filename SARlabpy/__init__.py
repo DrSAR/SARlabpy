@@ -11,7 +11,8 @@ from io.BRUKER_classes import (natural_sort,
 from io import SARlogger
 
 from fmoosvi import analysis
-#from fmoosvi import test_suite
+from fmoosvi import getters
+from fmoosvi import test_suite
 
 #from io.congrid import congrid
 

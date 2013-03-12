@@ -6,24 +6,21 @@ Created on Mon Feb 25 00:24:57 2013
 """
 # Add sarlabpy to the di
 
-import sys
-#sys.path.append("/Users/firas/git/SARlabpy/")
-#sys.path.append('/Volumes/Data/Dropboxes/PhD./Dropbox/code/python/')
-
-# testing code
-
 import numpy
 import os
 import SARlabpy as sar
 import pylab
+import SARlabpy.io.BRUKER_classes as cls
 
 reload(sar)
+reload(cls)
 
-dir_name = os.path.expanduser('~/data/NecS1Hs02.hi1/8/pdata/1/');
-data_dict = sar.read2dseq(dir_name)
+NecS1Exp = cls.Experiment('NecS1')
+
+NecS1dce = NecS1Exp.studies[2].scans[6]
 
 fig1 = pylab.figure();
-auc = sar.analysis.calculate_AUC(data_dict)
+auc = sar.analysis.calculate_AUC(NecS1dce)
 #xlim( (0,20) )
 
 fig2 = pylab.figure();
