@@ -14,17 +14,15 @@ import numpy.testing
 import os
 
 
-NecS1dce = cls.Experiment('NecS1').studies[2].scans[6]
 
-# Test functions
-test_calculate_AUC(NecS1dce)
+# Test Funtion definitions
 
 
 def test_calculate_AUC(scan_object, pdata_num = 0, debug = False):
     
     # Method params
     scan_object.method.PVM_RepetitionTime = 1000/50
-    scan_object.method.PVM_NRepetitions = 70
+    scan_object.method.PVM_NRepetitions = 100
     scan_object.method.PVM_EncMatrix = 50
     
     # Data altering
@@ -38,15 +36,24 @@ def test_calculate_AUC(scan_object, pdata_num = 0, debug = False):
     
     pylab.plot(norm_data[60,35,0,0:69])   
     # Compute the AUC of each slice using triangle area formula
-    base = data_dict['header']['method']['PVM_NRepetitions'] - (inj_point)
+    base = scan_object.method.PVM_NRepetitions - (inj_point)
     height = numpy.round(numpy.max(norm_data[:,:,:,:]),2)
     
     area_triangle = base*height/2
     
     try:
         numpy.testing.assert_almost_equal(area_triangle, numpy.max(auc_template), decimal=3, verbose=True)
+        
+        if debug==True:
+            print 'You functions are nearly equal'
 
     except AssertionError:
         fig = pylab.figure
         pylab.plot(norm_data[60,30,0,:])    
         
+        
+# Test le functions
+
+NecS1dce = sarpy.Experiment('NecS1').studies[2].scans[6]
+
+test_calculate_AUC(NecS1dce, debug=True)

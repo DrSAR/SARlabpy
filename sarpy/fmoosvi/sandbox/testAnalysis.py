@@ -10,20 +10,18 @@ import numpy
 import os
 import sarpy
 import pylab
-import sarpy.io.BRUKER_classes as cls
 
-reload(sar)
-reload(cls)
+reload(sarpy)
 
-NecS1Exp = cls.Experiment('NecS1')
+
+NecS1Exp = sarpy.Experiment('NecS1')
 
 NecS1dce = NecS1Exp.studies[2].scans[6]
 
-fig1 = pylab.figure();
 auc = sarpy.analysis.calculate_AUC(NecS1dce)
 #xlim( (0,20) )
 
-fig2 = pylab.figure();
+fig1 = pylab.figure();
 pylab.imshow(auc[:,:,3])
 pylab.axis('off')
 pylab.colorbar()
@@ -33,7 +31,7 @@ pylab.title('Sample tumour AUC')
 
 ## Creating an AUC template data set
 
-fig3 = pylab.figure()
+#fig3 = pylab.figure()
 
 
 
