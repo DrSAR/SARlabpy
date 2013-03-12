@@ -151,7 +151,7 @@ class Scan(object):
         >>> import os
         >>> exp3 = Scan('readfidTest.ix1/3')
         >>> dir(exp3)
-        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'dirname', 'fid', 'method', 'pdata']
+        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'dirname', 'fid', 'method', 'pdata', 'shortdirname']
         >>> exp3.acqp.ACQ_protocol_name
         'FLASH_bas(modified)'
         >>> exp3.acqp.ORIGIN
@@ -186,7 +186,7 @@ class Scan(object):
             raise IOError(
                 'Filename "%s" is neither a directory nor a file inside one' %
                 filename)
-
+        self.shortdirname = re.sub(dataroot+os.path.sep, '', self.dirname)
         # see whether we can find a useful BRUKER file
         try:
             self.acqp = ACQP_file(self.dirname, lazy=lazy)
@@ -220,22 +220,45 @@ class Scan(object):
                 self.__delattr__(attr)
                 
     def __str__(self):
-        return 'Scan object: {0}'.format(self.dirname)
+        '''
+        Simple print representation of the Scan object:
+            
+            >>> a=Scan('readfidTest.ix1/5')
+            >>> print(a)
+            <object: Scan("readfidTest.ix1/5") >
+        '''
+        return '<object: Scan("{0}") >'.format(self.shortdirname)
         
     def __repr__(self):
-        return ('Scan object: Scan("{0}")\n'+ 
-                '   protocol: {1}\n'+
-                '   TE = {2}\n'+
-                '   TR = {3}\n'+
-                '   FA = {4}\n'+
-                '   FoV = {5}\n'+
-                '   matrix = {6}').format(self.dirname, 
-                        self.acqp.ACQ_protocol_name,
-                        self.acqp.ACQ_echo_time,
-                        self.acqp.ACQ_repetition_time,
-                        self.acqp.ACQ_flip_angle,
-                        self.acqp.ACQ_fov,
-                        self.acqp.ACQ_size)
+        '''
+        More elaborate string representation of the Scan object:
+            
+            >>> a=Scan('readfidTest.ix1/5')
+            >>> a
+            Scan object: Scan("readfidTest.ix1/5")
+               protocol: MSME_bas
+               TE = [14]
+               TR = [50]
+               FA = 180
+               FoV = [3.0, 4.0, 2.5]
+               matrix = [266, 105, 25]
+        '''
+        try:
+            return ('Scan object: Scan("{0}")\n'+ 
+                    '   protocol: {1}\n'+
+                    '   TE = {2}\n'+
+                    '   TR = {3}\n'+
+                    '   FA = {4}\n'+
+                    '   FoV = {5}\n'+
+                    '   matrix = {6}').format(self.shortdirname, 
+                            self.acqp.ACQ_protocol_name,
+                            self.acqp.ACQ_echo_time,
+                            self.acqp.ACQ_repetition_time,
+                            self.acqp.ACQ_flip_angle,
+                            self.acqp.ACQ_fov,
+                            self.acqp.ACQ_size)
+        except AttributeError:
+            return self.__str__()
                 
         
 class Study(object):
@@ -273,7 +296,8 @@ class Study(object):
             raise IOError(
                 'Filename "%s" is neither a directory nor a file inside one' %
                 filename)
-                
+          
+        self.shortdirname = re.sub(dataroot+os.path.sep, '', self.dirname)
         self.subject = JCAMP_file(os.path.join(self.dirname,'subject'), 
                                       lazy=lazy)
         self.__yet_loaded = False
@@ -297,6 +321,59 @@ class Study(object):
                 re.match('[0-9]+', fname)):
                 self.scans.append(Scan(filename, lazy=True))
         self.__yet_loaded = True
+        
+    def __str__(self):
+        '''
+        Simple print representation of the Study object
+        
+            >>> a=Study('readfidTest.ix1')
+            >>> print(a)
+            <object: Study("readfidTest.ix1") >
+        '''
+        return '<object: Study("{0}") >'.format(self.shortdirname)
+        
+    def __repr__(self):
+        '''
+        More elaborate string representation of the Study object:
+
+>>> a=Study('readfidTest.ix1')
+>>> a
+Study object: Study("readfidTest.ix1")
+   subject: Moosvi, readfidTest
+   scans: 1-TriPilot-multi
+          FLASH_bas(modified)
+          FLASH_bas(modified)
+          MSME_bas
+          MSME_bas
+          MSME_turbo_bas
+          FLASH_bas(modified)
+          FLASH_bas(modified)
+          FLASH_bas(modified)
+          FLASH_bas(modified)
+          MSME_bas
+          EPI_bas
+          EPI_nav_bas
+          DtiStandard_bas
+          DtiSpiral_bas
+          UTE2D
+          UTE3D
+          ZTE
+          FLASH_bas(modified)
+          FLASH_bas(modified)
+            
+        '''
+        try:
+            scan_list_repr = [scan.acqp.ACQ_protocol_name for 
+                                scan in self.scans]
+            return ('Study object: Study("{0}")\n'+ 
+                    '   subject: {1}\n'+
+                    '   scans: {2}').format(
+                                self.shortdirname,
+                                self.subject.SUBJECT_name_string,
+                                '\n          '.join(scan_list_repr))
+        except AttributeError:
+            return self.__str__()
+
             
         
 class StudyCollection(object):
@@ -430,6 +507,6 @@ if __name__ == '__main__':
     import doctest
     doctest.testmod()
     import numpy
-    fname = os.path.expanduser('~/data/readfidTest.ix1/3')
-    x = Scan(fname)
-    print('mean = {0}'.format(numpy.mean(x.fid)))
+#    fname = os.path.expanduser('~/data/readfidTest.ix1/3')
+#    x = Scan(fname)
+#    print('mean = {0}'.format(numpy.mean(x.fid)))
