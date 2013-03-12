@@ -8,7 +8,7 @@ Test Suite
 """
 import numpy
 import pylab
-import sarpy as sar
+import sarpy
 import pdb
 import numpy.testing
 import os
@@ -32,9 +32,9 @@ def test_calculate_AUC(scan_object, pdata_num = 0, debug = False):
     scan_object.pdata[pdata_num].data[50:78,22:42,0:6,10] = 7
     scan_object.pdata[pdata_num].data[50:78,22:42,0:6,10:110] = numpy.arange(7,1,-0.1)
 
-    norm_data = sar.analysis.normalize_dce(scan_object)
-    inj_point = sar.analysis.inj_point(scan_object)
-    auc_template = sar.analysis.calculate_AUC(scan_object,60)
+    norm_data = sarpy.analysis.normalize_dce(scan_object)
+    inj_point = sarpy.analysis.inj_point(scan_object)
+    auc_template = sarpy.analysis.calculate_AUC(scan_object,60)
     
     pylab.plot(norm_data[60,35,0,0:69])   
     # Compute the AUC of each slice using triangle area formula

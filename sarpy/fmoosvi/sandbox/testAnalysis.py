@@ -8,7 +8,7 @@ Created on Mon Feb 25 00:24:57 2013
 
 import numpy
 import os
-import sarpy as sar
+import sarpy
 import pylab
 import sarpy.io.BRUKER_classes as cls
 
@@ -20,7 +20,7 @@ NecS1Exp = cls.Experiment('NecS1')
 NecS1dce = NecS1Exp.studies[2].scans[6]
 
 fig1 = pylab.figure();
-auc = sar.analysis.calculate_AUC(NecS1dce)
+auc = sarpy.analysis.calculate_AUC(NecS1dce)
 #xlim( (0,20) )
 
 fig2 = pylab.figure();

@@ -6,7 +6,7 @@ Created on Tue Feb 19 11:36:19 2013
 """
 
 from __future__ import division
-import SARlabpy as sar
+import sarpy
 #import os
 import pylab as py
 import math
@@ -25,7 +25,7 @@ for i in range(0,len(series_num)):
 
     procdirname = ''.join([your_path,study_name,series_num[i],default_reco])
     scan_name = ''.join(['scan',str(i)])
-    current_data_dict = sar.read2dseq(procdirname,typecast=True)
+    current_data_dict = sarpy.read2dseq(procdirname,typecast=True)
     
     data_dict[scan_name] = current_data_dict
 

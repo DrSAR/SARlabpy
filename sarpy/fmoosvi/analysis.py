@@ -11,7 +11,7 @@ from __future__ import division
 import numpy
 import os
 import pylab
-import sarpy as sar
+import sarpy
 import pdb
 import scipy.integrate
 import sarpy.fmoosvi.getters as getters
@@ -65,7 +65,7 @@ def calculate_AUC(scan_object, time = 60, pdata_num = 0):
     ########### Start AUC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sar.analysis.inj_point(scan_object)
+    inj_point = sarpy.analysis.inj_point(scan_object)
     
     # Now calculate the Normalized Intesity voxel by voxel
     norm_data = normalize_dce(scan_object)
@@ -94,7 +94,7 @@ def normalize_dce(scan_object, pdata_num = 0):
     data = scan_object.pdata[pdata_num].data
     
     # Calculated params      
-    inj_point = sar.analysis.inj_point(scan_object)
+    inj_point = sarpy.analysis.inj_point(scan_object)
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
