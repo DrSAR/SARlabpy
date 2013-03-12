@@ -16,24 +16,23 @@ import pdb
 import scipy.integrate
 
 
-import SARlabpy.io.BRUKER_classes as sar
-readfidExp = sar.Experiment('readfid')
-for study in readfidExp.studies:
-    print('-'*40+'\n'+study.subject.SUBJECT_id)
-    for scan in study.scans:
-        print("  "+scan.acqp.ACQ_protocol_name)
-
 def describe_object(class_object):
 
-    try:
+    try: # if patient, print studies
         for study in class_object.studies:
             print('-'*40+'\n'+study.subject.SUBJECT_id)    
-    except:
-        try:
-            for scan in class_object.scans:
-                print("  "+scan.acqp.ACQ_protocol_name)
-        except:
-            print("I don't know what's going on")
+    except: 
+        try: # if multile studies, print study names and scans         
+            for study in class_object:
+                print('-'*40+'\n'+study.subject.SUBJECT_id)    
+                for scan in study.scans:
+                    print("  "+scan.acqp.ACQ_protocol_name)
+        except: 
+            try: #if single study, print scan names             
+                for scan in class_object:
+                    print("  "+scan.acqp.ACQ_protocol_name)      
+            except: #otherwise print useless error message
+                print("I don't know what's going on")
 
 
 def calculate_AUC(data_dict, time = 60):
