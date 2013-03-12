@@ -218,6 +218,25 @@ class Scan(object):
         for attr in ['acqp', 'method','pdata']:
             if not self.__dict__[attr]:
                 self.__delattr__(attr)
+                
+    def __str__(self):
+        return 'Scan object: {0}'.format(self.dirname)
+        
+    def __repr__(self):
+        return ('Scan object: Scan("{0}")\n'+ 
+                '   protocol: {1}\n'+
+                '   TE = {2}\n'+
+                '   TR = {3}\n'+
+                '   FA = {4}\n'+
+                '   FoV = {5}\n'+
+                '   matrix = {6}').format(self.dirname, 
+                        self.acqp.ACQ_protocol_name,
+                        self.acqp.ACQ_echo_time,
+                        self.acqp.ACQ_repetition_time,
+                        self.acqp.ACQ_flip_angle,
+                        self.acqp.ACQ_fov,
+                        self.acqp.ACQ_size)
+                
         
 class Study(object):
     '''
