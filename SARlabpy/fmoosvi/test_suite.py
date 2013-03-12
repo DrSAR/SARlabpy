@@ -11,6 +11,7 @@ import pylab
 import SARlabpy as sar
 import pdb
 import numpy.testing
+import os
 
 dir_name = os.path.expanduser('~/data/NecS1Hs02.hi1/8/');
 data_dict = sar.read2dseq(dir_name)
