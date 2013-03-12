@@ -8,7 +8,7 @@ Created on Mon Feb 25 00:24:57 2013
 
 import sys
 #sys.path.append("/Users/firas/git/SARlabpy/")
-sys.path.append('/Volumes/Data/Dropboxes/PhD./Dropbox/code/python/')
+#sys.path.append('/Volumes/Data/Dropboxes/PhD./Dropbox/code/python/')
 
 # testing code
 
@@ -19,7 +19,7 @@ import pylab
 
 reload(sar)
 
-dir_name = os.path.expanduser('~/data/NecS1Hs02.hi1/8/');
+dir_name = os.path.expanduser('~/data/NecS1Hs02.hi1/8/pdata/1/');
 data_dict = sar.read2dseq(dir_name)
 
 fig1 = pylab.figure();
