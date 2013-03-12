@@ -653,7 +653,7 @@ def read2dseq(scandirname):
     
     data = data.reshape(all_dims)
     # transpose so that time, z, y, x -> x, y, z, time
-    data.transpose( numpy.arange(data.ndim,0,-1)-1)
+    data = data.transpose( numpy.arange(data.ndim,0,-1)-1)
                           
 #    #TODO - deal with slices in multiple packages
                                   
