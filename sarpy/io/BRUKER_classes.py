@@ -644,6 +644,19 @@ class Experiment(StudyCollection):
             study = Study(dirname, lazy=self.lazy)
             self.add_study(study)
 
+    def find_scan_in_experiment(self, protocol_name):
+        found_scans = []
+        
+        for study in self.studies:
+            for s in study.scans:
+                try:
+                    if s.acqp.ACQ_protocol_name == protocol_name:
+                        found_scans.append(s)
+                except AttributeError:
+                    print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
+        return(found_scans)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

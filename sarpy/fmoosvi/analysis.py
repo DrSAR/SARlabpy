@@ -9,7 +9,10 @@ test
 from __future__ import division
 
 import numpy
+import os
+import pylab
 import sarpy
+import pdb
 import scipy.integrate
 import sarpy.fmoosvi.getters as getters
 
@@ -133,6 +136,7 @@ def h_inj_point(scan_object, pdata_num = 0):
         print "You might only have 2D or 3D data, need 4D data check data source! "
         raise IndexError
         
+
     injection_point = []
 
     for slice in range(num_slices):
