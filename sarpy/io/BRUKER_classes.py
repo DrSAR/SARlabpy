@@ -422,6 +422,7 @@ class Study(object):
         except AttributeError:
             return self.__str__()
             
+            
     def find_scan(self, protocol_name):
         found_scans = []
 
@@ -432,7 +433,6 @@ class Study(object):
             except AttributeError:
                 print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
         return(found_scans)
-                                
             
         
 class StudyCollection(object):
@@ -537,8 +537,6 @@ class StudyCollection(object):
 
     def get_SUBJECT_id(self):
         return [x.subject.SUBJECT_id for x in self.studies]
-        
-
 
       
 class Patient(StudyCollection):
@@ -645,19 +643,6 @@ class Experiment(StudyCollection):
         for dirname in directories:
             study = Study(dirname, lazy=self.lazy)
             self.add_study(study)
-
-    def find_scan_in_experiment(self, protocol_name):
-        found_scans = []
-        
-        for study in self.studies:
-            for s in study.scans:
-                try:
-                    if s.acqp.ACQ_protocol_name == protocol_name:
-                        found_scans.append(s)
-                except AttributeError:
-                    print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
-        return(found_scans)
-
 
 if __name__ == '__main__':
     import doctest

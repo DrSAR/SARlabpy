@@ -6,28 +6,39 @@ Created on Mon Feb 25 00:24:57 2013
 """
 # Add sarpy to the di
 
+import numpy
+import os
 import sarpy
-import sarpy.fmoosvi.wrappers
+import pylab
 
 reload(sarpy)
 
+
 NecS1Exp = sarpy.Experiment('NecS1')
-NecS1dce = NecS1Exp.find_scan_in_experiment('06_FLASH2D.6sl-DCE')
+
+NecS1dce = NecS1Exp.studies[2].scans[6]
+
+auc = sarpy.analysis.calculate_AUC(NecS1dce)
+#xlim( (0,20) )
+
+fig1 = pylab.figure();
+pylab.imshow(auc[:,:,3])
+pylab.axis('off')
+pylab.colorbar()
+pylab.clim(5,60)
+pylab.title('Sample tumour AUC')
 
 
-#Experiment
-auc = sarpy.fmoosvi.wrappers.calculate_AUC(NecS1Exp)
+## Creating an AUC template data set
+
+#fig3 = pylab.figure()
 
 
 
-##Single Study #works!
-#auc = sarpy.fmoosvi.wrappers.calculate_AUC(NecS1Exp.studies[0])
-#
-##Single Scan #works!
-#auc = sarpy.fmoosvi.wrappers.calculate_AUC(NecS1Exp.studies[0].scans[7])
-#
-##List of Studies #works!
-#auc = sarpy.fmoosvi.wrappers.calculate_AUC(NecS1Exp.studies[0:5])
-#
-##List of Scans #works!
-#NecS1auc = sarpy.fmoosvi.wrappers.calculate_AUC(NecS1dce)
+
+
+
+
+
+
+
