@@ -421,7 +421,13 @@ class Study(object):
                                 '\n          '.join(scan_list_repr))
         except AttributeError:
             return self.__str__()
-
+            
+            
+    def find_scan(self, protocol_name):
+        found_scans = []
+        for s in self.scans:
+            found_scans.append(s)
+        return(found_scans)
             
         
 class StudyCollection(object):
