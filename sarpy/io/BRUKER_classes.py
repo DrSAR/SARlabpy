@@ -422,12 +422,14 @@ class Study(object):
         except AttributeError:
             return self.__str__()
             
-            
     def find_scan(self, protocol_name):
         found_scans = []
-        for s in self.scans:
-            found_scans.append(s)
+
+        for s in self.scans: 
+            if s.acqp.ACQ_protocol_name == protocol_name:
+                found_scans.append(s)
         return(found_scans)
+                                
             
         
 class StudyCollection(object):
@@ -532,6 +534,8 @@ class StudyCollection(object):
 
     def get_SUBJECT_id(self):
         return [x.subject.SUBJECT_id for x in self.studies]
+        
+
 
       
 class Patient(StudyCollection):

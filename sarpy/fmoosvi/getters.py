@@ -35,29 +35,3 @@ def get_num_slices(scan_object, pdata_num = 0):
                 num_slices = int(VisuFGOrderDesc_element[0])
                 
     return num_slices
-    
-def get_matching_scans(study_object, desired_protocol):
-
-    """
-    Returns array of scans that match the protocol name(s)
-
-    :param object Experiment: Object with studies from a study, 
-            e.g., say NecS3Hs01.hi1
-    :param string protocol_name: Name of protocol being searched, 
-            e.g., '06_FLASH2D.6sl-DCE'
-    :return: integer num_slices: number of slices, detrmined from visu_pars
-    """
-    
-    matching_scans = []    
-    
-    for scan in study_object.scans:
-        
-        protocol = scan.acqp.ACQ_protocol_name
-        
-        if protocol == desired_protocol:
-            
-    
-    
-    acqp.ACQ_protocol_name
-    
-    

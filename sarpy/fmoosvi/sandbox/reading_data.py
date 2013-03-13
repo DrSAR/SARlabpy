@@ -7,11 +7,15 @@ Created on Mon Mar 11 22:51:48 2013
 
 import sarpy
 
-NecS3Exp= sarpy.Experiment('NecS3')
-for study in NecS3Exp.studies:
-    print('-'*40+'\n'+study.subject.SUBJECT_id)
-    for scan in study.scans:
-        print("  "+scan.acqp.ACQ_protocol_name)
+#NecS3Exp= sarpy.Experiment('NecS3')
+#for study in NecS3Exp.studies:
+#    print('-'*40+'\n'+study.subject.SUBJECT_id)
+#    for scan in study.scans:
+#        print("  "+scan.acqp.ACQ_protocol_name)
 
+
+NecS3Exp= sarpy.Experiment('NecS3')
+
+dce_scans = NecS3Exp.studies
 
 
