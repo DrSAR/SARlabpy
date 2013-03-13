@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 12 03:12:52 2013
-
-@author: stefan
+qt-based image data viewer with pyqtgrpah to do the heavy lifting
+in the display department
 """
-try:
-    from PyQt4 import QtGui, QtCore
-    print('importing PyQt4')
-except ImportError:
-    from PySide import QtGui, QtCore
-    print('importing PySide')
 
 from qtsarpy_mainwindow_auto import Ui_MainWindow
+# importing PyQt modules from ui generated file is a round-about way 
+# of trying to follow the choice of PyQt vs PySide that's been made there... 
+from qtsarpy_mainwindow_auto import QtGui, QtCore
 import os
 
 # This code should be in the auto-generated file but since
