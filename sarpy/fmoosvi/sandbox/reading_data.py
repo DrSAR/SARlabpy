@@ -10,6 +10,11 @@ import numpy
 import pylab
 import scipy
 
+readfidExp = sarpy.Experiment('readfid')
+for study in readfidExp.studies:
+    print('-'*40+'\n'+study.subject.SUBJECT_id)
+    for scan in study.scans:
+        print("  "+scan.acqp.ACQ_protocol_name)
 
 #NecS3Exp= sarpy.Experiment('NecS3')
 #for study in NecS3Exp.studies:
