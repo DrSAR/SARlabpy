@@ -4,7 +4,7 @@ fmoosvi Package
 :mod:`BSanalysis` Module
 ------------------------
 
-.. automodule:: SARlabpy.fmoosvi.BSanalysis
+.. automodule:: sarpy.fmoosvi.BSanalysis
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,23 +12,23 @@ fmoosvi Package
 :mod:`analysis` Module
 ----------------------
 
-.. automodule:: SARlabpy.fmoosvi.analysis
+.. automodule:: sarpy.fmoosvi.analysis
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`firstRun` Module
-----------------------
+:mod:`getters` Module
+---------------------
 
-.. automodule:: SARlabpy.fmoosvi.firstRun
+.. automodule:: sarpy.fmoosvi.getters
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`testAnalysis` Module
---------------------------
+:mod:`test_suite` Module
+------------------------
 
-.. automodule:: SARlabpy.fmoosvi.testAnalysis
+.. automodule:: sarpy.fmoosvi.test_suite
     :members:
     :undoc-members:
     :show-inheritance:

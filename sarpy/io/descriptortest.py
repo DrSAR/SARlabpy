@@ -43,10 +43,11 @@ class Cnew(object):
     data = Dnew()
     def __init__(self):
         print('this is Cnew __init__')
-        
-print('Cnew not yet instantiated')
-y = Cnew()
-print('instance exists, data not yet loaded')
-print(y.data)
-print('let us do this again')
-print(y.data)
+
+    
+if __name__ == '__main__':
+    y = Cnew()
+    print('instance exists, data not yet loaded')
+    print(y.data)
+    print('let us do this again')
+    print(y.data)

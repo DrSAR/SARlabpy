@@ -49,7 +49,7 @@ html:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 apidoc:
-	sphinx-apidoc -f -o . --doc-project='SARlabpy Documentation' ./..
+	sphinx-apidoc -f -o . --doc-project='sarpy Documentation' ./..
 	@echo "apidoc traversal done"
 
 gh-docs-checkedout:
@@ -91,17 +91,17 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/SARlabpy.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/sarpy.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/SARlabpy.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/sarpy.qhc"
 
 devhelp:
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/SARlabpy"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/SARlabpy"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/sarpy"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/sarpy"
 	@echo "# devhelp"
 
 epub:

@@ -1,4 +1,4 @@
-Documenting and Testing SARlabpy
+Documenting and Testing sarpy
 ================================
 
 To make this code usable, it needs to be documented. The easiest and at the same time most helpful way to write documentation are a few examples (copied verbatim from your interactive session) into the docstring. The amazing thing is that this docstring can be parsed by the doctest module in order to **automatically** run those examples and compare them to the expected output.

@@ -1,9 +1,9 @@
-SARlabpy Documentation
-======================
+sarpy Documentation
+===================
 
 .. toctree::
    :maxdepth: 4
 
-   SARlabpy
+   sarpy
    setup
    test

@@ -96,9 +96,9 @@ class dict2obj(object):
 
 class PDATA_file(object):
     '''
-    Initialize a processed data set that usually sits in */pdata/[1-9].
+    Initialize a processed data set that usually sits in `*/pdata/[1-9]`.
 
-    __init__(filename) expects a directory name in pdata. It will look
+    constructor expects a directory name (filename). It will look
     for the 2dseq file, the d3proc and th reco file.
     '''
     def __init__(self, filename, lazy=True):
