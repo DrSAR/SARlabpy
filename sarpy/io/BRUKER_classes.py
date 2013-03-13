@@ -426,8 +426,11 @@ class Study(object):
         found_scans = []
 
         for s in self.scans: 
-            if s.acqp.ACQ_protocol_name == protocol_name:
-                found_scans.append(s)
+            try:
+                if s.acqp.ACQ_protocol_name == protocol_name:
+                    found_scans.append(s)
+            except AttributeError:
+                print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
         return(found_scans)
                                 
             
@@ -436,7 +439,7 @@ class StudyCollection(object):
     '''
     A StudyCollection can have multiple studies (in BRUKER speak) which can in 
     turn have multiple scans. It can be initialised by pointing it 
-    to a scan or study. This should be a superclass to, e.g. the Patient and 
+    to a scan or study. This should be a superclass too (?), e.g. the Patient and 
     the Experiment class.
     '''
     
@@ -642,6 +645,19 @@ class Experiment(StudyCollection):
         for dirname in directories:
             study = Study(dirname, lazy=self.lazy)
             self.add_study(study)
+
+    def find_scan_in_experiment(self, protocol_name):
+        found_scans = []
+        
+        for study in self.studies:
+            for s in study.scans:
+                try:
+                    if s.acqp.ACQ_protocol_name == protocol_name:
+                        found_scans.append(s)
+                except AttributeError:
+                    print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
+        return(found_scans)
+
 
 if __name__ == '__main__':
     import doctest

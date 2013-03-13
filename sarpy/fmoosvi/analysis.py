@@ -9,15 +9,12 @@ test
 from __future__ import division
 
 import numpy
-import os
-import pylab
 import sarpy
-import pdb
 import scipy.integrate
 import sarpy.fmoosvi.getters as getters
 
 
-def describe_object(class_object):
+def h_describe_object(class_object):
 
     try: # if patient, print studies
         for study in class_object.studies:
@@ -35,7 +32,7 @@ def describe_object(class_object):
             except: #otherwise print useless error message
                 print("I don't know what's going on")
 
-def calculate_AUC(scan_object, time = 60, pdata_num = 0):
+def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     
     """
     Returns an area under the curve data for the scan object
@@ -65,10 +62,10 @@ def calculate_AUC(scan_object, time = 60, pdata_num = 0):
     ########### Start AUC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.analysis.inj_point(scan_object)
+    inj_point = sarpy.analysis.h_inj_point(scan_object)
     
     # Now calculate the Normalized Intesity voxel by voxel
-    norm_data = normalize_dce(scan_object)
+    norm_data = h_normalize_dce(scan_object)
 
     # Now calculate the actual AUC
     auc_data = numpy.empty([x_size,y_size,num_slices])
@@ -78,7 +75,7 @@ def calculate_AUC(scan_object, time = 60, pdata_num = 0):
     return auc_data
 
 
-def normalize_dce(scan_object, pdata_num = 0):
+def h_normalize_dce(scan_object, pdata_num = 0):
 
     ########### Getting and defining parameters
     
@@ -94,7 +91,7 @@ def normalize_dce(scan_object, pdata_num = 0):
     data = scan_object.pdata[pdata_num].data
     
     # Calculated params      
-    inj_point = sarpy.analysis.inj_point(scan_object)
+    inj_point = sarpy.analysis.h_inj_point(scan_object)
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
@@ -104,7 +101,7 @@ def normalize_dce(scan_object, pdata_num = 0):
 
     return norm_data
 
-def enhancement_curve(data_dict, mask=False):
+def h_enhancement_curve(data_dict, mask=False):
 
     if mask:
         print "I don't know how to deal with masks quite yet"
@@ -117,7 +114,7 @@ def enhancement_curve(data_dict, mask=False):
                 
         return
 
-def inj_point(scan_object, pdata_num = 0):
+def h_inj_point(scan_object, pdata_num = 0):
 
     from collections import Counter   
 
@@ -133,10 +130,9 @@ def inj_point(scan_object, pdata_num = 0):
         img_mean = data[:,:,:,:].sum(0).sum(0)
 
     except IndexError:
-        print "You might only have 2D or 3D data, check data source! "
+        print "You might only have 2D or 3D data, need 4D data check data source! "
         raise IndexError
         
-
     injection_point = []
 
     for slice in range(num_slices):
