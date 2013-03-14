@@ -101,7 +101,7 @@ def h_normalize_dce(scan_object, pdata_num = 0):
 
     return norm_data
 
-def h_enhancement_curve(data_dict, mask=False):
+def h_enhancement_curve(scan_object, pdata_num = 0, mask=False):
 
     if mask:
         print "I don't know how to deal with masks quite yet"
@@ -151,6 +151,31 @@ def h_inj_point(scan_object, pdata_num = 0):
     injection_point = injection_point_counter.most_common(1)
 
     return injection_point[0][0]+1
+    
+def h_BS_B1map(scan_object, pdata_num = 0):
+    
+    print('Still working on it')
+    
+def temp_parse_BS(params_string):
+    
+    params_list = params_string.strip().split(',')
+    
+    params = []
+
+    for el in params_list:
+        el.strip(' ')
+        el.replace('(','')
+        el.replace(')','')
+        try:
+            params.append(float(el))
+        except:
+            params.append(el)                
+        
+    return params
+        
+    
+
+    
 
 
 
