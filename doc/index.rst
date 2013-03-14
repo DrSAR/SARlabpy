@@ -37,12 +37,6 @@ Doc's harvested from source code
 .. toctree::
    :maxdepth: 2
 
-Doc's harvested from source code
-----------------------------------
-
-.. toctree::
-   :maxdepth: 2
-
    modules
 
 Indices and tables

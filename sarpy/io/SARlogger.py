@@ -65,9 +65,16 @@ def initiate_logging(module, formatter=None,
             
     # remove all NullHandlers:
     handlers_to_be_removed = []
-    for hdlr in module.logger.handlers:
-        if isinstance(hdlr, logging.NullHandler):
-            handlers_to_be_removed.append(hdlr)
+    try:
+        for hdlr in module.logger.handlers:
+            if isinstance(hdlr, logging.NullHandler):
+                handlers_to_be_removed.append(hdlr)
+    except AttributeError, exc:
+        # TODO reformat output
+        print('Initiation of logging for module {0} failed'.
+                format(module))
+        print('Presumably logging has not been prepared.')
+        raise AttributeError(exc)    
     for hdlr in handlers_to_be_removed[:]:
         module.logger.removeHandler(hdlr)
 
@@ -81,15 +88,8 @@ def initiate_logging(module, formatter=None,
         handler.setFormatter(formatter)
         handler.setLevel(handler_level)
 
-    try:
-        module.logger.addHandler(handler)
-        module.logger.setLevel(logger_level)
-    except AttributeError, exc:
-        # TODO reformat output
-        print('Initiation of logging for module {0} failed'.
-                format(module))
-        print('Presumably logging has not been prepared.')
-        raise AttributeError(exc)
+    module.logger.addHandler(handler)
+    module.logger.setLevel(logger_level)
     
         
            
