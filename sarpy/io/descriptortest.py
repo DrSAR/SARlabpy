@@ -22,11 +22,6 @@ print(x.a)
 print('-'*40)
 
     
-    
-class Cnew(object):
-    data = Dnew()
-    def __init__(self):
-        print('this is Cnew __init__')
 
 class Dnew(object):
     def __init__(self):
@@ -43,6 +38,13 @@ class Dnew(object):
         self.data=[42,42,42]
         self.__yet_loaded = True
     
+    
+class Cnew(object):
+    data = Dnew()
+    def __init__(self):
+        print('this is Cnew __init__')
+        
+print('Cnew not yet instantiated')
 y = Cnew()
 print('instance exists, data not yet loaded')
 print(y.data)

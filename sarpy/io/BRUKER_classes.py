@@ -6,6 +6,7 @@ import os
 import re
 import glob
 import BRUKERIO
+import AData_classes
 
 import logging
 logger=logging.getLogger(__name__)
@@ -120,7 +121,10 @@ class PDATA_file(object):
         '''
         if not self.__yet_loaded:
             self.__forced_load() 
-        return object.__getattribute__(self, attr)                                          
+        return object.__getattribute__(self, attr)
+
+    def uid(self):
+        return self.visu_pars.VisuUid
         
 class FID_file(object):
     '''
@@ -169,14 +173,21 @@ class Scan(object):
         >>> import os
         >>> exp3 = Scan('readfidTest.ix1/3')
         >>> dir(exp3)
-        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'dirname', 'fid', 'method', 'pdata', 'shortdirname']
+        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'adata', 'dirname', 'fid', 'method', 'pdata', 'shortdirname']
+
         >>> exp3.acqp.ACQ_protocol_name
         'FLASH_bas(modified)'
         >>> exp3.acqp.ORIGIN
         'Bruker BioSpin MRI GmbH'
         >>> exp3.acqp.DATE
         'Thu Feb 21 19:01:26 2013 PST (UT-8h)  '
-
+        
+    Also, Scan has a pretty way of falling over when no fid file is detected:
+        
+        >>> Scan('readfidTest.ix1/9') # doctest:+ELLIPSIS
+        Traceback (most recent call last):
+            ...
+        IOError:...
     '''
     fid = FID_file()
     def __init__(self, root, absolute_root=False, lazy=True):
@@ -205,15 +216,15 @@ class Scan(object):
                 'Filename "%s" is neither a directory nor a file inside one' %
                 filename)
         self.shortdirname = re.sub(dataroot+os.path.sep, '', self.dirname)
-        # see whether we can find a useful BRUKER file
-        try:
-            self.acqp = ACQP_file(self.dirname, lazy=lazy)
-        except IOError:
-            self.acqp = None
-        try:
-            self.method = METHOD_file(self.dirname, lazy=lazy)
-        except IOError:
-            self.method = None
+        # see whether we can find an fid file
+        # in all likelihood this means that an acqp and method file
+        # is also present - this was true for ca 9000 scans we tested thi in
+        if not(os.path.isfile(os.path.join(self.dirname,'fid'))):
+            raise IOError(
+                ('Directory "{0}" did not contain a BRUKER fid '+
+                'file').format(self.dirname))            
+        self.acqp = ACQP_file(self.dirname, lazy=lazy)
+        self.method = METHOD_file(self.dirname, lazy=lazy)
         
         # let's see whether any data has been processed
         self.pdata=[]
@@ -223,13 +234,30 @@ class Scan(object):
             except IOError:
                 pass
 
-        # for success we need at least an image file.
-        # or some acqp/method files as a miminum
-        if (all([not self.acqp, not self.method, not self.pdata])):
-            raise IOError(
-                ('Directory "{0}" did not contain any of the typical BRUKER '+
-                'files').format(self.dirname))
-                
+        # if there are no 2dseq files (processed data) this is potentially
+        # solvable of the data is retro-actively reconstructed. In the
+        # meantime -> warning
+        if not self.pdata:
+            logger.warn(('Directory "{0}" did not contain processed data '+
+                         '(2dseq)').format(self.dirname))
+               
+        # load analysed datasets for all processed datasets
+        self.adata=[]
+        for pdata in self.pdata:
+            adata_potential = os.path.join(AData_classes.adataroot,
+                                           pdata.uid())
+            if os.path.isdir(adata_potential):
+                for adata_sets in os.listdir(adata_potential):
+                    try:
+                        self.adata.append(AData_classes.AData.fromfile(
+                                os.path.join(adata_potential, adata_sets)))
+                    except:
+                        logger.warn('loading ADate "%s" failed.' % adata_sets)
+            else:
+                logger.info('No analysis data in directory "{0}"'.
+                             format(self.dirname))
+
+
         # this feels kludgy but this will cause AttributeErrors when the 
         # user tries to access objects that don't exist (rather than getting
         # a None)
@@ -339,7 +367,10 @@ class Study(object):
             filename = os.path.join(self.dirname, fname)
             if (os.path.isdir(filename) and
                 re.match('[0-9]+', fname)):
-                self.scans.append(Scan(filename, lazy=True))
+                try:
+                    self.scans.append(Scan(filename, lazy=True))
+                except IOError:
+                    pass
         self.__yet_loaded = True
         
     def __str__(self):
@@ -371,17 +402,13 @@ class Study(object):
                   FLASH_bas(modified)
                   FLASH_bas(modified)
                   FLASH_bas(modified)
-                  FLASH_bas(modified)
                   MSME_bas
                   EPI_bas
                   EPI_nav_bas
                   DtiStandard_bas
-                  DtiSpiral_bas
                   UTE2D
                   UTE3D
                   ZTE
-                  FLASH_bas(modified)
-                  FLASH_bas(modified)
         '''
         try:
             scan_list_repr = [scan.acqp.ACQ_protocol_name for 
@@ -552,17 +579,13 @@ class Patient(StudyCollection):
                   FLASH_bas(modified)
                   FLASH_bas(modified)
                   FLASH_bas(modified)
-                  FLASH_bas(modified)
                   MSME_bas
                   EPI_bas
                   EPI_nav_bas
                   DtiStandard_bas
-                  DtiSpiral_bas
                   UTE2D
                   UTE3D
                   ZTE
-                  FLASH_bas(modified)
-                  FLASH_bas(modified)
         '''
         try:
             study_list_repr = [study.__repr__() for study in self.studies]
