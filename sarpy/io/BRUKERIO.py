@@ -9,6 +9,7 @@ Handy functions to read BRUKER data and header files.
 The logging is set up so that if the library user does nothing,
 all will be silent. Details in :py:mod: SARlogger
 """
+from __future__ import division
 import logging
 logger=logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -17,10 +18,8 @@ import numpy
 import os.path
 import re
 from types import StringType, FileType
-import sys
-
-
 from itertools import tee, izip
+
 def pairwise(iterable):
     """
     This is a solution to the problem of looking ahead in a for loop
@@ -580,7 +579,7 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(scandirname):
+def read2dseq(scandirname, param_files_only=False):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
@@ -598,6 +597,14 @@ def read2dseq(scandirname):
     reco = readJCAMP(os.path.join(scandirname,'reco'))
     d3proc = readJCAMP(os.path.join(scandirname,'d3proc'))
     visu_pars = readJCAMP(os.path.join(scandirname,'visu_pars'))
+    
+    if param_files_only:
+        logger.info('only loading parameter files')
+        return {'data':None,
+                'isImage':None,
+                'header':{'reco': reco, 
+                          'd3proc': d3proc,
+                          'visu_pars':visu_pars}}
     
     # determine ENDIANness and storage type
         
@@ -648,6 +655,11 @@ def read2dseq(scandirname):
     all_dims.reverse()
     
     data = data.reshape(all_dims)
+    
+    # Deal with RECO_slope (added by FM)
+    #TODO - Fix this so that it divides it slice by slice in case reco slope is different
+    data = data/reco['RECO_map_slope'][0]
+     
     # transpose so that time, z, y, x -> x, y, z, time
     data = data.transpose( numpy.arange(data.ndim,0,-1)-1)
                           

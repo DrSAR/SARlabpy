@@ -5,10 +5,19 @@ Created on Tue Mar 12 14:41:54 2013
 @author: fmoosvi
 """
 
-def get_num_slices(scan_object, pdata_num):
+def get_num_slices(scan_object, pdata_num = 0):
     
-        ## Ridiculouly long (but definitely complete and correct) method of 
-       # obtaining the third dimension from visu_pars
+    """
+    Returns the number of slices
+
+    :param object scan_object: scan object from a study
+    :param integer pdata_num: reconstruction number, according to python numbering.
+            default reconstruction is pdata_num = 0.
+    :return: integer num_slices: number of slices, detrmined from visu_pars
+    """     
+    
+       ## Ridiculouly long (but definitely complete and correct) method of 
+       #  obtaining the third dimension from visu_pars
     
     if scan_object.pdata[pdata_num].visu_pars.VisuCoreDim == 2:
         num_slices = 1 # we hope this will get updated below in the case of
