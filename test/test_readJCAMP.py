@@ -1,7 +1,9 @@
 from sarpy import (readJCAMP, dataroot, adataroot)
 import os
 
-x=readJCAMP('untracked_JCAMPtest.dat')
+x=readJCAMP('JCAMPtest.dat')
+print(x)
+print('-'*50)
 print(type(x ['ACQ_scan_size']))
 print(x ['ACQ_scan_size'])
 
