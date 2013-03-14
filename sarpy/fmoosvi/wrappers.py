@@ -41,5 +41,10 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D.6sl-DCE', pdata_num
         
     return auc
     
+def calculate_BSB1map(Experiment_object, protocol_name = '04_ubcLL2'):
     
+    
+    
+    
+    return
     
