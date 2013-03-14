@@ -12,7 +12,7 @@ import glob
 from sarpy import SARlogger
 #test logging for BRUKERIO
 from sarpy.io import BRUKER_classes
-SARlogger.initiate_logging(BRUKER_classes, handler_level=SARlogger.INFO)
+SARlogger.initiate_logging(BRUKER_classes, handler_level=SARlogger.DEBUG)
 
 print('testing: %s' % __name__)
 

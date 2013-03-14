@@ -41,3 +41,19 @@ test Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`test_readJCAMP` Module
+----------------------------
+
+.. automodule:: test.test_readJCAMP
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`testuid` Module
+---------------------
+
+.. automodule:: test.testuid
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

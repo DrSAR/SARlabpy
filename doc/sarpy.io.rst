@@ -1,6 +1,14 @@
 io Package
 ==========
 
+:mod:`AData_classes` Module
+---------------------------
+
+.. automodule:: sarpy.io.AData_classes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`BRUKERIO` Module
 ----------------------
 
@@ -21,6 +29,14 @@ io Package
 -----------------------
 
 .. automodule:: sarpy.io.SARlogger
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`check_fid_acqp_method` Module
+-----------------------------------
+
+.. automodule:: sarpy.io.check_fid_acqp_method
     :members:
     :undoc-members:
     :show-inheritance:

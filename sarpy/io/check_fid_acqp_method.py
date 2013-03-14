@@ -11,23 +11,24 @@ import os
 import glob
 from BRUKER_classes import dataroot
 
-print(__doc__)
-
-studies = os.listdir(dataroot)
-counter = 0
-for study in studies:
-    scans = [x for x in os.listdir(os.path.join(dataroot, study))
-             if os.path.isdir(os.path.join(dataroot,study,x))]
-    for scan in scans:
-        if not (scan == 'FieldMap' or scan == 'AdjResult'):
-            scanname = os.path.join(dataroot,study,scan)
-            testval = 1*os.path.isfile(scanname+'/acqp') + \
-                      2*os.path.isfile(scanname+'/method') + \
-                      4*os.path.isfile(scanname+'/fid') + \
-                      8*(len(glob.glob(scanname+'/pdata/*/2dseq'))>0)
+if __name__ == '__main__':
+    print(__doc__)
+    
+    studies = os.listdir(dataroot)
+    counter = 0
+    for study in studies:
+        scans = [x for x in os.listdir(os.path.join(dataroot, study))
+                 if os.path.isdir(os.path.join(dataroot,study,x))]
+        for scan in scans:
+            if not (scan == 'FieldMap' or scan == 'AdjResult'):
+                scanname = os.path.join(dataroot,study,scan)
+                testval = 1*os.path.isfile(scanname+'/acqp') + \
+                          2*os.path.isfile(scanname+'/method') + \
+                          4*os.path.isfile(scanname+'/fid') + \
+                          8*(len(glob.glob(scanname+'/pdata/*/2dseq'))>0)
+                
+                if testval !=15:
+                    print('{0} / {1} : {2}'.format(study, scan, testval))
+                counter += 1
             
-            if testval !=15:
-                print('{0} / {1} : {2}'.format(study, scan, testval))
-            counter += 1
-        
-print('-'*40 + '\n{0} scans tested'.format(counter))
+    print('-'*40 + '\n{0} scans tested'.format(counter))
