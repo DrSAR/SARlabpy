@@ -9,6 +9,7 @@ Handy functions to read BRUKER data and header files.
 The logging is set up so that if the library user does nothing,
 all will be silent. Details in :py:mod: SARlogger
 """
+from __future__ import division
 import logging
 logger=logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -17,10 +18,8 @@ import numpy
 import os.path
 import re
 from types import StringType, FileType
-import sys
-
-
 from itertools import tee, izip
+
 def pairwise(iterable):
     """
     This is a solution to the problem of looking ahead in a for loop
@@ -648,6 +647,11 @@ def read2dseq(scandirname):
     all_dims.reverse()
     
     data = data.reshape(all_dims)
+    
+    # Deal with RECO_slope (added by FM)
+    #TODO - Fix this so that it divides it slice by slice in case reco slope is different
+    data = data/reco['RECO_map_slope'][0]
+     
     # transpose so that time, z, y, x -> x, y, z, time
     data = data.transpose( numpy.arange(data.ndim,0,-1)-1)
                           
