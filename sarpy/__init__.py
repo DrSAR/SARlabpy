@@ -10,6 +10,8 @@ from io.BRUKERIO import (readJCAMP, readfid, readfidspectro, read2dseq,
 
 from io.BRUKER_classes import (natural_sort, 
                                Scan, Study, StudyCollection,
-                               Patient, Experiment)
+                               Patient, Experiment,
+                               dataroot)
+from io.AData_classes import (adataroot, AData)
                         
 from io import SARlogger

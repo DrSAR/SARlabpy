@@ -32,6 +32,16 @@ def pairwise(iterable):
     next(b, None)
     return izip(a, b)
 
+def convert_int_float_string(param):
+    try:
+        y = int(param)
+    except ValueError:
+        try:
+            y = float(param)
+        except ValueError:
+            y = param.strip()
+    return y
+    
 def readJCAMP(filename):
     """
     Parse text file in JCAMP format
@@ -112,17 +122,9 @@ def readJCAMP(filename):
         # is it an array or struct? (signified by the size indicator)
         if not re.match(r'\(', v):
             # we have an int/float/simple string
-            try:
-                LDRdict[k] = int(v)
-                logger.debug('found int: {0}={1}'.format(k,LDRdict[k]))
-            except ValueError:
-                try:
-                    LDRdict[k] = float(v)
-                    logger.debug('found float: {0}={1}'.format(k,LDRdict[k]))
-                except ValueError:
-                    LDRdict[k] = v
-                    logger.debug('found simple string: {0}={1}'.
-                            format(k,LDRdict[k]))
+            val = convert_int_float_string(v)
+            LDRdict[k] = val
+            logger.debug('found {2}: {0}={1}'.format(k,LDRdict[k], type(val)))
         else:
             # this isunfortunately harder. Let's get the array dimensions:
             # is there something following the 'array' definition? 
@@ -132,6 +134,8 @@ def readJCAMP(filename):
                 # this is actually a structure (without dimension instructions)
                 v = struc_match.group(1)
                 shape = [1]
+                LDRdict[k] = [convert_int_float_string(val) 
+                                for val in v.split(',')]
                 logger.debug('found dim-less structure({2})): {0}={1}'.
                             format(k,v,shape))
             else:                
@@ -150,26 +154,18 @@ def readJCAMP(filename):
                     list_level_one = [s.strip(' ()')
                                       for s in re.split('\) *\(', 
                                       v)]
-                    if len(list_level_one) > 0:
-                        LDRdict[k] = [list_element.
-                                split(',') for list_element in list_level_one]
-                    else:
-                        LDRdict[k] = inner_value(v)
+                    split_list = [list_element.
+                            split(',') for list_element in list_level_one]
+                            
+                    LDRdict[k] = [[convert_int_float_string(x) for x in listA]
+                                 for listA in split_list]
                     logger.debug('found comlex structure): {0}={1}'.
                                 format(k,LDRdict[k]))
                 else:
                     # this is a proper array
                     split_string = [s for s in re.split(' ',v)]
-                    try:
-                        # is this a homogeneous list of ints?
-                        LDRdict[k] = [int(s) for s in split_string if s]
-                    except ValueError:
-                        try:
-                            #no? maybe it's a list of floats?
-                            LDRdict[k] = [float(s) for s in split_string if s]
-                        except ValueError:
-                            # no? has got to be a list of strings (enumeration?)
-                            LDRdict[k] = split_string
+                    LDRdict[k] = [convert_int_float_string(s) for 
+                                            s in split_string if s]
                     logger.debug('found array({1}): {0}={2}'.
                                 format(k,shape,LDRdict[k]))
     return LDRdict
