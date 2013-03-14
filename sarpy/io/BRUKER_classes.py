@@ -61,7 +61,7 @@ class JCAMP_file(object):
         return object.__getattribute__(self, attr)
         
     def __forced_load(self):
-        logger.info('loading %s now forced' % self.filename)        
+        logger.info('JCAMP_file: loading %s now forced' % self.filename)        
         acqp = BRUKERIO.readJCAMP(self.filename)
         for k,v in acqp.iteritems():
             self.__dict__[k] = v
@@ -106,21 +106,29 @@ class PDATA_file(object):
         self.filename = filename 
         if not lazy:
             self.__forced_load()
-    def  __forced_load(self):
-        logger.info('loading 2dseq now forced %s:' % self.filename)
-        pdata = BRUKERIO.read2dseq(self.filename)
+    def  __forced_load(self, param_files_only=True):
+        if param_files_only:
+            logger.info('loading PDATA_file(params) now forced %s:' % self.filename)        
+        else:
+            logger.info('loading PDATA_file(params+data) now forced %s:' % self.filename)        
+        pdata = BRUKERIO.read2dseq(self.filename, 
+                                   param_files_only=param_files_only)
         self.__yet_loaded = True
-        self.data = pdata['data']
+        if not param_files_only:
+            self.data = pdata['data']
         for k,v in pdata['header'].iteritems():
             self.__dict__[k] = dict2obj(v)
-
+    
     def __getattr__(self, attr):
         '''
         intercepts only undefined attributes. this will be used to 
         trigger the loading of the data
         '''
-        if not self.__yet_loaded:
-            self.__forced_load() 
+        # decide whether to load data
+        if attr == 'data':
+            self.__forced_load(param_files_only=False) 
+        else:
+            self.__forced_load(param_files_only=True)
         return object.__getattribute__(self, attr)
 
     def uid(self):
@@ -422,8 +430,7 @@ class Study(object):
         except AttributeError:
             return self.__str__()
             
-            
-    def find_scan(self, protocol_name):
+    def find_scan_by_protocol(self, protocol_name):
         found_scans = []
 
         for s in self.scans: 
@@ -433,6 +440,7 @@ class Study(object):
             except AttributeError:
                 print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
         return(found_scans)
+                                
             
         
 class StudyCollection(object):
@@ -537,6 +545,14 @@ class StudyCollection(object):
 
     def get_SUBJECT_id(self):
         return [x.subject.SUBJECT_id for x in self.studies]
+        
+    def find_scan_by_protocol(self, protocol_name):
+        found_scans = []
+        for study in self.studies:
+            found_scans.extend(study.find_scan_by_protocol(protocol_name))
+        return(found_scans)
+
+
 
       
 class Patient(StudyCollection):
@@ -643,19 +659,6 @@ class Experiment(StudyCollection):
         for dirname in directories:
             study = Study(dirname, lazy=self.lazy)
             self.add_study(study)
-
-    def find_scan_in_experiment(self, protocol_name):
-        found_scans = []
-        
-        for study in self.studies:
-            for s in study.scans:
-                try:
-                    if s.acqp.ACQ_protocol_name == protocol_name:
-                        found_scans.append(s)
-                except AttributeError:
-                    print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
-        return(found_scans)
-
 
 if __name__ == '__main__':
     import doctest

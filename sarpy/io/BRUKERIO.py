@@ -579,7 +579,7 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(scandirname):
+def read2dseq(scandirname, param_files_only=False):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
@@ -597,6 +597,14 @@ def read2dseq(scandirname):
     reco = readJCAMP(os.path.join(scandirname,'reco'))
     d3proc = readJCAMP(os.path.join(scandirname,'d3proc'))
     visu_pars = readJCAMP(os.path.join(scandirname,'visu_pars'))
+    
+    if param_files_only:
+        logger.info('only loading parameter files')
+        return {'data':None,
+                'isImage':None,
+                'header':{'reco': reco, 
+                          'd3proc': d3proc,
+                          'visu_pars':visu_pars}}
     
     # determine ENDIANness and storage type
         
