@@ -1,3 +1,7 @@
+##$PULPROG=( 32 )
+<FLASH.ppg>
+##$ACQ_ns=1
+##$ACQ_scan_size=One_scan
 ##$ExcPulse=(1, 5400, 30, 17.9862515696541, 100, 0, 100, LIB_EXCITATION, <
 hermite.exc>, 5400, 0.1794, 50, 0.1024, conventional)
 ##$TPQQ=( 16 )
