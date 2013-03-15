@@ -102,20 +102,21 @@ class PDATA_file(object):
     for the 2dseq file, the d3proc and th reco file.
     '''
     def __init__(self, filename, lazy=True):
-        self.__yet_loaded = False
+        self.__yet_loaded_params = False
+        self.__yet_loaded_data = False
         self.filename = filename 
         if not lazy:
             self.__forced_load()
     def  __forced_load(self, param_files_only=True):
-        if param_files_only:
-            logger.info('loading PDATA_file(params) now forced %s:' % self.filename)        
-        else:
-            logger.info('loading PDATA_file(params+data) now forced %s:' % self.filename)        
         pdata = BRUKERIO.read2dseq(self.filename, 
                                    param_files_only=param_files_only)
-        self.__yet_loaded = True
-        if not param_files_only:
+        if param_files_only:        
+            logger.info('PDATA_file(params) now force-loaded %s:' % self.filename)        
+        else:
+            logger.info('PDATA_file(params+data) now force-loaded %s:' % self.filename)        
+            self.__yet_loaded_data = True
             self.data = pdata['data']
+        self.__yet_loaded_params = True # gets loaded in any case
         for k,v in pdata['header'].iteritems():
             self.__dict__[k] = dict2obj(v)
     
@@ -126,9 +127,11 @@ class PDATA_file(object):
         '''
         # decide whether to load data
         if attr == 'data':
-            self.__forced_load(param_files_only=False) 
+            if not self.__yet_loaded_data:
+                self.__forced_load(param_files_only=False) 
         else:
-            self.__forced_load(param_files_only=True)
+            if not self.__yet_loaded_params:
+                self.__forced_load(param_files_only=True)
         return object.__getattribute__(self, attr)
 
     def uid(self):
