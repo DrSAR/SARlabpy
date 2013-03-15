@@ -38,3 +38,4 @@ nosetests.xml
 # path to auto documentation (sphinx)
 html/
 doctrees/
+TemperatureLogFile
