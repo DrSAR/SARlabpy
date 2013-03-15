@@ -547,10 +547,6 @@ def readfidspectro(fptr=None, untouched=False):
                 'isImage':False,
                 'header':{'acqp': acqp, 'method': method}}
     else:
-
-        logger.debug('{0}\n{1}\n{2}\n{3}}'.
-                      format(ACQ_size, ACQ_obj_order, NR, fid.shape))
-
         # reshape into a large 2D array with dimensions [readsize, nr(objorder)*phase*NR]
         tempfid = fid.reshape(NR, len(ACQ_obj_order), ACQ_size[0])
 

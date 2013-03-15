@@ -41,7 +41,7 @@ def initiate_logging(module, formatter=None,
         Module object that points to module in the sarpy package 
         framework (collection of libraries? modules?).
     :param int handler_level: 
-        log level for the handler, default logging.DEBUG(=10)
+        log level for the handler, default logging.WARNING(=30)
     :param int logger_level: 
         log level for the entire logger, default logging.DEBUG(=10)
         Use :py:meth:`change_logger_level` to change the overall level

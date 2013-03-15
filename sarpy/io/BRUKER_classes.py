@@ -246,7 +246,7 @@ class Scan(object):
         # solvable of the data is retro-actively reconstructed. In the
         # meantime -> warning
         if not self.pdata:
-            logger.warn(('Directory "{0}" did not contain processed data '+
+            logger.warning(('Directory "{0}" did not contain processed data '+
                          '(2dseq)').format(self.dirname))
                
         # load analysed datasets for all processed datasets
@@ -260,7 +260,7 @@ class Scan(object):
                         self.adata.append(AData_classes.AData.fromfile(
                                 os.path.join(adata_potential, adata_sets)))
                     except:
-                        logger.warn('loading ADate "%s" failed.' % adata_sets)
+                        logger.warning('loading ADate "%s" failed.' % adata_sets)
             else:
                 logger.info('No analysis data in directory "{0}"'.
                              format(self.dirname))
@@ -523,7 +523,7 @@ class StudyCollection(object):
         if done:
             if (study.subject.SUBJECT_patient_instance_uid in 
                 self.study_instance_uids):
-                logger.warn('study previously added')
+                logger.warning('study previously added')
             else:
                 self.studies.append(study)
                 try:
@@ -572,7 +572,7 @@ class Patient(StudyCollection):
                 self.patient_id = study.subject.SUBJECT_id
             if self.patient_id != study.subject.SUBJECT_id:
                 logger.warning(
-                    'trying to load studies of different SUBJECT_id(s)')
+                    'loading studies of different SUBJECT_id(s) not permitted')
             else:
                 self.add_study(study)
                 
