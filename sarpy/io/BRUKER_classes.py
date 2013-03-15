@@ -198,6 +198,7 @@ class Scan(object):
         IOError:...
     '''
     fid = FID_file()
+    adata = AData_classes.ADataCollection()
     def __init__(self, root, absolute_root=False, lazy=True):
         '''
         Is the filename a direcotry and can we at least find
@@ -236,9 +237,12 @@ class Scan(object):
         
         # let's see whether any data has been processed
         self.pdata=[]
+        self.pdata_uids=[]
         for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
             try:
-                self.pdata.append(PDATA_file(f))
+                pdata = PDATA_file(f)
+                self.pdata.append(pdata)
+                self.pdata_uids.append(pdata.uid())
             except IOError:
                 pass
 
@@ -250,20 +254,18 @@ class Scan(object):
                          '(2dseq)').format(self.dirname))
                
         # load analysed datasets for all processed datasets
-        self.adata=[]
-        for pdata in self.pdata:
-            adata_potential = os.path.join(AData_classes.adataroot,
-                                           pdata.uid())
-            if os.path.isdir(adata_potential):
-                for adata_sets in os.listdir(adata_potential):
-                    try:
-                        self.adata.append(AData_classes.AData.fromfile(
-                                os.path.join(adata_potential, adata_sets)))
-                    except:
-                        logger.warning('loading ADate "%s" failed.' % adata_sets)
-            else:
-                logger.info('No analysis data in directory "{0}"'.
-                             format(self.dirname))
+#        self.adata={}
+#        for pdata in self.pdata:
+#            adata_potential = os.path.join(AData_classes.adataroot,
+#                                           pdata.uid())
+#            if os.path.isdir(adata_potential):
+#                for adata_sets in os.listdir(adata_potential):
+#                    adata_candidate = AData_classes.AData.fromfile(
+#                            os.path.join(adata_potential, adata_sets))
+#                    self.adata[adata_candidate.key]=adata_candidate
+#            else:
+#                logger.info('No analysis data in directory "{0}"'.
+#                             format(self.dirname))
 
 
         # this feels kludgy but this will cause AttributeErrors when the 

@@ -34,17 +34,40 @@ def mkdir_p(path):
         else: raise
 
 class AData(object):
-    def __init__(self, data=None, meta=None):
-        self.data = data
+    def __init__(self, yet_loaded=True, meta=None, **kwargs):
+        try:
+            self.key=kwargs['key']
+        except AttributeError:
+            raise AttributeError('To create an adata set, '+
+                                 'an identifying key is required')
+        if yet_loaded:
+            self.data = kwargs['data']
+            self.__yet_loaded=True
+        else:
+            self.__yet_loaded = yet_loaded
         self.meta = meta
         #some data is handy to have close by
         self.parent_uid = meta['parent_uid']
+        
+    def __getattr__(self, attr):
+        if attr == 'data':
+            if not self.__yet_loaded:
+                self.data = nibabel.load(os.path.join(adataroot, 
+                                          self.meta['dirname'],
+                                          self.meta['fileroot'])+'.nii')
+                self.__yet_loaded = True
+                logger.info('Loading of Adata.data now forced for (%s)' %
+                        self.meta['dirname'].split(os.path.sep)[1])
+
+            return self.data
+        else:
+            raise AttributeError('%s is not an attribute' % attr)
         
     def __str__(self):
         '''
         Simple representation (for print() and str() uses) of AData class
         '''
-        return 'AData.fromfile("%s")' % self.meta['filename']
+        return 'AData.fromfile("%s")' % self.meta['dirname']
     def __repr__(self):
         '''
         More elaborate representation
@@ -57,7 +80,7 @@ class AData(object):
                           self.meta['parent_filename'])
 
     @classmethod
-    def fromfile(cls, filename):
+    def fromfile(cls, filename, lazy=True):
         '''
         classmethod that can be used to initiatlize the AData object 
         by reading the content from file. To use, issue:
@@ -83,12 +106,25 @@ class AData(object):
             datafilename))            
         with open(paramfilename[0], 'r') as paramfile:
             meta = json.load(paramfile)
-        data = nibabel.load(datafilename[0])
-        return cls(data=data, meta=meta)
+        if not lazy:
+            logger.info('loading Nifti file %s' % datafilename[0])
+            data = nibabel.load(datafilename[0])
+            yet_loaded = True
+            return cls(data=data, 
+                       meta=meta, 
+                       key=meta['key'], 
+                       yet_loaded=yet_loaded)
+        else:
+            yet_loaded = False
+            return cls(meta=meta, 
+                       key=meta['key'], 
+                       yet_loaded=yet_loaded)
 
             
     @classmethod
-    def fromdata(cls, parent=None, data=None, meta=None):
+    def fromdata(cls, parent=None, data=None, 
+                 key=None, meta=None,
+                 force=False):
         '''
         :param BRUKER_classes.PDATA_file parent:
             A parent has to be a Scan or some object that provides a UID
@@ -103,47 +139,90 @@ class AData(object):
         else:
             if not meta: 
                 meta = {}
+            # preference is given to key defined in meta parameter
+            # but key through the key parameter is admissable as well
+            try:
+                key_joined = meta['key'] or key
+            except KeyError:
+                key_joined = key
+                
+            if key_joined is None:
+                raise ValueError('To create an adata set, '+
+                                 'an identifying key is required')
+            meta['key']=key_joined
             meta['parent_uid'] = parent.uid()
             meta['created_datetime'] = datetime.now().strftime('%c')
             
-            # try to find some recognizable information on parent
+            # the handle is a fairly safe and human-readable way to identify
+            # the originating scan and pdata
             try:
-                handle = re.sub(BRUKER_classes.dataroot, '', parent.filename)
+                handle = re.sub(BRUKER_classes.dataroot+os.path.sep, '',
+                                parent.filename)
                 meta['parent_filename'] = parent.filename
             except AttributeError:
                 handle = ''
                 meta['parent_filename'] = ''
             handle = re.sub(os.path.sep,'-',handle)
-            
-            #create new uid based on already existing uids
-            try:
-                existing_adatas = os.listdir(os.path.join(adataroot, 
-                                                          meta['parent_uid']))
-            except OSError:
-                existing_adatas = ''
-            used_ids = []
-            for folder in existing_adatas:
-                used_ids.append(int(re.sub('-.*','',folder)))
-            if used_ids:
-                new_id = str(max(used_ids) + 1)
-            else:
-                new_id = '1'
+            # folder = meta['dirname'] is where the AData will be stored
+            # relative to adataroot
             folder = os.path.join(
                             meta['parent_uid'],
-                            '-'.join([new_id, handle]))    
-            meta['filename'] = folder
-            target = os.path.join(adataroot, folder)
-            assert not(os.path.exists(target)), ('target directory '+
-                    '(%s) exists - this should not have happened' % target)
-            mkdir_p(target)
-            fileroot = os.path.join(target, 
-                                    '.'.join([meta['parent_uid'], new_id]))
+                            '-#-'.join([meta['key'],handle]))    
+            meta['dirname'] = folder
+            meta['fileroot'] = '-#-'.join([meta['key'], meta['parent_uid']])
+            absfolder = os.path.join(adataroot, folder)
+            fileroot = os.path.join(absfolder, meta['fileroot'])
+            # react if there is a pre-existingnkey of the same name
+            if os.path.isdir(absfolder):
+                if force:
+                   # overwrite
+                   os.remove(fileroot+'.json')
+                   os.remove(fileroot+'.nii')
+                   logger.warning('overwriting analysed data ({0}) for {1}'.
+                               format(meta['key'], meta['parent_filename']))
+                else:
+                   raise IOError(errno.EEXIST, 'Key exists')
+            else:
+                mkdir_p(absfolder)
+                
             nibabel.Nifti1Image(data,numpy.eye(4)).to_filename(fileroot+'.nii')
             with open(fileroot+'.json','w') as paramfile:
                 json.dump(meta, paramfile, indent=4)
+            logger.info('Saving to {0}.(nii, json)'.format(fileroot))
 
             
-        return cls(data=data, meta=meta)
+        return cls(data=data, meta=meta, key=meta['key'])
+
+class ADataCollection(object):
+    '''
+    A dictionary of AData objects. This is  decorator class that is used
+    in the BRUKER_classes.Scan object
+    '''
+    def __init__(self):
+        self.__yet_loaded = False
+        self.adata = {}
+                
+    def __set__(self, *args): raise AttributeError('read only!')
+        
+    def __get__(self, instance, value):
+        if not self.__yet_loaded:
+            self.__forced_load(instance.pdata_uids) 
+        return self.adata
+        
+    def __forced_load(self, pdata_uids):
+        logger.info('delayed loading of ADataCollection now forced ...')
+        for pdata_uid in pdata_uids:
+            adata_potential = os.path.join(adataroot, pdata_uid)
+            if os.path.isdir(adata_potential):
+                for adata_sets in os.listdir(adata_potential):
+                    adata_candidate = AData.fromfile(
+                            os.path.join(adata_potential, adata_sets))
+                    self.adata[adata_candidate.key]=adata_candidate
+            else:
+                logger.info('No analysis data in directory "{0}"'.
+                             format(self.dirname))
+
+        self.__yet_loaded = True
 
 if __name__ == '__main__':
     import doctest
