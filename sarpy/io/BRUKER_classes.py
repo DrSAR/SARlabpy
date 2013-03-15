@@ -440,7 +440,7 @@ class Study(object):
 
         for s in self.scans: 
             try:
-                if s.acqp.ACQ_protocol_name == protocol_name:
+                if re.match(protocol_name, s.acqp.ACQ_protocol_name):
                     found_scans.append(s)
             except AttributeError:
                 print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
