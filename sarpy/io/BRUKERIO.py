@@ -317,19 +317,25 @@ def readfid(fptr=None, untouched=False):
         raise IOError('Unknown ##$GO_raw_data_format = '\
                           + acqp['GO_raw_data_format'])
     dtype = numpy.dtype(datatype)
+
     # byteorder: 'little' don't swap, 'big' do swap
     BYTORDA = acqp['BYTORDA']
     logger.debug('BYTORDA={0}'.format(BYTORDA))
-    # determine array dimensions
-    ACQ_dim = acqp['ACQ_dim'] #Spatial/spectroscopic dimension
+
+    # Spatial/spectroscopic dimension of the experiment.
+    ACQ_dim = acqp['ACQ_dim'] 
     logger.debug('ACQ_dim={0}'.format(ACQ_dim))
-    ACQ_size = acqp['ACQ_size'][:] #ACQ_size[0] should be even (real valued counts)
+    #ACQ_size[0] should be even (real valued counts)
+    ACQ_size = acqp['ACQ_size'][:] 
     logger.debug('ACQ_size={0}'.format(ACQ_size))
     assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
             'I am not clever enough to read Parallel acquired data, yet')
     assert ACQ_dim == len(ACQ_size),(
-            'Not enough/too much information about the size of length in\n'+
-            'each dim image dimension')
+            'ACQ_dim = {0} != len(ACQ_size={1}) ??'.format(
+            ACQ_dim, ACQ_size))
+
+    # Number of objects
+    NI = acqp['NI']
 
     #There is the possibility of 'zero filling' since objects (aka kspace
     # lines) are written n 1Kb blocks if GO_block_size != continuous
@@ -344,16 +350,22 @@ def readfid(fptr=None, untouched=False):
     else:
         raise IOError, 'Unexpected value for GO_block_size in acqp'
 
-    #see ho many repetitions
-    NR = acqp['NR']
     # find BRUKER object order
     ACQ_obj_order = acqp['ACQ_obj_order']
+    # Number of subsequent scans in the raw dataset belonging
+    # to the same Object.
     ACQ_phase_factor = acqp['ACQ_phase_factor']
+    #  Ordering scheme for scans within the k-space.
     ACQ_phase_encoding_mode = acqp['ACQ_phase_encoding_mode']
+    #  For positioning of first scan in phase encoding scheme.
     ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
     # RARE factor sort of indicates how many PE shots are spend on one slice
-    # before moving on to next object (slice?) as defined in AQ_obj_order
+    # before moving on to next object (slice?) as defined in ACQ_obj_order
     ACQ_rare_factor = acqp['ACQ_rare_factor']
+
+    # Number of repeated experiments within the dataset.
+    NR = acqp['NR']
+
 
     # 2D vs 3D issues about slices etc.
     if ACQ_dim == 2:
@@ -371,9 +383,13 @@ def readfid(fptr=None, untouched=False):
     # parameter of the methods file. It appears to be missing from
     # EPI data
     try:
-        EncSteps = numpy.array(acqp['ACQ_spatial_phase_1']
-                    )*acqp['ACQ_spatial_size_1']/2
-        EncSteps = (EncSteps - min(EncSteps)).astype('int')
+        phase_range = max(acqp['ACQ_spatial_phase_1']) - \
+                        min(acqp['ACQ_spatial_phase_1'])
+        EncSteps = (numpy.array(acqp['ACQ_spatial_phase_1']) - 
+                    min(acqp['ACQ_spatial_phase_1']))
+        EncSteps *= (acqp['ACQ_spatial_size_1']-1)/phase_range   
+        # roundin of float to nearest int is a tricky business...                             
+        EncSteps = numpy.floor(EncSteps+.5).astype('int')
     except KeyError:
         logger.info('ACQ_spatial_phase_1 not found in acqp, '+
                 'trying PVM_EncSteps1 from method')
@@ -416,11 +432,11 @@ def readfid(fptr=None, untouched=False):
 
         # reshape into a large 2D array with dimensions
         # [readsize, nr(objorder)*phase*NR]
-        if numpy.size(fid) != (ACQ_size[0] * ACQ_size[1] * ACQ_size[2] * NR):
+        if fid.size != (ACQ_size[0] * ACQ_size[1] * ACQ_size[2] * NR):
             logger.warning('size(fid) = {0} != {1} = ACQ_size*NR'.
                       format(numpy.shape(fid)[0], ACQ_size[0] *
                              ACQ_size[1] * ACQ_size[2] * NR))             
-            NR = numpy.size(fid) / (ACQ_size[0]*ACQ_size[1]*ACQ_size[2])
+            NR = int(numpy.size(fid) / (ACQ_size[0]*ACQ_size[1]*ACQ_size[2]))
             logger.warning('NR reset to {0}'.format(NR))
             fid = fid[0:ACQ_size[0]*ACQ_size[1]*ACQ_size[2]*NR]
 
@@ -448,12 +464,15 @@ def readfid(fptr=None, untouched=False):
 
         # alternative using array-based index access
         # We are vectorizing the functions so they can eb c
-        PEnr = numpy.array(EncSteps)[(idx % (ACQ_size[1]*len(ACQ_obj_order))) /
-                    (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor
-                 + (idx % ACQ_rare_factor)]
-        slicenr = numpy.array(ACQ_obj_order)[(idx/ACQ_rare_factor) % len(ACQ_obj_order)]
+        
+        index_array = (idx % (ACQ_size[1]*len(ACQ_obj_order))) // \
+                    (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor \
+                 + (idx % ACQ_rare_factor)
+        PEnr = EncSteps[index_array]
+        slicenr = numpy.array(ACQ_obj_order)[(idx//ACQ_rare_factor) % \
+                                        len(ACQ_obj_order)]
 
-        REPnr = idx / (ACQ_size[1] * len(ACQ_obj_order))
+        REPnr = idx // (ACQ_size[1] * len(ACQ_obj_order))
 
         fid_reorder[:, PEnr, slicenr, REPnr] = tempfid[idx, :].T
 
@@ -771,5 +790,3 @@ def readRFshape(filename):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-#    fn = os.path.expanduser('~/data/readfidTest.ix1/1/acqp')
-#    hdr=readJCAMP(fn)
