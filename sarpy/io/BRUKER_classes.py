@@ -136,7 +136,18 @@ class PDATA_file(object):
 
     def uid(self):
         return self.visu_pars.VisuUid
+    
+    def store_adata(self, *args, **kwargs):
+        '''
+        Store some secondary data for this PData scan.
+
+        See call signature of AData_classes.AData.fromdata
         
+        Would be nice to trigger an update in the adata list of the 
+        parent object (Scan). This might be hard. Sounds like Traits to me.        
+        '''
+        return AData_classes.AData.fromdata(self, *args, **kwargs)
+                
 class FID_file(object):
     '''
     Initialize an fid object whih should sit in the scan root directory.
@@ -320,8 +331,15 @@ class Scan(object):
                             self.acqp.ACQ_size)
         except AttributeError:
             return self.__str__()
-                
-        
+
+    def store_adata(self, pdata_idx=0, **kwargs):
+        '''
+        Store an AData set for one of the processed children of this scan.
+        Typically the first one (pdata_idx=0)
+        '''
+        self.adata[kwargs['key']] = AData_classes.AData.fromdata(
+                    self.pdata[pdata_idx], **kwargs)
+                    
 class Study(object):
     '''
     A study in BRUKER parlance is a collection of scans performed on
