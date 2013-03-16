@@ -769,7 +769,7 @@ def readRFshape(filename):
 
 # main part - run test cases if called as a module
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
-#    fn = os.path.expanduser('~/data/readfidTest.ix1/1/acqp')
-#    hdr=readJCAMP(fn)
+#    import doctest
+#    doctest.testmod()
+    fn = os.path.expanduser('~/data/readfidTest.ix1/1/fid')
+    kspace=readfid(fn)
