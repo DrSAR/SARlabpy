@@ -63,8 +63,58 @@ def readJCAMP(filename):
 
     The issue of reading these is complicated due to the various
     types of data (integers, floats, strings, arrays and nested
-    structures) that can be present. A currently experimental feature is the
-    typecasting of the records into all these different datatypes.
+    structures) that can be present.
+    
+    ~/data/readfidTest.ix1/subject ::
+        ##$SUBJECT_name_string=( 64 )
+        <Moosvi, readfidTest>
+        ##$SUBJECT_name=(<Moosvi>, <readfidTest>)
+
+        >>> import os
+        >>> a=readJCAMP(os.path.expanduser('~/data/readfidTest.ix1/subject'))
+        >>> a['SUBJECT_name']
+        ['<Moosvi>', '<readfidTest>']
+        >>> a['SUBJECT_name_string']
+        'Moosvi, readfidTest'
+        
+    ~/data/readfidTest.ix1/1/acqp::
+        ##$ACQ_user_filter=No
+        ##$ACQ_dim_desc=( 2 )
+        Spatial Spatial
+        ##$NR=1
+        ##$D=( 64 )
+        0.00502257333333333 0 0.00066296 0.000114 0.000114 0 0.001886 0 2.5e-05 0 
+        0.000886 0.000886 0.000368 0 0 0 0 0 0 0 1e-05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        ##$TPQQ=( 16 )
+        (<hermite.exc>, 17.9862515696541, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 
+        30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0)
+         (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0)
+        ##$ACQ_grad_matrix=( 15, 3, 3 )
+        1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 -0 0 1 -0 1 -0 1 
+        0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 
+        0 1 -0 1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 -0 0 1 -0 1 -0 1 0 0 -0 0 1 -0 
+        1 -0 1 0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0
+
+        >>> import os
+        >>> a=readJCAMP(os.path.expanduser('~/data/readfidTest.ix1/1/acqp'))
+        >>> a['ACQ_user_filter']
+        'No'
+        >>> a['ACQ_dim_desc']
+        ['Spatial', 'Spatial']
+        >>> a['NR']
+        1
+        >>> a['D'][0:4]
+        [0.00502257333333333, 0, 0.00066296, 0.000114]
+        >>> a['TPQQ'][0:4]
+        [['<hermite.exc>', 17.9862515696541, 0], ['<>', 30, 0], ['<>', 30, 0], ['<>', 30, 0]]
+        >>> a['TPQQ'][0]
+        ['<hermite.exc>', 17.9862515696541, 0]
+        >>> a['TPQQ'][0][1]
+        17.9862515696541
+        >>> a['ACQ_grad_matrix'][0:20]
+        [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0]
+
     """
 
     logger.debug("opening {0}".format(filename))
