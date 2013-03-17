@@ -65,11 +65,13 @@ def readJCAMP(filename):
     types of data (integers, floats, strings, arrays and nested
     structures) that can be present.
     
-    ~/data/readfidTest.ix1/subject ::
+    ~/data/readfidTest.ix1/subject:
+    ::
+        
         ##$SUBJECT_name_string=( 64 )
         <Moosvi, readfidTest>
         ##$SUBJECT_name=(<Moosvi>, <readfidTest>)
-
+        
         >>> import os
         >>> a=readJCAMP(os.path.expanduser('~/data/readfidTest.ix1/subject'))
         >>> a['SUBJECT_name']
@@ -77,7 +79,9 @@ def readJCAMP(filename):
         >>> a['SUBJECT_name_string']
         'Moosvi, readfidTest'
         
-    ~/data/readfidTest.ix1/1/acqp::
+    ~/data/readfidTest.ix1/1/acqp:
+    ::
+        
         ##$ACQ_user_filter=No
         ##$ACQ_dim_desc=( 2 )
         Spatial Spatial
