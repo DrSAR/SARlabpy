@@ -39,3 +39,4 @@ nosetests.xml
 html/
 doctrees/
 qtsarpy_mainwindow_auto.py
+TemperatureLogFile
