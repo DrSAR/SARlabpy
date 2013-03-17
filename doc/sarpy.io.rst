@@ -57,3 +57,11 @@ io Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`obj2dict` Module
+----------------------
+
+.. automodule:: sarpy.io.obj2dict
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
