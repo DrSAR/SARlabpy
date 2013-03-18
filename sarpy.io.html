@@ -338,7 +338,7 @@ phase, bandwidth etc.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>fptr</strong> (<em>string or FileType</em>) &#8211; filename of fid file or filehandle to open fid file</li>
+<li><strong>fptr</strong> (<em>FileType,StringType</em>) &#8211; filename of fid file or filehandle to open fid file</li>
 <li><strong>untouched</strong> (<em>boolean</em>) &#8211; leave the fid as found without rearranging lines into slices and echos?</li>
 </ul>
 </td>
@@ -354,13 +354,6 @@ phase, bandwidth etc.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/Moosvi.ii1/3/fid&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
-<span class="go">(128, 128, 3, 1)</span>
-</pre></div>
-</div>
 <p><strong>BRUKER manual D.14 File Formats (Raw data files)</strong></p>
 <blockquote>
 <div><p>The reconstruction assumes that the raw data to be reconstructed will
@@ -412,7 +405,8 @@ from different receivers are appended. The number of active receivers is
 derived from the number of selected receivers in the parameter array
 GO_ReceiverSelect.</p>
 </li>
-<li><p class="first">NI - Number of objects.</p>
+<li><p class="first">NI - Number of objects. 
+e.g. slices, but not purely!, could be slices*echoes</p>
 </li>
 <li><p class="first">ACQ_obj_order - Permutation of the order of the acquired objects.</p>
 </li>
@@ -446,6 +440,48 @@ ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.</p>
 </dd>
 </dl>
 </div></blockquote>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/1/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># TriPilot multi</span>
+<span class="go">(128, 128, 15, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/2/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># FLASH 2D</span>
+<span class="go">(256, 105, 5, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/3/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># FLASH 3D --- THIS IS ACTUALLY WRONG!!</span>
+<span class="go">(256, 105, 1, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/4/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># MSME 2D</span>
+<span class="go">(256, 105, 5, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/5/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># MSME 3D</span>
+<span class="go">(256, 105, 1, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/6/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(256, 256, 15, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/7/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(256, 105, 5, 25)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/8/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(256, 105, 5, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/9/fid&#39;</span><span class="p">))</span> 
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">IOError</span>: <span class="n">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># fid fil 9 was missing due to incomplete scans</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/10/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(128, 32, 5, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/11/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(128, 32, 5, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/12/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(4096, 1, 5, 1)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
