@@ -25,7 +25,7 @@ I have come to believe in the rebase workflow and hence I suggest we do the foll
         git fetch
         git rebase origin/master # you do this while still checked out on mynewfeature
   p
-  * If time comes to make the feature, bugfix, whatever available, *tell me*. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:
+  * If time comes to make the feature, bugfix, whatever available, **tell me**. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:
 
   .. code-block:: bash
 
@@ -38,5 +38,4 @@ I have come to believe in the rebase workflow and hence I suggest we do the foll
 
   * *master* the slighlty more sacrosanct branch
   * *hg-pages* do not touch! this is a special orphan branch that is used for auto-documentation
-  * *firas-xxx* replace firas with your name and xxx if you find that there is a feature that you are working on at the moment. A branch that is labelled with a name is totally off limites for anyone else to force push to! We have log files.
-  * *xxx* branch dedicated to feature xxx
+  * *firas/xxx* replace firas with your name or initials and xxx if you find that there is a feature that you are working on at the moment. A branch that is labelled with a name is totally off-limits for anyone else to force push to! We have log files. And we will find you.
