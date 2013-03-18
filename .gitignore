@@ -40,29 +40,7 @@ html/
 doctrees/
 qtsarpy_mainwindow_auto.py
 TemperatureLogFile
-.spyderproject .spyderproject .spyderworkspace
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs01a.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs02.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs03.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs04.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs05.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs06.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs08.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs09.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs10.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs11.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs12.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs13.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs14.png
-sarpy/fmoosvi/sandbox/summaries/AUC60NecS3Hs15.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs02.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs04.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs06.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs08.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs09.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs11.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs12.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs13.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs14.png
-sarpy/fmoosvi/sandbox/summaries/T1-NecS3Hs15.png
-HPGS6save_to_nii.py
+
+# spyder stuff.
+.spyderproject 
+.spyderworkspace

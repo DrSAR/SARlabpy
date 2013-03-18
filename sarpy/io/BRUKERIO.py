@@ -377,13 +377,13 @@ def readfid(fptr=None,
         >>> fid['data'].shape   # MSME 3D
         (256, 105, 1, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/6/fid'))
-        >>> fid['data'].shape
+        >>> fid['data'].shape   # MSME 2D-TURBO  --- THIS IS ACTUALLY WRONG!!
         (256, 256, 15, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/7/fid'))
-        >>> fid['data'].shape
+        >>> fid['data'].shape  # FLASH 2D (NR=25)
         (256, 105, 5, 25)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/8/fid'))
-        >>> fid['data'].shape
+        >>> fid['data'].shape  # FLASH 2D, partial acq. NR auto reset to 5
         (256, 105, 5, 5)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/9/fid')) # doctest:+ELLIPSIS
         Traceback (most recent call last):
@@ -391,17 +391,29 @@ def readfid(fptr=None,
         IOError: ...
         >>> # fid fil 9 was missing due to incomplete scans
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/10/fid'))
-        >>> fid['data'].shape
+        >>> fid['data'].shape # FLASH 2D (MATRIX 32 X 32)
         (128, 32, 5, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/11/fid'))
-        >>> fid['data'].shape
+        >>> fid['data'].shape # FLASH 3D (MATRIX 32 X 32)
         (128, 32, 5, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/12/fid'))
-        >>> fid['data'].shape
+        >>> fid['data'].shape # EPI "1 segment" -- OBVIOUSLY WRONG!
         (4096, 1, 5, 1)
 
-
-
+        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/13/fid')) # 16 segment EPI
+        ... # doctest: +ELLIPSIS  
+        Traceback (most recent call last):
+        ...
+        IndexError: ...
+        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/14/fid'))
+        >>> fid['data'].shape # DTI Standard
+        (256, 105, 10, 1)
+        
+    and some more complicated scans ...
+    15:'DTI SPIRAL (did not show)', 
+    16:'UTE 2D',
+    17:'UTE 3D',
+    18:'ZTE 3D'
     """
     if isinstance(fptr, FileType):
         fidname = fptr.name
@@ -819,7 +831,7 @@ def read2dseq(scandirname,
     
     # Finally, shape the data so all frames are put into separate dimensions.
     data = data.reshape(matrix_size)        
-    # there are two kinsof transposition needed:
+    # there are two kinds of transposition needed:
     #  (a) transpose so that time, z, y, x -> x, y, z, time
     #  (b) account for the row-major preference in python and for column
     #      major in paravision -> this equates to an in-plane transpose
