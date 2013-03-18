@@ -56,10 +56,10 @@ minus_image = analysis.h_phase_from_fid(power_BS_minus)
 plus_image =  analysis.h_phase_from_fid(power_BS_plus)
 
 fig1 = pylab.figure()
-pylab.imshow(minus_image[:,:,0])
+pylab.imshow(minus_image[:,:,0,0])
 pylab.colorbar()
 fig = pylab.figure()
-pylab.imshow(plus_image[:,:,0])
+pylab.imshow(plus_image[:,:,0,0])
 pylab.colorbar()
 
 
