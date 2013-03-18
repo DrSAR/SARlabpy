@@ -18,14 +18,14 @@ I have come to believe in the rebase workflow and hence I suggest we do the foll
         git commit # maybe even a few times
         git push origin mynewfeature  # if you want a backup
 
-  * The objective here is that your code will at somepoint work with the rest of the code (which, of course, is also evolving). Hence to effect that merge at some future date, you need to stay on top of things. You do this by 'rebasing' all your as yet unmerged changes on the most recent version of master.
+* The objective here is that your code will at somepoint work with the rest of the code (which, of course, is also evolving). Hence to effect that merge at some future date, you need to stay on top of things. You do this by 'rebasing' all your as yet unmerged changes on the most recent version of master.
 
   .. code-block:: bash
 
         git fetch
         git rebase origin/master # you do this while still checked out on mynewfeature
-  p
-  * If time comes to make the feature, bugfix, whatever available, **tell me**. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:
+
+* If time comes to make the feature, bugfix, whatever available, **tell me**. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:
 
   .. code-block:: bash
 
