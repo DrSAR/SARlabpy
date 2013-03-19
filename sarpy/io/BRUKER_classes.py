@@ -36,85 +36,7 @@ def strip_all_but_classname(obj, class_str):
     else:
         class_name = class_str
     return class_name
-                            
-class JCAMP_file(object):
-    '''
-    Represents a JCAMP encoded parameter file.
-    
-    Parameters become attributes in this class
-    '''
-    def __init__(self, filename):
-        if not os.path.isfile(filename):
-            raise IOError('File "%s" not found' % filename)
-        self.filename = filename
-        logger.info('JCAMP_file: loading %s now forced' % self.filename)        
-        acqp = BRUKERIO.readJCAMP(self.filename)
-        for k,v in acqp.iteritems():
-            self.__dict__[k] = v
-                                                  
-class dict2obj(object):
-    '''
-    Helper class to turn dictionary keys into class attributes.
-    It's so much nicer to refer to them that way.
-    '''
-    def __init__(self,dictionary):
-        for k,v in dictionary.iteritems():
-            self.__dict__[k] = v
-
-class PDATA_file(object):
-    '''
-    Initialize a processed data set that usually sits in `*/pdata/[1-9]`.
-
-    constructor expects a directory name (filename). It will look
-    for the 2dseq file, the d3proc and th reco file.
-    '''
-    def __init__(self, filename):
-        self.__yet_loaded_params = False
-        self.__yet_loaded_data = False
-        self.filename = filename 
-        self.__forced_load()
-    def  __forced_load(self, param_files_only=True):
-        pdata = BRUKERIO.read2dseq(self.filename, 
-                                   param_files_only=param_files_only)
-        if param_files_only:        
-            logger.info('PDATA_file(params) now force-loaded %s:' % self.filename)        
-        else:
-            logger.info('PDATA_file(params+data) now force-loaded %s:' % self.filename)        
-            self.__yet_loaded_data = True
-            self.data = pdata['data']
-        self.__yet_loaded_params = True # gets loaded in any case
-        for k,v in pdata['header'].iteritems():
-            self.__dict__[k] = dict2obj(v)
-    
-    def __getattr__(self, attr):
-        '''
-        intercepts only undefined attributes. this will be used to 
-        trigger the loading of the data
-        '''
-        # decide whether to load data
-        if attr == 'data':
-            if not self.__yet_loaded_data:
-                self.__forced_load(param_files_only=False) 
-        else:
-            if not self.__yet_loaded_params:
-                self.__forced_load(param_files_only=True)
-        return object.__getattribute__(self, attr)
-
-    def uid(self):
-        return self.visu_pars.VisuUid
-    
-    def store_adata(self, *args, **kwargs):
-        '''
-        Store some secondary data for this PData scan.
-
-        See call signature of AData_classes.AData.fromdata
-        
-        Would be nice to trigger an update in the adata list of the 
-        parent object (Scan). This might be hard. Sounds like Traits to me.        
-        '''
-        return AData_classes.AData.fromdata(self, *args, **kwargs)
-
-        
+                           
 class lazy_property(object):
     '''
     meant to be used for lazy evaluation of an object attribute.
@@ -150,6 +72,75 @@ class Test(object):
        calcs = 1 # do a lot of calculation here
        print('phew, this took a lot of effort - glad I do this so rarely...')
        return calcs
+                           
+class dict2obj(object):
+    '''
+    Helper class to turn dictionary keys into class attributes.
+    It's so much nicer to refer to them that way.
+    '''
+    def __init__(self,dictionary):
+        for k,v in dictionary.iteritems():
+            self.__dict__[k] = v
+
+# ===========================================================
+                           
+class JCAMP_file(object):
+    '''
+    Represents a JCAMP encoded parameter file.
+    
+    Parameters become attributes in this class
+    '''
+    def __init__(self, filename):
+        if not os.path.isfile(filename):
+            raise IOError('File "%s" not found' % filename)
+        self.filename = filename
+        logger.info('JCAMP_file: loading %s now forced' % self.filename)        
+        acqp = BRUKERIO.readJCAMP(self.filename)
+        for k,v in acqp.iteritems():
+            self.__dict__[k] = v
+                                                  
+class PDATA_file(object):
+    '''
+    Initialize a processed data set that usually sits in `*/pdata/[1-9]`.
+
+    constructor expects a directory name (filename). It will look
+    for the 2dseq file, the d3proc and th reco file.
+    '''
+    def __init__(self, filename):
+        self.filename = filename 
+        
+    @lazy_property
+    def reco(self):
+        
+        return BRUKERIO.readJCAMP(os.path.join(self.filename,'reco'))
+
+    @lazy_property
+    def visu_pars(self):
+        return BRUKERIO.readJCAMP(os.path.join(self.filename,'visu_pars'))
+                
+    @lazy_property
+    def d3proc(self):
+        return BRUKERIO.readJCAMP(os.path.join(self.filename,'d3proc'))
+
+    @lazy_property
+    def data(self):
+        dta = BRUKERIO.read2dseq(os.path.join(self.filename))
+        return dta['data']
+
+    def uid(self):
+        return self.visu_pars.VisuUid
+    
+    def store_adata(self, *args, **kwargs):
+        '''
+        Store some secondary data for this PData scan.
+
+        See call signature of AData_classes.AData.fromdata
+        
+        Would be nice to trigger an update in the adata list of the 
+        parent object (Scan). This might be hard. Sounds like Traits to me.        
+        '''
+        return AData_classes.AData.fromdata(self, *args, **kwargs)
+
 
 
 class Scan(object):
