@@ -258,12 +258,20 @@ def inner_value(somelist):
     except TypeError:
         return somelist
 
-def readfid(fptr=None, untouched=False):
+def readfid(fptr=None,
+            acqp=None, 
+            method=None, 
+            untouched=False):
     """
     Returns BRUKER's fid file as a properly dimensioned & rearranged array.
 
-    :param FileType,StringType fptr: filename of fid file or filehandle to open fid file
-    :param boolean untouched: leave the fid as found without rearranging lines into slices and echos?
+    :param FileType,StringType fptr: 
+        filename of fid file or filehandle to open fid file
+    :param dict acqp: dictionary of acqp parameters 
+        (default None: parameter file will be loaded)
+    :param dict method:  dictionary of method parameters 
+        (default None: parameter file will be loaded)
+    :param boolean untouched: do not rearrange/reshape data
     :return: Flat (untouched = True) or Rearranged and assembled array of the acquire k-space
     :rtype: numpy array
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
@@ -392,9 +400,10 @@ def readfid(fptr=None, untouched=False):
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
-    logger.info('loading %s' % fidname)
-    acqp = readJCAMP(dirname + "/acqp")
-    method = readJCAMP(dirname + '/method')
+    
+    # use parameter files provided by caller or load if needed
+    acqp = acqp or readJCAMP(os.path.join(dirname,'acqp'))
+    method = method or readJCAMP(os.apth.join(dirname,'method'))
 
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
