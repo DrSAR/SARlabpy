@@ -684,12 +684,18 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(scandirname, param_files_only=False):
+def read2dseq(scandirname,
+              reco=None,
+              d3proc=None,
+              visu_pars=None):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
     :param string scandirname: filename of the scan directory
-    :return: dictionary with data, and headerinformation. The data is
+    :param dict reco, d3proc, visu_pars:
+        parameter files (as dict) that can be provided by caller
+        default: None which means they will be loaded by this function
+    :return: dictionary with data, and header information. The data is
              an array of BRUKER-reconstructed image data in the respecive proc
              directory.
     :rtype: dict with 'data':numpy array 'header':dict{'recpo':..., 'd3proc':...}
@@ -699,18 +705,10 @@ def read2dseq(scandirname, param_files_only=False):
     """ 
 
     # get relevant information from the reco and d3proc files
-    reco = readJCAMP(os.path.join(scandirname,'reco'))
-    d3proc = readJCAMP(os.path.join(scandirname,'d3proc'))
-    visu_pars = readJCAMP(os.path.join(scandirname,'visu_pars'))
-    
-    if param_files_only:
-        logger.info('only loading parameter files')
-        return {'data':None,
-                'isImage':None,
-                'header':{'reco': reco, 
-                          'd3proc': d3proc,
-                          'visu_pars':visu_pars}}
-    
+    reco = reco or readJCAMP(os.path.join(scandirname,'reco'))
+    d3proc = d3proc or readJCAMP(os.path.join(scandirname,'d3proc'))
+    visu_pars = visu_pars or readJCAMP(os.path.join(scandirname,'visu_pars'))
+        
     # determine ENDIANness and storage type
         
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':

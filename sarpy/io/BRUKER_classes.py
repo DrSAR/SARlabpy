@@ -114,8 +114,10 @@ class PDATA_file(object):
 
     @lazy_property
     def data(self):
-        logger.info('delayed loading of "%s" now forced ...' % self.filename)
-        dta = BRUKERIO.read2dseq(os.path.join(self.filename))
+        dta = BRUKERIO.read2dseq(os.path.join(self.filename),
+                                 reco=self.reco.__dict__,
+                                 d3proc=self.d3proc.__dict__,
+                                 visu_pars=self.visu_pars.__dict__)
         return dta['data']
 
     def uid(self):
