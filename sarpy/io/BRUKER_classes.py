@@ -39,8 +39,30 @@ def strip_all_but_classname(obj, class_str):
                            
 class lazy_property(object):
     '''
-    meant to be used for lazy evaluation of an object attribute.
+    Meant to be used for lazy evaluation of an object attribute.
     property should represent non-mutable data, as it replaces itself.
+    
+    An example illustrates the use. First define a class that contains
+    a lazy_property. That call it and observe how the calculation is 
+    only performed once.
+    
+    >>> class Test(object):
+    ...     @lazy_property
+    ...     def results(self):
+    ...         calcs = 42 # do a lot of calculation here
+    ...         print('phew, this took a lot of effort - glad I do this so rarely...')
+    ...         return calcs
+    >>> A=Test()
+    >>> A.__dict__
+    {}
+    >>> A.results
+    phew, this took a lot of effort - glad I do this so rarely...
+    42
+    >>> A.results  # on a second call the calculation is not needed !
+    42
+    >>> A.__dict__  # see how results is no a proper attribute
+    {'results': 42}
+
     '''
 
     def __init__(self,fget):
@@ -57,21 +79,6 @@ class lazy_property(object):
         # calls the expensive calculation once.
         setattr(obj,self.func_name,value)
         return value
-
-class Test(object):
-    '''
-    This class is here for illustration purposes. 
-    Define it and access attribute results. You will see that the 
-    calculation only happens once and only when called. Try commenting
-    out the line 'setattr(obj...)' in the lazy_property __get__
-    routine and see how the expensive calc is done for every access!
-    '''
-
-    @lazy_property
-    def results(self):
-       calcs = 1 # do a lot of calculation here
-       print('phew, this took a lot of effort - glad I do this so rarely...')
-       return calcs
                            
 # ===========================================================
                            
@@ -85,7 +92,6 @@ class JCAMP_file(object):
         if not os.path.isfile(filename):
             raise IOError('File "%s" not found' % filename)
         self.filename = filename
-        logger.info('JCAMP_file: loading %s now forced' % self.filename)        
         acqp = BRUKERIO.readJCAMP(self.filename)
         for k,v in acqp.iteritems():
             self.__dict__[k] = v
@@ -150,8 +156,13 @@ class Scan(object):
         
         >>> import os
         >>> exp3 = Scan('readfidTest.ix1/3')
-        >>> dir(exp3)
-        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'adata', 'dirname', 'fid', 'method', 'pdata', 'pdata_uids', 'shortdirname', 'store_adata']
+        >>> dir(exp3)    # doctest: +NORMALIZE_WHITESPACE
+        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', 
+         '__getattribute__', '__hash__', '__init__', '__module__', '__new__', 
+         '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', 
+         '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 
+         'adata', 'dirname', 'fid', 'method', 'pdata', 'pdata_uids', 
+         'shortdirname', 'store_adata']
 
         >>> exp3.acqp.ACQ_protocol_name
         'FLASH_bas(modified)'
@@ -333,7 +344,6 @@ class Study(object):
          
     @lazy_property
     def scans(self):
-        logger.info('loading %s now forced' % self.dirname)        
         scans = []
         eligible_dirs = natural_sort(os.listdir(self.dirname))
         for fname in eligible_dirs:
