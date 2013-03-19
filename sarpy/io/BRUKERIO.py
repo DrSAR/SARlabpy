@@ -121,7 +121,7 @@ def readJCAMP(filename):
 
     """
 
-    logger.debug("opening {0}".format(filename))
+    logger.info("opening {0}".format(filename))
     JCAMPfile = open(filename, "r")
     JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
     JCAMPfile.close()
@@ -463,6 +463,7 @@ def readfid(fptr=None,
             EncSteps = numpy.arange(ACQ_size[1])
 
     # load data
+    logger.info('loading %s' % fidname)
     data = numpy.fromfile(fptr, dtype = dtype)
     if BYTORDA =='big':
         data.byteswap(True)  # swap ENDIANness in place
@@ -698,8 +699,9 @@ def read2dseq(scandirname,
     dtype = numpy.dtype(datatype)
 
     # load data
-    data = numpy.fromfile(file=os.path.join(scandirname,'2dseq'),
-                          dtype=dtype)
+    filename = os.path.join(scandirname,'2dseq')
+    logger.info('read2dseq: loading %s' % filename)
+    data = numpy.fromfile(file=filename, dtype=dtype)
                           
     matrix_size = visu_pars['VisuCoreSize']
     x=matrix_size[0]
