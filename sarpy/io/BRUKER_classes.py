@@ -185,14 +185,14 @@ class Scan(object):
         >>> import os
         >>> exp3 = Scan('readfidTest.ix1/3')
         >>> dir(exp3)
-        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'adata', 'dirname', 'fid', 'method', 'pdata', 'shortdirname']
+        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'adata', 'dirname', 'fid', 'method', 'pdata', 'pdata_uids', 'shortdirname', 'store_adata']
 
         >>> exp3.acqp.ACQ_protocol_name
         'FLASH_bas(modified)'
         >>> exp3.acqp.ORIGIN
         'Bruker BioSpin MRI GmbH'
         >>> exp3.acqp.DATE
-        'Thu Feb 21 19:01:26 2013 PST (UT-8h)  '
+        'Thu Feb 21 19:01:26 2013 PST (UT-8h)'
         
     Also, Scan has a pretty way of falling over when no fid file is detected:
         
@@ -211,6 +211,7 @@ class Scan(object):
 
     @lazy_property
     def fid(self):
+        logger.info('delayed loading of "%s" now forced ...' % self.dirname)
         kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'))['data']
         return kspace
         
@@ -221,7 +222,6 @@ class Scan(object):
         
     @lazy_property
     def pdata(self):
-        print('loading pdata')
         pdata_list = []
         for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
             try:
@@ -233,7 +233,6 @@ class Scan(object):
 
     @lazy_property
     def pdata_uids(self):
-        print('calculating pdata')
         return [pdata.uid() for pdata in self.pdata]
     
     def __init__(self, root, absolute_root=False, lazy=True):
@@ -273,7 +272,6 @@ class Scan(object):
         # if there are no 2dseq files (processed data) this is potentially
         # solvable of the data is retro-actively reconstructed. In the
         # meantime -> warning
-        print os.path.join(self.dirname,'pdata','*','2dseq')
         if len(glob.glob(os.path.join(self.dirname,'pdata','*','2dseq'))) == 0:
             logger.warning(('Directory "{0}" did not contain processed data '+
                          '(2dseq)').format(self.dirname))
@@ -302,7 +300,7 @@ class Scan(object):
                TE = [14]
                TR = [50]
                FA = 180
-               FoV = [3.0, 4.0, 2.5]
+               FoV = [3, 4, 2.5]
                matrix = [266, 105, 25]
         '''
         try:
@@ -371,28 +369,21 @@ class Study(object):
                                       lazy=lazy)
         self.__yet_loaded = False
          
-    def __getattr__(self, attr):
-        '''
-        intercepts only undefined attributes. this will be used to 
-        trigger the loading of the data
-        '''
-        if not self.__yet_loaded:
-            self.__forced_load() 
-        return object.__getattribute__(self, attr)
-        
-    def __forced_load(self):
+         
+    @lazy_property
+    def scans(self):
         logger.info('loading %s now forced' % self.dirname)        
-        self.scans = []
+        scans = []
         eligible_dirs = natural_sort(os.listdir(self.dirname))
         for fname in eligible_dirs:
             filename = os.path.join(self.dirname, fname)
             if (os.path.isdir(filename) and
                 re.match('[0-9]+', fname)):
                 try:
-                    self.scans.append(Scan(filename, lazy=True))
+                    scans.append(Scan(filename, lazy=True))
                 except IOError:
                     pass
-        self.__yet_loaded = True
+        return scans
         
     def __str__(self):
         '''
@@ -430,6 +421,7 @@ class Study(object):
                   UTE2D
                   UTE3D
                   ZTE
+                  FLASH_bas(modified)
         '''
         try:
             scan_list_repr = [scan.acqp.ACQ_protocol_name for 
@@ -626,6 +618,7 @@ class Patient(StudyCollection):
                   UTE2D
                   UTE3D
                   ZTE
+                  FLASH_bas(modified)
         '''
         try:
             study_list_repr = [study.__repr__() for study in self.studies]
