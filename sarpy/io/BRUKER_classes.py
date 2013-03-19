@@ -43,7 +43,7 @@ class JCAMP_file(object):
     
     Parameters become attributes in this class
     '''
-    def __init__(self, filename, lazy=True):
+    def __init__(self, filename):
         if not os.path.isfile(filename):
             raise IOError('File "%s" not found' % filename)
         self.filename = filename
@@ -51,24 +51,7 @@ class JCAMP_file(object):
         acqp = BRUKERIO.readJCAMP(self.filename)
         for k,v in acqp.iteritems():
             self.__dict__[k] = v
-        
-class ACQP_file(JCAMP_file):
-    '''
-    Thin specialization of JCAMP_file. Mostly just a place holder and
-    a place to store the fact that these files are called "acqp".
-    '''
-    def __init__(self, dirname):
-        super(ACQP_file, self).__init__(os.path.join(dirname,'acqp'))
-
-class METHOD_file(JCAMP_file):
-    '''
-    Thin specialization of JCAMP_file. Mostly just a place holder and
-    a place to store the fact that these files are called "method".
-    '''
-    def __init__(self, dirname, lazy=True):
-        super(METHOD_file, self).__init__(os.path.join(dirname,'method'),
-                                          lazy=lazy)
-                                          
+                                                  
 class dict2obj(object):
     '''
     Helper class to turn dictionary keys into class attributes.
@@ -85,12 +68,11 @@ class PDATA_file(object):
     constructor expects a directory name (filename). It will look
     for the 2dseq file, the d3proc and th reco file.
     '''
-    def __init__(self, filename, lazy=True):
+    def __init__(self, filename):
         self.__yet_loaded_params = False
         self.__yet_loaded_data = False
         self.filename = filename 
-        if not lazy:
-            self.__forced_load()
+        self.__forced_load()
     def  __forced_load(self, param_files_only=True):
         pdata = BRUKERIO.read2dseq(self.filename, 
                                    param_files_only=param_files_only)
@@ -235,7 +217,7 @@ class Scan(object):
     def pdata_uids(self):
         return [pdata.uid() for pdata in self.pdata]
     
-    def __init__(self, root, absolute_root=False, lazy=True):
+    def __init__(self, root, absolute_root=False):
         '''
         Is the filename a direcotry and can we at least find
         one of acqp, fid, or 2dseq
@@ -335,14 +317,11 @@ class Study(object):
     directory is expected to contain a JCAMP file 'subject' and have one
     or more subdirectories which are scans.
     '''
-    def __init__(self, root, absolute_root=False, lazy=True):
+    def __init__(self, root, absolute_root=False):
         '''
         Initialize the Study through loading metadata from the subject file.
         
         :param string filename: directory name for the BRUKER study
-        :param boolean lazy: 
-            do not investigate the number and validity of scans contained 
-            with the study directory
         '''
         if absolute_root:
             filename = root
@@ -365,10 +344,7 @@ class Study(object):
                 filename)
           
         self.shortdirname = re.sub(dataroot+os.path.sep, '', self.dirname)
-        self.subject = JCAMP_file(os.path.join(self.dirname,'subject'), 
-                                      lazy=lazy)
-        self.__yet_loaded = False
-         
+        self.subject = JCAMP_file(os.path.join(self.dirname,'subject'))
          
     @lazy_property
     def scans(self):
@@ -380,7 +356,7 @@ class Study(object):
             if (os.path.isdir(filename) and
                 re.match('[0-9]+', fname)):
                 try:
-                    scans.append(Scan(filename, lazy=True))
+                    scans.append(Scan(filename))
                 except IOError:
                     pass
         return scans
@@ -456,24 +432,18 @@ class StudyCollection(object):
     the Experiment class.
     '''
     
-    def __init__(self, lazy=True):
+    def __init__(self):
         '''
         Initialize without loading any data.
-        
-        :param boolean lazy: 
-            do not look for other studies, the number and validity of 
-            scans contained with the study directory, this parameter is
-            handed onwards when adding studies
         '''
         self.study_instance_uids = []
         self.studies = []
-        self.lazy = lazy
     
     def __str__(self):
         '''
         Simple print representation of the Study object
         
-            >>> a=StudyCollection('readfidTest')
+            >>> a=StudyCollection()
             >>> print(a)
             __main__.StudyCollection()
         '''
@@ -484,7 +454,7 @@ class StudyCollection(object):
         '''
         More elaborate string representation of the StudyCollection object:
 
-            >>> a=StudyCollection('readfidTest.ix1')
+            >>> a=StudyCollection()
             >>> a
             __main__.StudyCollection()
         '''
@@ -565,14 +535,14 @@ class Patient(StudyCollection):
     A Patient is a special Collection of studies in that the subject_id
     has to agree from one study to the next
     '''
-    def __init__(self, patient_name, lazy=True):
-        super(Patient, self).__init__(lazy=lazy)
+    def __init__(self, patient_name):
+        super(Patient, self).__init__()
         self.patient_id = None
         
         searchdir = os.path.join(dataroot, patient_name) + '*'
         directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
-            study = Study(dirname, lazy=self.lazy)
+            study = Study(dirname)
             if not self.patient_id:
                 self.patient_id = study.subject.SUBJECT_id
             if self.patient_id != study.subject.SUBJECT_id:
@@ -637,7 +607,7 @@ class Experiment(StudyCollection):
     of the performed scans. It is a bit like a patient with the relaxation
     of the requirement of having identical SUBJECT_ids.
     '''
-    def __init__(self, root=None, absolute_root=False, lazy=True):
+    def __init__(self, root=None, absolute_root=False):
         super(Experiment, self).__init__()
         if root:
             self.find_studies(root=root, absolute_root=absolute_root)
@@ -663,7 +633,7 @@ class Experiment(StudyCollection):
         self.root = root
         directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
-            study = Study(dirname, lazy=self.lazy)
+            study = Study(dirname)
             self.add_study(study)
 
 if __name__ == '__main__':
