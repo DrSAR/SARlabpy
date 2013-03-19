@@ -73,15 +73,6 @@ class Test(object):
        print('phew, this took a lot of effort - glad I do this so rarely...')
        return calcs
                            
-class dict2obj(object):
-    '''
-    Helper class to turn dictionary keys into class attributes.
-    It's so much nicer to refer to them that way.
-    '''
-    def __init__(self,dictionary):
-        for k,v in dictionary.iteritems():
-            self.__dict__[k] = v
-
 # ===========================================================
                            
 class JCAMP_file(object):
