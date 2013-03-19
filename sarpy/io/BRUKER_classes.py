@@ -177,14 +177,15 @@ class Scan(object):
 
     @lazy_property
     def fid(self):
-        logger.info('delayed loading of "%s" now forced ...' % self.dirname)
-        kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'))['data']
+        kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
+                                  acqp=self.acqp.__dict__,
+                                  method=self.method.__dict__)['data']
         return kspace
         
     @lazy_property
     def adata(self):
-        raise NotImplementedError('I should load pre-existing adata but not '+
-                'sure how!')
+        raise NotImplementedError(
+                'I should load pre-existing adata but not sure how!')
         
     @lazy_property
     def pdata(self):
