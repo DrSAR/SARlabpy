@@ -14,4 +14,4 @@ from io.BRUKER_classes import (natural_sort,
                                dataroot)
 from io.AData_classes import (adataroot, AData)
                         
-from io import SARlogger
+from io.SARlogger import initiate_logging
