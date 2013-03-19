@@ -619,6 +619,30 @@ class Experiment(StudyCollection):
                 strip_all_but_classname(self, 'Experiment'),
                 self.root)
 
+    def __repr__(self):
+        '''
+        More elaborate string representation of the Experiment object:
+
+        >>> a=Experiment('NecS3')
+        >>> a
+        Experiment object: Experiment("NecS3")
+           studies: --Total (30)--
+                    NecS3Hs01a.iJ1
+                    ...
+        '''
+        try:
+            
+            study_list = [study.shortdirname for study in self.studies]
+            
+            return ('Experiment object: Experiment("{0}")\n'+ 
+                    '   studies: --Total ({1})--\n'+
+                    '            {2}').format(self.root, len(study_list),
+                                '\n            '.join(study_list))
+        except AttributeError:
+            return self.__str__()
+  
+
+
     def find_studies(self, root=None, absolute_root=False):
         if absolute_root:
             searchdir = root
