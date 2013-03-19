@@ -403,7 +403,7 @@ def readfid(fptr=None,
     
     # use parameter files provided by caller or load if needed
     acqp = acqp or readJCAMP(os.path.join(dirname,'acqp'))
-    method = method or readJCAMP(os.apth.join(dirname,'method'))
+    method = method or readJCAMP(os.path.join(dirname,'method'))
 
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
