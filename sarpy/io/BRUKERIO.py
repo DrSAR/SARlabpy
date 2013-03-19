@@ -121,7 +121,7 @@ def readJCAMP(filename):
 
     """
 
-    logger.debug("opening {0}".format(filename))
+    logger.info("opening {0}".format(filename))
     JCAMPfile = open(filename, "r")
     JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
     JCAMPfile.close()
@@ -258,12 +258,20 @@ def inner_value(somelist):
     except TypeError:
         return somelist
 
-def readfid(fptr=None, untouched=False):
+def readfid(fptr=None,
+            acqp=None, 
+            method=None, 
+            untouched=False):
     """
     Returns BRUKER's fid file as a properly dimensioned & rearranged array.
 
-    :param FileType,StringType fptr: filename of fid file or filehandle to open fid file
-    :param boolean untouched: leave the fid as found without rearranging lines into slices and echos?
+    :param FileType,StringType fptr: 
+        filename of fid file or filehandle to open fid file
+    :param dict acqp: dictionary of acqp parameters 
+        (default None: parameter file will be loaded)
+    :param dict method:  dictionary of method parameters 
+        (default None: parameter file will be loaded)
+    :param boolean untouched: do not rearrange/reshape data
     :return: Flat (untouched = True) or Rearranged and assembled array of the acquire k-space
     :rtype: numpy array
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
@@ -392,9 +400,10 @@ def readfid(fptr=None, untouched=False):
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
-    logger.info('loading %s' % fidname)
-    acqp = readJCAMP(dirname + "/acqp")
-    method = readJCAMP(dirname + '/method')
+    
+    # use parameter files provided by caller or load if needed
+    acqp = acqp or readJCAMP(os.path.join(dirname,'acqp'))
+    method = method or readJCAMP(os.apth.join(dirname,'method'))
 
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
@@ -492,6 +501,7 @@ def readfid(fptr=None, untouched=False):
             EncSteps = numpy.arange(ACQ_size[1])
 
     # load data
+    logger.info('loading %s' % fidname)
     data = numpy.fromfile(fptr, dtype = dtype)
     if BYTORDA =='big':
         data.byteswap(True)  # swap ENDIANness in place
@@ -684,12 +694,18 @@ def readfidspectro(fptr=None, untouched=False):
                           }
                 }
 
-def read2dseq(scandirname, param_files_only=False):
+def read2dseq(scandirname,
+              reco=None,
+              d3proc=None,
+              visu_pars=None):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
 
     :param string scandirname: filename of the scan directory
-    :return: dictionary with data, and headerinformation. The data is
+    :param dict reco, d3proc, visu_pars:
+        parameter files (as dict) that can be provided by caller
+        default: None which means they will be loaded by this function
+    :return: dictionary with data, and header information. The data is
              an array of BRUKER-reconstructed image data in the respecive proc
              directory.
     :rtype: dict with 'data':numpy array 'header':dict{'recpo':..., 'd3proc':...}
@@ -699,18 +715,10 @@ def read2dseq(scandirname, param_files_only=False):
     """ 
 
     # get relevant information from the reco and d3proc files
-    reco = readJCAMP(os.path.join(scandirname,'reco'))
-    d3proc = readJCAMP(os.path.join(scandirname,'d3proc'))
-    visu_pars = readJCAMP(os.path.join(scandirname,'visu_pars'))
-    
-    if param_files_only:
-        logger.info('only loading parameter files')
-        return {'data':None,
-                'isImage':None,
-                'header':{'reco': reco, 
-                          'd3proc': d3proc,
-                          'visu_pars':visu_pars}}
-    
+    reco = reco or readJCAMP(os.path.join(scandirname,'reco'))
+    d3proc = d3proc or readJCAMP(os.path.join(scandirname,'d3proc'))
+    visu_pars = visu_pars or readJCAMP(os.path.join(scandirname,'visu_pars'))
+        
     # determine ENDIANness and storage type
         
     if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
@@ -729,8 +737,9 @@ def read2dseq(scandirname, param_files_only=False):
     dtype = numpy.dtype(datatype)
 
     # load data
-    data = numpy.fromfile(file=os.path.join(scandirname,'2dseq'),
-                          dtype=dtype)
+    filename = os.path.join(scandirname,'2dseq')
+    logger.info('read2dseq: loading %s' % filename)
+    data = numpy.fromfile(file=filename, dtype=dtype)
                           
     matrix_size = visu_pars['VisuCoreSize']
     x=matrix_size[0]

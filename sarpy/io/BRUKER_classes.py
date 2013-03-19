@@ -36,64 +36,66 @@ def strip_all_but_classname(obj, class_str):
     else:
         class_name = class_str
     return class_name
-                            
+                           
+class lazy_property(object):
+    '''
+    Meant to be used for lazy evaluation of an object attribute.
+    property should represent non-mutable data, as it replaces itself.
+    
+    An example illustrates the use. First define a class that contains
+    a lazy_property. That call it and observe how the calculation is 
+    only performed once.
+    
+    >>> class Test(object):
+    ...     @lazy_property
+    ...     def results(self):
+    ...         calcs = 42 # do a lot of calculation here
+    ...         print('phew, this took a lot of effort - glad I do this so rarely...')
+    ...         return calcs
+    >>> A=Test()
+    >>> A.__dict__
+    {}
+    >>> A.results
+    phew, this took a lot of effort - glad I do this so rarely...
+    42
+    >>> A.results  # on a second call the calculation is not needed !
+    42
+    >>> A.__dict__  # see how results is no a proper attribute
+    {'results': 42}
+
+    '''
+
+    def __init__(self,fget):
+        self.fget = fget
+        self.func_name = fget.__name__
+
+    def __get__(self,obj,cls):
+        ''' this is called on attribute access '''
+        if obj is None:
+            return None
+        value = self.fget(obj)
+        # the following overwrites the dict in the calling object
+        # thereby erasing any access to this function (which)
+        # calls the expensive calculation once.
+        setattr(obj,self.func_name,value)
+        return value
+                           
+# ===========================================================
+                           
 class JCAMP_file(object):
     '''
     Represents a JCAMP encoded parameter file.
     
     Parameters become attributes in this class
     '''
-    def __init__(self, filename, lazy=True):
+    def __init__(self, filename):
         if not os.path.isfile(filename):
             raise IOError('File "%s" not found' % filename)
         self.filename = filename
-        self.__yet_loaded = False
-        if not lazy:
-            self.__forced_load()
-            
-    def __getattr__(self, attr):
-        '''
-        intercepts only undefined attributes. this will be used to 
-        trigger the loading of the data
-        '''
-        if not self.__yet_loaded:
-            self.__forced_load() 
-        return object.__getattribute__(self, attr)
-        
-    def __forced_load(self):
-        logger.info('JCAMP_file: loading %s now forced' % self.filename)        
         acqp = BRUKERIO.readJCAMP(self.filename)
         for k,v in acqp.iteritems():
             self.__dict__[k] = v
-        self.__yet_loaded = True
-        
-class ACQP_file(JCAMP_file):
-    '''
-    Thin specialization of JCAMP_file. Mostly just a place holder and
-    a place to store the fact that these files are called "acqp".
-    '''
-    def __init__(self, dirname, lazy=True):
-        super(ACQP_file, self).__init__(os.path.join(dirname,'acqp'), 
-                                        lazy=lazy)
-
-class METHOD_file(JCAMP_file):
-    '''
-    Thin specialization of JCAMP_file. Mostly just a place holder and
-    a place to store the fact that these files are called "method".
-    '''
-    def __init__(self, dirname, lazy=True):
-        super(METHOD_file, self).__init__(os.path.join(dirname,'method'),
-                                          lazy=lazy)
-                                          
-class dict2obj(object):
-    '''
-    Helper class to turn dictionary keys into class attributes.
-    It's so much nicer to refer to them that way.
-    '''
-    def __init__(self,dictionary):
-        for k,v in dictionary.iteritems():
-            self.__dict__[k] = v
-
+                                                  
 class PDATA_file(object):
     '''
     Initialize a processed data set that usually sits in `*/pdata/[1-9]`.
@@ -101,38 +103,28 @@ class PDATA_file(object):
     constructor expects a directory name (filename). It will look
     for the 2dseq file, the d3proc and th reco file.
     '''
-    def __init__(self, filename, lazy=True):
-        self.__yet_loaded_params = False
-        self.__yet_loaded_data = False
+    def __init__(self, filename):
         self.filename = filename 
-        if not lazy:
-            self.__forced_load()
-    def  __forced_load(self, param_files_only=True):
-        pdata = BRUKERIO.read2dseq(self.filename, 
-                                   param_files_only=param_files_only)
-        if param_files_only:        
-            logger.info('PDATA_file(params) now force-loaded %s:' % self.filename)        
-        else:
-            logger.info('PDATA_file(params+data) now force-loaded %s:' % self.filename)        
-            self.__yet_loaded_data = True
-            self.data = pdata['data']
-        self.__yet_loaded_params = True # gets loaded in any case
-        for k,v in pdata['header'].iteritems():
-            self.__dict__[k] = dict2obj(v)
-    
-    def __getattr__(self, attr):
-        '''
-        intercepts only undefined attributes. this will be used to 
-        trigger the loading of the data
-        '''
-        # decide whether to load data
-        if attr == 'data':
-            if not self.__yet_loaded_data:
-                self.__forced_load(param_files_only=False) 
-        else:
-            if not self.__yet_loaded_params:
-                self.__forced_load(param_files_only=True)
-        return object.__getattribute__(self, attr)
+        
+    @lazy_property
+    def reco(self):
+        return JCAMP_file(os.path.join(self.filename,'reco'))
+
+    @lazy_property
+    def visu_pars(self):
+        return JCAMP_file(os.path.join(self.filename,'visu_pars'))
+                
+    @lazy_property
+    def d3proc(self):
+        return JCAMP_file(os.path.join(self.filename,'d3proc'))
+
+    @lazy_property
+    def data(self):
+        dta = BRUKERIO.read2dseq(os.path.join(self.filename),
+                                 reco=self.reco.__dict__,
+                                 d3proc=self.d3proc.__dict__,
+                                 visu_pars=self.visu_pars.__dict__)
+        return dta['data']
 
     def uid(self):
         return self.visu_pars.VisuUid
@@ -147,36 +139,6 @@ class PDATA_file(object):
         parent object (Scan). This might be hard. Sounds like Traits to me.        
         '''
         return AData_classes.AData.fromdata(self, *args, **kwargs)
-                
-class FID_file(object):
-    '''
-    Initialize an fid object whih should sit in the scan root directory.
-    Really, this is a decorator class.
-    
-    __init__() does not expect a directory name. It will look
-    for the fid file only when the attribue is being accessed. (see __get__)
-    The expectation is that the class implementing this decorator will 
-    provide an attribute dirname to load.
-    '''
-    def __init__(self):
-        self.__yet_loaded = False
-                
-    def __set__(*args): raise AttributeError('read only!')
-        
-    def __get__(self, instance, value):
-        if not self.__yet_loaded:
-            self.__forced_load(instance.dirname) 
-        return self.fid
-        
-    # TODO: currently, header files acqp and method are loaded twice.
-    #       need to remove the redundancy. Somehow provide the headers
-    #       if possible.
-    def __forced_load(self, filename):
-        logger.info('delayed loading of "%s" now forced ...' % filename)
-        fid = BRUKERIO.readfid(os.path.join(filename,'fid'))
-        self.fid = fid['data']
-        self.__yet_loaded = True
-        
 
 
 
@@ -194,15 +156,20 @@ class Scan(object):
         
         >>> import os
         >>> exp3 = Scan('readfidTest.ix1/3')
-        >>> dir(exp3)
-        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 'adata', 'dirname', 'fid', 'method', 'pdata', 'shortdirname']
+        >>> dir(exp3)    # doctest: +NORMALIZE_WHITESPACE
+        ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', 
+         '__getattribute__', '__hash__', '__init__', '__module__', '__new__', 
+         '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', 
+         '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'acqp', 
+         'adata', 'dirname', 'fid', 'method', 'pdata', 'pdata_uids', 
+         'shortdirname', 'store_adata']
 
         >>> exp3.acqp.ACQ_protocol_name
         'FLASH_bas(modified)'
         >>> exp3.acqp.ORIGIN
         'Bruker BioSpin MRI GmbH'
         >>> exp3.acqp.DATE
-        'Thu Feb 21 19:01:26 2013 PST (UT-8h)  '
+        'Thu Feb 21 19:01:26 2013 PST (UT-8h)'
         
     Also, Scan has a pretty way of falling over when no fid file is detected:
         
@@ -211,9 +178,42 @@ class Scan(object):
             ...
         IOError:...
     '''
-    fid = FID_file()
-    adata = AData_classes.ADataCollection()
-    def __init__(self, root, absolute_root=False, lazy=True):
+    @lazy_property
+    def acqp(self):
+        return JCAMP_file(os.path.join(self.dirname,'acqp'))
+
+    @lazy_property
+    def method(self):
+        return JCAMP_file(os.path.join(self.dirname,'method'))
+
+    @lazy_property
+    def fid(self):
+        kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
+                                  acqp=self.acqp.__dict__,
+                                  method=self.method.__dict__)['data']
+        return kspace
+        
+    @lazy_property
+    def adata(self):
+        raise NotImplementedError(
+                'I should load pre-existing adata but not sure how!')
+        
+    @lazy_property
+    def pdata(self):
+        pdata_list = []
+        for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
+            try:
+                pdata = PDATA_file(f)
+                pdata_list.append(pdata)
+            except IOError:
+                pass
+        return pdata_list
+
+    @lazy_property
+    def pdata_uids(self):
+        return [pdata.uid() for pdata in self.pdata]
+    
+    def __init__(self, root, absolute_root=False):
         '''
         Is the filename a direcotry and can we at least find
         one of acqp, fid, or 2dseq
@@ -246,49 +246,15 @@ class Scan(object):
             raise IOError(
                 ('Directory "{0}" did not contain a BRUKER fid '+
                 'file').format(self.dirname))            
-        self.acqp = ACQP_file(self.dirname, lazy=lazy)
-        self.method = METHOD_file(self.dirname, lazy=lazy)
-        
-        # let's see whether any data has been processed
-        self.pdata=[]
-        self.pdata_uids=[]
-        for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
-            try:
-                pdata = PDATA_file(f)
-                self.pdata.append(pdata)
-                self.pdata_uids.append(pdata.uid())
-            except IOError:
-                pass
 
         # if there are no 2dseq files (processed data) this is potentially
         # solvable of the data is retro-actively reconstructed. In the
         # meantime -> warning
-        if not self.pdata:
+        if len(glob.glob(os.path.join(self.dirname,'pdata','*','2dseq'))) == 0:
             logger.warning(('Directory "{0}" did not contain processed data '+
                          '(2dseq)').format(self.dirname))
                
-        # load analysed datasets for all processed datasets
-#        self.adata={}
-#        for pdata in self.pdata:
-#            adata_potential = os.path.join(AData_classes.adataroot,
-#                                           pdata.uid())
-#            if os.path.isdir(adata_potential):
-#                for adata_sets in os.listdir(adata_potential):
-#                    adata_candidate = AData_classes.AData.fromfile(
-#                            os.path.join(adata_potential, adata_sets))
-#                    self.adata[adata_candidate.key]=adata_candidate
-#            else:
-#                logger.info('No analysis data in directory "{0}"'.
-#                             format(self.dirname))
 
-
-        # this feels kludgy but this will cause AttributeErrors when the 
-        # user tries to access objects that don't exist (rather than getting
-        # a None)
-        for attr in ['acqp', 'method','pdata']:
-            if not self.__dict__[attr]:
-                self.__delattr__(attr)
-                
     def __str__(self):
         '''
         Simple print representation of the Scan object:
@@ -312,7 +278,7 @@ class Scan(object):
                TE = [14]
                TR = [50]
                FA = 180
-               FoV = [3.0, 4.0, 2.5]
+               FoV = [3, 4, 2.5]
                matrix = [266, 105, 25]
         '''
         try:
@@ -347,14 +313,11 @@ class Study(object):
     directory is expected to contain a JCAMP file 'subject' and have one
     or more subdirectories which are scans.
     '''
-    def __init__(self, root, absolute_root=False, lazy=True):
+    def __init__(self, root, absolute_root=False):
         '''
         Initialize the Study through loading metadata from the subject file.
         
         :param string filename: directory name for the BRUKER study
-        :param boolean lazy: 
-            do not investigate the number and validity of scans contained 
-            with the study directory
         '''
         if absolute_root:
             filename = root
@@ -377,32 +340,21 @@ class Study(object):
                 filename)
           
         self.shortdirname = re.sub(dataroot+os.path.sep, '', self.dirname)
-        self.subject = JCAMP_file(os.path.join(self.dirname,'subject'), 
-                                      lazy=lazy)
-        self.__yet_loaded = False
+        self.subject = JCAMP_file(os.path.join(self.dirname,'subject'))
          
-    def __getattr__(self, attr):
-        '''
-        intercepts only undefined attributes. this will be used to 
-        trigger the loading of the data
-        '''
-        if not self.__yet_loaded:
-            self.__forced_load() 
-        return object.__getattribute__(self, attr)
-        
-    def __forced_load(self):
-        logger.info('loading %s now forced' % self.dirname)        
-        self.scans = []
+    @lazy_property
+    def scans(self):
+        scans = []
         eligible_dirs = natural_sort(os.listdir(self.dirname))
         for fname in eligible_dirs:
             filename = os.path.join(self.dirname, fname)
             if (os.path.isdir(filename) and
                 re.match('[0-9]+', fname)):
                 try:
-                    self.scans.append(Scan(filename, lazy=True))
+                    scans.append(Scan(filename))
                 except IOError:
                     pass
-        self.__yet_loaded = True
+        return scans
         
     def __str__(self):
         '''
@@ -440,6 +392,7 @@ class Study(object):
                   UTE2D
                   UTE3D
                   ZTE
+                  FLASH_bas(modified)
         '''
         try:
             scan_list_repr = [scan.acqp.ACQ_protocol_name for 
@@ -474,24 +427,18 @@ class StudyCollection(object):
     the Experiment class.
     '''
     
-    def __init__(self, lazy=True):
+    def __init__(self):
         '''
         Initialize without loading any data.
-        
-        :param boolean lazy: 
-            do not look for other studies, the number and validity of 
-            scans contained with the study directory, this parameter is
-            handed onwards when adding studies
         '''
         self.study_instance_uids = []
         self.studies = []
-        self.lazy = lazy
     
     def __str__(self):
         '''
         Simple print representation of the Study object
         
-            >>> a=StudyCollection('readfidTest')
+            >>> a=StudyCollection()
             >>> print(a)
             __main__.StudyCollection()
         '''
@@ -502,7 +449,7 @@ class StudyCollection(object):
         '''
         More elaborate string representation of the StudyCollection object:
 
-            >>> a=StudyCollection('readfidTest.ix1')
+            >>> a=StudyCollection()
             >>> a
             __main__.StudyCollection()
         '''
@@ -583,14 +530,14 @@ class Patient(StudyCollection):
     A Patient is a special Collection of studies in that the subject_id
     has to agree from one study to the next
     '''
-    def __init__(self, patient_name, lazy=True):
-        super(Patient, self).__init__(lazy=lazy)
+    def __init__(self, patient_name):
+        super(Patient, self).__init__()
         self.patient_id = None
         
         searchdir = os.path.join(dataroot, patient_name) + '*'
         directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
-            study = Study(dirname, lazy=self.lazy)
+            study = Study(dirname)
             if not self.patient_id:
                 self.patient_id = study.subject.SUBJECT_id
             if self.patient_id != study.subject.SUBJECT_id:
@@ -636,6 +583,7 @@ class Patient(StudyCollection):
                   UTE2D
                   UTE3D
                   ZTE
+                  FLASH_bas(modified)
         '''
         try:
             study_list_repr = [study.__repr__() for study in self.studies]
@@ -654,7 +602,7 @@ class Experiment(StudyCollection):
     of the performed scans. It is a bit like a patient with the relaxation
     of the requirement of having identical SUBJECT_ids.
     '''
-    def __init__(self, root=None, absolute_root=False, lazy=True):
+    def __init__(self, root=None, absolute_root=False):
         super(Experiment, self).__init__()
         if root:
             self.find_studies(root=root, absolute_root=absolute_root)
@@ -680,7 +628,7 @@ class Experiment(StudyCollection):
         self.root = root
         directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
-            study = Study(dirname, lazy=self.lazy)
+            study = Study(dirname)
             self.add_study(study)
 
 if __name__ == '__main__':
