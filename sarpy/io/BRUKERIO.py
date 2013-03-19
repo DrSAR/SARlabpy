@@ -262,19 +262,11 @@ def readfid(fptr=None, untouched=False):
     """
     Returns BRUKER's fid file as a properly dimensioned & rearranged array.
 
-    :param fptr: filename of fid file or filehandle to open fid file
-    :type fptr: string or FileType
-    :param untouched: leave the fid as found without rearranging lines into slices and echos?
-    :type untouched: boolean
+    :param FileType,StringType fptr: filename of fid file or filehandle to open fid file
+    :param boolean untouched: leave the fid as found without rearranging lines into slices and echos?
     :return: Flat (untouched = True) or Rearranged and assembled array of the acquire k-space
     :rtype: numpy array
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
-
-    >>> import os
-    >>> fname = os.path.expanduser('~/data/Moosvi.ii1/3/fid')
-    >>> fid = readfid(fname)
-    >>> fid['data'].shape
-    (128, 128, 3, 1)
 
     **BRUKER manual D.14 File Formats (Raw data files)**
 
@@ -329,7 +321,8 @@ def readfid(fptr=None, untouched=False):
              from different receivers are appended. The number of active receivers is
              derived from the number of selected receivers in the parameter array
              GO_ReceiverSelect.
-           * NI - Number of objects.
+           * NI - Number of objects. 
+             e.g. slices, but not purely!, could be slices*echoes
            * ACQ_obj_order - Permutation of the order of the acquired objects.
            * ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
              to the same Object. Typically, this parameter is set to 1 which will keep
@@ -348,6 +341,49 @@ def readfid(fptr=None, untouched=False):
              is determined by ACQ_size[1] / ACQ_rare_factor.
              ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.
            * NR - Number of repeated experiments within the dataset.
+
+    Examples:
+        
+        >>> import os
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/1/fid'))
+        >>> fid['data'].shape   # TriPilot multi
+        (128, 128, 15, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/2/fid'))
+        >>> fid['data'].shape   # FLASH 2D
+        (256, 105, 5, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/3/fid'))
+        >>> fid['data'].shape   # FLASH 3D --- THIS IS ACTUALLY WRONG!!
+        (256, 105, 1, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/4/fid'))
+        >>> fid['data'].shape   # MSME 2D
+        (256, 105, 5, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/5/fid'))
+        >>> fid['data'].shape   # MSME 3D
+        (256, 105, 1, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/6/fid'))
+        >>> fid['data'].shape
+        (256, 256, 15, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/7/fid'))
+        >>> fid['data'].shape
+        (256, 105, 5, 25)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/8/fid'))
+        >>> fid['data'].shape
+        (256, 105, 5, 5)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/9/fid')) # doctest:+ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        IOError: ...
+        >>> # fid fil 9 was missing due to incomplete scans
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/10/fid'))
+        >>> fid['data'].shape
+        (128, 32, 5, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/11/fid'))
+        >>> fid['data'].shape
+        (128, 32, 5, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/readfidTest.ix1/12/fid'))
+        >>> fid['data'].shape
+        (4096, 1, 5, 1)
+
 
 
     """
@@ -424,8 +460,8 @@ def readfid(fptr=None, untouched=False):
     # 2D vs 3D issues about slices etc.
     if ACQ_dim == 2:
         # this is 2D
-        assert len(ACQ_obj_order) == acqp['NSLICES'],(
-                'NSLICES not equal to number of ACQ_obj_order')
+        if len(ACQ_obj_order) != acqp['NSLICES']:
+            logger.warning('NSLICES not equal to number of ACQ_obj_order')
 
         ACQ_size.append(len(ACQ_obj_order))
         encoding = [1, 1, 0, 0] # dimensions that require FFT
