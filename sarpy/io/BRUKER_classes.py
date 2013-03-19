@@ -111,19 +111,19 @@ class PDATA_file(object):
         
     @lazy_property
     def reco(self):
-        
-        return BRUKERIO.readJCAMP(os.path.join(self.filename,'reco'))
+        return JCAMP_file(os.path.join(self.filename,'reco'))
 
     @lazy_property
     def visu_pars(self):
-        return BRUKERIO.readJCAMP(os.path.join(self.filename,'visu_pars'))
+        return JCAMP_file(os.path.join(self.filename,'visu_pars'))
                 
     @lazy_property
     def d3proc(self):
-        return BRUKERIO.readJCAMP(os.path.join(self.filename,'d3proc'))
+        return JCAMP_file(os.path.join(self.filename,'d3proc'))
 
     @lazy_property
     def data(self):
+        logger.info('delayed loading of "%s" now forced ...' % self.filename)
         dta = BRUKERIO.read2dseq(os.path.join(self.filename))
         return dta['data']
 
