@@ -47,34 +47,18 @@ class JCAMP_file(object):
         if not os.path.isfile(filename):
             raise IOError('File "%s" not found' % filename)
         self.filename = filename
-        self.__yet_loaded = False
-        if not lazy:
-            self.__forced_load()
-            
-    def __getattr__(self, attr):
-        '''
-        intercepts only undefined attributes. this will be used to 
-        trigger the loading of the data
-        '''
-        if not self.__yet_loaded:
-            self.__forced_load() 
-        return object.__getattribute__(self, attr)
-        
-    def __forced_load(self):
         logger.info('JCAMP_file: loading %s now forced' % self.filename)        
         acqp = BRUKERIO.readJCAMP(self.filename)
         for k,v in acqp.iteritems():
             self.__dict__[k] = v
-        self.__yet_loaded = True
         
 class ACQP_file(JCAMP_file):
     '''
     Thin specialization of JCAMP_file. Mostly just a place holder and
     a place to store the fact that these files are called "acqp".
     '''
-    def __init__(self, dirname, lazy=True):
-        super(ACQP_file, self).__init__(os.path.join(dirname,'acqp'), 
-                                        lazy=lazy)
+    def __init__(self, dirname):
+        super(ACQP_file, self).__init__(os.path.join(dirname,'acqp'))
 
 class METHOD_file(JCAMP_file):
     '''
@@ -147,37 +131,43 @@ class PDATA_file(object):
         parent object (Scan). This might be hard. Sounds like Traits to me.        
         '''
         return AData_classes.AData.fromdata(self, *args, **kwargs)
-                
-class FID_file(object):
-    '''
-    Initialize an fid object whih should sit in the scan root directory.
-    Really, this is a decorator class.
-    
-    __init__() does not expect a directory name. It will look
-    for the fid file only when the attribue is being accessed. (see __get__)
-    The expectation is that the class implementing this decorator will 
-    provide an attribute dirname to load.
-    '''
-    def __init__(self):
-        self.__yet_loaded = False
-                
-    def __set__(*args): raise AttributeError('read only!')
-        
-    def __get__(self, instance, value):
-        if not self.__yet_loaded:
-            self.__forced_load(instance.dirname) 
-        return self.fid
-        
-    # TODO: currently, header files acqp and method are loaded twice.
-    #       need to remove the redundancy. Somehow provide the headers
-    #       if possible.
-    def __forced_load(self, filename):
-        logger.info('delayed loading of "%s" now forced ...' % filename)
-        fid = BRUKERIO.readfid(os.path.join(filename,'fid'))
-        self.fid = fid['data']
-        self.__yet_loaded = True
-        
 
+        
+class lazy_property(object):
+    '''
+    meant to be used for lazy evaluation of an object attribute.
+    property should represent non-mutable data, as it replaces itself.
+    '''
+
+    def __init__(self,fget):
+        self.fget = fget
+        self.func_name = fget.__name__
+
+    def __get__(self,obj,cls):
+        ''' this is called on attribute access '''
+        if obj is None:
+            return None
+        value = self.fget(obj)
+        # the following overwrites the dict in the calling object
+        # thereby erasing any access to this function (which)
+        # calls the expensive calculation once.
+        setattr(obj,self.func_name,value)
+        return value
+
+class Test(object):
+    '''
+    This class is here for illustration purposes. 
+    Define it and access attribute results. You will see that the 
+    calculation only happens once and only when called. Try commenting
+    out the line 'setattr(obj...)' in the lazy_property __get__
+    routine and see how the expensive calc is done for every access!
+    '''
+
+    @lazy_property
+    def results(self):
+       calcs = 1 # do a lot of calculation here
+       print('phew, this took a lot of effort - glad I do this so rarely...')
+       return calcs
 
 
 class Scan(object):
@@ -211,8 +201,41 @@ class Scan(object):
             ...
         IOError:...
     '''
-    fid = FID_file()
-    adata = AData_classes.ADataCollection()
+    @lazy_property
+    def acqp(self):
+        return JCAMP_file(os.path.join(self.dirname,'acqp'))
+
+    @lazy_property
+    def method(self):
+        return JCAMP_file(os.path.join(self.dirname,'method'))
+
+    @lazy_property
+    def fid(self):
+        kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'))['data']
+        return kspace
+        
+    @lazy_property
+    def adata(self):
+        raise NotImplementedError('I should load pre-existing adata but not '+
+                'sure how!')
+        
+    @lazy_property
+    def pdata(self):
+        print('loading pdata')
+        pdata_list = []
+        for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
+            try:
+                pdata = PDATA_file(f)
+                pdata_list.append(pdata)
+            except IOError:
+                pass
+        return pdata_list
+
+    @lazy_property
+    def pdata_uids(self):
+        print('calculating pdata')
+        return [pdata.uid() for pdata in self.pdata]
+    
     def __init__(self, root, absolute_root=False, lazy=True):
         '''
         Is the filename a direcotry and can we at least find
@@ -246,49 +269,16 @@ class Scan(object):
             raise IOError(
                 ('Directory "{0}" did not contain a BRUKER fid '+
                 'file').format(self.dirname))            
-        self.acqp = ACQP_file(self.dirname, lazy=lazy)
-        self.method = METHOD_file(self.dirname, lazy=lazy)
-        
-        # let's see whether any data has been processed
-        self.pdata=[]
-        self.pdata_uids=[]
-        for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
-            try:
-                pdata = PDATA_file(f)
-                self.pdata.append(pdata)
-                self.pdata_uids.append(pdata.uid())
-            except IOError:
-                pass
 
         # if there are no 2dseq files (processed data) this is potentially
         # solvable of the data is retro-actively reconstructed. In the
         # meantime -> warning
-        if not self.pdata:
+        print os.path.join(self.dirname,'pdata','*','2dseq')
+        if len(glob.glob(os.path.join(self.dirname,'pdata','*','2dseq'))) == 0:
             logger.warning(('Directory "{0}" did not contain processed data '+
                          '(2dseq)').format(self.dirname))
                
-        # load analysed datasets for all processed datasets
-#        self.adata={}
-#        for pdata in self.pdata:
-#            adata_potential = os.path.join(AData_classes.adataroot,
-#                                           pdata.uid())
-#            if os.path.isdir(adata_potential):
-#                for adata_sets in os.listdir(adata_potential):
-#                    adata_candidate = AData_classes.AData.fromfile(
-#                            os.path.join(adata_potential, adata_sets))
-#                    self.adata[adata_candidate.key]=adata_candidate
-#            else:
-#                logger.info('No analysis data in directory "{0}"'.
-#                             format(self.dirname))
 
-
-        # this feels kludgy but this will cause AttributeErrors when the 
-        # user tries to access objects that don't exist (rather than getting
-        # a None)
-        for attr in ['acqp', 'method','pdata']:
-            if not self.__dict__[attr]:
-                self.__delattr__(attr)
-                
     def __str__(self):
         '''
         Simple print representation of the Scan object:
