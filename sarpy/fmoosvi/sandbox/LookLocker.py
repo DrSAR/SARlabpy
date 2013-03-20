@@ -33,7 +33,7 @@ b1map = sarpy.fmoosvi.analysis.h_BS_B1map(zero_BS_minus,\
                                           power_BS_minus,\
                                           power_BS_plus,\
                                           LLdata[0])
-                                          
+pylab.figure()                                          
 pylab.imshow(b1map[:,:,0,0], aspect = 0.5)
 pylab.colorbar()
 ######################## End B1 Map #########################
@@ -46,23 +46,24 @@ proc_data = sarpy.fmoosvi.wrappers.calculate_T1map(LLdata, flip_angle_map = nump
 start_time = time.time()
 #proc_data = sarpy.fmoosvi.analysis.h_fit_T1(LLdata, FA = numpy.fliplr(b1map[:,:,:,0]))
 proc_data_noAngle = sarpy.fmoosvi.analysis.h_fit_T1_LL(LLdata, flip_angle_map = 0)
+end_time = time.time()
+print 'This run took {0} seconds.'.format(round(end_time - start_time))
 
-print 'This run took {0} seconds.'.format(round(time.time() - start_time))
+pylab.figure()
+img = pylab.imshow(proc_data[0][:,:,0], aspect = 0.5)
+img.set_clim(0.0,1200)
+pylab.colorbar()
+pylab.show()
 
-#img = pylab.imshow(proc_data[:,:,0], aspect = 0.5)
-#img.set_clim(0.0,1200)
-#pylab.colorbar()
-#pylab.show()
-#
-#pylab.figure()
-#img = pylab.imshow(proc_data_noAngle[:,:,0], aspect = 0.5)
-#img.set_clim(0.0,1200)
-#pylab.colorbar()
-#pylab.show()
-#
-#print ('-----Without FA correction')
-#print numpy.mean(proc_data_noAngle[45:80,10:20,0])
-#print numpy.mean(proc_data_noAngle[45:52,35:55,0])
-#print ('-----With FA correction')
-#print numpy.mean(proc_data[45:80,10:20,0])
-#print numpy.mean(proc_data[45:52,35:55,0])
+pylab.figure()
+img = pylab.imshow(proc_data_noAngle[:,:,0], aspect = 0.5)
+img.set_clim(0.0,1200)
+pylab.colorbar()
+pylab.show()
+
+print ('-----Without FA correction')
+print numpy.mean(proc_data_noAngle[45:80,10:20,0])
+print numpy.mean(proc_data_noAngle[45:52,35:55,0])
+print ('-----With FA correction')
+print numpy.mean(proc_data[0][45:80,10:20,0])
+print numpy.mean(proc_data[0][45:52,35:55,0])

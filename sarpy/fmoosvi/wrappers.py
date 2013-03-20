@@ -32,6 +32,29 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, t
     return auc
     
 def calculate_BSB1map(Experiment_object, protocol_name = '04_ubcLL2'):
+    
+    # TODo = eed to actually fix this!
+    
+    try:
+        scan_list = Experiment_object.find_scan_by_protocol(protocol_name)
+    except:
+        try: 
+            scan_list = []                                
+            for study in Experiment_object:
+                scan_list.append(study.find_scan(protocol_name))
+            print('You put in a list of studies, try to avoid that')
+        except:
+            raise
+
+    ## Now to calculate the map
+
+    #    b1map  = []
+
+
+    for scan in scan_list:
+        auc.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
+        
+    return b1map
 
 #TODO: Implemen BSB1 mapwrapper around h_BS_B1map
 
@@ -85,7 +108,7 @@ def calculate_T1map(Bruker_object, protocol_name = 'MOBILE+', flip_angle_map = 0
 
     for scan in scan_list:
         T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,\
-                                                      flip_angle_map = numpy.fliplr(flip_angle_map)))
+                                                      flip_angle_map = flip_angle_map))
     return T1_map
     
     

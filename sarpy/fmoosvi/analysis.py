@@ -216,7 +216,7 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
     repetition_time = scan_object[0].method.PVM_RepetitionTime
     
     if type(flip_angle_map) != numpy.ndarray:
-        FA = math.radians(scan_object[0].acqp.ACQ_flip_angle)
+        flip_angle_map = math.radians(scan_object[0].acqp.ACQ_flip_angle)
    
     # Visu_pars params 
         
@@ -248,7 +248,7 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
                                                 fitfunc, initial_params)[2]
     
     # Need to conert T1_eff to T1
-    T1 = 1 / (( (1 / data_after_fitting) + numpy.log(numpy.cos(FA))/repetition_time))
+    T1 = 1 / (( (1 / data_after_fitting) + numpy.log(numpy.cos(flip_angle_map))/repetition_time))
                                         
     return T1
                     
