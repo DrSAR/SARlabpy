@@ -23,7 +23,7 @@ import pylab
 #power_BS_plus = BS_scans[3]
 #
 #b1map = sarpy.fmoosvi.analysis.h_BS_B1map(zero_BS_minus,\
-#                                          zero_BS_plus,\
+#                                          zero_BS_plus,\ 
 #                                          power_BS_minus,\
 #                                          power_BS_plus,\
 #                                          pdata_num=0)
