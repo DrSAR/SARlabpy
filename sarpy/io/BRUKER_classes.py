@@ -69,7 +69,9 @@ class lazy_property(object):
         self.func_name = fget.__name__
 
     def __get__(self,obj,cls):
-        ''' this is called on attribute access '''
+        ''' this is called on attribute read access
+        it will be called only the first time. 
+        '''
         if obj is None:
             return None
         value = self.fget(obj)
@@ -212,7 +214,7 @@ class Scan(object):
                                   method=self.method.__dict__)['data']
         return kspace
         
-    @lazy_property
+    @AData_classes.lazy_property_plus
     def adata(self):
         adata_dict = {}
         logger.info('delayed loading of adata (list) now forced ...')

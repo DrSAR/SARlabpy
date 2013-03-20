@@ -32,6 +32,11 @@ def mkdir_p(path):
             pass
         else: raise
 
+class lazy_property_plus(BRUKER_classes.lazy_property):
+    def __set__(self, obj, value):
+        raise AttributeError('someone trying to set this to {0}'.format(
+                            value))
+
 class AData(object):
     def __init__(self, yet_loaded=True, meta=None, **kwargs):
         try:
