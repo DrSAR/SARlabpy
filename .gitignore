@@ -40,3 +40,4 @@ html/
 doctrees/
 qtsarpy_mainwindow_auto.py
 TemperatureLogFile
+.spyderproject .spyderproject .spyderworkspace

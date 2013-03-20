@@ -9,8 +9,7 @@ import BRUKERIO
 import AData_classes
 
 import logging
-logger=logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger=logging.getLogger('sarpy.io.BRUKER_classes')
 
 dataroot = os.path.expanduser('~/data')
 
@@ -79,7 +78,7 @@ class lazy_property(object):
         # calls the expensive calculation once.
         setattr(obj,self.func_name,value)
         return value
-                           
+
 # ===========================================================
                            
 class JCAMP_file(object):
@@ -195,8 +194,19 @@ class Scan(object):
         
     @lazy_property
     def adata(self):
-        raise NotImplementedError(
-                'I should load pre-existing adata but not sure how!')
+        adata_dict = {}
+        logger.info('delayed loading of adata (list) now forced ...')
+        for pdata_uid in self.pdata_uids:
+            adata_potential = os.path.join(AData_classes.adataroot, pdata_uid)
+            if os.path.isdir(adata_potential):
+                for adata_sets in os.listdir(adata_potential):
+                    adata_candidate = AData_classes.AData.fromfile(
+                            os.path.join(adata_potential, adata_sets))
+                    adata_dict[adata_candidate.key]=adata_candidate
+        if len(adata_dict) == 0:
+            logger.info('No analysis data in directory "{0}"'.
+                         format(self.dirname))
+        return adata_dict
         
     @lazy_property
     def pdata(self):
