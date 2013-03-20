@@ -296,6 +296,6 @@ if __name__ == "__main__":
 
     print "test case for read2dseq_visu"
     x=read2dseq_visu('I:\\Documents\\Dropbox\\T1VFAphant.3U1\\34\\pdata\\1')
-#    x=read2dseq_visu('I:\\Documents\\Dropbox\\KDVPM101.dP1\\10\\pdata\\2')
+#    x=read2dseq_visu('I:\\Documents\\Dropbox\\KDVPM101.dP1\\10\\pdata\\2') #these are Bruker-generated DTI parameter maps
 
     
