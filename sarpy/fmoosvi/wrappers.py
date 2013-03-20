@@ -52,7 +52,7 @@ def calculate_BSB1map(Experiment_object, protocol_name = '04_ubcLL2'):
 
 
     for scan in scan_list:
-        auc.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
+        b1map.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
         
     return b1map
 
