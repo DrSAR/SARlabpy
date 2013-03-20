@@ -192,37 +192,6 @@ class AData(object):
             
         return cls(data=data, meta=meta, key=meta['key'])
 
-class ADataCollection(object):
-    '''
-    A dictionary of AData objects. This is  decorator class that is used
-    in the BRUKER_classes.Scan object
-    '''
-    def __init__(self):
-        self.__yet_loaded = False
-        self.adata = {}
-                
-    def __set__(self, *args): raise AttributeError('read only!')
-        
-    def __get__(self, instance, value):
-        if not self.__yet_loaded:
-            self.__forced_load(instance.pdata_uids) 
-        return self.adata
-        
-    def __forced_load(self, pdata_uids):
-        logger.info('delayed loading of ADataCollection now forced ...')
-        for pdata_uid in pdata_uids:
-            adata_potential = os.path.join(adataroot, pdata_uid)
-            if os.path.isdir(adata_potential):
-                for adata_sets in os.listdir(adata_potential):
-                    adata_candidate = AData.fromfile(
-                            os.path.join(adata_potential, adata_sets))
-                    self.adata[adata_candidate.key]=adata_candidate
-            else:
-                logger.info('No analysis data in directory "{0}"'.
-                             format(self.dirname))
-
-        self.__yet_loaded = True
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
