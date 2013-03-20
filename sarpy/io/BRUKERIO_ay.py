@@ -288,7 +288,7 @@ def read2dseq_visu(procdirname):
 # XXXX main XXXX
 # main part - run test cases if called as a module
 if __name__ == "__main__":
-   import pprint 
+    import pprint 
     print "test case for readBrukerParx"
 #    acqp_dict=readBrukerParx('I:\\Documents\\Dropbox\\T1VFAphant.3U1\\34\\acqp')
     visu_dict=readBrukerParx('I:\\Documents\\Dropbox\\KDVPM101.dP1\\10\\pdata\\2\\visu_pars')
