@@ -13,8 +13,7 @@ import numpy
 from datetime import datetime
 
 import logging
-logger=logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger=logging.getLogger('sarpy.io.Adata_classes')
 
 #this is where datagoes that is secondary to acquired data.
 # for this to make any sense, there needs to be som mechanism by which the

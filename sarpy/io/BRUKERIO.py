@@ -11,8 +11,7 @@ all will be silent. Details in :py:mod: SARlogger
 """
 from __future__ import division
 import logging
-logger=logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger=logging.getLogger('sarpy.io.BRUKERIO')
 
 import numpy
 import os.path

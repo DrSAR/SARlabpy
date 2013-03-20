@@ -9,8 +9,7 @@ import BRUKERIO
 import AData_classes
 
 import logging
-logger=logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger=logging.getLogger('sarpy.io.BRUKER_classes')
 
 dataroot = os.path.expanduser('~/data')
 

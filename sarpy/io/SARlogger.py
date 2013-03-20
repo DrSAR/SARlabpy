@@ -30,6 +30,8 @@ to attach another handler (with another log level and formatter):
 import logging
 from logging import (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     
+logger=logging.getLogger('sarpy')
+    
 def initiate_logging(module, formatter=None, 
                      handler=None, handler_level=None,
                      logger_level=None):
@@ -54,7 +56,8 @@ def initiate_logging(module, formatter=None,
     has been set so the default logging (methods in the libraries should
     emit appropriate log message at opportune times) is swallowed. If this
     handlers is overwritten, logging can commence.
-    '''
+    '''    
+    
     if formatter is None:
         formatter = logging.Formatter(
                 fmt='%(asctime)s %(levelname)s: %(module)s  - %(message)s',
