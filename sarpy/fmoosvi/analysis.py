@@ -68,7 +68,7 @@ def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     ########### Start AUC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.analysis.h_inj_point(scan_object)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
     
     # Now calculate the Normalized Intesity voxel by voxel
     norm_data = h_normalize_dce(scan_object)
@@ -213,14 +213,14 @@ def h_fit(x_data, y_data, fit_function, initial_params):
 def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
     
     num_slices = getters.get_num_slices(scan_object,pdata_num)
-    repetition_time = scan_object[0].method.PVM_RepetitionTime
+    repetition_time = scan_object.method.PVM_RepetitionTime
     
     if type(flip_angle_map) != numpy.ndarray:
-        flip_angle_map = math.radians(scan_object[0].acqp.ACQ_flip_angle)
+        flip_angle_map = math.radians(scan_object.acqp.ACQ_flip_angle)
    
     # Visu_pars params 
         
-    data = scan_object[0].pdata[pdata_num].data 
+    data = scan_object.pdata[pdata_num].data 
     # data_for_fitting = numpy.zeros( [data.shape[0],data.shape[1],data.shape[2],data.shape[3]] )
     #for slice in range(num_slices):
         #data_for_fitting[:,:,slice,:] = numpy.mean(numpy.mean(data[:,:,slice,:],0),0)
@@ -230,8 +230,8 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
                                        data.shape[2]] )
             
     x_data = numpy.linspace(1,\
-        scan_object[0].pdata[pdata_num].data.shape[3]*repetition_time,\
-        scan_object[0].pdata[pdata_num].data.shape[3])
+        scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
+        scan_object.pdata[pdata_num].data.shape[3])
                                                        
                                                        
     fitfunc = lambda param, x_data: numpy.abs(param[0]*\
