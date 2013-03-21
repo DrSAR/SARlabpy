@@ -107,7 +107,14 @@ class PDATA_file(object):
         
     @lazy_property
     def reco(self):
-        return JCAMP_file(os.path.join(self.filename,'reco'))
+        try:
+            reco_obj = JCAMP_file(os.path.join(self.filename,'reco'))
+        except IOError:
+            logger.warning('reco file for %s not found \n' % self.filename +
+                    '(this is normal for some BRUKER sets: e.g. DTI)' )
+            return None
+        else:
+            return reco_obj
 
     @lazy_property
     def visu_pars(self):
@@ -120,8 +127,6 @@ class PDATA_file(object):
     @lazy_property
     def data(self):
         dta = BRUKERIO.read2dseq(os.path.join(self.filename),
-                                 reco=self.reco.__dict__,
-                                 d3proc=self.d3proc.__dict__,
                                  visu_pars=self.visu_pars.__dict__)
         return dta['data']
 
