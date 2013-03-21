@@ -128,7 +128,22 @@ class PDATA_file(object):
     def data(self):
         dta = BRUKERIO.read2dseq(os.path.join(self.filename),
                                  visu_pars=self.visu_pars.__dict__)
+        setattr(self, 'dimdesc', dta['dimdesc'])
+        setattr(self, 'dimcomment', dta['dimcomment'])
         return dta['data']
+
+    @lazy_property
+    def dimdesc(self):
+        # need to load the data which we'll force by some parameter access
+        self.data.shape
+        return self.dimdesc
+
+    @lazy_property
+    def dimcomment(self):
+        # need to load the data which we'll force by some parameter access
+        self.data.shape
+        return self.dimcomment
+        
 
     def uid(self):
         return self.visu_pars.VisuUid
