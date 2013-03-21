@@ -694,8 +694,6 @@ def readfidspectro(fptr=None, untouched=False):
                 }
 
 def read2dseq(scandirname,
-              reco=None,
-              d3proc=None,
               visu_pars=None):
     """
     Returns BRUKER's 2dseq file as a properly dimensioned array
