@@ -603,7 +603,6 @@ def readfidspectro(fptr=None, untouched=False):
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
-    print(dirname)
     acqp = readJCAMP(dirname+"/acqp")
 
     assert "Spectroscopic" in acqp['ACQ_dim_desc'] ,(
@@ -679,9 +678,6 @@ def readfidspectro(fptr=None, untouched=False):
 
         # using array-based index access
         ObjNr = idx % len(ACQ_obj_order)
-
-        print idx
-        print ObjNr
 
         fid_reorder[:, ObjNr] = tempfid[:, idx].T
 
@@ -760,8 +756,6 @@ def read2dseq(scandirname,
     if len(matrix_size)==3:
         dimdesc.append('PE2')
         dimcomment.append('')
-    elif len(matrix_size)==2:
-        matrix_size.append(1)
 
     # Determine size and descriptors of frame groups (RECO_size, dimdesc and 
     # dimcomment).  VisuFGOrderDesc is a  struct which describes the number of
@@ -779,13 +773,14 @@ def read2dseq(scandirname,
             dimdesc.append(v[1])
             depvalstart = v[3]
             depvalend = depvalstart + v[4]
+            more_dimcomment = ''
             for depval in range(depvalstart,depvalend):
                 if visu_pars['VisuGroupDepVals'][depval][0] == '<VisuFGElemComment>': 
                     FGcommentstart=visu_pars['VisuGroupDepVals'][depval][1]
                     fullFGcomments = visu_pars['VisuFGElemComment'].split('> <')
-                    dimcomment.extend(fullFGcomments[FGcommentstart:FGcommentstart+FGdim])
-                else:
-                    dimcomment.append([''])
+                    more_dimcomment=fullFGcomments[FGcommentstart:
+                                                   FGcommentstart+FGdim]
+            dimcomment.append(more_dimcomment)
 
     # extract binary data from 2dseq. For now, format the data shape so all
     # the image frames are lumped together in the 3rd dimension.
@@ -799,8 +794,7 @@ def read2dseq(scandirname,
     logger.info('read2dseq: loading %s' % filename)
     data = numpy.fromfile(file=filename, dtype=dtype)
 
-    print matrix_size, n_frames, data.shape
-    data=data.reshape(n_frames, matrix_size[-2],matrix_size[-1])
+    data=data.reshape(n_frames, matrix_size[-2],matrix_size[-1]).astype('float64')
 
     # now apply the data slopes and offsets to transform the stored binary 
     # number into a absolute number
