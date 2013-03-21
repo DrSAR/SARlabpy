@@ -214,7 +214,7 @@ def read2dseq_visu(procdirname):
     # header data containing parameters from the visu_pars and reco files.
     # files.
 
-    RECO_size=visu['VisuCoreSize']
+    RECO_size=visu['VisuCoreSize'][3:]
     if RECO_transposition == 0:
         dimdesc=['readout','PE1']
     else:
@@ -257,8 +257,9 @@ def read2dseq_visu(procdirname):
 
     # extract binary data from 2dseq. For now, format the data shape so all
     # the image frames are lumped together in the 3rd dimension.
-    reco_offset = np.asarray(visu['VisuCoreDataOffs'])
-    reco_slope = np.asarray(visu['VisuCoreDataSlope'])    
+    reco_offset = np.asarray(visu['VisuCoreDataOffs'][3:])
+    reco_slope = np.asarray(visu['VisuCoreDataSlope'][3:])    
+    print RECO_size
     n_frames = np.asarray(RECO_size)[2:].prod()
     datapath=os.path.join(procdirname,'2dseq')
     data=np.fromfile(file=datapath, dtype=dtype)
@@ -266,6 +267,7 @@ def read2dseq_visu(procdirname):
 
     # now apply the data slopes and offsets to transform the stored binary 
     # number into a absolute number
+    print reco_slope, reco_offset
     if reco_slope.size == 1:  #single slope value which applies to all frames
         data = reco_offset + reco_slope*data
     else:  # separate slope + offset for each frame
