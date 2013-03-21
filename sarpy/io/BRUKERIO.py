@@ -760,6 +760,8 @@ def read2dseq(scandirname,
     if len(matrix_size)==3:
         dimdesc.append('PE2')
         dimcomment.append('')
+    elif len(matrix_size)==2:
+        matrix_size.append(1)
 
     # Determine size and descriptors of frame groups (RECO_size, dimdesc and 
     # dimcomment).  VisuFGOrderDesc is a  struct which describes the number of
@@ -791,12 +793,14 @@ def read2dseq(scandirname,
     reco_slope = numpy.asarray(visu_pars['VisuCoreDataSlope'])    
 
     n_frames = numpy.asarray(matrix_size)[2:].prod()
+    matrix_size.reverse()
     
     filename = os.path.join(scandirname,'2dseq')
     logger.info('read2dseq: loading %s' % filename)
     data = numpy.fromfile(file=filename, dtype=dtype)
 
-    data=data.reshape(matrix_size[0],matrix_size[1],n_frames)
+    print matrix_size, n_frames, data.shape
+    data=data.reshape(n_frames, matrix_size[-2],matrix_size[-1])
 
     # now apply the data slopes and offsets to transform the stored binary 
     # number into a absolute number
@@ -804,12 +808,12 @@ def read2dseq(scandirname,
         data = reco_offset + reco_slope*data
     else:  # separate slope + offset for each frame
         for i in range(0,n_frames):
-            data[:,:,i] = reco_offset[i] + reco_slope[i]*data[:,:,i]
+            data[i,:,:] = reco_offset[i] + reco_slope[i]*data[i,:,:]
     
     # Finally, shape the data so all frames are put into separate dimensions.
     data = data.reshape(matrix_size)        
     # TODO: check wheher to transpose so that time, z, y, x -> x, y, z, time
-    data = data.transpose( numpy.arange(data.ndim,0,-1)-1)
+    data = data.transpose( numpy.arange(len(matrix_size),0,-1)-1)
                           
                                   
     return {'data':data, 
