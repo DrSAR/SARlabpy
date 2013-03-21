@@ -41,11 +41,11 @@ pylab.colorbar()
 ######################## Start Look Locker T1 map #########################
 
 
-proc_data = sarpy.fmoosvi.wrappers.calculate_T1map(LLdata, flip_angle_map = numpy.fliplr(b1map[:,:,:,0]))
+proc_data = sarpy.fmoosvi.wrappers.calculate_T1map(LLdata[0], flip_angle_map = numpy.fliplr(b1map[:,:,:,0]))
 
 start_time = time.time()
 #proc_data = sarpy.fmoosvi.analysis.h_fit_T1(LLdata, FA = numpy.fliplr(b1map[:,:,:,0]))
-proc_data_noAngle = sarpy.fmoosvi.analysis.h_fit_T1_LL(LLdata, flip_angle_map = 0)
+proc_data_noAngle = sarpy.fmoosvi.analysis.h_fit_T1_LL(LLdata[0], flip_angle_map = 0)
 end_time = time.time()
 print 'This run took {0} seconds.'.format(round(end_time - start_time))
 
