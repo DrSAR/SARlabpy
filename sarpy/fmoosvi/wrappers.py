@@ -31,9 +31,11 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, t
         
     return auc
     
-def calculate_BSB1map(Experiment_object, protocol_name = '04_ubcLL2'):
+def calculate_BSB1map(Experiment_object, protocol_name = ''):
     
-    # TODo = eed to actually fix this!
+    # TODo = need to actually fix this!
+    
+    print ("Why are you using this!? It' not implemented yet")
     
     try:
         scan_list = Experiment_object.find_scan_by_protocol(protocol_name)
@@ -46,13 +48,11 @@ def calculate_BSB1map(Experiment_object, protocol_name = '04_ubcLL2'):
         except:
             raise
 
-    ## Now to calculate the map
+    ## Now to calculate the B1 map
 
-    #    b1map  = []
-
-
+    b1map  = []
     for scan in scan_list:
-        b1map.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
+        b1map.append(sarpy.fmoosvi.analysis.h_BS_B1map(scan))
         
     return b1map
 
@@ -82,7 +82,7 @@ def calculate_BSB1map(Experiment_object, protocol_name = '04_ubcLL2'):
 
     return #b1map
     
-def calculate_T1map(Bruker_object, protocol_name = 'MOBILE+', flip_angle_map = 0):
+def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map = 0):
 
 
 #TODO: Fix this so the list/object situation is sorted!
@@ -102,8 +102,8 @@ def calculate_T1map(Bruker_object, protocol_name = 'MOBILE+', flip_angle_map = 0
 #            raise
 
     ## Now to calculate the AUC
-    
-    scan_list = Bruker_object
+    scan_list = []
+    scan_list.append(Bruker_object)
     T1_map = []
 
     for scan in scan_list:
