@@ -711,76 +711,112 @@ def read2dseq(scandirname,
     This relies on numpy's array functionality
     """ 
 
-    # get relevant information from the reco and d3proc files
-    reco = reco or readJCAMP(os.path.join(scandirname,'reco'))
-    d3proc = d3proc or readJCAMP(os.path.join(scandirname,'d3proc'))
+    try:
+        reco = readJCAMP(os.path.join(scandirname,'reco'))
+        RECO_transposition = reco['RECO_transposition']
+    except IOError:
+        RECO_transposition = 0
+    # get relevant information from the visu_pars files
     visu_pars = visu_pars or readJCAMP(os.path.join(scandirname,'visu_pars'))
         
     # determine ENDIANness and storage type
         
-    if reco['RECO_wordtype'] =='_16BIT_SGN_INT':
+    if visu_pars['VisuCoreWordType'] =='_16BIT_SGN_INT':
         datatype = 'i2'
-    elif reco['RECO_wordtype'] =='_32BIT_SGN_INT':
+    elif visu_pars['VisuCoreWordType'] =='_32BIT_SGN_INT':
         datatype = 'i4'
-    elif reco['RECO_wordtype'] =='_32BIT_FLOAT':
+    elif visu_pars['VisuCoreWordType'] =='_32BIT_FLOAT':
         datatype = 'f'
     else:
-        raise IOError('unknown ##$RECO_wordtype = '+reco['RECO_wordtype'])
+        raise IOError('unknown ##$VisuCoreWordType = '+
+                        visu_pars['VisuCoreWordType'])
 
-    if reco['RECO_byte_order'] == 'littleEndian':
+    if visu_pars['VisuCoreByteOrder'] == 'littleEndian':
         datatype = '<'+datatype
     else:
         datatype = '>'+datatype
     dtype = numpy.dtype(datatype)
 
-    # load data
+    # ANDREW YUNG: 
+    # load data based on the visu_pars file.  first two dimensions are the in-               
+    # plane pixels. The higher dimensions refer to things like slice, echo, 
+    # diffusion weighting, which are described by VisuGroupDepVals and
+    # VisuFGOrderDesc.  If these parameters do not exist, assume that there are     
+    # only 3 dimensions and label the 3rd dimension as "frame".  Output a
+    # dictionary which contains a) the image data with appropriate data slopes
+    # and offsets applied, b) string list describing each dimension, and c) 
+    # header data containing parameters from the visu_pars and reco files.
+    # files.
+                          
+    matrix_size = visu_pars['VisuCoreSize']
+
+    if RECO_transposition == 0:
+        dimdesc=['readout','PE1']
+    else:
+        dimdesc=['PE1','readout']
+    dimcomment=['','']    
+
+    # if VisuCoreSize has 3 elements, this is a 3D acquisition
+    if len(matrix_size)==3:
+        dimdesc.append('PE2')
+        dimcomment.append('')
+
+    # Determine size and descriptors of frame groups (RECO_size, dimdesc and 
+    # dimcomment).  VisuFGOrderDesc is a  struct which describes the number of
+    # images in the frame group, the type of frame (e.g. FG_SLICE, FG_ECHO),
+    # and index ranges for the parameter array VisuGroupDepVals, which denotes
+    # the names of parameter arrays which depend on that particular frame 
+    # group.  If there is a dependent parameter array called VisuFGElemComment
+    # for the frame group, it should be stored in dimcomment (e.g. DTI 
+    # generated procnos have FA, Tensor trace, etc.)
+
+    if 'VisuFGOrderDesc' in visu_pars:
+        for v in visu_pars['VisuFGOrderDesc']:
+            FGdim = v[0]
+            matrix_size.append(FGdim)
+            dimdesc.append(v[1])
+            depvalstart = v[3]
+            depvalend = depvalstart + v[4]
+            for depval in range(depvalstart,depvalend):
+                if visu_pars['VisuGroupDepVals'][depval][0] == '<VisuFGElemComment>': 
+                    FGcommentstart=visu_pars['VisuGroupDepVals'][depval][1]
+                    fullFGcomments = visu_pars['VisuFGElemComment'].split('> <')
+                    dimcomment.extend(fullFGcomments[FGcommentstart:FGcommentstart+FGdim])
+                else:
+                    dimcomment.append([''])
+
+    # extract binary data from 2dseq. For now, format the data shape so all
+    # the image frames are lumped together in the 3rd dimension.
+    reco_offset = numpy.asarray(visu_pars['VisuCoreDataOffs'])
+    reco_slope = numpy.asarray(visu_pars['VisuCoreDataSlope'])    
+
+    n_frames = numpy.asarray(matrix_size)[2:].prod()
+    
     filename = os.path.join(scandirname,'2dseq')
     logger.info('read2dseq: loading %s' % filename)
     data = numpy.fromfile(file=filename, dtype=dtype)
-                          
-    matrix_size = visu_pars['VisuCoreSize']
-    x=matrix_size[0]
-    y=matrix_size[1]
-    
-    if visu_pars['VisuCoreDim'] == 2:
-        z = 1 # we hope this will get updated below in the case of
-              # multi-slice 2D data
-    else:
-        z = matrix_size[2]
-        
-    additional_dims = []
-    try:
-        VisuFGOrderDesc = visu_pars['VisuFGOrderDesc']
-    except KeyError:
-        # data missing, we should have all we need anyway
-        pass
-    else:
-        for VisuFGOrderDesc_element in VisuFGOrderDesc:
-            if VisuFGOrderDesc_element[1].strip()=='<FG_SLICE>':
-                z = int(VisuFGOrderDesc_element[0])
-            else:
-                additional_dims.append(int(VisuFGOrderDesc_element[0]))
 
-    all_dims = [x, y, z]
-    all_dims.extend(additional_dims)
-    all_dims.reverse()
+    data=data.reshape(matrix_size[0],matrix_size[1],n_frames)
+
+    # now apply the data slopes and offsets to transform the stored binary 
+    # number into a absolute number
+    if reco_slope.size == 1:  #single slope value which applies to all frames
+        data = reco_offset + reco_slope*data
+    else:  # separate slope + offset for each frame
+        for i in range(0,n_frames):
+            data[:,:,i] = reco_offset[i] + reco_slope[i]*data[:,:,i]
     
-    data = data.reshape(all_dims)
-    
-    # Deal with RECO_slope (added by FM)
-    #TODO - Fix this so that it divides it slice by slice in case reco slope is different
-    data = data/reco['RECO_map_slope'][0]
-     
-    # transpose so that time, z, y, x -> x, y, z, time
+    # Finally, shape the data so all frames are put into separate dimensions.
+    data = data.reshape(matrix_size)        
+    # TODO: check wheher to transpose so that time, z, y, x -> x, y, z, time
     data = data.transpose( numpy.arange(data.ndim,0,-1)-1)
                           
-#    #TODO - deal with slices in multiple packages
                                   
-    return {'data':data,
-            'isImage':True,
-            'header':{'reco': reco, 
-                      'd3proc': d3proc,
-                      'visu_pars':visu_pars}}
+    return {'data':data, 
+            'dimcomment':dimcomment,
+            'dimdesc':dimdesc,
+            'header':{'visu_pars': visu_pars}}
+
 
 def dict2string(d):
     '''
