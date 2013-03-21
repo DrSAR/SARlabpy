@@ -31,7 +31,7 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, t
         
     return auc
     
-def calculate_BSB1map(Experiment_object, protocol_name = ''):
+def calculate_BSB1map(Experiment_object, protocol_name = '07_bSB1mapFLASH'):
     
     # TODo = need to actually fix this!
     
@@ -84,29 +84,32 @@ def calculate_BSB1map(Experiment_object, protocol_name = ''):
     
 def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map = 0):
 
-
-#TODO: Fix this so the list/object situation is sorted!
-#    try:
-#        
-#        if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
-#            scan_list = Bruker_object
-#        else:
-#            scan_list = Bruker_object.find_scan_by_protocol(protocol_name)
-#    except:
-#        try: 
-#            scan_list = []                                
-#            for study in Bruker_object:
-#                scan_list.append(study.find_scan_by_protocol(protocol_name))
-#            print('You put in a list of studies, try to avoid that')
-#        except:
-#            raise
+    try:       
+        if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
+            scan_list = []
+            scan_list.append(Bruker_object)
+        elif type(Bruker_object) == sarpy.io.BRUKER_classes.Experiment \
+          or type(Bruker_object) == sarpy.io.BRUKER_classes.Study:
+              
+            scan_list = Bruker_object.find_scan_by_protocol(protocol_name)
+        else:
+            scan_list = Bruker_object
+            
+    except:
+        try: 
+            scan_list = []                                
+            for study in Bruker_object:
+                scan_list.append(study.find_scan_by_protocol(protocol_name))
+            print('You put in a list of studies, try to avoid that')
+        except:
+            raise
 
     ## Now to calculate the AUC
-    scan_list = []
-    scan_list.append(Bruker_object)
     T1_map = []
 
     for scan in scan_list:
+        
+        print scan
         T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,\
                                                       flip_angle_map = flip_angle_map))
     return T1_map

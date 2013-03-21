@@ -211,9 +211,10 @@ def h_fit(x_data, y_data, fit_function, initial_params):
     return final_params
         
 def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
-    
-    num_slices = getters.get_num_slices(scan_object,pdata_num)
+       
+    num_slices = getters.get_num_slices(scan_object, pdata_num)
     repetition_time = scan_object.method.PVM_RepetitionTime
+    inversion_time = scan_object.method.PVM_InversionTime
     
     if type(flip_angle_map) != numpy.ndarray:
         flip_angle_map = math.radians(scan_object.acqp.ACQ_flip_angle)
@@ -229,7 +230,7 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
                                        data.shape[1],\
                                        data.shape[2]] )
             
-    x_data = numpy.linspace(1,\
+    x_data = numpy.linspace(inversion_time,\
         scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
         scan_object.pdata[pdata_num].data.shape[3])
                                                        
@@ -238,7 +239,7 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
                                 (1 - param[1]*numpy.exp(-x_data/param[2])))
     initial_params = [3E5, 2, 350]
     
-    for x in range(data.shape[0]):
+    for x in xrange(data.shape[0]):
         for y in range(data.shape[1]):
             for slice in range(num_slices):
                 
