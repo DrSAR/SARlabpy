@@ -11,10 +11,9 @@ import pylab
 import numpy
 
 #make the SARlogger features available
-from sarpy import SARlogger
-#test logging for BRUKERIO
+from sarpy import initiate_logging
 from sarpy.io import BRUKERIO
-SARlogger.initiate_logging(BRUKERIO, handler_level=SARlogger.INFO)
+initiate_logging(BRUKERIO, handler_level=30)
 
 print('test_BRUKERIO run: %s' % __name__)
 
@@ -108,6 +107,18 @@ class Test(unittest.TestCase):
                    self.assertEqual(ACQ_size, PVM_EncMatrix)
             except KeyError:
                 BRUKERIO.logger.info('scan {0} has no PVM_EncMatrix'.format(k))
+
+    def test_read2dseq(self):
+        skip = [9, 15, 99]
+        for k in [keys for keys in scan_labels.keys() if keys not in skip]:
+            BRUKERIO.logger.warn('opening procno for scan {0} which is "{1}"'.
+                                format(k,scan_labels[k]))
+            fname_pdata = fnameroot+str(k)+'/pdata/1'
+            d = BRUKERIO.read2dseq(fname_pdata)
+            print d['data'].shape
+            self.assertEqual(len(d['dimdesc']), len(d['dimcomment']))
+            
+
     
 def stresstest_readfid(skip=None):
     '''
