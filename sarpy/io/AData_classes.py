@@ -173,9 +173,15 @@ class AData(object):
         '''
         classmethod that can be used to initiatlize the AData object 
         by reading the content from file. To use, issue:
-            
-            >>> AData.fromfile('2.16.756.5.5.100.1384712661.15242.1362627392.1/12--NecS3Hs10.iK1-5-pdata-1')
-        
+
+            >>> import glob, os
+            >>> adata_dir = glob.glob(adataroot+'/*/*')[0] # take the first dir
+            >>> adata_dir_short = re.sub(adataroot+os.path.sep, '', adata_dir)
+            >>> AData.fromfile(adata_dir_short)  # doctest:+ELLIPSIS
+            Analysed data based on PDATA (uid=...)
+              created on ...
+              parent: ...
+
         Admittedly this will rarely be required and most likely be done from
         some other constructor.
         
@@ -231,9 +237,9 @@ class AData(object):
         return cls(**kwargs)
 
 if __name__ == '__main__':
-#    import doctest
-#    doctest.testmod()
-    scn = BRUKER_classes.Scan('readfidTest.ix1/3')
-    print(scn.adata)
-    scn.adata['new']=AData.fromdata(parent=scn.pdata[0], 
-                                data=numpy.empty([10,10,10]))
+    import doctest
+    doctest.testmod()
+#    scn = BRUKER_classes.Scan('readfidTest.ix1/3')
+#    print(scn.adata)
+#    scn.adata['new']=AData.fromdata(parent=scn.pdata[0], 
+#                                data=numpy.empty([10,10,10]))
