@@ -14,7 +14,10 @@ import pylab
 import sarpy
 import pdb
 import scipy.integrate
+import scipy.optimize
+import scipy.fftpack
 import sarpy.fmoosvi.getters as getters
+import math
 
 
 def h_describe_object(class_object):
@@ -65,7 +68,7 @@ def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     ########### Start AUC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.analysis.h_inj_point(scan_object)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
     
     # Now calculate the Normalized Intesity voxel by voxel
     norm_data = h_normalize_dce(scan_object)
@@ -156,31 +159,119 @@ def h_inj_point(scan_object, pdata_num = 0):
 
     return injection_point[0][0]+1
     
-def h_BS_B1map(scan_object, pdata_num = 0):
+def h_calculate_KBS(scan_object):
     
-    print('Still working on it')
+    KBS = 71.16*2
+    # print('Still working on it')
     
-def temp_parse_BS(params_string):
-    
-    params_list = params_string.strip().split(',')
-    
-    params = []
+    return KBS
 
-    for el in params_list:
-        el.strip(' ')
-        el.replace('(','')
-        el.replace(')','')
-        try:
-            params.append(float(el))
-        except:
-            params.append(el)                
+
+    
+def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_POI):
+    
+    try:
+        TPQQ_POI = scan_with_POI.method.ExcPulse[3] #11.3493504066491 # 5.00591 #11.3493504066491
+        pulse_width_POI = scan_with_POI.method.ExcPulse[0]*1E-3
+    except:
+        print('Please use a scan that has a valid power level for the pulse \
+                of interest. scan_with_POI.method.ExcPulse[3]')
+    
+    TPQQ_BS = high_BSminus.method.BSPulse[3]
+    
+    integral_ratio = high_BSminus.method.ExcPulse[10] #0.071941 default from AY
+
+    #TODO: Write function to calculateKBS
+    KBS = h_calculate_KBS(high_BSminus)
+    gamma = 267.513e6
+    
+    # Get phase data from fid
+    offset = h_phase_from_fid(zero_BSplus) - h_phase_from_fid(zero_BSminus)
+    phase_diff = h_phase_from_fid(high_BSplus) - h_phase_from_fid(high_BSminus) + offset
+    
+    # Calculate B1 peak
+    B1peak = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
+    
+    # Calculate Flip Angle for the pulse of interest
+    alpha_BS = (gamma*B1peak/10000) * (math.pow(10,(TPQQ_BS-TPQQ_POI)/20)) *\
+                integral_ratio*pulse_width_POI
+
+
+    return alpha_BS
+
+def h_fit(x_data, y_data, fit_function, initial_params):    
+
+    # Distance to the target function    
+    errfunc = lambda param, x_data, y_data: fit_function(param, x_data) - y_data
+
+    # Fit function to data    
+    final_params, success = scipy.optimize.leastsq(errfunc, \
+                            initial_params[:], args = (x_data, y_data))
+    
+    return final_params
         
-    return params
+def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
+       
+    num_slices = getters.get_num_slices(scan_object, pdata_num)
+    repetition_time = scan_object.method.PVM_RepetitionTime
+    inversion_time = scan_object.method.PVM_InversionTime
+    
+    if type(flip_angle_map) != numpy.ndarray:
+        flip_angle_map = math.radians(scan_object.acqp.ACQ_flip_angle)
+   
+    # Visu_pars params 
         
+    data = scan_object.pdata[pdata_num].data 
+    # data_for_fitting = numpy.zeros( [data.shape[0],data.shape[1],data.shape[2],data.shape[3]] )
+    #for slice in range(num_slices):
+        #data_for_fitting[:,:,slice,:] = numpy.mean(numpy.mean(data[:,:,slice,:],0),0)
     
-
+    data_after_fitting = numpy.zeros( [data.shape[0],\
+                                       data.shape[1],\
+                                       data.shape[2]] )
+            
+    x_data = numpy.linspace(inversion_time,\
+        scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
+        scan_object.pdata[pdata_num].data.shape[3])
+                                                       
+                                                       
+    fitfunc = lambda param, x_data: numpy.abs(param[0]*\
+                                (1 - param[1]*numpy.exp(-x_data/param[2])))
+    initial_params = [3E5, 2, 350]
     
+    for x in xrange(data.shape[0]):
+        for y in range(data.shape[1]):
+            for slice in range(num_slices):
+                
+                y_data = data[x,y,slice,:]
+                
+                data_after_fitting[x,y,slice] = h_fit(x_data, y_data, \
+                                                fitfunc, initial_params)[2]
+    
+    # Need to conert T1_eff to T1
+    T1 = 1 / (( (1 / data_after_fitting) + numpy.log(numpy.cos(flip_angle_map))/repetition_time))
+                                        
+    return T1
+                    
+        #TODO: Implement code to deal with other methos of calculating T1
+        # e.g., IR, VFA
+        # NecS3Exp= sarpy.Experiment('NecS3')
+        # scan_object = NecS3Exp.studies[0].find_scan_by_protocol('04_ubcLL2')
+        
+def h_phase_from_fid(scan_object):
+    
+    phase_data = numpy.angle(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
+    
+    return phase_data
+    
+def h_mag_from_fid(scan_object):
 
+    mag_data = numpy.abs(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
+    
+    return mag_data
+    
+    
+    
 
 
 
