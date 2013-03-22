@@ -263,19 +263,40 @@ class Scan(object):
                matrix = [266, 105, 25]
         '''
         try:
-            return ('Scan object: Scan("{0}")\n'+ 
-                    '   protocol: {1}\n'+
-                    '   TE = {2}\n'+
-                    '   TR = {3}\n'+
-                    '   FA = {4}\n'+
-                    '   FoV = {5}\n'+
-                    '   matrix = {6}').format(self.shortdirname, 
-                            self.acqp.ACQ_protocol_name,
-                            self.acqp.ACQ_echo_time,
-                            self.acqp.ACQ_repetition_time,
-                            self.acqp.ACQ_flip_angle,
-                            self.acqp.ACQ_fov,
-                            self.acqp.ACQ_size)
+            
+            try: 
+                return ('Scan object: Scan("{0}")\n'+ 
+                                            '   protocol: {1}\n'+
+                                            '   TE = {2}\n'+
+                                            '   TR = {3}\n'+
+                                            '   FA = {4}\n'+
+                                            '   FoV = {5}\n'+
+                                            '   matrix = {6}\n'
+                                            '   -----BS-----\n'+
+                                            '   BSFreq = {7}\n'+
+                                            '   BSPower = {8}').format(self.shortdirname, 
+                                                    self.acqp.ACQ_protocol_name,
+                                                    self.acqp.ACQ_echo_time,
+                                                    self.acqp.ACQ_repetition_time,
+                                                    self.acqp.ACQ_flip_angle,
+                                                    self.acqp.ACQ_fov,
+                                                    self.acqp.ACQ_size,
+                                                    self.method.BSFreqOffset,
+                                                    self.method.BSPulse[3])
+            except:
+                return ('Scan object: Scan("{0}")\n'+ 
+                        '   protocol: {1}\n'+
+                        '   TE = {2}\n'+
+                        '   TR = {3}\n'+
+                        '   FA = {4}\n'+
+                        '   FoV = {5}\n'+
+                        '   matrix = {6}').format(self.shortdirname, 
+                                self.acqp.ACQ_protocol_name,
+                                self.acqp.ACQ_echo_time,
+                                self.acqp.ACQ_repetition_time,
+                                self.acqp.ACQ_flip_angle,
+                                self.acqp.ACQ_fov,
+                                self.acqp.ACQ_size)
         except AttributeError:
             return self.__str__()
 
