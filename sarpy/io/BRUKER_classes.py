@@ -204,7 +204,13 @@ class Scan(object):
         if absolute_root:
             filename = root
         else:
-            filename = os.path.join(dataroot, root)
+            extended_search = glob.glob(os.path.join(dataroot,'*','nmr',root))
+            if len(extended_search) > 1:
+                raise IOError(
+                    'Data root (%s) is not unique ' % root + 
+                    '\nDataset present for several users!')
+            else:
+                filename = extended_search[0]
         if os.path.isdir(filename):
             # good, that could be it
             self.dirname = filename
@@ -219,7 +225,10 @@ class Scan(object):
             raise IOError(
                 'Filename "%s" is neither a directory nor a file inside one' %
                 filename)
-        self.shortdirname = re.sub(dataroot+os.path.sep, '', self.dirname)
+                
+        sep=os.path.sep        
+        self.shortdirname = re.sub(dataroot+sep+'[^'+sep+']+'+
+                                   sep+'nmr'+sep, '', self.dirname)
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
         # is also present - this was true for ca 9000 scans we tested thi in
@@ -324,7 +333,16 @@ class Study(object):
         if absolute_root:
             filename = root
         else:
-            filename = os.path.join(dataroot, root)
+            extended_search = glob.glob(os.path.join(dataroot,'*','nmr',root))
+            if len(extended_search) > 1 :
+                raise IOError(
+                    'Data root (%s) is not unique ' % root + 
+                    '\nStudy present for several users!')
+            elif len(extended_search) < 1:
+                raise IOError(
+                    'Study root (%s) does not exist ' % root)
+            else:
+                filename = extended_search[0]
 
         if os.path.isdir(filename):
             # good, that could be it
@@ -340,8 +358,10 @@ class Study(object):
             raise IOError(
                 'Filename "%s" is neither a directory nor a file inside one' %
                 filename)
-          
-        self.shortdirname = re.sub(dataroot+os.path.sep, '', self.dirname)
+                
+        sep=os.path.sep        
+        self.shortdirname = re.sub(dataroot+sep+'[^'+sep+']+'+
+                                   sep+'nmr'+sep, '', self.dirname)
         self.subject = JCAMP_file(os.path.join(self.dirname,'subject'))
          
     @lazy_property
@@ -536,7 +556,7 @@ class Patient(StudyCollection):
         super(Patient, self).__init__()
         self.patient_id = None
         
-        searchdir = os.path.join(dataroot, patient_name) + '*'
+        searchdir = os.path.join(dataroot, '*', 'nmr', patient_name) + '*'
         directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
             study = Study(dirname)
@@ -626,7 +646,7 @@ class Experiment(StudyCollection):
         More elaborate string representation of the Experiment object:
 
         >>> a=Experiment('NecS3')
-        >>> a
+        >>> a       # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Experiment object: Experiment("NecS3")
            studies: --Total (30)--
                     NecS3Hs01a.iJ1
@@ -649,7 +669,7 @@ class Experiment(StudyCollection):
         if absolute_root:
             searchdir = root
         else:
-            searchdir = os.path.join(dataroot, root) + '*'
+            searchdir = os.path.join(dataroot, '*', 'nmr', root) + '*'
 
         self.root = root
         directories = natural_sort(glob.glob(searchdir))
