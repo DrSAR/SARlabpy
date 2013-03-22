@@ -7,6 +7,7 @@ import re
 import glob
 import BRUKERIO
 import AData_classes
+from lazy_property import lazy_property
 
 import logging
 logger=logging.getLogger('sarpy.io.BRUKER_classes')
@@ -36,48 +37,6 @@ def strip_all_but_classname(obj, class_str):
         class_name = class_str
     return class_name
                            
-class lazy_property(object):
-    '''
-    Meant to be used for lazy evaluation of an object attribute.
-    property should represent non-mutable data, as it replaces itself.
-    
-    An example illustrates the use. First define a class that contains
-    a lazy_property. That call it and observe how the calculation is 
-    only performed once.
-    
-    >>> class Test(object):
-    ...     @lazy_property
-    ...     def results(self):
-    ...         calcs = 42 # do a lot of calculation here
-    ...         print('phew, this took a lot of effort - glad I do this so rarely...')
-    ...         return calcs
-    >>> A=Test()
-    >>> A.__dict__
-    {}
-    >>> A.results
-    phew, this took a lot of effort - glad I do this so rarely...
-    42
-    >>> A.results  # on a second call the calculation is not needed !
-    42
-    >>> A.__dict__  # see how results is no a proper attribute
-    {'results': 42}
-
-    '''
-
-    def __init__(self,fget):
-        self.fget = fget
-        self.func_name = fget.__name__
-
-    def __get__(self,obj,cls):
-        ''' this is called on attribute access '''
-        if obj is None:
-            return None
-        value = self.fget(obj)
-        # the following overwrites the dict in the calling object
-        # thereby erasing any access to this function (which)
-        # calls the expensive calculation once.
-        setattr(obj,self.func_name,value)
-        return value
 
 # ===========================================================
                            
@@ -107,7 +66,14 @@ class PDATA_file(object):
         
     @lazy_property
     def reco(self):
-        return JCAMP_file(os.path.join(self.filename,'reco'))
+        try:
+            reco_obj = JCAMP_file(os.path.join(self.filename,'reco'))
+        except IOError:
+            logger.warning('reco file for %s not found \n' % self.filename +
+                    '(this is normal for some BRUKER sets: e.g. DTI)' )
+            return None
+        else:
+            return reco_obj
 
     @lazy_property
     def visu_pars(self):
@@ -120,10 +86,23 @@ class PDATA_file(object):
     @lazy_property
     def data(self):
         dta = BRUKERIO.read2dseq(os.path.join(self.filename),
-                                 reco=self.reco.__dict__,
-                                 d3proc=self.d3proc.__dict__,
                                  visu_pars=self.visu_pars.__dict__)
+        setattr(self, 'dimdesc', dta['dimdesc'])
+        setattr(self, 'dimcomment', dta['dimcomment'])
         return dta['data']
+
+    @lazy_property
+    def dimdesc(self):
+        # need to load the data which we'll force by some parameter access
+        self.data.shape
+        return self.dimdesc
+
+    @lazy_property
+    def dimcomment(self):
+        # need to load the data which we'll force by some parameter access
+        self.data.shape
+        return self.dimcomment
+        
 
     def uid(self):
         return self.visu_pars.VisuUid
@@ -194,15 +173,7 @@ class Scan(object):
         
     @lazy_property
     def adata(self):
-        adata_dict = {}
-        logger.info('delayed loading of adata (list) now forced ...')
-        for pdata_uid in self.pdata_uids:
-            adata_potential = os.path.join(AData_classes.adataroot, pdata_uid)
-            if os.path.isdir(adata_potential):
-                for adata_sets in os.listdir(adata_potential):
-                    adata_candidate = AData_classes.AData.fromfile(
-                            os.path.join(adata_potential, adata_sets))
-                    adata_dict[adata_candidate.key]=adata_candidate
+        adata_dict = AData_classes.load_AData(self.pdata, self.dirname)
         if len(adata_dict) == 0:
             logger.info('No analysis data in directory "{0}"'.
                          format(self.dirname))
