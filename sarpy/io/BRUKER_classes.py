@@ -12,7 +12,7 @@ from lazy_property import lazy_property
 import logging
 logger=logging.getLogger('sarpy.io.BRUKER_classes')
 
-dataroot = os.path.expanduser('~/data')
+dataroot = os.path.expanduser(os.path.join('~','data'))
 
 def natural_sort(l): 
     '''

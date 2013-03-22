@@ -19,7 +19,8 @@ logger=logging.getLogger('sarpy.io.Adata_classes')
 #this is where datagoes that is secondary to acquired data.
 # for this to make any sense, there needs to be som mechanism by which the
 # source data can be found
-adataroot = os.path.expanduser('~/analysed-data')
+adataroot = os.path.expanduser(os.path.join('~','analysed-data'))
+# here is an extra change
 
 def mkdir_p(path):
     '''
