@@ -49,7 +49,7 @@ def ReadSerial():       # Inputs: None. Outputs: x,T,x2,T2,WixelAlive
     try:
         # Setup SerialData Read
         port='/dev/tty.usbmodemfa131'
-        ser = serial.Serial("/dev/tty.usbmodemfa131",9600)
+        ser = serial.Serial("/dev/tty.usbmodemfa131",9600,timeout=7)    # When timeout occurs, nothing is read in and code goes to EXCEPTION: WixelAlive=0 (Dead)
         #print ser
         value = ser.readline()
         #print value
@@ -147,48 +147,55 @@ def Logger(Tnorm,WixelAlive,ServerUp,x,T,x2,T2):    # Outputs: Logs Tnorm,WixelA
 
 #----------------------------------------------------------------------------------------
 ## SEND EMAIL 
-def Email(ServerUp):
+def Email(ServerUp,EmailCount):
     if ServerUp==1 and Tnorm==0:     # 'and' so that don't send email on case (8) (Normal Operation)
-        print "Email: Email Sent"
-        # Open .txt file for sending latest temperature values  
-        fp = open("TemperatureLogFile", 'rb')
-        # Create a text/plain message
-        msg = MIMEText(fp.read())
-        fp.close()
+        print "Email: Request"
+        EmailCount=EmailCount+1;
 
-        me = 'ubcmri7t@gmail.com'
-        you = ['clw9@sfu.ca'] #,'clayton.wong1x@gmail.com']   # Can send to 2 recipients
-        #msg = MIMEMultipart('alternative')
-        msg['Subject'] = 'Alert: 7T Freezer Temperature HOTT'  # "Hello %s, my name is %s" % ('john', 'mike') # Hello john, my name is mike".
-        msg['From'] = me
-        msg['To'] = ", ".join(you)
-        #text = 'The temperature of the TMP36 in the 7T Freezer is hot (greater than 23 degCelius)!'
+        if EmailCount%5==1:     # Send an email every 5th time get an email request 
+            logger.error('Email Actually sent!')
+            # Open .txt file for sending latest temperature values  
+            fp = open("TemperatureLogFile", 'rb')
+            # Create a text/plain message
+            msg = MIMEText(fp.read())
+            fp.close()
+
+            me = 'ubcmri7t@gmail.com'
+            you = ['clw9@sfu.ca'] #,'clayton.wong1x@gmail.com']   # Can send to 2 recipients
+            #msg = MIMEMultipart('alternative')
+            msg['Subject'] = 'Alert: 7T Freezer Temperature HOTT'  # "Hello %s, my name is %s" % ('john', 'mike') # Hello john, my name is mike".
+            msg['From'] = me
+            msg['To'] = ", ".join(you)
+            #text = 'The temperature of the TMP36 in the 7T Freezer is hot (greater than 23 degCelius)!'
 
 
 
-        #part1 = MIMEText(text, 'plain')
-        #msg.attach(part1)
-        #msg.attach(part2)                
+            #part1 = MIMEText(text, 'plain')
+            #msg.attach(part1)
+            #msg.attach(part2)                
 
-        # Credentials
-        username = 'ubcmri7t@gmail.com'  
-        password = 'xwinnmr123'  
+            # Credentials
+            username = 'ubcmri7t@gmail.com'  
+            password = 'xwinnmr123'  
 
-        # Send the message via our own SMTP server, but don't include the envelope header
-        s = smtplib.SMTP('smtp.gmail.com:587')
-        s.starttls() # SMTP connection in TLS (Transport Layer Security) mode. All SMTP commands that follow will be encrypted 
-        s.login(username,password) 
-        s.sendmail(me, you, msg.as_string())
-        s.quit()
+            # Send the message via our own SMTP server, but don't include the envelope header
+            s = smtplib.SMTP('smtp.gmail.com:587')
+            s.starttls() # SMTP connection in TLS (Transport Layer Security) mode. All SMTP commands that follow will be encrypted 
+            s.login(username,password) 
+            s.sendmail(me, you, msg.as_string())
+            s.quit()
     elif ServerUp==0:   #Server is down => Don't send email
         print ('Email: No email because server is DOWN')
+
+    return EmailCount
 
 
 
 
 ##----------------------------------------------------------------------------------------
 ## MAIN LOOP
-
+EmailCount=0;
+print EmailCount
 while True: # Infinite loop (ctr-c to break)
 
     
@@ -206,14 +213,18 @@ while True: # Infinite loop (ctr-c to break)
 
 
     # Logger
-    if T > 100:   # High Temperature
+    if T > 30:   # High Temperature
         Tnorm=0;
     else:         # Normal Temperature
         Tnorm=1;
         
     Logger(Tnorm,WixelAlive,ServerUp,x,T,x2,T2)    # Calls Function 'Logger'
-    Email(ServerUp)     # Call 'Email' Function
     
+    # Call 'Email' Function  # Actually send an email every 5th time get an email request
+    # Send Email when mod(EmailCount,5)==1
+    EmailCount=Email(ServerUp,EmailCount)     
+    print EmailCount
+
     del x, T, x2, T2
     time.sleep(5)
 
