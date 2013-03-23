@@ -11,7 +11,7 @@ If you are stuck with branches and commits, try this quickstart: (assuming you h
 
 .. code-block:: bash
 
-   rm -rf SARpy # remove any traces of the local copy of the repository
+   rm -rf SARlabpy # remove any traces of the local copy of the repository - you might have called it something else in the past
    git clone git@pfeifer.phas.ubc.ca:SARlabpy # make a new fresh clone
    cd SARlabpy # you will now be on the master branch
    git checkout --track origin/thatbranchthatIusedbefore # if you are continuing on an old existing branch
@@ -31,13 +31,14 @@ Howto, Guides, Examples
    BRUKERIOexamples
    SARloggerexamples
 
-Doc's harvested from source code
-----------------------------------
+
+Autodocumentation harvested from code base
+------------------------------------------
 
 .. toctree::
-   :maxdepth: 2
-
-   modules
+   :maxdepth: 4
+   
+   sarpy
 
 Indices and tables
 -------------------

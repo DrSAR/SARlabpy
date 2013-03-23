@@ -17,6 +17,14 @@ io Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`BRUKERIO_ay` Module
+-------------------------
+
+.. automodule:: sarpy.io.BRUKERIO_ay
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`BRUKER_classes` Module
 ----------------------------
 
@@ -53,6 +61,14 @@ io Package
 ----------------------------
 
 .. automodule:: sarpy.io.descriptortest
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`lazy_property` Module
+---------------------------
+
+.. automodule:: sarpy.io.lazy_property
     :members:
     :undoc-members:
     :show-inheritance:

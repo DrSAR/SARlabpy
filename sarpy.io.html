@@ -25,7 +25,6 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="sarpy 0.1alpha documentation" href="index.html" />
     <link rel="up" title="sarpy Package" href="sarpy.html" />
-    <link rel="next" title="setup Module" href="setup.html" />
     <link rel="prev" title="fmoosvi Package" href="sarpy.fmoosvi.html" /> 
   </head>
   <body>
@@ -39,13 +38,9 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="setup.html" title="setup Module"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
           <a href="sarpy.fmoosvi.html" title="fmoosvi Package"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li>
-          <li><a href="modules.html" >sarpy Documentation</a> &raquo;</li>
           <li><a href="sarpy.html" accesskey="U">sarpy Package</a> &raquo;</li> 
       </ul>
     </div>  
@@ -62,12 +57,20 @@
 <p>Class definitions for the analysed data structures</p>
 <dl class="class">
 <dt id="sarpy.io.AData_classes.AData">
-<em class="property">class </em><tt class="descclassname">sarpy.io.AData_classes.</tt><tt class="descname">AData</tt><big>(</big><em>yet_loaded=True</em>, <em>meta=None</em>, <em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sarpy.io.AData_classes.</tt><tt class="descname">AData</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<dl class="attribute">
+<dt id="sarpy.io.AData_classes.AData.data">
+<tt class="descname">data</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="classmethod">
 <dt id="sarpy.io.AData_classes.AData.fromdata">
-<em class="property">classmethod </em><tt class="descname">fromdata</tt><big>(</big><em>parent=None</em>, <em>data=None</em>, <em>key=None</em>, <em>meta=None</em>, <em>force=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.fromdata" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<em class="property">classmethod </em><tt class="descname">fromdata</tt><big>(</big><em>parent=None</em>, <em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.fromdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>This creates an AData object from an array (maybe somehing else later)
+It does not store it on disk. This would typically be done by the
+ADataDict on assignment to a key.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -88,7 +91,13 @@ Parent uid added.</li>
 <em class="property">classmethod </em><tt class="descname">fromfile</tt><big>(</big><em>filename</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.fromfile" title="Permalink to this definition">¶</a></dt>
 <dd><p>classmethod that can be used to initiatlize the AData object 
 by reading the content from file. To use, issue:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">AData</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="s">&#39;2.16.756.5.5.100.1384712661.15242.1362627392.1/12--NecS3Hs10.iK1-5-pdata-1&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">glob</span><span class="o">,</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adata_dir</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">adataroot</span><span class="o">+</span><span class="s">&#39;/*/*&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c"># take the first dir</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adata_dir_short</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">adataroot</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">adata_dir</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AData</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">adata_dir_short</span><span class="p">)</span>  
+<span class="go">Analysed data based on PDATA (uid=...)</span>
+<span class="go">  created on ...</span>
+<span class="go">  parent: ...</span>
 </pre></div>
 </div>
 <p>Admittedly this will rarely be required and most likely be done from
@@ -106,12 +115,20 @@ some other constructor.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="sarpy.io.AData_classes.ADataCollection">
-<em class="property">class </em><tt class="descclassname">sarpy.io.AData_classes.</tt><tt class="descname">ADataCollection</tt><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.ADataCollection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>A dictionary of AData objects. This is  decorator class that is used
-in the BRUKER_classes.Scan object</p>
+<dt id="sarpy.io.AData_classes.ADataDict">
+<em class="property">class </em><tt class="descclassname">sarpy.io.AData_classes.</tt><tt class="descname">ADataDict</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.ADataDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">_abcoll.MutableMapping</span></tt></p>
+<p>A dictionary which perfoms some magic on value-by-key assignment</p>
+<p>Pre-existing keys are bein checked against the new key.
+This is inspired by an 
+<a class="reference external" href="http://stackoverflow.com/a/3387975/607562">answer on stackoverflow</a>
+to the question of how to perfectly override  a dict.</p>
 </dd></dl>
+
+<dl class="function">
+<dt id="sarpy.io.AData_classes.load_AData">
+<tt class="descclassname">sarpy.io.AData_classes.</tt><tt class="descname">load_AData</tt><big>(</big><em>pdatas</em>, <em>dirname</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.load_AData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="sarpy.io.AData_classes.mkdir_p">
@@ -218,21 +235,29 @@ mentioned in on <a class="reference external" href="http://stackoverflow.com/que
 
 <dl class="function">
 <dt id="sarpy.io.BRUKERIO.read2dseq">
-<tt class="descclassname">sarpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>scandirname</em>, <em>param_files_only=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">sarpy.io.BRUKERIO.</tt><tt class="descname">read2dseq</tt><big>(</big><em>scandirname</em>, <em>visu_pars=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKERIO.read2dseq" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns BRUKER&#8217;s 2dseq file as a properly dimensioned array</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>scandirname</strong> (<em>string</em>) &#8211; filename of the scan directory</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scandirname</strong> (<em>string</em>) &#8211; filename of the scan directory</li>
+<li><strong>reco, d3proc, visu_pars</strong> (<em>dict</em>) &#8211; parameter files (as dict) that can be provided by caller
+default: None which means they will be loaded by this function</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary with data, and headerinformation. The data is
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dictionary with data, and header information. The data is
 an array of BRUKER-reconstructed image data in the respecive proc
-directory.</td>
+directory.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict with &#8216;data&#8217;:numpy array &#8216;header&#8217;:dict{&#8216;recpo&#8217;:..., &#8216;d3proc&#8217;:...}</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict with &#8216;data&#8217;:numpy array &#8216;header&#8217;:dict{&#8216;recpo&#8217;:..., &#8216;d3proc&#8217;:...}</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body">IOERROR if directory non-existent</td>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">IOERROR if directory non-existent</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -275,7 +300,7 @@ structures) that can be present.</p>
 ##$SUBJECT_name=(&lt;Moosvi&gt;, &lt;readfidTest&gt;)
 
 &gt;&gt;&gt; import os
-&gt;&gt;&gt; a=readJCAMP(os.path.expanduser('~/data/readfidTest.ix1/subject'))
+&gt;&gt;&gt; a=readJCAMP(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/subject'))
 &gt;&gt;&gt; a['SUBJECT_name']
 ['&lt;Moosvi&gt;', '&lt;readfidTest&gt;']
 &gt;&gt;&gt; a['SUBJECT_name_string']
@@ -301,7 +326,7 @@ Spatial Spatial
 1 -0 1 0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0
 
 &gt;&gt;&gt; import os
-&gt;&gt;&gt; a=readJCAMP(os.path.expanduser('~/data/readfidTest.ix1/1/acqp'))
+&gt;&gt;&gt; a=readJCAMP(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/1/acqp'))
 &gt;&gt;&gt; a['ACQ_user_filter']
 'No'
 &gt;&gt;&gt; a['ACQ_dim_desc']
@@ -331,7 +356,7 @@ phase, bandwidth etc.</p>
 
 <dl class="function">
 <dt id="sarpy.io.BRUKERIO.readfid">
-<tt class="descclassname">sarpy.io.BRUKERIO.</tt><tt class="descname">readfid</tt><big>(</big><em>fptr=None</em>, <em>untouched=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKERIO.readfid" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">sarpy.io.BRUKERIO.</tt><tt class="descname">readfid</tt><big>(</big><em>fptr=None</em>, <em>acqp=None</em>, <em>method=None</em>, <em>untouched=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKERIO.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKERIO.readfid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns BRUKER&#8217;s fid file as a properly dimensioned &amp; rearranged array.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -339,7 +364,11 @@ phase, bandwidth etc.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>fptr</strong> (<em>FileType,StringType</em>) &#8211; filename of fid file or filehandle to open fid file</li>
-<li><strong>untouched</strong> (<em>boolean</em>) &#8211; leave the fid as found without rearranging lines into slices and echos?</li>
+<li><strong>acqp</strong> (<em>dict</em>) &#8211; dictionary of acqp parameters 
+(default None: parameter file will be loaded)</li>
+<li><strong>method</strong> (<em>dict</em>) &#8211; dictionary of method parameters 
+(default None: parameter file will be loaded)</li>
+<li><strong>untouched</strong> (<em>boolean</em>) &#8211; do not rearrange/reshape data</li>
 </ul>
 </td>
 </tr>
@@ -442,42 +471,42 @@ ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.</p>
 </div></blockquote>
 <p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/1/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/1/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># TriPilot multi</span>
 <span class="go">(128, 128, 15, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/2/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/2/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># FLASH 2D</span>
 <span class="go">(256, 105, 5, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/3/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/3/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># FLASH 3D --- THIS IS ACTUALLY WRONG!!</span>
 <span class="go">(256, 105, 1, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/4/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/4/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># MSME 2D</span>
 <span class="go">(256, 105, 5, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/5/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/5/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c"># MSME 3D</span>
 <span class="go">(256, 105, 1, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/6/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/6/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(256, 256, 15, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/7/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/7/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(256, 105, 5, 25)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/8/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/8/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(256, 105, 5, 5)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/9/fid&#39;</span><span class="p">))</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/9/fid&#39;</span><span class="p">))</span> 
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
 <span class="gr">IOError</span>: <span class="n">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># fid fil 9 was missing due to incomplete scans</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/10/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/10/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(128, 32, 5, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/11/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/11/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(128, 32, 5, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/readfidTest.ix1/12/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/data/stefan/nmr/readfidTest.ix1/12/fid&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(4096, 1, 5, 1)</span>
 </pre></div>
@@ -514,20 +543,43 @@ misunderstandings of how the data is to be interpreted.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="bruker-classes-module">
-<h2><tt class="xref py py-mod docutils literal"><span class="pre">BRUKER_classes</span></tt> Module<a class="headerlink" href="#bruker-classes-module" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-sarpy.io.BRUKER_classes"></span><p>Class Definitions for BRUKER data</p>
-<dl class="class">
-<dt id="sarpy.io.BRUKER_classes.ACQP_file">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">ACQP_file</tt><big>(</big><em>dirname</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.ACQP_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#sarpy.io.BRUKER_classes.JCAMP_file" title="sarpy.io.BRUKER_classes.JCAMP_file"><tt class="xref py py-class docutils literal"><span class="pre">sarpy.io.BRUKER_classes.JCAMP_file</span></tt></a></p>
-<p>Thin specialization of JCAMP_file. Mostly just a place holder and
-a place to store the fact that these files are called &#8220;acqp&#8221;.</p>
+<div class="section" id="module-sarpy.io.BRUKERIO_ay">
+<span id="brukerio-ay-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">BRUKERIO_ay</span></tt> Module<a class="headerlink" href="#module-sarpy.io.BRUKERIO_ay" title="Permalink to this headline">¶</a></h2>
+<p>Collection of BRUKER input routines</p>
+<p>Handy functions to read BRUKER data and header files.
+Stefan A Reinsberg - Spring 2011, Vancouver
+Modified by Andrew Yung - Spring 2013</p>
+<dl class="function">
+<dt id="sarpy.io.BRUKERIO_ay.read2dseq_visu">
+<tt class="descclassname">sarpy.io.BRUKERIO_ay.</tt><tt class="descname">read2dseq_visu</tt><big>(</big><em>procdirname</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKERIO_ay.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKERIO_ay.read2dseq_visu" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns BRUKER&#8217;s 2dseq file as a properly dimensioned array</p>
+<p>This relies on numpy&#8217;s array functionality</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="sarpy.io.BRUKERIO_ay.readBrukerParx">
+<tt class="descclassname">sarpy.io.BRUKERIO_ay.</tt><tt class="descname">readBrukerParx</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKERIO_ay.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKERIO_ay.readBrukerParx" title="Permalink to this definition">¶</a></dt>
+<dd><p>parse Bruker parameter file (JCAMP format) and return as dictionary</p>
+<p>The <em>JCAMP format</em> is a self-documenting, ASCII text file format that is 
+maintained by IUPAC (<a class="reference external" href="http://www.iupac.org/objID/Article/pac7108x1549">http://www.iupac.org/objID/Article/pac7108x1549</a>).
+It consists of labelled data records (LDR) that start with a ## and end
+when the next record begins. They can span several lines. The data label is
+enclosed between &#8216;##&#8217; and &#8216;=&#8217;. If it starts with a $, we are dealing with a
+private LDR.</p>
+<p>This is a version of Stefan&#8217;s readJCAMP function.  The only difference is
+that this function parses the parameter values into their data type (it
+doesn&#8217;t just leave the parameter values as strings).  The only exception is
+if a structure array is detected; the function only extracts the elements
+of this structure array as a string.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.io.BRUKER_classes">
+<span id="bruker-classes-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">BRUKER_classes</span></tt> Module<a class="headerlink" href="#module-sarpy.io.BRUKER_classes" title="Permalink to this headline">¶</a></h2>
+<p>Class Definitions for BRUKER data</p>
 <dl class="class">
 <dt id="sarpy.io.BRUKER_classes.Experiment">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Experiment</tt><big>(</big><em>root=None</em>, <em>absolute_root=False</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Experiment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Experiment</tt><big>(</big><em>root=None</em>, <em>absolute_root=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#sarpy.io.BRUKER_classes.StudyCollection" title="sarpy.io.BRUKER_classes.StudyCollection"><tt class="xref py py-class docutils literal"><span class="pre">sarpy.io.BRUKER_classes.StudyCollection</span></tt></a></p>
 <p>An Experiment is not BRUKER terminology. It is a grouping of several 
 studies (that have scans themselves) by various criteria.
@@ -542,40 +594,45 @@ of the requirement of having identical SUBJECT_ids.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="sarpy.io.BRUKER_classes.FID_file">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">FID_file</tt><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.FID_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>Initialize an fid object whih should sit in the scan root directory.
-Really, this is a decorator class.</p>
-<p>__init__() does not expect a directory name. It will look
-for the fid file only when the attribue is being accessed. (see __get__)
-The expectation is that the class implementing this decorator will 
-provide an attribute dirname to load.</p>
-</dd></dl>
-
-<dl class="class">
 <dt id="sarpy.io.BRUKER_classes.JCAMP_file">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">JCAMP_file</tt><big>(</big><em>filename</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.JCAMP_file" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">JCAMP_file</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.JCAMP_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Represents a JCAMP encoded parameter file.</p>
 <p>Parameters become attributes in this class</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="sarpy.io.BRUKER_classes.METHOD_file">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">METHOD_file</tt><big>(</big><em>dirname</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.METHOD_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#sarpy.io.BRUKER_classes.JCAMP_file" title="sarpy.io.BRUKER_classes.JCAMP_file"><tt class="xref py py-class docutils literal"><span class="pre">sarpy.io.BRUKER_classes.JCAMP_file</span></tt></a></p>
-<p>Thin specialization of JCAMP_file. Mostly just a place holder and
-a place to store the fact that these files are called &#8220;method&#8221;.</p>
-</dd></dl>
-
-<dl class="class">
 <dt id="sarpy.io.BRUKER_classes.PDATA_file">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">PDATA_file</tt><big>(</big><em>filename</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">PDATA_file</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Initialize a processed data set that usually sits in <cite>*/pdata/[1-9]</cite>.</p>
 <p>constructor expects a directory name (filename). It will look
 for the 2dseq file, the d3proc and th reco file.</p>
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.PDATA_file.d3proc">
+<tt class="descname">d3proc</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.d3proc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.PDATA_file.data">
+<tt class="descname">data</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.PDATA_file.dimcomment">
+<tt class="descname">dimcomment</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.dimcomment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.PDATA_file.dimdesc">
+<tt class="descname">dimdesc</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.dimdesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.PDATA_file.reco">
+<tt class="descname">reco</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.reco" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="sarpy.io.BRUKER_classes.PDATA_file.store_adata">
 <tt class="descname">store_adata</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.store_adata" title="Permalink to this definition">¶</a></dt>
@@ -590,11 +647,36 @@ parent object (Scan). This might be hard. Sounds like Traits to me.</p>
 <tt class="descname">uid</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.uid" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.PDATA_file.visu_pars">
+<tt class="descname">visu_pars</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.visu_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.io.BRUKER_classes.PDATA_file.write2nii">
+<tt class="descname">write2nii</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.write2nii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the data originating from a 2dseq (BRUKER) reconstruction to
+a Nifti file format.</p>
+<p>TODO: Header information from visu_pars.</p>
+<dl class="docutils">
+<dt>Examples:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;readfidTest.ix1&#39;</span><span class="p">,</span><span class="s">&#39;3&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span><span class="s">&#39;readfid.nii&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;writing tempfile </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span> 
+<span class="go">writing tempfile ...readfid.nii</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">pdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write2nii</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="sarpy.io.BRUKER_classes.Patient">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Patient</tt><big>(</big><em>patient_name</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Patient" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Patient</tt><big>(</big><em>patient_name</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Patient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#sarpy.io.BRUKER_classes.StudyCollection" title="sarpy.io.BRUKER_classes.StudyCollection"><tt class="xref py py-class docutils literal"><span class="pre">sarpy.io.BRUKER_classes.StudyCollection</span></tt></a></p>
 <p>A Patient is a special Collection of studies in that the subject_id
 has to agree from one study to the next</p>
@@ -602,7 +684,7 @@ has to agree from one study to the next</p>
 
 <dl class="class">
 <dt id="sarpy.io.BRUKER_classes.Scan">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Scan</tt><big>(</big><em>root</em>, <em>absolute_root=False</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Scan</tt><big>(</big><em>root</em>, <em>absolute_root=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Object to represent a BRUKER scan consisting, typically, of FID_file 
 and PDATA_file(s).</p>
@@ -613,8 +695,13 @@ acqp, method, fid or one 2dseq file.</p>
 <p>Simple Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="s">&#39;readfidTest.ix1/3&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">dir</span><span class="p">(</span><span class="n">exp3</span><span class="p">)</span>
-<span class="go">[&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__doc__&#39;, &#39;__format__&#39;, &#39;__getattribute__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__module__&#39;, &#39;__new__&#39;, &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;acqp&#39;, &#39;adata&#39;, &#39;dirname&#39;, &#39;fid&#39;, &#39;method&#39;, &#39;pdata&#39;, &#39;shortdirname&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dir</span><span class="p">(</span><span class="n">exp3</span><span class="p">)</span>    
+<span class="go">[&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__doc__&#39;, &#39;__format__&#39;, </span>
+<span class="go"> &#39;__getattribute__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__module__&#39;, &#39;__new__&#39;, </span>
+<span class="go"> &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, </span>
+<span class="go"> &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;acqp&#39;, </span>
+<span class="go"> &#39;adata&#39;, &#39;dirname&#39;, &#39;fid&#39;, &#39;method&#39;, &#39;pdata&#39;, &#39;pdata_uids&#39;, </span>
+<span class="go"> &#39;shortdirname&#39;, &#39;store_adata&#39;]</span>
 </pre></div>
 </div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span><span class="o">.</span><span class="n">acqp</span><span class="o">.</span><span class="n">ACQ_protocol_name</span>
@@ -622,7 +709,7 @@ acqp, method, fid or one 2dseq file.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span><span class="o">.</span><span class="n">acqp</span><span class="o">.</span><span class="n">ORIGIN</span>
 <span class="go">&#39;Bruker BioSpin MRI GmbH&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span><span class="o">.</span><span class="n">acqp</span><span class="o">.</span><span class="n">DATE</span>
-<span class="go">&#39;Thu Feb 21 19:01:26 2013 PST (UT-8h)  &#39;</span>
+<span class="go">&#39;Thu Feb 21 19:01:26 2013 PST (UT-8h)&#39;</span>
 </pre></div>
 </div>
 <p>Also, Scan has a pretty way of falling over when no fid file is detected:</p>
@@ -631,6 +718,36 @@ Traceback (most recent call last):
     ...
 IOError:...</pre>
 </div>
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.Scan.acqp">
+<tt class="descname">acqp</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan.acqp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.Scan.adata">
+<tt class="descname">adata</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan.adata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.Scan.fid">
+<tt class="descname">fid</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan.fid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.Scan.method">
+<tt class="descname">method</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan.method" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.Scan.pdata">
+<tt class="descname">pdata</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan.pdata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.Scan.pdata_uids">
+<tt class="descname">pdata_uids</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan.pdata_uids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="sarpy.io.BRUKER_classes.Scan.store_adata">
 <tt class="descname">store_adata</tt><big>(</big><em>pdata_idx=0</em>, <em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan.store_adata" title="Permalink to this definition">¶</a></dt>
@@ -642,7 +759,7 @@ Typically the first one (pdata_idx=0)</p>
 
 <dl class="class">
 <dt id="sarpy.io.BRUKER_classes.Study">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Study</tt><big>(</big><em>root</em>, <em>absolute_root=False</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Study" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Study</tt><big>(</big><em>root</em>, <em>absolute_root=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Study" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>A study in BRUKER parlance is a collection of scans performed on
 on subject (typically within a day, without interruption). A study
@@ -653,11 +770,16 @@ or more subdirectories which are scans.</p>
 <tt class="descname">find_scan_by_protocol</tt><big>(</big><em>protocol_name</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Study.find_scan_by_protocol" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="sarpy.io.BRUKER_classes.Study.scans">
+<tt class="descname">scans</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Study.scans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="sarpy.io.BRUKER_classes.StudyCollection">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">StudyCollection</tt><big>(</big><em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.StudyCollection" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">StudyCollection</tt><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.StudyCollection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>A StudyCollection can have multiple studies (in BRUKER speak) which can in 
 turn have multiple scans. It can be initialised by pointing it 
@@ -692,14 +814,6 @@ the Experiment class.</p>
 <tt class="descname">get_SUBJECT_id</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.StudyCollection.get_SUBJECT_id" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</dd></dl>
-
-<dl class="class">
-<dt id="sarpy.io.BRUKER_classes.dict2obj">
-<em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">dict2obj</tt><big>(</big><em>dictionary</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.dict2obj" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>Helper class to turn dictionary keys into class attributes.
-It&#8217;s so much nicer to refer to them that way.</p>
 </dd></dl>
 
 <dl class="function">
@@ -893,6 +1007,78 @@ routine of the same name.</p>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 </dd></dl>
 
+<dl class="class">
+<dt id="sarpy.io.descriptortest.dict_plus">
+<em class="property">class </em><tt class="descclassname">sarpy.io.descriptortest.</tt><tt class="descname">dict_plus</tt><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.descriptortest.dict_plus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.io.descriptortest.lazy_property_desc">
+<em class="property">class </em><tt class="descclassname">sarpy.io.descriptortest.</tt><tt class="descname">lazy_property_desc</tt><big>(</big><em>fget</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.descriptortest.lazy_property_desc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.io.descriptortest.tryout">
+<em class="property">class </em><tt class="descclassname">sarpy.io.descriptortest.</tt><tt class="descname">tryout</tt><big>(</big><em>someval</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.descriptortest.tryout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<dl class="attribute">
+<dt id="sarpy.io.descriptortest.tryout.adata">
+<tt class="descname">adata</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.descriptortest.tryout.adata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.io.descriptortest.tryout.getname">
+<tt class="descname">getname</tt><big>(</big><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.descriptortest.tryout.getname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.io.descriptortest.tryout.name">
+<tt class="descname">name</tt><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.descriptortest.tryout.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.io.descriptortest.tryout.setname">
+<tt class="descname">setname</tt><big>(</big><em>value</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.descriptortest.tryout.setname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.io.lazy_property">
+<span id="lazy-property-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">lazy_property</span></tt> Module<a class="headerlink" href="#module-sarpy.io.lazy_property" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Mar 21 16:06:35 2013</p>
+<p>&#64;author: stefan</p>
+<dl class="class">
+<dt id="sarpy.io.lazy_property.lazy_property">
+<em class="property">class </em><tt class="descclassname">sarpy.io.lazy_property.</tt><tt class="descname">lazy_property</tt><big>(</big><em>fget</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/lazy_property.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.lazy_property.lazy_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Meant to be used for lazy evaluation of an object attribute.
+property should represent non-mutable data, as it replaces itself.</p>
+<p>An example illustrates the use. First define a class that contains
+a lazy_property. That call it and observe how the calculation is 
+only performed once.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nd">@lazy_property</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="n">calcs</span> <span class="o">=</span> <span class="mi">42</span> <span class="c"># do a lot of calculation here</span>
+<span class="gp">... </span>        <span class="k">print</span><span class="p">(</span><span class="s">&#39;phew, this took a lot of effort - glad I do this so rarely...&#39;</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">calcs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">=</span><span class="n">Test</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">__dict__</span>
+<span class="go">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">results</span>
+<span class="go">phew, this took a lot of effort - glad I do this so rarely...</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">results</span>  <span class="c"># on a second call the calculation is not needed !</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">__dict__</span>  <span class="c"># see how results is no a proper attribute</span>
+<span class="go">{&#39;results&#39;: 42}</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </div>
 <div class="section" id="module-sarpy.io.obj2dict">
 <span id="obj2dict-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">obj2dict</span></tt> Module<a class="headerlink" href="#module-sarpy.io.obj2dict" title="Permalink to this headline">¶</a></h2>
@@ -922,11 +1108,13 @@ routine of the same name.</p>
 <li><a class="reference internal" href="#">io Package</a><ul>
 <li><a class="reference internal" href="#module-sarpy.io.AData_classes"><tt class="docutils literal"><span class="pre">AData_classes</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.BRUKERIO"><tt class="docutils literal"><span class="pre">BRUKERIO</span></tt> Module</a></li>
-<li><a class="reference internal" href="#bruker-classes-module"><tt class="docutils literal"><span class="pre">BRUKER_classes</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.io.BRUKERIO_ay"><tt class="docutils literal"><span class="pre">BRUKERIO_ay</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.io.BRUKER_classes"><tt class="docutils literal"><span class="pre">BRUKER_classes</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.SARlogger"><tt class="docutils literal"><span class="pre">SARlogger</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.check_fid_acqp_method"><tt class="docutils literal"><span class="pre">check_fid_acqp_method</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.congrid"><tt class="docutils literal"><span class="pre">congrid</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.descriptortest"><tt class="docutils literal"><span class="pre">descriptortest</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.io.lazy_property"><tt class="docutils literal"><span class="pre">lazy_property</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.obj2dict"><tt class="docutils literal"><span class="pre">obj2dict</span></tt> Module</a></li>
 </ul>
 </li>
@@ -935,9 +1123,6 @@ routine of the same name.</p>
   <h4>Previous topic</h4>
   <p class="topless"><a href="sarpy.fmoosvi.html"
                         title="previous chapter">fmoosvi Package</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="setup.html"
-                        title="next chapter">setup Module</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/sarpy.io.txt"
@@ -972,13 +1157,9 @@ routine of the same name.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="setup.html" title="setup Module"
-             >next</a> |</li>
-        <li class="right" >
           <a href="sarpy.fmoosvi.html" title="fmoosvi Package"
              >previous</a> |</li>
         <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li>
-          <li><a href="modules.html" >sarpy Documentation</a> &raquo;</li>
           <li><a href="sarpy.html" >sarpy Package</a> &raquo;</li> 
       </ul>
     </div>
