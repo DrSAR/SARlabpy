@@ -4,7 +4,7 @@ sarpy Package
 :mod:`sarpy` Package
 --------------------
 
-.. automodule:: sarpy
+.. automodule:: sarpy.__init__
     :members:
     :undoc-members:
     :show-inheritance:

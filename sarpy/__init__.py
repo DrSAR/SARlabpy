@@ -1,3 +1,9 @@
+'''
+Central __init__.py file that pulls various typically used functions from the
+various subpackes into the main sarpy namespace. This way, e.g., instead of using the
+cumbersome :py:class:`sarpy.io.BRUKER_classes.Scan()` users can use the rather 
+snappy :py:class:`sarpy.Scan()`.
+'''
 version = '0.1'
 release = version + 'alpha'
 

@@ -1,14 +1,6 @@
 fmoosvi Package
 ===============
 
-:mod:`BSanalysis` Module
-------------------------
-
-.. automodule:: sarpy.fmoosvi.BSanalysis
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`analysis` Module
 ----------------------
 

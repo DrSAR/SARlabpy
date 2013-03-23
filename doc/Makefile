@@ -49,7 +49,9 @@ html:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 apidoc:
-	sphinx-apidoc -f -o . --doc-project='sarpy Documentation' ./..
+	sphinx-apidoc -f -o . --doc-project='sarpy Documentation' ./../sarpy # exclusion can be added
+	# but have to given with absolute (?!) path names. Also, they have to be directories. Files
+	# like setup.py can not be excluded. Current compromise only apidoc the sarpy directory and below.
 	@echo "apidoc traversal done"
 
 gh-docs-checkedout:

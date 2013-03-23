@@ -5,5 +5,3 @@ sarpy Documentation
    :maxdepth: 4
 
    sarpy
-   setup
-   test
