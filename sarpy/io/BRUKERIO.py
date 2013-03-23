@@ -806,10 +806,22 @@ def read2dseq(scandirname,
     
     # Finally, shape the data so all frames are put into separate dimensions.
     data = data.reshape(matrix_size)        
-    # TODO: check wheher to transpose so that time, z, y, x -> x, y, z, time
-    data = data.transpose( numpy.arange(len(matrix_size),0,-1)-1)
-                          
-                                  
+    # there are two kinsof transposition needed:
+    #  (a) transpose so that time, z, y, x -> x, y, z, time
+    #  (b) account for the row-major preference in python and for column
+    #      major in paravision -> this equates to an in-plane transpose
+    #      (swapping x for y)
+    swp_axis = range(len(matrix_size)-1)
+    swp_axis.reverse()
+    swp_axis.insert(1,len(matrix_size)-1)
+    data = data.transpose(swp_axis)
+    # and now we have to apply thesame logic to te axis descriptors
+    # which have already been built from revere accomplishing the 
+    # transposition (a) above. watch the beautiful pythn index swap in 
+    # action. a,b = b,a ... genius!
+    dimcomment[0], dimcomment[1] = dimcomment[1], dimcomment[0]
+    dimdesc[0], dimdesc[1] = dimdesc[1], dimdesc[0]
+
     return {'data':data, 
             'dimcomment':dimcomment,
             'dimdesc':dimdesc,
