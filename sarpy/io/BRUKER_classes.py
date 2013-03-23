@@ -5,12 +5,17 @@ Class Definitions for BRUKER data
 import os
 import re
 import glob
+
+import numpy
+import nibabel
+
 import BRUKERIO
 import AData_classes
 from lazy_property import lazy_property
 
 import logging
 logger=logging.getLogger('sarpy.io.BRUKER_classes')
+
 
 dataroot = os.path.expanduser(os.path.join('~','data'))
 
@@ -118,8 +123,24 @@ class PDATA_file(object):
         '''
         return AData_classes.AData.fromdata(self, *args, **kwargs)
 
+    def write2nii(self,filename):
+        '''
+        Write the data originating from a 2dseq (BRUKER) reconstruction to
+        a Nifti file format. 
+        
+        TODO: Header information from visu_pars.
 
+        Examples:
+            >>> import tempfile
+            >>> scn = Scan(os.path.join('readfidTest.ix1','3'))
+            >>> fname = os.path.join(tempfile.gettempdir(),'readfid.nii')
+            >>> print('writing tempfile %s' % fname) #doctest:+ELLIPSIS
+            writing tempfile ...readfid.nii
+            >>> scn.pdata[0].write2nii(fname)
 
+        '''
+        nibabel.Nifti1Image(self.data, numpy.eye(4)).to_filename(filename)
+        
 class Scan(object):
     '''
     Object to represent a BRUKER scan consisting, typically, of FID_file 
@@ -648,7 +669,7 @@ class Experiment(StudyCollection):
         >>> a=Experiment('NecS3')
         >>> a       # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Experiment object: Experiment("NecS3")
-           studies: --Total (30)--
+           studies: --Total (...)--
                     NecS3Hs01a.iJ1
                     ...
         '''
