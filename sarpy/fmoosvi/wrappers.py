@@ -31,28 +31,43 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, t
         
     return auc
     
-def calculate_BSB1map(Experiment_object, protocol_name = '07_bSB1mapFLASH'):
+def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH', \
+                      POI_protocol_name = '04_ubcLL+'):
     
-    # TODo = need to actually fix this!
+    # Can take in an experiment, a list of scans (4 - BS + 1 scan with poi),
+    # a study
     
-    print ("Why are you using this!? It' not implemented yet")
+    print ("Why are you using this!? It's not implemented yet")
     
     try:
-        scan_list = Experiment_object.find_scan_by_protocol(protocol_name)
-    except:
-        try: 
+        if type(Bruker_object) == sarpy.io.BRUKER_classes.Experiment \
+          or type(Bruker_object) == sarpy.io.BRUKER_classes.Study:
+              
+            scan_list = Bruker_object.find_scan_by_protocol(BS_protocol_name)
+            LL_scan_list = Bruker_object.find_scan_by_protocol(POI_protocol_name)
+        else:
             scan_list = []                                
-            for study in Experiment_object:
-                scan_list.append(study.find_scan(protocol_name))
+            for study in Bruker_object:
+                scan_list.append(study.find_scan(BS_protocol_name))
+                LL_scan_list = Bruker_object.find_scan_by_protocol(POI_protocol_name)
             print('You put in a list of studies, try to avoid that')
-        except:
-            raise
+    except:
+        raise
 
     ## Now to calculate the B1 map
-
-    b1map  = []
-    for scan in scan_list:
-        b1map.append(sarpy.fmoosvi.analysis.h_BS_B1map(scan))
+    b1map = []
+    
+    for scan in LL_scan_list:
+        zero_BSminus = scan_list[0]
+        zero_BSplus = scan_list[1]
+        high_BSminus = scan_list[2]
+        high_BSplus = scan_list[3]
+        scan_with_POI = LL_scan_list
+    
+    
+    b1map.append(sarpy.fmoosvi.analysis.h_BS_B1map(zero_BSminus, zero_BSplus, \
+                                                   high_BSminus, high_BSplus, \
+                                                   scan_with_POI))
         
     return b1map
 
@@ -112,4 +127,4 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map =
         print scan
         T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,\
                                                       flip_angle_map = flip_angle_map))
-    return T1_map    
+    return T1_map

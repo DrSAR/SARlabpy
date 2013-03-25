@@ -5,6 +5,8 @@ Created on Tue Mar 12 14:41:54 2013
 @author: fmoosvi
 """
 
+import sarpy
+
 def get_num_slices(scan_object, pdata_num = 0):
     
     """
@@ -35,3 +37,23 @@ def get_num_slices(scan_object, pdata_num = 0):
                 num_slices = int(VisuFGOrderDesc_element[0])
                 
     return num_slices
+
+
+def get_patients_from_experiment(Experiment_name, check = False):
+    
+    
+    Exp = sarpy.Experiment(Experiment_name)
+    
+    Patients = []
+    
+    for study in Exp.studies:
+        subject_name = study.subject.SUBJECT_name[1].strip('<>')
+        study_list = sarpy.Patient(subject_name)
+        Patients.append(study_list)
+        
+        if check:
+            print('Patient {0} has {1} sessions.'.format(subject_name,len(study_list.studies)))
+    
+    return Patients
+    
+        
