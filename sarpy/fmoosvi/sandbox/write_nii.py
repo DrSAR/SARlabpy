@@ -135,24 +135,43 @@ WHY 3 METHODS?
 """
 import sarpy
 import nibabel
+import numpy
+
+scan = sarpy.Experiment('readfid').studies[0].scans[3]
+pdata = scan.pdata[0]
+data = scan.pdata[0].data
+visu_pars = pdata.visu_pars
+reco = pdata.reco
+d3proc = pdata.d3proc
+
+#def write_nii(data, append_label = ''):
+    
+header = nibabel.nifti1.Nifti1Header()
+
+# Finished
+
+data_shape = numpy.array(pdata.data.shape)
+header.set_data_shape(data_shape) # Safest way to get data dimensions at the moment
+header.set_xyzt_units(xyz=2,t=16) #mm = 2, s = 8, ms = 16
+
+header.set_dim_info(freq=0, phase=1, slice=2) # Still trying to figure out what the est way to do this is.
+
+# Potentially non-existent settings
+try:
+    #TODO: Deal with case when slope an offset are not identical
+    header.set_slope_inter(slope = visu_pars.VisuCoreDataSlope[0], inter = visu_pars.VisuCoreDataOffs[0])
+    
+    #TODO: Stefan this is for you!
+    #header.set_qform(affine, code=None, strip_shears=True)
+
+except:
+    print('Could not set Data slope, Intercept')
+
+nibabel.nifti1.Nifti1Pair(data,affine=None,header=header)
 
 
-def write_nii(scan_object, filename = 'test.nii'):
-    
-    header = nibabel.nifti1.Nifti1Header()
-    
-    header.set_data_shape([128, 64, 16, 1])
-    header.set_dim_info(freq=0, phase=1, slice=2) # TODO: Hmm, why does nifti want to know freq/phase/slice
-    header.set_xyzt_units(xyz=2,t=16) #TODO: find the units of these number. #mm = 2, s = 8, ms = 16
-    header.set_slope_inter(slope = 5, inter = 0)
-    
-     header.set_qform(affine, code=None, strip_shears=True) #TODO: Okay this is gonna be the hardest
+# TODO: Figure out why nifti wants to know this    
 
-    
-    
-    
-    
-    
     
     
     
