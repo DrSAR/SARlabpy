@@ -136,6 +136,7 @@ WHY 3 METHODS?
 import sarpy
 import nibabel
 import numpy
+import os
 
 scan = sarpy.Experiment('readfid').studies[0].scans[3]
 pdata = scan.pdata[0]
@@ -167,11 +168,13 @@ try:
 except:
     print('Could not set Data slope, Intercept')
 
-nibabel.nifti1.Nifti1Pair(data,affine=None,header=header)
+img_pair = nibabel.nifti1.Nifti1Pair(data,affine=None,header=header)
 
 
-# TODO: Figure out why nifti wants to know this    
+# Save niftifile
 
+nibabel.nifti1.save(img_pair,'test')
+print('Your file test.img has been printed in: ',os.getcwd())
     
     
     
