@@ -128,7 +128,37 @@ class PDATA_file(object):
         Write the data originating from a 2dseq (BRUKER) reconstruction to
         a Nifti file format. 
         
-        TODO: Header information from visu_pars.
+        `Original Header information <http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/`_
+        But `this site is by far the best resource for info on the Nifti header:
+        <http://brainder.org/2012/09/23/the-nifti-file-format/>`
+
+        There are 3 different methods by which continuous coordinates can be 
+        attached to voxels. We are using method 2:
+        METHOD 2 (used when qform_code > 0, which should be the "normal" case):
+        `Ref: <http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/nifti1fields_pages/qsform.html#ref3>`_
+        ---------------------------------------------------------------------
+        The (x,y,z) coordinates are given by the pixdim[] scales, a rotation
+        matrix, and a shift.  This method is intended to represent
+        "scanner-anatomical" coordinates, which are often embedded in the
+        image header (e.g., DICOM fields (0020,0032), (0020,0037), (0028,0030),
+        and (0018,0050)), and represent the nominal orientation and location of
+        the data.  This method can also be used to represent "aligned"
+        coordinates, which would typically result from some post-acquisition
+        alignment of the volume to a standard orientation (e.g., the same
+        subject on another day, or a rigid rotation to true anatomical
+        orientation from the tilted position of the subject in the scanner).
+        The formula for (x,y,z) in terms of header parameters and (i,j,k) is:
+
+
+        [ x ]   [ R11 R12 R13 ] [        pixdim[1] * i ]   [ qoffset_x ]
+        [ y ] = [ R21 R22 R23 ] [        pixdim[2]  j ] + [ qoffset_y ]
+        [ z ]   [ R31 R32 R33 ] [ qfac  pixdim[3] * k ]   [ qoffset_z ]
+
+        In methods 2 and 3, the (x,y,z) axes refer to a subject-based coordinate system,
+       with
+       +x = Right  +y = Anterior  +z = Superior.
+       This is a right-handed coordinate system.  However, the exact direction
+       these axes point with respect to the subject depends on qform_code
 
         Examples:
             >>> import tempfile
@@ -139,7 +169,59 @@ class PDATA_file(object):
             >>> scn.pdata[0].write2nii(fname)
 
         '''
-        nibabel.Nifti1Image(self.data, numpy.eye(4)).to_filename(filename)
+        header = nibabel.nifti1.Nifti1Header()
+        # Safest way to get data dimensions at the moment
+        header.set_data_shape(numpy.array(self.data.shape)) 
+        # setting units: it's mm = 2, s = 8, ms = 16
+        header.set_xyzt_units(xyz=2,t=16) 
+        # Still trying to figure out what the easiest way to do this is.
+        header.set_dim_info(freq=0, phase=1, slice=2) 
+        
+        # Potentially non-existent settings
+        try:
+            # check whether all slopes are the same 
+            # (i.e. set of list has length 1) -> exception
+            #TODO: Deal with case when slope an offset are not identical            
+            if len(set(self.visu_pars.VisuCoreDataSlope)) > 1:
+                raise ValueError("Don't know how to deal with VisuCoreDataSlope"+
+                                "that vary from frame to frame")
+            if len(set(self.visu_pars.VisuCoreDataOffs)) > 1:
+                raise ValueError("Don't know how to deal with VisuCoreDataOffs"+
+                                    "that vary from frame to frame")
+                    
+            slope = self.visu_pars.VisuCoreDataSlope[0] 
+            inter = self.visu_pars.VisuCoreDataOffs[0]
+        except AttributeError:
+            logger.warn('Could not set Data slope, or Intercept\n'+
+                    'assuming identity.')
+            slope = 1
+            inter = 0
+
+        header.set_slope_inter(slope = slope, inter = inter)
+
+        try:
+            rot_mat = self.visu_pars.VisuCoreOrientation
+            for i in xrange(9):
+                if len(set(rot_mat[i::9])) > 1:
+                    raise ValueError("Different slicepacks with different " +
+                                "orientations!")
+        except AttributeError:
+            logger.warn('Could not set rotation \nassuming Identity.')
+            rot_mat = numpy.eye(3).reshape(9)
+
+        try:
+            qoffset = self.visu_pars.VisuCorePosition[0:3]
+        except AttributeError:
+            logger.warn('Could not find positional offset\nassuming zero.')
+            qoffset = [0,0,0]
+            
+        aff = numpy.empty((4,4))
+        aff[0:3,0:3] = numpy.array([rot_mat[0:3], rot_mat[3:6], rot_mat[6:9]])
+        aff[3,:] = [0, 0, 0, 1]
+        aff[0:3,3] = qoffset
+
+        img_pair = nibabel.nifti1.Nifti1Image(self.data,aff,header=header)
+        img_pair.to_filename(filename)
         
 class Scan(object):
     '''
