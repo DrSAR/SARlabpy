@@ -743,8 +743,9 @@ def read2dseq(scandirname,
     # and offsets applied, b) string list describing each dimension, and c) 
     # header data containing parameters from the visu_pars and reco files.
     # files.
-                          
-    matrix_size = visu_pars['VisuCoreSize']
+                      
+    # make a copy of this parameter so as not to change the original!                      
+    matrix_size = visu_pars['VisuCoreSize'][:]
 
     if RECO_transposition == 0:
         dimdesc=['readout','PE1']
