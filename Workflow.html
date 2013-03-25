@@ -68,15 +68,14 @@ git commit <span class="c"># maybe even a few times</span>
 git push origin mynewfeature  <span class="c"># if you want a backup</span>
 </pre></div>
 </div>
-<ul class="simple">
-<li>The objective here is that your code will at somepoint work with the rest of the code (which, of course, is also evolving). Hence to effect that merge at some future date, you need to stay on top of things. You do this by &#8216;rebasing&#8217; all your as yet unmerged changes on the most recent version of master.</li>
-</ul>
+</li>
+<li><p class="first">The objective here is that your code will at somepoint work with the rest of the code (which, of course, is also evolving). Hence to effect that merge at some future date, you need to stay on top of things. You do this by &#8216;rebasing&#8217; all your as yet unmerged changes on the most recent version of master.</p>
 <div class="highlight-bash"><div class="highlight"><pre>git fetch
 git rebase origin/master <span class="c"># you do this while still checked out on mynewfeature</span>
 </pre></div>
 </div>
-<p>p
-* If time comes to make the feature, bugfix, whatever available, <strong>tell me</strong>. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:</p>
+</li>
+<li><p class="first">If time comes to make the feature, bugfix, whatever available, <strong>tell me</strong>. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:</p>
 <div class="highlight-bash"><div class="highlight"><pre>git checkout master
 git merge --no-ff mynewfeature
 git push

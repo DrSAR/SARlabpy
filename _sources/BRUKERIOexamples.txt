@@ -4,9 +4,9 @@ Examples for BRUKERIO
 Reading Bruker headers and data shouldn't be all that complicated. Here are
 some examples on how to do this:
 
->>> import SARlabpy
->>> fname = 'SARlabpy/test/test-data/Moosvi.ii1/2/acqp'
->>> header = SARlabpy.readJCAMP(fname)
+>>> import sarpy
+>>> fname = 'sarpy/test/test-data/Moosvi.ii1/2/acqp'
+>>> header = sarpy.readJCAMP(fname)
 
 The header is a dictionary with parameter names as the keys:
 
@@ -15,18 +15,18 @@ The header is a dictionary with parameter names as the keys:
 
 All of the BRUKER header files are in this JCAMP format. So the *method* parameter file can be loaded as well:
 
->>> fname = 'SARlabpy/test/test-data/Moosvi.ii1/2/method'
->>> header = SARlabpy.readJCAMP(fname)
+>>> fname = 'sarpy/test/test-data/Moosvi.ii1/2/method'
+>>> header = sarpy.readJCAMP(fname)
 >>> header['ExcPulse']
 '(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, < hermite.exc>, 5400, 0.1794, 50, 0.1024, conventional)'
 
 Loading k-space data (BRUKER calls the file fid) is also doable:
 
->>> fname = 'SARlabpy/test/test-data/Moosvi.ii1/2/fid'
->>> data = SARlabpy.readfid(fname)
-/tmp/SARlabpy/SARlabpy/test/test-data/Moosvi.ii1/2
-opening /tmp/SARlabpy/SARlabpy/test/test-data/Moosvi.ii1/2/acqp
-opening /tmp/SARlabpy/SARlabpy/test/test-data/Moosvi.ii1/2/method
+>>> fname = 'sarpy/test/test-data/Moosvi.ii1/2/fid'
+>>> data = sarpy.readfid(fname)
+/tmp/sarpy/sarpy/test/test-data/Moosvi.ii1/2
+opening /tmp/sarpy/sarpy/test/test-data/Moosvi.ii1/2/acqp
+opening /tmp/sarpy/sarpy/test/test-data/Moosvi.ii1/2/method
 ACQ_size = [128, 128, 15], NR=1, ACQ_obj_order=[0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13], EncSteps=[  
    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17
   18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35
