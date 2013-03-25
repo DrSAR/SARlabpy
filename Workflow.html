@@ -62,7 +62,8 @@
 </li>
 <li><p class="first">Any given feature, bugfix, enhancement should be worked on in a (local) branch. Feel free to push them to the central repo (as that branch) but nobody has any right to expect to find workable code in there.</p>
 <div class="highlight-bash"><div class="highlight"><pre>git checkout master
-git checkout -b mynewfeature <span class="c"># same as git branch mynewfeature ; git checkout mynewfeature</span>
+git pull                 <span class="c"># this brings your local master in line with what&#39;s on origin</span>
+git checkout -b mynewfeature <span class="c"># same as: git branch mynewfeature ; git checkout mynewfeature</span>
 <span class="c"># do work ...</span>
 git commit <span class="c"># maybe even a few times</span>
 git push origin mynewfeature  <span class="c"># if you want a backup</span>
@@ -75,15 +76,22 @@ git rebase origin/master <span class="c"># you do this while still checked out o
 </pre></div>
 </div>
 </li>
-<li><p class="first">If time comes to make the feature, bugfix, whatever available, <strong>tell me</strong>. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:</p>
-<div class="highlight-bash"><div class="highlight"><pre>git checkout master
+<li><p class="first">If time comes to make the feature, bugfix, whatever available, <strong>tell me</strong>. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. If you have pushed before then a simple <cite>git push origin mynewfeature</cite> will fail (&#8220;Updates were rejected because the tip of your current branch is behind its remote counterpart&#8221;) You absolutely have to resist to follow git&#8217;s usually helpful advice in merging the remote changes, pulling or whatever. What is required is a <strong>force push</strong> (a feature which is absent from a few GUI frontends to git! Even though it is quite safe if used on branches that are your own alone):</p>
+<div class="highlight-bash"><div class="highlight"><pre>git push -f origin mynewfeature
+</pre></div>
+</div>
+</li>
+</ul>
+<p>And this is what I will do:</p>
+<blockquote>
+<div><div class="highlight-bash"><div class="highlight"><pre>git checkout master
 git merge --no-ff mynewfeature
 git push
 </pre></div>
 </div>
-</li>
-<li><p class="first">As a convention for the use of branches I suggest:</p>
+</div></blockquote>
 <ul class="simple">
+<li>As a convention for the use of branches I suggest:<ul>
 <li><em>master</em> the slighlty more sacrosanct branch</li>
 <li><em>hg-pages</em> do not touch! this is a special orphan branch that is used for auto-documentation</li>
 <li><em>firas/xxx</em> replace firas with your name or initials and xxx if you find that there is a feature that you are working on at the moment. A branch that is labelled with a name is totally off-limits for anyone else to force push to! We have log files. And we will find you.</li>

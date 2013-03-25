@@ -13,7 +13,8 @@ I have come to believe in the rebase workflow and hence I suggest we do the foll
   .. code-block:: bash
 
         git checkout master
-        git checkout -b mynewfeature # same as git branch mynewfeature ; git checkout mynewfeature
+        git pull                 # this brings your local master in line with what's on origin
+        git checkout -b mynewfeature # same as: git branch mynewfeature ; git checkout mynewfeature
         # do work ...
         git commit # maybe even a few times
         git push origin mynewfeature  # if you want a backup
@@ -25,7 +26,13 @@ I have come to believe in the rebase workflow and hence I suggest we do the foll
         git fetch
         git rebase origin/master # you do this while still checked out on mynewfeature
 
-* If time comes to make the feature, bugfix, whatever available, **tell me**. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:
+* If time comes to make the feature, bugfix, whatever available, **tell me**. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. If you have pushed before then a simple `git push origin mynewfeature` will fail ("Updates were rejected because the tip of your current branch is behind its remote counterpart") You absolutely have to resist to follow git's usually helpful advice in merging the remote changes, pulling or whatever. What is required is a **force push** (a feature which is absent from a few GUI frontends to git! Even though it is quite safe if used on branches that are your own alone):
+        
+  .. code-block:: bash
+
+        git push -f origin mynewfeature
+ 
+And this is what I will do:
 
   .. code-block:: bash
 

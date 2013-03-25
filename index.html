@@ -52,7 +52,7 @@
 <h1>SARpy&#8217;s documentation!<a class="headerlink" href="#sarpy-s-documentation" title="Permalink to this headline">¶</a></h1>
 <p>The code is hosted in the <a class="reference external" href="https://github.com/DrSAR/SARlabpy.git">private repository by github</a>.
 If you are stuck with branches and commits, try this quickstart: (assuming you have no uncommitted local changes or local commits not pushed to the central repo that you care about):</p>
-<div class="highlight-bash"><div class="highlight"><pre>rm -rf SARpy <span class="c"># remove any traces of the local copy of the repository</span>
+<div class="highlight-bash"><div class="highlight"><pre>rm -rf SARlabpy <span class="c"># remove any traces of the local copy of the repository - you might have called it something else in the past</span>
 git clone git@pfeifer.phas.ubc.ca:SARlabpy <span class="c"># make a new fresh clone</span>
 <span class="nb">cd </span>SARlabpy <span class="c"># you will now be on the master branch</span>
 git checkout --track origin/thatbranchthatIusedbefore <span class="c"># if you are continuing on an old existing branch</span>
@@ -92,14 +92,39 @@ git checkout -b newfeaturebranch <span class="c"># if you are starting on someth
 </ul>
 </div>
 </div>
-<div class="section" id="doc-s-harvested-from-source-code">
-<h2>Doc&#8217;s harvested from source code<a class="headerlink" href="#doc-s-harvested-from-source-code" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="autodocumentation-harvested-from-code-base">
+<h2>Autodocumentation harvested from code base<a class="headerlink" href="#autodocumentation-harvested-from-code-base" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">sarpy Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sarpy.html">sarpy Package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="setup.html">setup Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="test.html">test Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sarpy.html">sarpy Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sarpy.html#id1"><tt class="docutils literal"><span class="pre">sarpy</span></tt> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sarpy.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sarpy.DCE.html">DCE Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.DCE.html#tammo-lib-module"><tt class="docutils literal"><span class="pre">tammo_lib</span></tt> Module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sarpy.fmoosvi.html">fmoosvi Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.fmoosvi.html#module-sarpy.fmoosvi.analysis"><tt class="docutils literal"><span class="pre">analysis</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.fmoosvi.html#module-sarpy.fmoosvi.getters"><tt class="docutils literal"><span class="pre">getters</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.fmoosvi.html#module-sarpy.fmoosvi.test_suite"><tt class="docutils literal"><span class="pre">test_suite</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.fmoosvi.html#module-sarpy.fmoosvi.wrappers"><tt class="docutils literal"><span class="pre">wrappers</span></tt> Module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sarpy.io.html">io Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.AData_classes"><tt class="docutils literal"><span class="pre">AData_classes</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.BRUKERIO"><tt class="docutils literal"><span class="pre">BRUKERIO</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.BRUKERIO_ay"><tt class="docutils literal"><span class="pre">BRUKERIO_ay</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.BRUKER_classes"><tt class="docutils literal"><span class="pre">BRUKER_classes</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.SARlogger"><tt class="docutils literal"><span class="pre">SARlogger</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.check_fid_acqp_method"><tt class="docutils literal"><span class="pre">check_fid_acqp_method</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.congrid"><tt class="docutils literal"><span class="pre">congrid</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.descriptortest"><tt class="docutils literal"><span class="pre">descriptortest</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.lazy_property"><tt class="docutils literal"><span class="pre">lazy_property</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sarpy.io.html#module-sarpy.io.obj2dict"><tt class="docutils literal"><span class="pre">obj2dict</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -128,7 +153,7 @@ git checkout -b newfeaturebranch <span class="c"># if you are starting on someth
 <li><a class="reference internal" href="#howto-guides-examples">Howto, Guides, Examples</a><ul>
 </ul>
 </li>
-<li><a class="reference internal" href="#doc-s-harvested-from-source-code">Doc&#8217;s harvested from source code</a><ul>
+<li><a class="reference internal" href="#autodocumentation-harvested-from-code-base">Autodocumentation harvested from code base</a><ul>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>

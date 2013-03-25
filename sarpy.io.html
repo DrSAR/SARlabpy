@@ -25,7 +25,6 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="sarpy 0.1alpha documentation" href="index.html" />
     <link rel="up" title="sarpy Package" href="sarpy.html" />
-    <link rel="next" title="setup Module" href="setup.html" />
     <link rel="prev" title="fmoosvi Package" href="sarpy.fmoosvi.html" /> 
   </head>
   <body>
@@ -39,13 +38,9 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="setup.html" title="setup Module"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
           <a href="sarpy.fmoosvi.html" title="fmoosvi Package"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li>
-          <li><a href="modules.html" >sarpy Documentation</a> &raquo;</li>
           <li><a href="sarpy.html" accesskey="U">sarpy Package</a> &raquo;</li> 
       </ul>
     </div>  
@@ -660,10 +655,39 @@ parent object (Scan). This might be hard. Sounds like Traits to me.</p>
 <dl class="method">
 <dt id="sarpy.io.BRUKER_classes.PDATA_file.write2nii">
 <tt class="descname">write2nii</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.write2nii" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write the data originating from a 2dseq (BRUKER) reconstruction to
+<dd><blockquote>
+<div><p>Write the data originating from a 2dseq (BRUKER) reconstruction to
 a Nifti file format.</p>
-<p>TODO: Header information from visu_pars.</p>
-<dl class="docutils">
+<p><a href="#id2"><span class="problematic" id="id3">`Original Header information &lt;http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/`_</span></a>
+But <cite>this site is by far the best resource for info on the Nifti header:
+&lt;http://brainder.org/2012/09/23/the-nifti-file-format/&gt;</cite></p>
+<p>There are 3 different methods by which continuous coordinates can be 
+attached to voxels. We are using method 2:
+METHOD 2 (used when qform_code &gt; 0, which should be the &#8220;normal&#8221; case):
+<a class="reference external" href="http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/nifti1fields_pages/qsform.html#ref3">Ref:</a>
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+The (x,y,z) coordinates are given by the pixdim[] scales, a rotation
+matrix, and a shift.  This method is intended to represent
+&#8220;scanner-anatomical&#8221; coordinates, which are often embedded in the
+image header (e.g., DICOM fields (0020,0032), (0020,0037), (0028,0030),
+and (0018,0050)), and represent the nominal orientation and location of
+the data.  This method can also be used to represent &#8220;aligned&#8221;
+coordinates, which would typically result from some post-acquisition
+alignment of the volume to a standard orientation (e.g., the same
+subject on another day, or a rigid rotation to true anatomical
+orientation from the tilted position of the subject in the scanner).
+The formula for (x,y,z) in terms of header parameters and (i,j,k) is:</p>
+<p>[ x ]   [ R11 R12 R13 ] [        pixdim[1] * i ]   [ qoffset_x ]
+[ y ] = [ R21 R22 R23 ] [        pixdim[2]  j ] + [ qoffset_y ]
+[ z ]   [ R31 R32 R33 ] [ qfac  pixdim[3] * k ]   [ qoffset_z ]</p>
+<p>In methods 2 and 3, the (x,y,z) axes refer to a subject-based coordinate system,</p>
+</div></blockquote>
+<p>with
++x = Right  +y = Anterior  +z = Superior.
+This is a right-handed coordinate system.  However, the exact direction
+these axes point with respect to the subject depends on qform_code</p>
+<blockquote>
+<div><dl class="docutils">
 <dt>Examples:</dt>
 <dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;readfidTest.ix1&#39;</span><span class="p">,</span><span class="s">&#39;3&#39;</span><span class="p">))</span>
@@ -675,6 +699,7 @@ a Nifti file format.</p>
 </div>
 </dd>
 </dl>
+</div></blockquote>
 </dd></dl>
 
 </dd></dl>
@@ -1128,9 +1153,6 @@ only performed once.</p>
   <h4>Previous topic</h4>
   <p class="topless"><a href="sarpy.fmoosvi.html"
                         title="previous chapter">fmoosvi Package</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="setup.html"
-                        title="next chapter">setup Module</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/sarpy.io.txt"
@@ -1165,13 +1187,9 @@ only performed once.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="setup.html" title="setup Module"
-             >next</a> |</li>
-        <li class="right" >
           <a href="sarpy.fmoosvi.html" title="fmoosvi Package"
              >previous</a> |</li>
         <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li>
-          <li><a href="modules.html" >sarpy Documentation</a> &raquo;</li>
           <li><a href="sarpy.html" >sarpy Package</a> &raquo;</li> 
       </ul>
     </div>

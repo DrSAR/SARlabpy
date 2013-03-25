@@ -56,8 +56,8 @@
 <h1>Examples for BRUKERIO<a class="headerlink" href="#examples-for-brukerio" title="Permalink to this headline">¶</a></h1>
 <p>Reading Bruker headers and data shouldn&#8217;t be all that complicated. Here are
 some examples on how to do this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sarpy</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;sarpy/test/test-data/Moosvi.ii1/2/acqp&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sarpy</span><span class="o">,</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~&#39;</span><span class="p">),</span><span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;stefan&#39;</span><span class="p">,</span><span class="s">&#39;nmr&#39;</span><span class="p">,</span><span class="s">&#39;readfidTest.ix1&#39;</span><span class="p">,</span><span class="s">&#39;2&#39;</span><span class="p">,</span><span class="s">&#39;method&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">header</span> <span class="o">=</span> <span class="n">sarpy</span><span class="o">.</span><span class="n">readJCAMP</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
 </pre></div>
 </div>
