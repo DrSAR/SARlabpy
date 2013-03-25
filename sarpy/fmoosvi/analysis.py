@@ -52,8 +52,6 @@ def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     ########### Getting and defining parameters
     
     # Visu_pars params
-    x_size = scan_object.pdata[pdata_num].visu_pars.VisuCoreSize[0]
-    y_size = scan_object.pdata[pdata_num].visu_pars.VisuCoreSize[1]
     num_slices = getters.get_num_slices(scan_object,pdata_num)
     phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
   
@@ -74,7 +72,7 @@ def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     norm_data = h_normalize_dce(scan_object)
 
     # Now calculate the actual AUC
-    auc_data = numpy.empty([x_size,y_size,num_slices])
+    auc_data = numpy.empty([norm_data.shape[0],norm_data.shape[1],num_slices])
     
     for slice in range(num_slices):
         auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
@@ -85,19 +83,19 @@ def h_normalize_dce(scan_object, pdata_num = 0):
 
     ########### Getting and defining parameters
     
+    # Data
+    data = scan_object.pdata[pdata_num].data
+        
     # Visu_pars params
-    x_size = scan_object.pdata[pdata_num].visu_pars.VisuCoreSize[0]
-    y_size = scan_object.pdata[pdata_num].visu_pars.VisuCoreSize[1]
+    x_size = data.shape[0]
+    y_size = data.shape[1]
     num_slices = getters.get_num_slices(scan_object,pdata_num)
 
     # Method params
     reps =  scan_object.method.PVM_NRepetitions
-    
-    # Data
-    data = scan_object.pdata[pdata_num].data
-    
+
     # Calculated params      
-    inj_point = sarpy.analysis.h_inj_point(scan_object)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
@@ -106,7 +104,7 @@ def h_normalize_dce(scan_object, pdata_num = 0):
         norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1    
 
     return norm_data
-
+ 
 def h_enhancement_curve(scan_object, pdata_num = 0, mask=False):
 
     if mask:
@@ -148,7 +146,7 @@ def h_inj_point(scan_object, pdata_num = 0):
         std_slice =  numpy.std(diff_slice)
         
         try: 
-            injection_point.append(next(i for i,v in enumerate(diff_slice) if v > 3*std_slice))
+            injection_point.append(next(i for i,v in enumerate(diff_slice) if v > 2*std_slice))
         except StopIteration:
             print "Could not find the injection point, possibly okay" + str(slice)
             injection_point.append(0)
