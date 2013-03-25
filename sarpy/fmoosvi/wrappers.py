@@ -112,16 +112,4 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map =
         print scan
         T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,\
                                                       flip_angle_map = flip_angle_map))
-    return T1_map
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    return T1_map    
