@@ -216,8 +216,12 @@ def readJCAMP(filename):
                 else:
                     # this is a proper array
                     split_string = [s for s in re.split(' ',v)]
-                    LDRdict[k] = [convert_int_float_string(s) for 
-                                            s in split_string if s]
+                    if len(shape) > 1:
+                        LDRdict[k] = numpy.array([convert_int_float_string(s) for 
+                                    s in split_string if s]).reshape(shape)
+                    else:
+                        LDRdict[k] = [convert_int_float_string(s) for 
+                                    s in split_string if s]
                     logger.debug('found array({1}): {0}={2}'.
                                 format(k,shape,LDRdict[k]))
     return LDRdict
