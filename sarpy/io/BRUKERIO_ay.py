@@ -71,7 +71,8 @@ def readBrukerParx(filename):
             # match lists that are normal LDRs
             elif re.match("##.*",line):
                 # we should remove parenthesis
-                 line=[line]
+                line=re.sub("\\(.*\\)", "", line) 
+                line=[line]
 
             # this must be a line that belongs to the preceeding LDR
             # (like for strings or arrays)
