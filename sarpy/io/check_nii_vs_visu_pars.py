@@ -55,47 +55,53 @@ A case of multi-slice 2D
 
 '''
 
-def load_all_nii(dirname=os.path.expanduser('~'),
-                 visu_dicts=None):
-    nii_list = glob.glob(os.path.join(dirname, '*.nii.gz'))
-    
-    for filename in nii_list:
-        a = nibabel.Nifti1Image.from_filename(filename)
-        print('\n'+filename)
-        print a.get_affine()[0:3, 0:3].reshape(9).round(3)
-        uid = re.sub('.*\/','',filename)
-        uid = re.sub('.nii.gz$','',uid)
-        v = visu_dicts[uid]
-        rot_mat = numpy.matrix(v.VisuCoreOrientation[0]).reshape(3,3).I
-        print rot_mat.reshape(9).round(3)
-        pixdims = numpy.array(v.VisuCoreExtent).astype('float')/ \
-                  numpy.array(v.VisuCoreSize)
-        # for 2D we still need to figure out the 3rd dimension
-        if v.VisuCoreDim == 2:
-            # check distance of neigbouring Frames
-            if v.VisuCoreFrameCount == 1:
-                d = v.VisuCoreFrameThickness
-            else:
-                p1 = numpy.array(v.VisuCorePosition[0])                
-                p2 = numpy.array(v.VisuCorePosition[1])
-                d = numpy.sqrt(((p1 - p2)**2).sum())
-            pixdims = numpy.hstack([pixdims, d])
+def load_all_nii(filename=os.path.expanduser('~'),
+                 visu_dict=None):
+    v = visu_dict
+    a = nibabel.Nifti1Image.from_filename(filename)
+    print a.get_affine()[0:3, 0:3].reshape(9).round(3)
+    M_inv = numpy.matrix(v.VisuCoreOrientation[0]).reshape(3,3).I
+    print M_inv.reshape(9).round(3)
+    pixdims = numpy.array(v.VisuCoreExtent).astype('float')/ \
+              numpy.array(v.VisuCoreSize)
+    # for 2D we still need to figure out the 3rd dimension
+    if v.VisuCoreDim == 2:
+        # check distance of neigbouring Frames
+        if v.VisuCoreFrameCount == 1:
+            d = v.VisuCoreFrameThickness
+        else:
+            p1 = numpy.array(v.VisuCorePosition[0])                
+            p2 = numpy.array(v.VisuCorePosition[1])
+            d = numpy.sqrt(((p1 - p2)**2).sum())
+        pixdims = numpy.hstack([pixdims, d])
 
-        if len(pixdims) != 3:
-            raise ValueError('unexpected value for VisuCoreDim')
-        
-        print pixdims
-        
-        fktr = numpy.tile(pixdims.reshape(3,1),3).reshape(9)
-        print (numpy.asarray(rot_mat.reshape(9)) * fktr).round(3)
+    if len(pixdims) != 3:
+        raise ValueError('unexpected value for VisuCoreDim')
+    
+    print pixdims
+    
+#        fktr = numpy.tile(pixdims.reshape(3,1),3).reshape(9)
+#        print (numpy.asarray(M_inv.reshape(9)) * fktr).round(3)
 
 if __name__ == '__main__':
 
+    dirname = os.path.join(sarpy.dataroot,'nii')
+    nii_list = glob.glob(os.path.join(dirname, '*.nii.gz'))
+    
     visu_dicts = {}
-    Exp = sarpy.Experiment('PhantomOrientation')    
+    Exp = sarpy.Experiment('PhantomOrientation.iY1')    
     for study in Exp.studies:
         for scan in study.scans:
             for pdata in scan.pdata:
-                visu_dicts[pdata.visu_pars.VisuUid]=pdata.visu_pars
-    
-    load_all_nii(dirname = os.path.join(sarpy.dataroot,'nii'), visu_dicts=visu_dicts)
+                nii_file = os.path.join(dirname,
+                                          pdata.uid()+'.nii.gz')
+                if os.path.isfile(nii_file):
+                    print('\n'+nii_file)
+                    print('{0}\ ({1})'.format(scan.acqp.ACQ_protocol_name,                                    ' '.join(scan.method.PVM_SPackArrSliceOrient)))
+                    load_all_nii(nii_file, pdata.visu_pars)
+                                
+#    for filename in nii_list:
+#        uid = re.sub('.*\/','',filename)
+#        uid = re.sub('.nii.gz$','',uid)
+#        load_all_nii(filename, visu_dict=visu_dicts[uid])
+                
