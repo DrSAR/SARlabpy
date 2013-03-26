@@ -66,7 +66,7 @@ def load_all_nii(dirname=os.path.expanduser('~'),
         uid = re.sub('.*\/','',filename)
         uid = re.sub('.nii.gz$','',uid)
         v = visu_dicts[uid]
-        print numpy.array(v.VisuCoreOrientation[0:9]).astype('float').round(3)
+        print numpy.array(v.VisuCoreOrientation[0]).astype('float').round(3)
         pixdims = numpy.array(v.VisuCoreExtent).astype('float')/ \
                   numpy.array(v.VisuCoreSize)
         # for 2D we still need to figure out the 3rd dimension
@@ -75,8 +75,8 @@ def load_all_nii(dirname=os.path.expanduser('~'),
             if v.VisuCoreFrameCount == 1:
                 d = v.VisuCoreFrameThickness
             else:
-                p1 = numpy.array(v.VisuCorePosition[0:3])                
-                p2 = numpy.array(v.VisuCorePosition[3:6])
+                p1 = numpy.array(v.VisuCorePosition[0])                
+                p2 = numpy.array(v.VisuCorePosition[1])
                 d = numpy.sqrt(((p1 - p2)**2).sum())
             pixdims = numpy.hstack([pixdims, d])
 
@@ -95,4 +95,4 @@ if __name__ == '__main__':
             for pdata in scan.pdata:
                 visu_dicts[pdata.visu_pars.VisuUid]=pdata.visu_pars
     
-    load_all_nii(dirname = '/tmp/nii', visu_dicts=visu_dicts)
+    load_all_nii(dirname = os.path.join(sarpy.dataroot,'nii'), visu_dicts=visu_dicts)
