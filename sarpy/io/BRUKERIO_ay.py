@@ -34,7 +34,7 @@ def readBrukerParx(filename):
     import sys
     
     try:
-        print('opening ',filename)
+#        print('opening ',filename)
         JCAMPfile = open(filename, "r")
         JCAMPdata = JCAMPfile.read().splitlines() # read and lose the "\n"
         JCAMPfile.close()
