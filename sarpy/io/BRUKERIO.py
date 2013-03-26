@@ -870,13 +870,9 @@ def fftbruker(array, encoding=None, DCoffset=False):
     encoding = encoding or [1, 1, 0, 0]
 
     #find all axes that should be FTed
-    FTaxes = []
-    _encoding = encoding[:]
-    for i in range(len(_encoding)):
-        if _encoding.pop():
-            FTaxes.append(len(_encoding))
+    FTaxes = numpy.where(numpy.array(encoding) != 0)[0]
 
-    img = numpy.fft.fftn(array, axes=FTaxes)
+    img = numpy.fft.fftn(numpy.fft.fftshift(array, axes = FTaxes), axes=FTaxes)
     if DCoffset:
         # remove DC offset
         if encoding[2]: # do this only for central point in 3D
