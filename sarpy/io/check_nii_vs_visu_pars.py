@@ -66,7 +66,8 @@ def load_all_nii(dirname=os.path.expanduser('~'),
         uid = re.sub('.*\/','',filename)
         uid = re.sub('.nii.gz$','',uid)
         v = visu_dicts[uid]
-        print numpy.array(v.VisuCoreOrientation[0]).astype('float').round(3)
+        rot_mat = numpy.matrix(v.VisuCoreOrientation[0]).reshape(3,3).I
+        print rot_mat.reshape(9).round(3)
         pixdims = numpy.array(v.VisuCoreExtent).astype('float')/ \
                   numpy.array(v.VisuCoreSize)
         # for 2D we still need to figure out the 3rd dimension
@@ -85,6 +86,8 @@ def load_all_nii(dirname=os.path.expanduser('~'),
         
         print pixdims
         
+        fktr = numpy.tile(pixdims.reshape(3,1),3).reshape(9)
+        print (numpy.asarray(rot_mat.reshape(9)) * fktr).round(3)
 
 if __name__ == '__main__':
 
