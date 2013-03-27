@@ -131,7 +131,7 @@ if __name__ == '__main__':
     nii_list = glob.glob(os.path.join(dirname, '*.nii.gz'))
     
     visu_dicts = {}
-    Exp = sarpy.Experiment('PhantomOrientation')    
+    Exp = sarpy.Experiment('PhantomOrientation.iY1')    
     for study in Exp.studies:
         for scan in study.scans:
             for pdata in scan.pdata:
@@ -146,4 +146,11 @@ if __name__ == '__main__':
 #        uid = re.sub('.*\/','',filename)
 #        uid = re.sub('.nii.gz$','',uid)
 #        load_all_nii(filename, visu_dict=visu_dicts[uid])
+                                
+    pdata.write2nii('/tmp/sformqform.nii.gz')
+    a=nibabel.Nifti1Image.from_filename('/tmp/sformqform.nii.gz')
+    a_orig=nibabel.Nifti1Image.from_filename('/home/stefan/data/nii/2.16.756.5.5.100.1384712661.16188.1363828008.19.nii.gz')
+    for k in a.get_header().keys():
+        print k, a.get_header()[k], '==?==', a_orig.get_header()[k]
+
                 
