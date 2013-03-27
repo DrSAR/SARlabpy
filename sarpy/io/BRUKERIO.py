@@ -168,7 +168,9 @@ def readJCAMP(filename):
     LDRlist = [re.sub('##[\\$]*', '', LDR) for LDR in LDRlist]
 
     # split every LDR at the " = " sign and turn it into a dictionary entry
-    LDRdict = dict([LDR.split("=") for LDR in LDRlist])
+    # make sure to specify maxsplit=1 to the str.split function in case
+    # some parameter values contain = as a sign...
+    LDRdict = dict([LDR.split("=", 1) for LDR in LDRlist])
     
     for k, v in LDRdict.iteritems():
         # is it an array or struct? (signified by the size indicator)
