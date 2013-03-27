@@ -128,7 +128,39 @@ class PDATA_file(object):
         Write the data originating from a 2dseq (BRUKER) reconstruction to
         a Nifti file format. 
         
-        TODO: Header information from visu_pars.
+        :param string filename: where to write the file
+        
+        `Original Header information <http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/`_
+        But `this site is by far the best resource for info on the Nifti header:
+        <http://brainder.org/2012/09/23/the-nifti-file-format/>`
+
+        There are 3 different methods by which continuous coordinates can be 
+        attached to voxels. We are using method 2:
+        METHOD 2 (used when qform_code > 0, which should be the "normal" case):
+        `Ref: <http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/nifti1fields_pages/qsform.html#ref3>`_
+        ---------------------------------------------------------------------
+        The (x,y,z) coordinates are given by the pixdim[] scales, a rotation
+        matrix, and a shift.  This method is intended to represent
+        "scanner-anatomical" coordinates, which are often embedded in the
+        image header (e.g., DICOM fields (0020,0032), (0020,0037), (0028,0030),
+        and (0018,0050)), and represent the nominal orientation and location of
+        the data.  This method can also be used to represent "aligned"
+        coordinates, which would typically result from some post-acquisition
+        alignment of the volume to a standard orientation (e.g., the same
+        subject on another day, or a rigid rotation to true anatomical
+        orientation from the tilted position of the subject in the scanner).
+        The formula for (x,y,z) in terms of header parameters and (i,j,k) is:
+
+
+        [ x ]   [ R11 R12 R13 ] [        pixdim[1] * i ]   [ qoffset_x ]
+        [ y ] = [ R21 R22 R23 ] [        pixdim[2]  j ] + [ qoffset_y ]
+        [ z ]   [ R31 R32 R33 ] [ qfac  pixdim[3] * k ]   [ qoffset_z ]
+
+        In methods 2 and 3, the (x,y,z) axes refer to a subject-based coordinate system,
+       with
+       +x = Right  +y = Anterior  +z = Superior.
+       This is a right-handed coordinate system.  However, the exact direction
+       these axes point with respect to the subject depends on qform_code
 
         Examples:
             >>> import tempfile
@@ -139,7 +171,125 @@ class PDATA_file(object):
             >>> scn.pdata[0].write2nii(fname)
 
         '''
-        nibabel.Nifti1Image(self.data, numpy.eye(4)).to_filename(filename)
+        header = nibabel.nifti1.Nifti1Header()
+        # Safest way to get data dimensions at the moment
+        header.set_data_shape(numpy.array(self.data.shape)) 
+        # setting units: it's mm = 2, s = 8, ms = 16
+        header.set_xyzt_units(xyz=2,t=16) 
+        # Still trying to figure out what the easiest way to do this is.
+        header.set_dim_info(freq=0, phase=1, slice=2) 
+        
+        # Potentially non-existent settings
+        try:
+            # check whether all slopes are the same 
+            # (i.e. set of list has length 1) -> exception
+            #TODO: Deal with case when slope/offset are not identical throughout            
+            if len(set(self.visu_pars.VisuCoreDataSlope)) > 1:
+                raise ValueError("Don't know how to deal with VisuCoreDataSlope"+
+                                "that vary from frame to frame")
+            if len(set(self.visu_pars.VisuCoreDataOffs)) > 1:
+                raise ValueError("Don't know how to deal with VisuCoreDataOffs"+
+                                    "that vary from frame to frame")
+                    
+            slope = self.visu_pars.VisuCoreDataSlope[0] 
+            inter = self.visu_pars.VisuCoreDataOffs[0]
+        except AttributeError:
+            logger.warn('Could not set Data slope, or Intercept\n'+
+                    'assuming identity.')
+            slope = 1
+            inter = 0
+
+        header.set_slope_inter(slope = slope, inter = inter)
+
+        # Let's figure out the rotation matrix. You ready? Here we go ...
+        try:
+            rot_mat = self.visu_pars.VisuCoreOrientation.flatten()
+            for i in xrange(9):
+                if len(set(rot_mat[i::9])) > 1:
+                    raise ValueError("Different slicepacks with different " +
+                                "orientations!")
+                                
+            M = numpy.matrix(self.visu_pars.VisuCoreOrientation[0]).reshape(3,3)
+            M_inv = M.I
+            # success of the following line also hinges on the ritually
+            # correct sacrifice of a chicken over the keyboard.
+            LPS_2_RAS = numpy.array([-1,1,-1, -1,1,-1, 1,-1,1])
+            M_inv_RAS = LPS_2_RAS * numpy.array(M_inv.reshape(9))
+        
+            pixdims = numpy.array(self.visu_pars.VisuCoreExtent).astype('float')/ \
+                      numpy.array(self.visu_pars.VisuCoreSize)
+            # for 2D we still need to figure out the 3rd dimension
+            if self.visu_pars.VisuCoreDim == 2:
+                # check distance of neigbouring Frames
+                if self.visu_pars.VisuCoreFrameCount == 1:
+                    d = self.visu_pars.VisuCoreFrameThickness
+                else:
+                    p1 = numpy.array(self.visu_pars.VisuCorePosition[0])                
+                    p2 = numpy.array(self.visu_pars.VisuCorePosition[1])
+                    d = numpy.sqrt(((p1 - p2)**2).sum())
+                pixdims = numpy.hstack([pixdims, d])
+                # k_size we need further down
+                k_size = self.visu_pars.VisuCoreFrameCount
+            else:
+                k_size = self.visu_pars.VisuCoreSize[2] 
+                
+            if len(pixdims) != 3:
+                raise ValueError('unexpected value for VisuCoreDim')
+                
+            R_visupars = M_inv_RAS.reshape(9) * numpy.tile(pixdims,3)
+
+        except AttributeError:
+            logger.warn('Could not set rotation \nassuming Identity.')
+            R_visupars = numpy.eye(3).reshape(9)
+
+        # Good you're still hanging in there. Let's do the positional offset
+        # Suprisingly, this is the ugliest part of the whole geometry effort.
+        try:
+            # -> bruker and nifti appears to be assuming different corners into 
+            # which to put the origin
+            
+            # Are we dealing with ax, sag, cor? Find out by looking at the 
+            # through-plane vector and check where it predominantly points to. 
+            # Note that we have to get rid of the pixel scaling.
+            through_plane_vctr = R_visupars[2::3] / pixdims[2]
+            # ori = ['sag', 'cor', 'ax']
+            ori_num = numpy.where(abs(through_plane_vctr) == 
+                                  max(abs(through_plane_vctr)))[0][0]                          
+            # depending on orientation we have to adjust the origin
+            # for ax and sag the following line is true.                       
+            addtl_offset = R_visupars[1::3]*(self.visu_pars.VisuCoreSize[1] - 1)
+            # for cor we have an additionl shift
+            if ori_num == 1:
+                addtl_offset += R_visupars[2::3]*(k_size - 1)
+        
+            qoffset =  self.visu_pars.VisuCorePosition[0,:] * [-1, -1, 1]-\
+                          addtl_offset
+
+        except AttributeError:
+            logger.warn('Could not find positional offset\nassuming zero.')
+            qoffset = [0,0,0]
+            
+        aff = numpy.empty((4,4))
+        aff[0:3,0:3] = R_visupars.reshape(3,3)
+        aff[3,:] = [0, 0, 0, 1]
+        aff[0:3,3] = qoffset
+        header.set_qform(aff, code='scanner')
+        header.set_sform(aff, code='scanner')
+
+        # turns out, the data is sometimes flipped/transposed. We need to
+        # make sure this is done before saving. This appears somewhat 
+        # related to the offset (0,0,0) issue above being different
+        self.data = numpy.fliplr(numpy.swapaxes(self.data, 0, 1))
+        if ori_num == 1: 
+            # since we are dealing with a coronal scan, we also need to flip 
+            # through plane!
+            # we really want a flipbf ("flip back-front")
+            self.data = numpy.swapaxes(self.data, 0,2)
+            self.data = numpy.flipud(self.data)
+            self.data = numpy.swapaxes(self.data, 0,2)
+
+        img_pair = nibabel.nifti1.Nifti1Image(self.data,aff,header=header)
+        img_pair.to_filename(filename)
         
 class Scan(object):
     '''
