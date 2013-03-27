@@ -15,3 +15,9 @@ from io.BRUKER_classes import (natural_sort,
 from io.AData_classes import (adataroot, AData)
                         
 from io.SARlogger import initiate_logging
+
+from DCE import tammo_lib
+
+#==============================================================================
+from PKanalysis import PKfit # PKModels need enthought, thus not imported
+#==============================================================================

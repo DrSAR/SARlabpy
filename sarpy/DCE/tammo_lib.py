@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This library provides functions to analyze MRI data.
-Created on Wed Sep 19 19:19:42 2012 @author: tammo
+"""Created on Wed Sep 19 19:19:42 2012 @author: tammo
 """
 from __future__ import print_function
 from __future__ import division
@@ -10,7 +8,7 @@ import sys
 import csv
 from scipy import optimize
 import matplotlib.pyplot as plt
-from movingaverage import movingaverage
+#from movingaverage import movingaverage
 #import time
 import math
 
@@ -29,7 +27,7 @@ def AIF_from_TDM( injection, time, parms ):
     time_long = np.arange(time[0], cutoff_frac*max(time), d)
 
     freq = np.fft.fftfreq( len(time_long), d)
-	#AIF = convolve_aif( abs(np.fft.ifft(H_TDM(freq, parms))), injection ,time)
+#    AIF = convolve_aif( abs(np.fft.ifft(H_TDM(freq, parms))), injection ,time)
     AIF = convolve_aif( abs(np.fft.ifft(H_TDM(freq, parms))), injection, time_long )
     AIF = AIF[:len(time)]
     return AIF #, freq
@@ -245,19 +243,21 @@ def divide_by_baseline(data, baseline_range = 10):
     return data
 
 
-
-def timeline_moving_average(data, ave_window = 10):
-
-    ave_signal = np.zeros([data.shape[0], data.shape[1],data.shape[2],\
-
-                            data.shape[3]-ave_window+1])
-    for i in range(data.shape[0]):    # Iterate over pixels and slices
-        for j in range(data.shape[1]):
-            for k in range(data.shape[2]):
-                            # calculate moving average
-                ave_signal[i,j,k,:] = np.array(list(\
-                                movingaverage(
-                                data[i,j,k,:], ave_window)))
+# Moving average module not available
+#==============================================================================
+# def timeline_moving_average(data, ave_window = 10):
+# 
+#     ave_signal = np.zeros([data.shape[0], data.shape[1],data.shape[2],\
+# 
+#                             data.shape[3]-ave_window+1])
+#     for i in range(data.shape[0]):    # Iterate over pixels and slices
+#         for j in range(data.shape[1]):
+#             for k in range(data.shape[2]):
+#                             # calculate moving average
+#                 ave_signal[i,j,k,:] = np.array(list(\
+#                                 movingaverage(
+#                                 data[i,j,k,:], ave_window)))
+#==============================================================================
     return ave_signal
 
 

@@ -178,7 +178,7 @@ def readJCAMP(filename):
             LDRdict[k] = val
             logger.debug('found {2}: {0}={1}'.format(k,LDRdict[k], type(val)))
         else:
-            # this isunfortunately harder. Let's get the array dimensions:
+            # this is unfortunately harder. Let's get the array dimensions:
             # is there something following the 'array' definition? 
             struc_match = re.match(r'\(([^\)]*)\)$', v)
             if struc_match:
