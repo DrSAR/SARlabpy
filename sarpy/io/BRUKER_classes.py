@@ -128,6 +128,8 @@ class PDATA_file(object):
         Write the data originating from a 2dseq (BRUKER) reconstruction to
         a Nifti file format. 
         
+        :param string filename: where to write the file
+        
         `Original Header information <http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/`_
         But `this site is by far the best resource for info on the Nifti header:
         <http://brainder.org/2012/09/23/the-nifti-file-format/>`
@@ -181,7 +183,7 @@ class PDATA_file(object):
         try:
             # check whether all slopes are the same 
             # (i.e. set of list has length 1) -> exception
-            #TODO: Deal with case when slope an offset are not identical            
+            #TODO: Deal with case when slope/offset are not identical throughout            
             if len(set(self.visu_pars.VisuCoreDataSlope)) > 1:
                 raise ValueError("Don't know how to deal with VisuCoreDataSlope"+
                                 "that vary from frame to frame")
@@ -199,27 +201,79 @@ class PDATA_file(object):
 
         header.set_slope_inter(slope = slope, inter = inter)
 
+        # Let's figure out the rotation matrix. You ready? Here we go ...
         try:
-            rot_mat = self.visu_pars.VisuCoreOrientation
+            rot_mat = self.visu_pars.VisuCoreOrientation.flatten()
             for i in xrange(9):
                 if len(set(rot_mat[i::9])) > 1:
                     raise ValueError("Different slicepacks with different " +
                                 "orientations!")
+                                
+            M = numpy.matrix(self.visu_pars.VisuCoreOrientation[0]).reshape(3,3)
+            M_inv = M.I
+            # success of the following line also hinges on the ritually
+            # correct sacrifice of a chicken over the keyboard.
+            LPS_2_RAS = numpy.array([-1,1,-1, -1,1,-1, 1,-1,1])
+            M_inv_RAS = LPS_2_RAS * numpy.array(M_inv.reshape(9))
+        
+            pixdims = numpy.array(self.visu_pars.VisuCoreExtent).astype('float')/ \
+                      numpy.array(self.visu_pars.VisuCoreSize)
+            # for 2D we still need to figure out the 3rd dimension
+            if self.visu_pars.VisuCoreDim == 2:
+                # check distance of neigbouring Frames
+                if self.visu_pars.VisuCoreFrameCount == 1:
+                    d = self.visu_pars.VisuCoreFrameThickness
+                else:
+                    p1 = numpy.array(self.visu_pars.VisuCorePosition[0])                
+                    p2 = numpy.array(self.visu_pars.VisuCorePosition[1])
+                    d = numpy.sqrt(((p1 - p2)**2).sum())
+                pixdims = numpy.hstack([pixdims, d])
+                # k_size we need further down
+                k_size = self.visu_pars.VisuCoreFrameCount
+            else:
+                k_size = self.visu_pars.VisuCoreSize[2] 
+                
+            if len(pixdims) != 3:
+                raise ValueError('unexpected value for VisuCoreDim')
+                
+            R_visupars = M_inv_RAS.reshape(9) * numpy.tile(pixdims,3)
+
         except AttributeError:
             logger.warn('Could not set rotation \nassuming Identity.')
-            rot_mat = numpy.eye(3).reshape(9)
+            R_visupars = numpy.eye(3).reshape(9)
 
+        # Good you're still hanging in there. Let's do the positional offset
+        # Suprisingly, this is the ugliest part of the whole geometry effort.
         try:
-            qoffset = self.visu_pars.VisuCorePosition[0:3]
+            # -> bruker and nifti appears to be assuming different corners into 
+            # which to put the origin
+            
+            # Are we dealing with ax, sag, cor? Find out by looking at the 
+            # through-plane vector and check where it predominantly points to. 
+            # Note that we have to get rid of the pixel scaling.
+            through_plane_vctr = R_visupars[2::3] / pixdims[2]
+            # ori = ['sag', 'cor', 'ax']
+            ori_num = numpy.where(abs(through_plane_vctr) == 
+                                  max(abs(through_plane_vctr)))[0][0]                          
+            # depending on orientation we have to adjust the origin
+            # for ax and sag the following line is true.                       
+            addtl_offset = R_visupars[1::3]*(self.visu_pars.VisuCoreSize[1] - 1)
+            # for cor we have an additionl shift
+            if ori_num == 1:
+                addtl_offset += R_visupars[2::3]*(k_size - 1)
+        
+            qoffset =  self.visu_pars.VisuCorePosition[0,:] * [-1, -1, 1]-\
+                          addtl_offset
+
         except AttributeError:
             logger.warn('Could not find positional offset\nassuming zero.')
             qoffset = [0,0,0]
             
         aff = numpy.empty((4,4))
-        aff[0:3,0:3] = numpy.array([rot_mat[0:3], rot_mat[3:6], rot_mat[6:9]])
+        aff[0:3,0:3] = R_visupars.reshape(3,3)
         aff[3,:] = [0, 0, 0, 1]
         aff[0:3,3] = qoffset
-
+        header.set_qform(aff, code='scanner')
         img_pair = nibabel.nifti1.Nifti1Image(self.data,aff,header=header)
         img_pair.to_filename(filename)
         
