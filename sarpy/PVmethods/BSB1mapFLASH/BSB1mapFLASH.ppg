@@ -1,0 +1,159 @@
+;****************************************************************
+;
+; Copyright (c) 2001 - 2003
+; Bruker BioSpin MRI GmbH
+; D-76275 Ettlingen, Germany
+;
+; All Rights Reserved
+; 
+; FLASH - a gradient echo imaging method
+;
+;****************************************************************
+;
+; d0 - TR padding
+; d1 - T1 padding
+; d2 - TE padding (before BS pulse)
+; d3 = PVM_RiseTime
+; d4 = PVM_RampTime
+; d5 = TE padding (after BS pulse)
+; d8 = CONFIG_amplifier_enable
+
+define list<frequency> fqBS = {$BS_freqlist}
+define list<frequency> o1list = {$ACQ_O1_list}
+define list<power> pwrBS = {$BS_pwr_list}
+
+#include <MRI.include>
+preset off
+
+define delay denab
+define delay d4d10u
+define delay d5d20u
+define delay d0d40u
+define delay d4d2
+
+"denab =  d3 - de"
+"d4d10u = d4 +10u"
+"d5d20u = d5 +20u"
+"d0d40u = d0 -40u"
+"d4d2 = d4 + d2"
+"l3 = l1 + ds"
+
+#include <PrepModulesHead.mod>
+
+subr FlowSatInit()
+
+INIT_DEVICES
+
+lgrad r2d<2d> = L[1]
+zgrad r2d
+lgrad r3d<3d> = L[2]
+zgrad r3d
+
+
+decr,   dgrad r2d
+        lo to decr times DS
+
+
+
+lgrad slice = NSLICES
+zslice
+        10u recph ph1
+start,  10u
+
+if(PVM_BlBloodOnOff)
+{
+#include <TriggerPerPhaseStep.mod>
+}
+subr BlBlood(ph0)
+
+#include <TriggerPerPhaseStep.mod>
+subr SliceSelIr()
+
+subr Tagging()
+;----------------------------------start of the main loop ----------
+slice, 	10u fq8b:f1
+
+#include <TriggerPerSlice.mod>
+;----------------------------------preparation modules -------------
+subr FlowSat()
+subr SatSlices()
+subr MagTrans()
+subr FatSup()
+
+        d6	grad{(0)|(0)|(t9)}
+;----------------------------------slice selection------------------	
+	d3 	grad{(0)|(0)|(t0)} o1list:f1
+        d8	gatepulse 1
+	p0:sp0 	ph0
+	d4d10u 	groff
+
+if(PVM_ppgFlag1) ;long TE mode
+{
+        ;----------------------------------slice rephase--------------------
+	d10 	grad{(0)|(0)|(t1)} fqBS:f1
+	d4 	groff pwrBS:f1
+        d8	gatepulse 1
+	p1:sp1(currentpower) 	ph0
+	d2      
+        ;----------------------------------read dephase + phase encoding----
+        d11      grad{(t2)|r2d(t3)|r3d(t4)} 
+	d4d10u   groff
+}
+if(!PVM_ppgFlag1) ;short TE mode
+{
+        ;----------------------slice rephase, read dephase, phase encoding----
+	d10 	grad{(t2)|r2d(t3)|(t1)+r3d(t4)} fqBS:f1
+	d4 	groff pwrBS:f1
+        d8	gatepulse 1
+	p1:sp1(currentpower) 	ph0
+	d2      
+}
+
+;----------------------------------frequency encoding---------------
+        denab   grad{(t5)|(0)|(0)} o1list:f1
+	ADC_INIT_B(NOPH, ph2)  ;ph1 is used (see recph)
+        aqq	ADC_START	
+;----------------------------------read spoiler + phase encoding----
+        d11     grad{(t6)|r2d(t7)|r3d(t8)} ; 2nd and 3rd dims
+	d12     grad{(t6)| (0) | (0) }
+	d3	groff
+        d0	ADC_END
+;----------------------------------slice and movie loop-----------------------	
+subr FlowSatInc()
+if(NI > 1)
+{
+	2.5u islice o1list.inc
+	lo to slice times NI
+}
+        d20
+;----------------------------------averaging loop-------------------
+if(NA > 1)
+{
+	2.5u ipp1 ipp2 o1list.res
+        2.5u recph ph1
+	lo to start times NA
+        2.5u rpp1 rpp2
+        2.5u recph ph1
+}
+;----------------------------------2d loop--------------------------
+	igrad r2d
+	lo to start times l3
+        "l3=l1"
+;----------------------------------3d loop--------------------------
+	igrad r3d
+	lo to start times l2
+        2.5u
+        lo to start times NAE
+        2.5u
+#include <Evolution.mod>
+        2.5u
+        fqBS.inc
+        pwrBS.inc
+        lo to start times NR
+SETUP_GOTO(start)
+
+exit
+
+ph0 = 0 
+ph1 = 0 2 1 3
+ph2 = 0 2 3 1
