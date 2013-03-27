@@ -5,29 +5,45 @@ Created on Wed Mar 13 14:11:03 2013
 @author: fmoosvi
 """
 
-import numpy
 import sarpy
 import sarpy.fmoosvi.analysis
 
 def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, time = 60):
-       
-    try:
-        scan_list = Bruker_object.find_scan_by_protocol(protocol_name)
-    except:
-        try: 
-            scan_list = []                                
-            for study in Bruker_object:
-                scan_list.append(study.find_scan(protocol_name))
-            print('You put in a list of studies, try to avoid that')
-        except:
-            raise
+
+
+    if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
+        
+        scan_list = []
+        scan_list.append(Bruker_object)
+        
+    else:
+      
+        try: # Will work for experiment and study
+            scan_list = Bruker_object.find_scan_by_protocol(protocol_name)
+        except: # check for list of studies
+            try: 
+                scan_list = []     
+    
+                if type(Bruker_object) == list:
+                    scan_list = Bruker_object
+                    print('You put in a list of scans, try to avoid that')
+    
+                elif type(Bruker_object[0]) == sarpy.io.BRUKER_classes.Study:
+                    for study in Bruker_object:
+                        scan_list.append(study.find_scan(protocol_name))
+                        print('You put in a list of studies, try to avoid that')              
+            except:
+                raise
 
     ## Now to calculate the AUC
 
     auc = []
 
     for scan in scan_list:
-        auc.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
+        try:
+            auc.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
+        except:
+            print('calculate_AUC failed for Scan {0} failed, please fix.'.format(scan.shortdirname))
         
     return auc
     
