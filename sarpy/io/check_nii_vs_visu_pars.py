@@ -108,9 +108,23 @@ def nii_geom(filename=os.path.expanduser('~'),
 #    print(nibabel.quaternions.mat2quat(M_inv_RAS))
     
     
-    shift = nii_img.get_affine()[0:3,3]
-    print(shift.round(3))
-    print(v.VisuCorePosition[0,:] * [-1, 1, 1])
+    shift_nii = nii_img.get_affine()[0:3,3]
+    print('affine shift     : {0}'.format(shift_nii.round(3)))
+    shift_visu = v.VisuCorePosition[0,:] * [-1, 1, 1]
+    print('VisuCorePosition : {0}'.format(shift_visu))
+    # I think the DICOM exporter screwed this one up. Where, I wonder,
+    # is (0,0,0)?    
+    
+    
+    # all corners
+    TL = numpy.matrix([0,0,0]).reshape(3,1)
+    TR = numpy.matrix([v.VisuCoreSize[0],0,0]).reshape(3,1)
+    BL = numpy.matrix([0,v.VisuCoreSize[1],0]).reshape(3,1)
+    BR = numpy.matrix([v.VisuCoreSize[0],v.VisuCoreSize[1],0]).reshape(3,1)
+#    print((numpy.matrix(R_visupars.reshape(3,3))*TL).reshape(3))
+#    print((numpy.matrix(R_visupars.reshape(3,3))*TR).reshape(3))
+#    print((numpy.matrix(R_visupars.reshape(3,3))*BL).reshape(3))
+    print((0.5*numpy.matrix(R_visupars.reshape(3,3))*BR).reshape(3))
 
 if __name__ == '__main__':
 
