@@ -41,8 +41,7 @@ def get_num_slices(scan_object, pdata_num = 0):
 
 def get_patients_from_experiment(Experiment_name, check = False):
     
-    
-    Exp = sarpy.Experiment(Experiment_name)
+    subject_list = sarpy.Experiment(Experiment_name).get_SUBJECT_id()
     
     Patients = []
     
@@ -56,4 +55,19 @@ def get_patients_from_experiment(Experiment_name, check = False):
     
     return Patients
     
-        
+def f5(seq, idfun=None):
+
+    #Get uniue items in list (maintaining order)
+    # From: http://www.peterbe.com/plog/uniqifiers-benchmark
+    
+   # order preserving
+   if idfun is None:
+       def idfun(x): return x
+   seen = {}
+   result = []
+   for item in seq:
+       marker = idfun(item)
+       if marker in seen: continue
+       seen[marker] = 1
+       result.append(item)
+   return result            

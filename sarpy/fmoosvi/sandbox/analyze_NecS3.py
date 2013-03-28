@@ -12,18 +12,18 @@ import pylab
 
 NecS3_exp = sarpy.Experiment('NecS3')
 
-## Look-Locker T1 maps
-#NecS3_LLscans = NecS3_exp.find_scan_by_protocol('04_ubcLL+')
-#
-#start_time = time.time()
-#
-#for scan in NecS3_LLscans:    
-#    T1map_LL = sarpy.fmoosvi.wrappers.calculate_T1map(scan, protocol_name = '04_ubcLL+')
-#    T1map_LL = numpy.array(T1map_LL)    
-#    scan.store_adata(key='T1map_LL', data = T1map_LL, force=True)
-#
-#end_time = time.time() 
-#print 'This run took {0} seconds.'.format(round(end_time - start_time))
+# Look-Locker T1 maps
+NecS3_LLscans = NecS3_exp.find_scan_by_protocol('04_ubcLL+')
+
+start_time = time.time()
+
+for scan in NecS3_LLscans:    
+    T1map_LL = sarpy.fmoosvi.wrappers.calculate_T1map(scan, protocol_name = '04_ubcLL+')
+    T1map_LL = numpy.array(T1map_LL)    
+    scan.store_adata(key='T1map_LL', data = T1map_LL, force=True)
+
+end_time = time.time() 
+print 'This run took {0} seconds.'.format(round(end_time - start_time))
 
 
 

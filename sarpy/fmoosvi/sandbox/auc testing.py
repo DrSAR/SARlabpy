@@ -7,7 +7,6 @@ Created on Tue Mar 26 15:41:30 2013
 import sarpy
 import numpy
 import sarpy.fmoosvi.wrappers
-import time
 import pylab
 
 NecS3_exp = sarpy.Experiment('NecS3')
