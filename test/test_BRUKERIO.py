@@ -7,17 +7,18 @@ import doctest
 import os
 
 #import matplotlib.pyplot as plt
-import pylab
+#import pylab
 import numpy
 
 #make the SARlogger features available
-from sarpy import initiate_logging
+from sarpy import initiate_logging, dataroot
 from sarpy.io import BRUKERIO
 initiate_logging(BRUKERIO, handler_level=30)
 
 print('test_BRUKERIO run: %s' % __name__)
 
-fnameroot = os.path.expanduser('~/data/readfidTest.ix1/')
+fnameroot = os.path.join(dataroot,'stefan','nmr','readfidTest.ix1')
+
 scan_labels = {1:'Tripilot multi', 
                2:'FLASH 2D', 
                3:'FLASH 3D', 
@@ -85,6 +86,7 @@ class Test(unittest.TestCase):
         Test readJCAMP for exceptions by reading variety of acqp 
         and method files
         '''
+        logger.info('test_readJCAMP started')
         skip = [] # default 
      
         for k in [keys for keys in scan_labels.keys() if keys not in skip]:
@@ -119,7 +121,14 @@ class Test(unittest.TestCase):
             self.assertEqual(len(d['dimdesc']), len(d['dimcomment']))
             
 
-    
+def stresstest_readJCAMP(*path_filter):
+    import glob
+    file_list = glob.glob(os.path.join(dataroot,'stefan',*path_filter))
+    for JCAMPname in file_list:
+        JCAMPfile=BRUKERIO.readJCAMP(JCAMPname)
+        print JCAMPname
+        
+        
 def stresstest_readfid(skip=None):
     '''
     test.test_BRUKERIO.stresstest_readfid(skip=[9,13,15])
@@ -155,5 +164,8 @@ def stresstest_readfid(skip=None):
             pylab.show()
 
 if __name__ == "__main__":
-    unittest.main()
+#    unittest.main()
 #    stresstest_readfid(skip=[6,9,13,14,15])
+#    stresstest_readJCAMP('nmr','*','subject')
+    stresstest_readJCAMP('nmr','*','*','acqp')
+    stresstest_readJCAMP('nmr','*','*','method')

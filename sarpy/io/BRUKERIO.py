@@ -115,8 +115,11 @@ def readJCAMP(filename):
         ['<hermite.exc>', 17.9862515696541, 0]
         >>> a['TPQQ'][0][1]
         17.9862515696541
-        >>> a['ACQ_grad_matrix'][0:20]
-        [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0]
+        >>> a['ACQ_grad_matrix'][0]
+        array([[1, 0, 0],
+               [0, 1, 0],
+               [0, 0, 1]])
+         
 
     """
 
@@ -168,7 +171,9 @@ def readJCAMP(filename):
     LDRlist = [re.sub('##[\\$]*', '', LDR) for LDR in LDRlist]
 
     # split every LDR at the " = " sign and turn it into a dictionary entry
-    LDRdict = dict([LDR.split("=") for LDR in LDRlist])
+    # make sure to specify maxsplit=1 to the str.split function in case
+    # some parameter values contain = as a sign...
+    LDRdict = dict([LDR.split("=", 1) for LDR in LDRlist])
     
     for k, v in LDRdict.iteritems():
         # is it an array or struct? (signified by the size indicator)
