@@ -7,6 +7,8 @@ Created on Wed Mar 13 14:11:03 2013
 
 import sarpy
 import sarpy.fmoosvi.analysis
+import sarpy.fmoosvi.getters
+import pylab
 
 def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, time = 60):
 
@@ -87,30 +89,6 @@ def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH', \
         
     return b1map
 
-#TODO: Implemen BSB1 mapwrapper around h_BS_B1map
-
-######################### Start Example #########################
-## This is for one phantom study using LL and BSB1 MSME
-#APExp = sarpy.Experiment('DiLL.iI1')
-#BS_scans = APExp.find_scan_by_protocol('09\-2DBSB1map\-MSME_bas\(modified\)')[-4:]
-#
-#LLdata = sarpy.Experiment('DiLL.iI1').find_scan_by_protocol('MOBILE*')[0]
-#
-#zero_BS_minus = BS_scans[0]
-#zero_BS_plus = BS_scans[1]
-#power_BS_minus = BS_scans[2]
-#power_BS_plus = BS_scans[3]
-#
-#b1map = sarpy.fmoosvi.analysis.h_BS_B1map(zero_BS_minus,\
-#                                          zero_BS_plus,\
-#                                          power_BS_minus,\
-#                                          power_BS_plus,\
-#                                          LLdata)
-#                                          
-#pylab.imshow(b1map[:,:,0,0], aspect = 0.5)
-#pylab.colorbar()
-######################### End Example #########################
-
     return #b1map
     
 def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map = 0):
@@ -144,3 +122,81 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map =
         T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,\
                                                       flip_angle_map = flip_angle_map))
     return T1_map
+
+
+def create_summary(data_list, key_list):
+     
+    num_slices = data_list[0].shape[2]
+    
+    fig = pylab.figure(figsize = (30,30), dpi = 300)
+    data_num = len(data_list)
+    
+    clims = sarpy.fmoosvi.getters.get_image_clims(data_list[0])
+    
+    for slice in xrange(num_slices):
+        
+        for n in xrange(data_num):
+    
+            fig.add_subplot(data_num,num_slices,slice+1 + (n*num_slices) )
+            a = pylab.imshow(data_list[n][0,:,:,slice])
+            a.set_clim(clims)
+            pylab.axis('off')
+            
+            if n == 0:
+                pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
+    
+    # Figure spacing adjustments
+    fig.subplots_adjust(right = 0.85, wspace = 0, hspace=0)
+    
+    # Colobar set up
+    cax = fig.add_axes([0.89, 0.10, 0.03, 0.7])
+    cax.set_title(key_list[len(key_list)-1], fontsize = 12)       
+    fig.colorbar(a, cax=cax)
+    
+    # Saving Figure    
+    filename = key_list[len(key_lis)-1] + '-' + data_list[0] + '.png'                
+    pylab.savefig(filename, bbox_inches=0, dpi=300)
+    pylab.close('all')        
+
+#for k,v in master_sheet.iteritems():
+#    try:           
+#        data1 = sarpy.Scan(master_sheet[k]['0h-LL']).adata['T1map_LL'].data.get_data()
+#        data2 = sarpy.Scan(master_sheet[k]['24h-LL']).adata['T1map_LL'].data.get_data()
+#        
+#        fig = pylab.figure(figsize=(14, 11), dpi=300)
+#        
+#        num_slices = sarpy.fmoosvi.getters.get_num_slices(sarpy.Scan(master_sheet[k]['0h-LL']))
+#        
+#        for slice in xrange(num_slices):
+#            
+#            fig.add_subplot(2,6,slice+1)
+#            a = pylab.imshow(data1[0,:,:,slice])
+#            a.set_clim(600,3500)
+#            pylab.axis('off')
+#            pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
+#            fig.show()
+#            
+#            fig.add_subplot(2,6,slice+num_slices+1)
+#            a = pylab.imshow(data2[0,:,:,slice])
+#            a.set_clim(600,3500)
+#            pylab.axis('off') 
+#            #pylab.title('Slice {0}'.format(slice+1))
+#            fig.show()
+#
+#        # Figure spacing adjustments
+#        fig.subplots_adjust(right = 0.85, wspace = 0, hspace=0)
+#        
+#        # Colobar set up
+#        cax = fig.add_axes([0.89, 0.10, 0.03, 0.7])
+#        cax.set_title('T$_1$ (ms)', fontsize = 12)       
+#        fig.colorbar(a, cax=cax)
+#    
+#       # Saving Figure    
+#        filename = 'T1-' + k + '.png'                
+#        pylab.savefig(filename, bbox_inches=0, dpi=300)
+#        pylab.close('all')        
+# 
+#    except:
+#        print k, 'did not produce LL summary'
+#    
+#
