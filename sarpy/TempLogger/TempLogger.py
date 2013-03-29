@@ -8,6 +8,20 @@
 # 3) Logger
 # 4) Email
 
+# STATE TABLE:
+#----------------------------------------------------------------------
+#             INPUTS             ||       OUTPUTS      || 
+# Tnorm   WixelAlive   ServerUp  ||   Log      Email   || Case Number
+#   x          0           0     || Tn,WA,SU     0     ||     1
+#   x          0           1     || Tn,WA,SU     1     ||     2
+#   0          1           0     || Tn,WA,SU     0     ||     3
+#   0          1           1     || Tn,WA,SU     1     ||     4
+#   x          0           0     || Tn,WA,SU     0     ||     5 (Same as 1)
+#   x          0           1     || Tn,WA,SU     1     ||     6 (Same as 2)
+#   1          1           0     || Tn,WA,SU     0     ||     7
+#   1          1           1     || Tn,WA,SU     0     ||     8 (WANT THIS! Everything Working)
+
+
 import serial # import serial for serial input
 #import datetime # import datetime for getting localtime
 import smtplib # import smtplib simple mail transfer protocol for EMAIL
@@ -30,6 +44,7 @@ import sys
 import urllib   # Import module to check if website is up
 import time     # Import time for time.sleep(5) # Run code every 5 seconds
 
+
 #----------------------------------------------------------------------------------------
 ## First CHECK IF SERVER IS UP 
 def CheckServer():      # CodeFolding Shortcut: option+command+[  
@@ -45,6 +60,7 @@ def CheckServer():      # CodeFolding Shortcut: option+command+[
     return ServerUp # Returns Var. ServerUp
 
 
+# SERIAL READ IN FUNCTION
 def ReadSerial():       # Inputs: None. Outputs: x,T,x2,T2,WixelAlive
     try:
         # Setup SerialData Read
@@ -78,6 +94,7 @@ def ReadSerial():       # Inputs: None. Outputs: x,T,x2,T2,WixelAlive
         return (WixelAlive, x, T, x2, T2)
 
 
+# LOGGER FUNCTION
 def Logger(Tnorm,WixelAlive,ServerUp,x,T,x2,T2):    # Outputs: Logs Tnorm,WixelAlive,ServerUp   
     # LOGGER (31 bytes per line * 1440 lines per day * 30 days = 1.3 Mb per month)
     # logger = logging.getLogger('TemperatureLogFile') # create logger instance
@@ -146,7 +163,7 @@ def Logger(Tnorm,WixelAlive,ServerUp,x,T,x2,T2):    # Outputs: Logs Tnorm,WixelA
 
 
 #----------------------------------------------------------------------------------------
-## SEND EMAIL 
+## SEND EMAIL FUNCTION
 def Email(ServerUp,EmailCount):
     if ServerUp==1 and Tnorm==0:     # 'and' so that don't send email on case (8) (Normal Operation)
         print "Email: Request"
