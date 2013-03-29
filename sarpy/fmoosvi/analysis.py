@@ -167,8 +167,6 @@ def h_calculate_KBS(scan_object):
     
     return KBS
 
-
-    
 def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_POI):
     
     try:
@@ -270,13 +268,3 @@ def h_mag_from_fid(scan_object):
     mag_data = numpy.abs(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
     
     return mag_data
-    
-    
-    
-
-
-
-
-
-
-
