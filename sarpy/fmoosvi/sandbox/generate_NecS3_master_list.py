@@ -93,3 +93,15 @@ with open('/Volumes/Data/Dropboxes/PhD./Dropbox/Studies/NecS3/NecS3.json','wb') 
 #            print k, x[k]['24h-DCE2'][0]
 #        except:
 #            print k, 'too bad'
+    
+    
+## After running  the summary thing:
+
+#==============================================================================
+# No LL for NecS3Ao 
+
+# No AUC60 for NecS3Hs04
+
+# No IR for NecS3Hs10 - manually fixed    
+# No IR for NecS3Hs02 - manually fixed 
+#==============================================================================
