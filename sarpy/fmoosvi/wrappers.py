@@ -124,79 +124,82 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map =
     return T1_map
 
 
-def create_summary(data_list, key_list):
+def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
      
-    num_slices = data_list[0].shape[2]
-    
-    fig = pylab.figure(figsize = (30,30), dpi = 300)
+    num_slices = data_list[0].shape[-1]
     data_num = len(data_list)
     
-    clims = sarpy.fmoosvi.getters.get_image_clims(data_list[0])
+    fig = pylab.figure(figsize = (14,3))
+    G = pylab.matplotlib.gridspec.GridSpec(data_num,num_slices)   
+    #clims = sarpy.fmoosvi.getters.get_image_clims(data_list[0])
     
     for slice in xrange(num_slices):
         
         for n in xrange(data_num):
     
-            fig.add_subplot(data_num,num_slices,slice+1 + (n*num_slices) )
-            a = pylab.imshow(data_list[n][0,:,:,slice])
-            a.set_clim(clims)
-            pylab.axis('off')
+            fig.add_subplot(G[n,slice],frameon=False, xticks=[], yticks=[])
             
+            try:
+                data = data_list[n][0,:,:,slice]  
+            except:
+                data = data_list[n][:,:,slice] 
+            
+            a = pylab.imshow(data, cmap = colour_map )
+            
+            if isinstance(clims[0],(int, float, long)):
+                
+                a.set_clim(clims)
+                
+            else:
+                a.set_clim(600,3500)
+
+            #a.set_clim(clims)
+            #pylab.axis('off')
+
             if n == 0:
                 pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
     
-    # Figure spacing adjustments
-    fig.subplots_adjust(right = 0.85, wspace = 0, hspace=0)
-    
+
     # Colobar set up
-    cax = fig.add_axes([0.89, 0.10, 0.03, 0.7])
-    cax.set_title(key_list[len(key_list)-1], fontsize = 12)       
+    cax = fig.add_axes([0.9, 0.10, 0.01, 0.7])
+    cax.set_title(key_list[1], fontsize = 12)       
     fig.colorbar(a, cax=cax)
     
+    # Figure spacing adjustments
+    #fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
+    G.tight_layout(fig, h_pad = 0.1, w_pad = 0.001)
+    G.update(right = 0.87)
+    
     # Saving Figure    
-    filename = key_list[len(key_lis)-1] + '-' + data_list[0] + '.png'                
+    filename = key_list[1] + key_list[0] + '.png'                
     pylab.savefig(filename, bbox_inches=0, dpi=300)
-    pylab.close('all')        
+    pylab.close('all')
 
-#for k,v in master_sheet.iteritems():
-#    try:           
-#        data1 = sarpy.Scan(master_sheet[k]['0h-LL']).adata['T1map_LL'].data.get_data()
-#        data2 = sarpy.Scan(master_sheet[k]['24h-LL']).adata['T1map_LL'].data.get_data()
-#        
-#        fig = pylab.figure(figsize=(14, 11), dpi=300)
-#        
-#        num_slices = sarpy.fmoosvi.getters.get_num_slices(sarpy.Scan(master_sheet[k]['0h-LL']))
-#        
-#        for slice in xrange(num_slices):
-#            
-#            fig.add_subplot(2,6,slice+1)
-#            a = pylab.imshow(data1[0,:,:,slice])
-#            a.set_clim(600,3500)
-#            pylab.axis('off')
-#            pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
-#            fig.show()
-#            
-#            fig.add_subplot(2,6,slice+num_slices+1)
-#            a = pylab.imshow(data2[0,:,:,slice])
-#            a.set_clim(600,3500)
-#            pylab.axis('off') 
-#            #pylab.title('Slice {0}'.format(slice+1))
-#            fig.show()
-#
-#        # Figure spacing adjustments
-#        fig.subplots_adjust(right = 0.85, wspace = 0, hspace=0)
-#        
-#        # Colobar set up
-#        cax = fig.add_axes([0.89, 0.10, 0.03, 0.7])
-#        cax.set_title('T$_1$ (ms)', fontsize = 12)       
-#        fig.colorbar(a, cax=cax)
-#    
-#       # Saving Figure    
-#        filename = 'T1-' + k + '.png'                
-#        pylab.savefig(filename, bbox_inches=0, dpi=300)
-#        pylab.close('all')        
-# 
-#    except:
-#        print k, 'did not produce LL summary'
-#    
-#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
