@@ -795,24 +795,27 @@ def read2dseq(scandirname,
     # extract binary data from 2dseq. For now, format the data shape so all
     # the image frames are lumped together in the 3rd dimension.
     reco_offset = numpy.asarray(visu_pars['VisuCoreDataOffs'])
+    assert len(set(reco_offset)) == 1, 'Cannot deal with multiple VisuCoreDataOffs'
     reco_slope = numpy.asarray(visu_pars['VisuCoreDataSlope'])    
+    assert len(set(reco_slope)) == 1, 'Cannot deal with multiple VisuCoreDataSlope'
+    
 
     n_frames = numpy.asarray(matrix_size)[2:].prod()
+    logger.info('Guessing we have {0} when VisuCoreFrameCount = {1}'.format(
+                    n_frames, visu_pars['VisuCoreFrameCount']))
     matrix_size.reverse()
     
     filename = os.path.join(scandirname,'2dseq')
     logger.info('read2dseq: loading %s' % filename)
     data = numpy.fromfile(file=filename, dtype=dtype)
 
+    logger.info('Dat shape = {0} while matrix_size={1}'.format(
+                data.shape, matrix_size))
     data=data.reshape(n_frames, matrix_size[-2],matrix_size[-1]).astype('float64')
 
     # now apply the data slopes and offsets to transform the stored binary 
     # number into a absolute number
-    if reco_slope.size == 1:  #single slope value which applies to all frames
-        data = reco_offset + reco_slope*data
-    else:  # separate slope + offset for each frame
-        for i in range(0,n_frames):
-            data[i,:,:] = reco_offset[i] + reco_slope[i]*data[i,:,:]
+    data = reco_offset[0] + reco_slope[0]*data
     
     # Finally, shape the data so all frames are put into separate dimensions.
     data = data.reshape(matrix_size)        
