@@ -127,6 +127,14 @@ def stresstest_readJCAMP(*path_filter):
     for JCAMPname in file_list:
         JCAMPfile=BRUKERIO.readJCAMP(JCAMPname)
         print JCAMPname
+
+def stresstest_read2dseq(*path_filter):
+    import glob
+    file_list = glob.glob(os.path.join(dataroot,*path_filter))
+    for fname in file_list:
+        if os.path.isfile(fname+'/visu_pars'):
+            print fname, BRUKERIO.read2dseq(fname)['data'].shape
+        
         
         
 def stresstest_readfid(skip=None):
@@ -167,5 +175,6 @@ if __name__ == "__main__":
 #    unittest.main()
 #    stresstest_readfid(skip=[6,9,13,14,15])
 #    stresstest_readJCAMP('nmr','*','subject')
-    stresstest_readJCAMP('nmr','*','*','acqp')
-    stresstest_readJCAMP('nmr','*','*','method')
+#    stresstest_readJCAMP('nmr','*','*','acqp')
+#    stresstest_readJCAMP('nmr','*','*','method')
+    stresstest_read2dseq('stefan','nmr','*','*','pdata','1')
