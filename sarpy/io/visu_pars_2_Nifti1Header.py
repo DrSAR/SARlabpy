@@ -106,7 +106,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
         # success of the following line also hinges on the ritually
         # correct sacrifice of a chicken over the keyboard.
         LPS_2_RAS = numpy.array([-1,1,-1, -1,1,-1, 1,-1,1])
-        LPS_2_RAS = numpy.array([-1,-1,-1, -1,-1,-1, 1,1,1])
+        LPS_2_RAS = numpy.array([-1,-1,-1, 1,1,1, 1,1,1])
         M_inv_RAS = LPS_2_RAS * numpy.array(M_inv.reshape(9))
     
         pixdims = numpy.array(visu_pars.VisuCoreExtent).astype('float')/ \
