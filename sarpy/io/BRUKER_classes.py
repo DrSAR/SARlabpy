@@ -289,7 +289,7 @@ class PDATA_file(object):
             data_copy = numpy.flipud(data_copy)
             data_copy = numpy.swapaxes(data_copy, 0,2)
 
-        img_pair = nibabel.nifti1.Nifti1Image(self.data,aff,header=header)
+        img_pair = nibabel.nifti1.Nifti1Image(data_copy,aff,header=header)
         img_pair.to_filename(filename)
         
 class Scan(object):
