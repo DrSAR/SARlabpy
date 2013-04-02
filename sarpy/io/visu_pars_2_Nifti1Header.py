@@ -8,6 +8,9 @@ Created on Mon Apr  1 00:36:03 2013
 import numpy
 import nibabel
 
+import logging
+logger=logging.getLogger('sarpy.io.visu_pars_2_Nifti1Header')
+
 def visu_pars_2_Nifti1Header(visu_pars):
     '''
     Take visu_pars header and extract all sful information for  Nifti1Header.
@@ -166,4 +169,8 @@ def visu_pars_2_Nifti1Header(visu_pars):
     header.set_qform(aff, code='scanner')
     header.set_sform(aff, code='scanner')
 
-    return header
+    return aff, header
+    
+    
+if __name__ == '__main__':
+    print('no doctests available yet')

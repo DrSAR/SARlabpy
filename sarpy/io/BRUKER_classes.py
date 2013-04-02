@@ -294,8 +294,8 @@ class PDATA_file(object):
 
     def export2nii(self, filename):
         from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
-        header = visu_pars_2_Nifti1Header(self.visu_pars)
-        img_pair = nibabel.nifti1.Nifti1Image(self.data, header=header)
+        aff, header = visu_pars_2_Nifti1Header(self.visu_pars)
+        img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
         img_pair.to_filename(filename)
         
     
