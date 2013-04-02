@@ -104,11 +104,10 @@ def visu_pars_2_Nifti1Header(visu_pars):
         M = numpy.matrix(visu_pars.VisuCoreOrientation[0]).reshape(3,3)
         M_inv = M.I
         # success of the following line also hinges on the ritually
-        # correct sacrifice of a chicken over the keyboard.
+        # correct sacrifice of a chicken over the keyboard (axially).
         LPS_2_RAS = numpy.array([-1,1,-1, -1,1,-1, 1,-1,1])
-        LPS_2_RAS = numpy.array([-1,-1,-1, 1,1,1, 1,1,1])
         M_inv_RAS = LPS_2_RAS * numpy.array(M_inv.reshape(9))
-    
+
         pixdims = numpy.array(visu_pars.VisuCoreExtent).astype('float')/ \
                   numpy.array(visu_pars.VisuCoreSize)
         # for 2D we still need to figure out the 3rd dimension
@@ -134,6 +133,38 @@ def visu_pars_2_Nifti1Header(visu_pars):
     except AttributeError:
         logger.warn('Could not set rotation \nassuming Identity.')
         R_visupars = numpy.eye(3).reshape(9)
+
+    # Now we have to do the rotation business correctly. So far we have a
+    # rotation matrix under the assumption of the somewhat screwy sign
+    # conventions that exist for LPS systems (not RAS as in nifti)
+
+    # Are we dealing with ax, sag, cor? Find out by looking at the 
+    # through-plane vector and check where it predominantly points to. 
+    # Note that we have to get rid of the pixel scaling.
+    through_plane_vctr = R_visupars[2::3] / pixdims[2]
+    ori_num = numpy.where(abs(through_plane_vctr) == 
+                          max(abs(through_plane_vctr)))[0][0]                          
+    # ori = ['sag', 'cor', 'ax'][ori_num]
+    # depending on orientation we have to adjust which axis the VisuCorePosition
+    # refers to. In-plane coordinates are x/y for axial, y/z for sag and x/z for
+    # cor.
+    if ori_num == 0: 
+        # sagittal
+        M = numpy.matrix([visu_pars.VisuCoreOrientation[0][3:6], 
+                          visu_pars.VisuCoreOrientation[0][6:9],
+                          visu_pars.VisuCoreOrientation[0][0:3]]).reshape(3,3)
+    elif ori_num == 1:
+        # coronal
+        M = numpy.matrix([-visu_pars.VisuCoreOrientation[0][6:9], 
+                          -visu_pars.VisuCoreOrientation[0][0:3],
+                          visu_pars.VisuCoreOrientation[0][3:6]]).reshape(3,3)
+    elif ori_num == 2:
+        # axial
+        M = numpy.matrix([-visu_pars.VisuCoreOrientation[0][3:6], 
+                          -visu_pars.VisuCoreOrientation[0][0:3],
+                          visu_pars.VisuCoreOrientation[0][6:9]]).reshape(3,3)
+
+    R_visupars = numpy.array(M.I).reshape(9) * numpy.tile(pixdims,3)
 
     # Good you're still hanging in there. Let's do the positional offset
     # Suprisingly, this is the ugliest part of the whole geometry effort.
