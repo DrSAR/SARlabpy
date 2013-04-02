@@ -279,14 +279,15 @@ class PDATA_file(object):
         # turns out, the data is sometimes flipped/transposed. We need to
         # make sure this is done before saving. This appears somewhat 
         # related to the offset (0,0,0) issue above being different
-        self.data = numpy.fliplr(numpy.swapaxes(self.data, 0, 1))
+        data_copy = self.data[:]
+        data_copy = numpy.fliplr(numpy.swapaxes(data_copy, 0, 1))
         if ori_num == 1: 
             # since we are dealing with a coronal scan, we also need to flip 
             # through plane!
             # we really want a flipbf ("flip back-front")
-            self.data = numpy.swapaxes(self.data, 0,2)
-            self.data = numpy.flipud(self.data)
-            self.data = numpy.swapaxes(self.data, 0,2)
+            data_copy = numpy.swapaxes(data_copy, 0,2)
+            data_copy = numpy.flipud(data_copy)
+            data_copy = numpy.swapaxes(data_copy, 0,2)
 
         img_pair = nibabel.nifti1.Nifti1Image(self.data,aff,header=header)
         img_pair.to_filename(filename)
