@@ -71,7 +71,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
     # Still trying to figure out what the easiest way to do this is.
     header.set_dim_info(freq=0, phase=1, slice=2) 
     
-    # Potentially non-existent settings
+    # Potentially non-existent settings, hence we wrap in try blocks
     try:
         # check whether all slopes are the same 
         # (i.e. set of list has length 1) -> exception
@@ -81,7 +81,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
                             "that vary from frame to frame")
         if len(set(visu_pars.VisuCoreDataOffs)) > 1:
             raise ValueError("Don't know how to deal with VisuCoreDataOffs"+
-                                "that vary from frame to frame")
+                            "that vary from frame to frame")
                 
         slope = visu_pars.VisuCoreDataSlope[0] 
         inter = visu_pars.VisuCoreDataOffs[0]
@@ -110,6 +110,8 @@ def visu_pars_2_Nifti1Header(visu_pars):
 
         pixdims = numpy.array(visu_pars.VisuCoreExtent).astype('float')/ \
                   numpy.array(visu_pars.VisuCoreSize)
+        # swap in-plane coordinates
+        pixdims[0], pixdims[1] = pixdims[1], pixdims[0]
         # for 2D we still need to figure out the 3rd dimension
         if visu_pars.VisuCoreDim == 2:
             # check distance of neigbouring Frames
@@ -133,6 +135,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
     except AttributeError:
         logger.warn('Could not set rotation \nassuming Identity.')
         R_visupars = numpy.eye(3).reshape(9)
+    R_visupars_old = R_visupars[:]
 
     # Now we have to do the rotation business correctly. So far we have a
     # rotation matrix under the assumption of the somewhat screwy sign
@@ -165,7 +168,9 @@ def visu_pars_2_Nifti1Header(visu_pars):
                           visu_pars.VisuCoreOrientation[0][6:9]]).reshape(3,3)
 
     R_visupars = numpy.array(M.I).reshape(9) * numpy.tile(pixdims,3)
-
+    print pixdims
+    print R_visupars_old
+    print R_visupars
     try:
         qoffset =  visu_pars.VisuCorePosition[0,:] * [-1, -1, 1]
     except AttributeError:
