@@ -268,3 +268,13 @@ def h_mag_from_fid(scan_object):
     mag_data = numpy.abs(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
     
     return mag_data
+    
+def h_image_to_mask(data):
+
+    masked_data = data[:] 
+    mask_val = scipy.percentile(data.flatten(),95)
+    masked_data[masked_data == mask_val] = numpy.nan
+    masked_data[numpy.isfinite(masked_data)] = 1
+    return masked_data    
+    
+    

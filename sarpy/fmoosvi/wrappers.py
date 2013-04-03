@@ -192,7 +192,17 @@ def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
     filename = key_list[1] + key_list[0] + '.png'                
     pylab.savefig(filename, bbox_inches=0, dpi=300)
     pylab.close('all')
-
+    
+    
+def roi_distribution(data,roi_image_mask, display_histogram = True, save_histogram = False):
+    
+    roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi_image_mask)
+    
+    masked_data = data * roi_mask
+    
+    
+    
+    data_masked = scan1masked * scan1[:,:,:]
 
 
 
