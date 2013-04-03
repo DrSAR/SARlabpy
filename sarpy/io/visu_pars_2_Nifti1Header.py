@@ -13,7 +13,7 @@ logger=logging.getLogger('sarpy.io.visu_pars_2_Nifti1Header')
 
 def visu_pars_2_Nifti1Header(visu_pars):
     '''
-    Take visu_pars header and extract all sful information for  Nifti1Header.
+    Take visu_pars header and extract all useful information for  Nifti1Header.
     This attempts to get all the geometry information out without requiring 
     any special flip etc in the data beyond the initial column-major-to-row- 
     major flip when reading in the 2dseq file.
@@ -151,13 +151,13 @@ def visu_pars_2_Nifti1Header(visu_pars):
     if ori_num == 0: 
         # sagittal
         M = numpy.matrix([visu_pars.VisuCoreOrientation[0][3:6], 
-                          visu_pars.VisuCoreOrientation[0][6:9],
-                          visu_pars.VisuCoreOrientation[0][0:3]]).reshape(3,3)
+                          -visu_pars.VisuCoreOrientation[0][0:3],
+                          visu_pars.VisuCoreOrientation[0][6:9]]).reshape(3,3)
     elif ori_num == 1:
         # coronal
-        M = numpy.matrix([-visu_pars.VisuCoreOrientation[0][6:9], 
+        M = numpy.matrix([visu_pars.VisuCoreOrientation[0][3:6], 
                           -visu_pars.VisuCoreOrientation[0][0:3],
-                          visu_pars.VisuCoreOrientation[0][3:6]]).reshape(3,3)
+                          visu_pars.VisuCoreOrientation[0][6:9]]).reshape(3,3)
     elif ori_num == 2:
         # axial
         M = numpy.matrix([-visu_pars.VisuCoreOrientation[0][3:6], 
@@ -172,13 +172,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
         # -> bruker and nifti appears to be assuming different corners into 
         # which to put the origin
         
-        # Are we dealing with ax, sag, cor? Find out by looking at the 
-        # through-plane vector and check where it predominantly points to. 
-        # Note that we have to get rid of the pixel scaling.
-        through_plane_vctr = R_visupars[2::3] / pixdims[2]
-        # ori = ['sag', 'cor', 'ax']
-        ori_num = numpy.where(abs(through_plane_vctr) == 
-                              max(abs(through_plane_vctr)))[0][0]                          
+        # Are we dealing with ax, sag, cor? 
         # depending on orientation we have to adjust the origin
         # for ax and sag the following line is true.                       
         addtl_offset = R_visupars[1::3]*(visu_pars.VisuCoreSize[1] - 1)
