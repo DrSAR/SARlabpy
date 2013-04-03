@@ -21,8 +21,11 @@ NecS3 = sarpy.Experiment('NecS3').find_scan_by_protocol('04')
 for k,v in master_sheet.iteritems():
     
     try:
-
-        sarpy.Scan(master_sheet[k]['24h-IR_A'][0]).pdata[0].write2nii(k)
+        name1 = k+'-1'
+        name2 = k+'-2'        
+        
+        sarpy.Scan(master_sheet[k]['0h-IR_A'][0]).pdata[0].export2nii(name1)
+        sarpy.Scan(master_sheet[k]['24h-IR_A'][0]).pdata[0].export2nii(name2)
         
     except:
         print k
