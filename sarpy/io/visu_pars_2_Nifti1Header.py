@@ -166,23 +166,8 @@ def visu_pars_2_Nifti1Header(visu_pars):
 
     R_visupars = numpy.array(M.I).reshape(9) * numpy.tile(pixdims,3)
 
-    # Good you're still hanging in there. Let's do the positional offset
-    # Suprisingly, this is the ugliest part of the whole geometry effort.
     try:
-        # -> bruker and nifti appears to be assuming different corners into 
-        # which to put the origin
-        
-        # Are we dealing with ax, sag, cor? 
-        # depending on orientation we have to adjust the origin
-        # for ax and sag the following line is true.                       
-        addtl_offset = R_visupars[1::3]*(visu_pars.VisuCoreSize[1] - 1)
-        # for cor we have an additionl shift
-        if ori_num == 1:
-            addtl_offset += R_visupars[2::3]*(k_size - 1)
-    
-        qoffset =  visu_pars.VisuCorePosition[0,:] * [-1, -1, 1]-\
-                      addtl_offset
-
+        qoffset =  visu_pars.VisuCorePosition[0,:] * [-1, -1, 1]
     except AttributeError:
         logger.warn('Could not find positional offset\nassuming zero.')
         qoffset = [0,0,0]
