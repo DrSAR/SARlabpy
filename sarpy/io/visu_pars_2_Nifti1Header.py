@@ -122,10 +122,6 @@ def visu_pars_2_Nifti1Header(visu_pars):
                 p2 = numpy.array(visu_pars.VisuCorePosition[1])
                 d = numpy.sqrt(((p1 - p2)**2).sum())
             pixdims = numpy.hstack([pixdims, d])
-            # k_size we need further down
-            k_size = visu_pars.VisuCoreFrameCount
-        else:
-            k_size = visu_pars.VisuCoreSize[2] 
             
         if len(pixdims) != 3:
             raise ValueError('unexpected value for VisuCoreDim')
