@@ -9,6 +9,7 @@ import sarpy
 import sarpy.fmoosvi.analysis
 import sarpy.fmoosvi.getters
 import pylab
+import numpy
 
 def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, time = 60):
 
@@ -46,16 +47,22 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, t
             auc.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
         except:
             print('calculate_AUC failed for Scan {0} failed, please fix.'.format(scan.shortdirname))
-        
-    return auc
-    
+            
+    # Get rid of annoying extra dimension if scan_list contains only one element
+    # Also return arrays instead of a list
+            
+    if numpy.array(auc).shape[0] == 1:     
+        return numpy.array(auc[0,:,:,:])
+    else:
+        return numpy.array(auc)
+
 def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH', \
                       POI_protocol_name = '04_ubcLL+'):
     
     # Can take in an experiment, a list of scans (4 - BS + 1 scan with poi),
     # a study
     
-    print ("Why are you using this!? It's not implemented yet")
+    print ("Why are you using this!? It's not fully implemented yet")
     
     try:
         if type(Bruker_object) == sarpy.io.BRUKER_classes.Experiment \
@@ -86,10 +93,15 @@ def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH', \
     b1map.append(sarpy.fmoosvi.analysis.h_BS_B1map(zero_BSminus, zero_BSplus, \
                                                    high_BSminus, high_BSplus, \
                                                    scan_with_POI))
-        
-    return b1map
 
-    return #b1map
+    # Get rid of annoying extra dimension if scan_list contains only one element
+    # Also return arrays instead of a list
+            
+    if numpy.array(b1map).shape[0] == 1:     
+        return numpy.array(b1map[0,:,:,:])
+    else:
+        return numpy.array(b1map)           
+
     
 def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map = 0):
 
@@ -121,8 +133,14 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map =
         print scan
         T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,\
                                                       flip_angle_map = flip_angle_map))
-    return T1_map
-
+    
+    # Get rid of annoying extra dimension if scan_list contains only one element
+    # Also return arrays instead of a list
+            
+    if numpy.array(T1_map).shape[0] == 1:     
+        return numpy.array(T1_map[0,:,:,:])
+    else:
+        return numpy.array(T1_map)                                                      
 
 def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
      
