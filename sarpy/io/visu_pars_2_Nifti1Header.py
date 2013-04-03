@@ -152,7 +152,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
         # sagittal
         M = numpy.matrix([visu_pars.VisuCoreOrientation[0][3:6], 
                           -visu_pars.VisuCoreOrientation[0][0:3],
-                          visu_pars.VisuCoreOrientation[0][6:9]]).reshape(3,3)
+                          -visu_pars.VisuCoreOrientation[0][6:9]]).reshape(3,3)
     elif ori_num == 1:
         # coronal
         M = numpy.matrix([visu_pars.VisuCoreOrientation[0][3:6], 
