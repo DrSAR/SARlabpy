@@ -113,6 +113,10 @@ def h_enhancement_curve(scan_object, pdata_num = 0, mask=False):
         #TODO: Complete this to read in an ROI somehow
         
     else:
+        
+        norm_data = h_normalize_dce(scan_object, pdata_num = pdata_num)        
+        
+        
         print "Work in progress"
 
                 
@@ -121,7 +125,6 @@ def h_enhancement_curve(scan_object, pdata_num = 0, mask=False):
 def h_inj_point(scan_object, pdata_num = 0):
 
     from collections import Counter   
-
 
     # Method params    
     num_slices = getters.get_num_slices(scan_object,pdata_num)
@@ -164,8 +167,6 @@ def h_calculate_KBS(scan_object):
     
     return KBS
 
-
-    
 def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_POI):
     
     try:
@@ -267,13 +268,3 @@ def h_mag_from_fid(scan_object):
     mag_data = numpy.abs(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
     
     return mag_data
-    
-    
-    
-
-
-
-
-
-
-
