@@ -272,6 +272,8 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0,
     data_after_fitting = numpy.zeros( [data.shape[0],\
                                        data.shape[1],\
                                        data.shape[2]] )
+                                       
+    fit_results = numpy.array(data_after_fitting[:], dtype=dict)                       
             
     t_data = numpy.linspace(inversion_time,\
         scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
@@ -285,11 +287,21 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0,
             for slice in range(num_slices):
                 
                 y_data = data[x,y,slice,:]
+                fit_dict = {}
                 
-                [M,B,T1],params_after_fitting=\
-                scipy.optimize.leastsq(h_residual_T1,params,args=(y_data,t_data))
-                
+                fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq( h_residual_T1,params,args=(y_data,t_data), full_output=True)
+
+                [M,B,T1] = fit_params
+                fit_dict = {
+                            'fit_params': fit_params,
+                            'cov' : cov,
+                            'infodict' : infodict,
+                            'mesg' : mesg,
+                            'ier' : ier
+                            }
+                            
                 data_after_fitting[x,y,slice] = T1
+                fit_results[x,y,slice] = fit_dict
                 
                 
                 #data_after_fitting[x,y,slice] = h_fit(t_data, y_data, \
@@ -298,7 +310,7 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0,
     # Need to convert T1_eff to T1
     T1 = 1 / (( (1 / data_after_fitting) + numpy.log(numpy.cos(flip_angle_map)) / repetition_time))
 
-    return T1
+    return T1, fit_results
                     
         #TODO: Implement code to deal with other methos of calculating T1
         # e.g., IR, VFA

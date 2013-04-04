@@ -11,8 +11,6 @@ import sarpy.fmoosvi.getters
 import pylab
 import numpy
 
-import time
-
 def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', 
                   pdata_num = 0, time = 60):
 
@@ -43,10 +41,13 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+',
     ## Now to calculate the AUC
 
     auc = []
+    fit_dicts = []
 
     for scan in scan_list:
         try:
-            auc.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
+            curr_auc, curr_fit_dict = sarpy.fmoosvi.analysis.h_calculate_AUC(scan)
+            auc.append(curr_auc)
+            fit_dicts.append(curr_fit_dict)
         except:
             print('calculate_AUC failed for Scan {0} failed, please fix.'.format(scan.shortdirname))
             
@@ -54,9 +55,9 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+',
     # Also return arrays instead of a list
             
     if numpy.array(auc).shape[0] == 1:     
-        return numpy.array(auc)[0,:,:,:]
+        return numpy.array(auc)[0,:,:,:], numpy.array(fit_dicts)[0,:,:,:]
     else:
-        return numpy.array(auc)
+        return numpy.array(auc), numpy.array(fit_dicts)
 
 def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH',
                       POI_protocol_name = '04_ubcLL+'):
@@ -205,3 +206,18 @@ def roi_distribution(data,roi_image_mask, bins,  display_histogram = True,
         
         filename = save_name + '.png'                
         pylab.savefig(filename, bbox_inches=0, dpi=300)
+        
+
+import sarpy
+
+NecS3_exp = sarpy.Experiment('NecS3')
+
+# Look-Locker T1 maps
+NecS3_LLscans = NecS3_exp.find_scan_by_protocol('04_ubcLL+')
+
+scan = NecS3_LLscans[0]
+
+T1map_LL,T1_fit_dict = calculate_T1map(scan, protocol_name = '04_ubcLL+')
+scan.store_adata(key='T1map_LL', data = T1map_LL)
+scan.store_adata(key='T1_fit_dict', data = T1_fit_dict)
+
