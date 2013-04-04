@@ -11,9 +11,10 @@ import sarpy.fmoosvi.getters
 import pylab
 import numpy
 
+import time
+
 def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', 
                   pdata_num = 0, time = 60):
-
 
     if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
         
@@ -53,7 +54,7 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+',
     # Also return arrays instead of a list
             
     if numpy.array(auc).shape[0] == 1:     
-        return numpy.array(auc[0,:,:,:])
+        return numpy.array(auc)[0,:,:,:]
     else:
         return numpy.array(auc)
 
@@ -99,13 +100,13 @@ def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH',
     # Also return arrays instead of a list
             
     if numpy.array(b1map).shape[0] == 1:     
-        return numpy.array(b1map[0,:,:,:])
+        return numpy.array(b1map)[0,:,:,:]
     else:
         return numpy.array(b1map)           
 
     
 def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', 
-                    flip_angle_map = 0):
+                    FA_map = 0):
 
     try:       
         if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
@@ -133,14 +134,13 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
     for scan in scan_list:
         
         print scan
-        T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,\
-                                                      flip_angle_map = flip_angle_map))
+        T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,flip_angle_map = FA_map))
     
     # Get rid of annoying extra dimension if scan_list contains only one element
     # Also return arrays instead of a list
             
     if numpy.array(T1_map).shape[0] == 1:     
-        return numpy.array(T1_map[0,:,:,:])
+        return numpy.array(T1_map)[0,:,:,:]
     else:
         return numpy.array(T1_map)                                                      
 
@@ -155,8 +155,7 @@ def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
     
     for slice in xrange(num_slices):
         
-        for n in xrange(data_num):
-    
+        for n in xrange(data_num):    
             fig.add_subplot(G[n,slice],frameon=False, xticks=[], yticks=[])
             
             try:
@@ -166,16 +165,10 @@ def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
             
             a = pylab.imshow(data, cmap = colour_map )
             
-            if isinstance(clims[0],(int, float, long)):
-                
+            if isinstance(clims[0],(int, float, long)):                
                 a.set_clim(clims)
-                
             else:
                 a.set_clim(600,3500)
-
-            #a.set_clim(clims)
-            #pylab.axis('off')
-
             if n == 0:
                 pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
     
@@ -212,29 +205,18 @@ def roi_distribution(data,roi_image_mask, bins,  display_histogram = True,
         
         filename = save_name + '.png'                
         pylab.savefig(filename, bbox_inches=0, dpi=300)
+   
 
 
+NecS3_exp = sarpy.Experiment('NecS3')
 
+# Look-Locker T1 maps
+NecS3_LLscans = NecS3_exp.find_scan_by_protocol('04_ubcLL+')
+start_time = time.time()
 
+scan = NecS3_LLscans[0]    
+T1map_LL = calculate_T1map(scan, protocol_name = '04_ubcLL+')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+end_time = time.time() 
+print 'This run took {0} seconds.'.format(round(end_time - start_time))
 
