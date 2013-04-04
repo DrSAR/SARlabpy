@@ -19,7 +19,6 @@ import scipy.fftpack
 import sarpy.fmoosvi.getters as getters
 import math
 
-
 def h_describe_object(class_object):
 
     try: # if patient, print studies
@@ -197,20 +196,68 @@ def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_P
 
 
     return alpha_BS
-
-def h_fit(x_data, y_data, fit_function, initial_params):    
-
-    # Distance to the target function    
-    errfunc = lambda param, x_data, y_data: fit_function(param, x_data) - y_data
-
-    # Fit function to data    
-    final_params, success = scipy.optimize.leastsq(errfunc, \
-                            initial_params[:], args = (x_data, y_data))
     
-    return final_params
-        
-def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
-       
+    
+    
+##############
+    #
+    # Fitting section
+    #
+    #
+    #
+    #
+    #
+    #
+    #
+##############    
+
+def h_func_T1(params,t):
+    M,B,T1 = params
+    return M*(1-B*numpy.exp(-t/T1))
+    
+def h_within_bounds(params,bounds):
+    try:        
+        for p in xrange(len(params)):
+            if params[p] >= bounds[p,0] or params[p] <= bounds[p,1] :
+                return True
+        return False
+    except:
+        print('You have some funky inputs for the bounds, you fail.')
+        return True
+            
+
+def h_residual_T1(params, y_data, t):
+    
+    bounds = numpy.zeros(shape=[3,2])
+    bounds[0,0] = 1e2
+    bounds[0,1] = 1e8
+    bounds[1,0] = 0
+    bounds[1,1] = 5
+    bounds[2,0] = 50
+    bounds[2,1] = 10000
+
+    if h_within_bounds(params,bounds):
+        return y_data - h_func_T1(params, t)
+    else:
+        return 1e9
+
+#def h_fit(x_data, y_data, fit_function, initial_params):    
+#
+#    # Distance to the target function
+#    errfunc = lambda param, x_data, y_data: fit_function(param, x_data) - y_data
+#
+#    # Fit function to data    
+#    final_params, success = scipy.optimize.leastsq(errfunc, \
+#                            initial_params[:], args = (x_data, y_data))
+#    
+#    return final_params
+#        
+def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0, 
+                params = []):
+    
+    if len(params) == 0:      
+        params = [3E5, 2, 350]
+
     num_slices = getters.get_num_slices(scan_object, pdata_num)
     repetition_time = scan_object.method.PVM_RepetitionTime
     inversion_time = scan_object.method.PVM_InversionTime
@@ -220,23 +267,18 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
    
     # Visu_pars params 
         
-    data = scan_object.pdata[pdata_num].data 
-    # data_for_fitting = numpy.zeros( [data.shape[0],data.shape[1],data.shape[2],data.shape[3]] )
-    #for slice in range(num_slices):
-        #data_for_fitting[:,:,slice,:] = numpy.mean(numpy.mean(data[:,:,slice,:],0),0)
-    
+    data = scan_object.pdata[pdata_num].data[:]
+
     data_after_fitting = numpy.zeros( [data.shape[0],\
                                        data.shape[1],\
                                        data.shape[2]] )
             
-    x_data = numpy.linspace(inversion_time,\
+    t_data = numpy.linspace(inversion_time,\
         scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
         scan_object.pdata[pdata_num].data.shape[3])
                                                        
-                                                       
-    fitfunc = lambda param, x_data: numpy.abs(param[0]*\
-                                (1 - param[1]*numpy.exp(-x_data/param[2])))
-    initial_params = [3E5, 2, 350]
+#    fitfunc = lambda param, x_data: numpy.abs(param[0]*\
+#                                (1 - param[1]*numpy.exp(-t_data/param[2])))
     
     for x in xrange(data.shape[0]):
         for y in range(data.shape[1]):
@@ -244,16 +286,18 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
                 
                 y_data = data[x,y,slice,:]
                 
-                data_after_fitting[x,y,slice] = h_fit(x_data, y_data, \
-                                                fitfunc, initial_params)[2]
+                [M,B,T1],params_after_fitting=\
+                scipy.optimize.leastsq(h_residual_T1,params,args=(y_data,t_data))
+                
+                data_after_fitting[x,y,slice] = T1
+                
+                
+                #data_after_fitting[x,y,slice] = h_fit(t_data, y_data, \
+                                                #fitfunc, initial_params)[2]
     
-    # Need to conert T1_eff to T1
-    T1 = 1 / (( (1 / data_after_fitting) + numpy.log(numpy.cos(flip_angle_map))/repetition_time))
-    
-    # Establish bounds on T1 fit results    
-    T1[T1>10000] = numpy.nan
-    T1[T1<50] = numpy.nan
-                                        
+    # Need to convert T1_eff to T1
+    T1 = 1 / (( (1 / data_after_fitting) + numpy.log(numpy.cos(flip_angle_map)) / repetition_time))
+
     return T1
                     
         #TODO: Implement code to deal with other methos of calculating T1
@@ -280,5 +324,3 @@ def h_image_to_mask(data):
     masked_data[masked_data == mask_val] = numpy.nan
     masked_data[numpy.isfinite(masked_data)] = 1
     return masked_data    
-    
-    
