@@ -19,9 +19,10 @@ start_time = time.time()
 
 for scan in NecS3_LLscans:
     try:
-        T1map_LL = sarpy.fmoosvi.wrappers.calculate_T1map(scan, protocol_name = '04_ubcLL+')
-        T1map_LL = numpy.array(T1map_LL)    
+        T1map_LL, T1_fit_dict = sarpy.fmoosvi.wrappers.calculate_T1map(scan, protocol_name = '04_ubcLL+')
         scan.store_adata(key='T1map_LL', data = T1map_LL)
+        scan.store_adata(key='T1_fit_dict', data = T1_fit_dict)
+
     except IOError:
         print scan
     except:
@@ -40,7 +41,7 @@ for scan in NecS3_DCEscans:
     
     try:
         AUC = sarpy.fmoosvi.wrappers.calculate_AUC(scan)
-        scan.store_adata(key='AUC60', data = numpy.array(AUC))
+        scan.store_adata(key='AUC60', data = AUC)
     except:
         print scan
 
