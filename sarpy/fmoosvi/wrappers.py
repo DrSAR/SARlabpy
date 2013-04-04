@@ -11,7 +11,8 @@ import sarpy.fmoosvi.getters
 import pylab
 import numpy
 
-def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, time = 60):
+def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', 
+                  pdata_num = 0, time = 60):
 
 
     if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
@@ -56,7 +57,7 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, t
     else:
         return numpy.array(auc)
 
-def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH', \
+def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH',
                       POI_protocol_name = '04_ubcLL+'):
     
     # Can take in an experiment, a list of scans (4 - BS + 1 scan with poi),
@@ -103,7 +104,8 @@ def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH', \
         return numpy.array(b1map)           
 
     
-def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map = 0):
+def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', 
+                    flip_angle_map = 0):
 
     try:       
         if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
@@ -194,17 +196,22 @@ def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
     pylab.close('all')
     
     
-def roi_distribution(data,roi_image_mask, display_histogram = True, save_histogram = False):
+def roi_distribution(data,roi_image_mask, bins,  display_histogram = True, 
+                     save_histogram = False, save_name = 'hist'):
     
     roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi_image_mask)
-    
     masked_data = data * roi_mask
     
     
-    
-    data_masked = scan1masked * scan1[:,:,:]
-
-
+    if display_histogram:
+        #fig = pylab.figure()
+        pylab.hist(masked_data.flatten(), bins, alpha = 0.5)
+        pylab.title('Distribution of T1s in the ROI')
+        
+    if save_histogram:
+        
+        filename = save_name + '.png'                
+        pylab.savefig(filename, bbox_inches=0, dpi=300)
 
 
 
