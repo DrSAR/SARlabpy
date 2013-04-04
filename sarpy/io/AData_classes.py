@@ -9,6 +9,7 @@ import json
 import re
 import BRUKER_classes
 from lazy_property import lazy_property
+from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
 import nibabel
 import numpy
 from datetime import datetime
@@ -118,7 +119,7 @@ def load_AData(pdatas, dirname):
             for adata_sets in os.listdir(adata_potential):
                 dirname = os.path.join(adata_potential, adata_sets)
                 logger.info('loading adata from %s' % dirname)
-                adata_candidate = AData.fromfile(dirname)
+                adata_candidate = AData.fromfile(dirname, parent=pdata)
                 special_dict.store[adata_candidate.key]=adata_candidate
     return special_dict
         
@@ -141,6 +142,7 @@ class AData(object):
                          'created_datetime': datetime.now().strftime('%c')}
         #some data is handy to have close by
         self.parent_uid = self.meta['parent_uid']
+        self.parent = kwargs['parent']
         
     @lazy_property
     def data(self):
@@ -170,7 +172,7 @@ class AData(object):
                           self.meta['parent_filename'])
 
     @classmethod
-    def fromfile(cls, filename, lazy=True):
+    def fromfile(cls, filename, parent=None, lazy=True):
         '''
         classmethod that can be used to initiatlize the AData object 
         by reading the content from file. To use, issue:
@@ -204,7 +206,8 @@ class AData(object):
             meta = json.load(paramfile)
 
         return cls(meta=meta, 
-                   key=meta['key'])
+                   key=meta['key'],
+                   parent=parent)
 
             
     @classmethod
@@ -233,14 +236,26 @@ class AData(object):
             raise ValueError('analysed data has to be based on a parent')            
         else:
             meta['parent_filename'] = parent.filename
+            kwargs['parent'] = parent
             
         kwargs['meta'] = meta
         return cls(**kwargs)
+        
+    def export2nii(self, filename):
+        aff, header = visu_pars_2_Nifti1Header(self.parent.visu_pars)
+        img_pair = nibabel.nifti1.Nifti1Image(self.data, 
+                                              aff, 
+                                              header=header)
+        img_pair.to_filename(filename)
+
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
-#    scn = BRUKER_classes.Scan('readfidTest.ix1/3')
-#    print(scn.adata)
-#    scn.adata['new']=AData.fromdata(parent=scn.pdata[0], 
-#                                data=numpy.empty([10,10,10]))
+#    import doctest
+#    doctest.testmod()
+    scn = BRUKER_classes.Scan('readfidTest.ix1/3')
+    print(scn.adata)
+    scn.adata['new']=AData.fromdata(parent=scn.pdata[0], 
+                                data=numpy.empty([10,10,10]))
+    
+#    scn = BRUKER_classes.Scan('NecS3Hs06.iJ1/9')
+    
