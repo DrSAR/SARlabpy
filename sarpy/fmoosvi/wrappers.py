@@ -205,18 +205,3 @@ def roi_distribution(data,roi_image_mask, bins,  display_histogram = True,
         
         filename = save_name + '.png'                
         pylab.savefig(filename, bbox_inches=0, dpi=300)
-   
-
-
-NecS3_exp = sarpy.Experiment('NecS3')
-
-# Look-Locker T1 maps
-NecS3_LLscans = NecS3_exp.find_scan_by_protocol('04_ubcLL+')
-start_time = time.time()
-
-scan = NecS3_LLscans[0]    
-T1map_LL = calculate_T1map(scan, protocol_name = '04_ubcLL+')
-
-end_time = time.time() 
-print 'This run took {0} seconds.'.format(round(end_time - start_time))
-
