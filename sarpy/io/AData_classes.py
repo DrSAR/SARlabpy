@@ -40,11 +40,11 @@ class ADataDict(collections.MutableMapping):
     """A dictionary which perfoms some magic on value-by-key assignment
 
     Pre-existing keys are bein checked against the new key.
-    This is inspired by an 
+    This is inspired by an
     `answer on stackoverflow <http://stackoverflow.com/a/3387975/607562>`_
     to the question of how to perfectly override  a dict.
     """
-    
+
     def __init__(self, *args, **kwargs):
         self.store = dict()
         self.update(dict(*args, **kwargs)) # use the free update to set keys
@@ -55,13 +55,13 @@ class ADataDict(collections.MutableMapping):
     def __setitem__(self, key, value):
         if key in self.store:
             logger.warn('ADate set is being overwriten for key %s' % key)
-        
-        # here we receve the key from the dictionary access
-        # hence, we should store it in the meta-data  
+
+        # here we receive the key from the dictionary access
+        # hence, we should store it in the meta-data
         value.meta['key'] = key
-        
+
         # store data on disk
-        
+
         # the handle is a fairly safe and human-readable way to identify
         # the originating scan and pdata
         handle = re.sub(os.path.sep,'-',
@@ -71,11 +71,11 @@ class ADataDict(collections.MutableMapping):
                        value.meta['parent_uid'],
                         '-#-'.join([value.meta['key'],handle]))
         value.meta['dirname'] = folder
-        value.meta['fileroot'] = '-#-'.join([value.meta['key'], 
+        value.meta['fileroot'] = '-#-'.join([value.meta['key'],
                                             value.meta['parent_uid']])
         absfolder = os.path.join(adataroot, folder)
         fileroot = os.path.join(absfolder, value.meta['fileroot'])
-        # react if there is a pre-existingnkey of the same name
+        # react if there is a pre-existing key of the same name
         if os.path.isdir(absfolder):
            os.remove(fileroot+'.json')
            os.remove(fileroot+'.nii')
@@ -84,17 +84,21 @@ class ADataDict(collections.MutableMapping):
         else:
             mkdir_p(absfolder)
 
+        # note how no directional information is stored here.
+        # AData.export2nii is better that way if analyzed-data should be made
+        # available externally: in that case, visu_pars geometry information
+        # will be used to populate the nifti header.
         nibabel.Nifti1Image(value.data,numpy.eye(4)).to_filename(
                                                             fileroot+'.nii')
         with open(fileroot+'.json','w') as paramfile:
             json.dump(value.meta, paramfile, indent=4)
         logger.info('Saving to {0}.(nii, json)'.format(fileroot))
- 
-        print('assigning {0} \nobject {1}'.format(key, 
+
+        print('assigning {0} \nobject {1}'.format(key,
                           value))
         self.store[key] = value
-           
-    
+
+
     def __delitem__(self, key):
         del self.store[key]
 
@@ -103,7 +107,7 @@ class ADataDict(collections.MutableMapping):
 
     def __len__(self):
         return len(self.store)
-        
+
     def __str__(self):
         return str(self.store)
 
@@ -122,7 +126,7 @@ def load_AData(pdatas, dirname):
                 adata_candidate = AData.fromfile(dirname, parent=pdata)
                 special_dict.store[adata_candidate.key]=adata_candidate
     return special_dict
-        
+
 
 class AData(object):
     def __init__(self, **kwargs):
@@ -134,16 +138,16 @@ class AData(object):
 #                                 'an identifying key is required')
         if 'data' in kwargs:
             self.data = kwargs['data']
-            
+
         if 'meta' in kwargs:
             self.meta = kwargs['meta']
         else:
-            self.meta = {'key': self.key, 
+            self.meta = {'key': self.key,
                          'created_datetime': datetime.now().strftime('%c')}
         #some data is handy to have close by
         self.parent_uid = self.meta['parent_uid']
         self.parent = kwargs['parent']
-        
+
     @lazy_property
     def data(self):
         #find in file when asked to load
@@ -153,8 +157,8 @@ class AData(object):
         logger.info('loading Nifti file %s' % datafilename)
         data = nibabel.load(datafilename)
         self.__yet_loaded = True
-        return data        
-        
+        return data
+
     def __str__(self):
         '''
         Simple representation (for print() and str() uses) of AData class
@@ -164,17 +168,18 @@ class AData(object):
         '''
         More elaborate representation
         '''
-        return ('Analysed data based on PDATA (uid={0})\n'+
+        return ("Analysed data ('{3}') based on PDATA (uid={0})\n"+
                 '  created on {1}\n'+
                 '  parent: {2}'+
                 '').format(self.parent_uid,
                           self.meta['created_datetime'],
-                          self.meta['parent_filename'])
+                          self.meta['parent_filename'],
+                          self.key)
 
     @classmethod
     def fromfile(cls, filename, parent=None, lazy=True):
         '''
-        classmethod that can be used to initiatlize the AData object 
+        classmethod that can be used to initiatlize the AData object
         by reading the content from file. To use, issue:
 
             >>> import glob, os
@@ -187,45 +192,46 @@ class AData(object):
 
         Admittedly this will rarely be required and most likely be done from
         some other constructor.
-        
+
         :param string filename:
             points to the adataroot/uid/uid.*/ directory
         '''
         datadir = os.path.join(adataroot,filename,'*')
         paramfilename = glob.glob(datadir+'json')
         datafilename = glob.glob(datadir+'nii')
-        
-        
+
+
         assert len(paramfilename) == 1, (
             'Need precisely one parameter file *json, found: {0}'.format(
             paramfilename))
         if len(datafilename) != 1:
             logger.warn('Need precisely one nifti file *nii, found: {0}'.
-                            format(datafilename))            
+                            format(datafilename))
         with open(paramfilename[0], 'r') as paramfile:
             meta = json.load(paramfile)
 
-        return cls(meta=meta, 
+        return cls(meta=meta,
                    key=meta['key'],
                    parent=parent)
 
-            
+
     @classmethod
-    def fromdata(cls, parent=None, **kwargs):
+    def fromdata(cls, parent=None, data=None, **kwargs):
         '''
         This creates an AData object from an array (maybe somehing else later)
         It does not store it on disk. This would typically be done by the
         ADataDict on assignment to a key.
-        
+
         :param BRUKER_classes.PDATA_file parent:
-            A parent has to be a Scan or some object that provides a UID
+            A parent has to be an object that provides a UID and has a
+            visu_pars attribute. Typically a PDATA_file
         :param array data:
             sourcedata
-        :param dict meta:
-            meta information in the form of a dictionary. It will have the
-            Parent uid added.
+        :param dict(optional) meta:
+            meta information in the form of a dictionary. The following keys
+            will be added to it: paret_uid, created_datetime, parent_filename.
         '''
-        if 'meta' in kwargs: 
+        if 'meta' in kwargs:
             meta = kwargs['meta']
         else:
             meta = {}
@@ -233,18 +239,24 @@ class AData(object):
             meta['created_datetime'] = datetime.now().strftime('%c')
 
         if parent is None:
-            raise ValueError('analysed data has to be based on a parent')            
+            raise ValueError('analysed data has to be based on a parent')
         else:
             meta['parent_filename'] = parent.filename
             kwargs['parent'] = parent
-            
+
+        if data is None:
+            raise ValueError('analysed data has to be passed: \n' +
+                             ' ... fromdata(..., data=numpy.array(), ...)')
+        else:
+            kwargs['data'] = data
+
         kwargs['meta'] = meta
         return cls(**kwargs)
-        
+
     def export2nii(self, filename):
         aff, header = visu_pars_2_Nifti1Header(self.parent.visu_pars)
-        img_pair = nibabel.nifti1.Nifti1Image(self.data, 
-                                              aff, 
+        img_pair = nibabel.nifti1.Nifti1Image(self.data,
+                                              aff,
                                               header=header)
         img_pair.to_filename(filename)
 
@@ -254,8 +266,7 @@ if __name__ == '__main__':
 #    doctest.testmod()
     scn = BRUKER_classes.Scan('readfidTest.ix1/3')
     print(scn.adata)
-    scn.adata['new']=AData.fromdata(parent=scn.pdata[0], 
+    scn.adata['new']=AData.fromdata(parent=scn.pdata[0],
                                 data=numpy.empty([10,10,10]))
-    
+
 #    scn = BRUKER_classes.Scan('NecS3Hs06.iJ1/9')
-    
