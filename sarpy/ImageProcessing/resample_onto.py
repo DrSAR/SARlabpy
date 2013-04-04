@@ -15,6 +15,8 @@ def resample_onto(source_fname, target_fname):
         This should also be pointing to a Nifti1 file. Only the header with
         the enclosed geometry information will be considered to determine the
         new grid to resample source_fname.data onto.
+    :return:
+        resampled image as numpy.array
 
     Example:
         >>> import os, nibabel
@@ -26,14 +28,19 @@ def resample_onto(source_fname, target_fname):
         (256, 256, 5)
         >>> new = resample_onto(fname, fname_ref)
         >>> new.shape
-
+        (256, 256, 5)
     '''
-    input = sitk.ReadImage(source_fname)
+    img_input = sitk.ReadImage(source_fname)
     ref_input = sitk.ReadImage(target_fname)
-    res_filter = sitk.ResampleImageFilter()
-    res_filter.SetReferenceImage(ref_input)
-    output=res_filter.Execute(input)
-    return output
+    resample_filter = sitk.ResampleImageFilter()
+    resample_filter.SetReferenceImage(ref_input)
+    # return the resampled image as an SimpleITK Image object
+    output=resample_filter.Execute(img_input)
+    # make a numpy array from that image
+    # NB: this appears to return the thing in reverse order of dimensions
+    dims = range(output.GetDimension())
+    dims = dims.reverse()
+    return sitk.GetArrayFromImage(output).transpose(dims)
 
 if __name__ == "__main__":
     import doctest
