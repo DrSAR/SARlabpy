@@ -122,10 +122,6 @@ def visu_pars_2_Nifti1Header(visu_pars):
                 p2 = numpy.array(visu_pars.VisuCorePosition[1])
                 d = numpy.sqrt(((p1 - p2)**2).sum())
             pixdims = numpy.hstack([pixdims, d])
-            # k_size we need further down
-            k_size = visu_pars.VisuCoreFrameCount
-        else:
-            k_size = visu_pars.VisuCoreSize[2] 
             
         if len(pixdims) != 3:
             raise ValueError('unexpected value for VisuCoreDim')
@@ -135,7 +131,6 @@ def visu_pars_2_Nifti1Header(visu_pars):
     except AttributeError:
         logger.warn('Could not set rotation \nassuming Identity.')
         R_visupars = numpy.eye(3).reshape(9)
-    R_visupars_old = R_visupars[:]
 
     # Now we have to do the rotation business correctly. So far we have a
     # rotation matrix under the assumption of the somewhat screwy sign
@@ -168,9 +163,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
                           visu_pars.VisuCoreOrientation[0][6:9]]).reshape(3,3)
 
     R_visupars = numpy.array(M.I).reshape(9) * numpy.tile(pixdims,3)
-    print pixdims
-    print R_visupars_old
-    print R_visupars
+
     try:
         qoffset =  visu_pars.VisuCorePosition[0,:] * [-1, -1, 1]
     except AttributeError:
