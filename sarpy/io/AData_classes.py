@@ -186,7 +186,7 @@ class AData(object):
             >>> adata_dir = glob.glob(adataroot+'/*/*')[0] # take the first dir
             >>> adata_dir_short = re.sub(adataroot+os.path.sep, '', adata_dir)
             >>> AData.fromfile(adata_dir_short)  # doctest:+ELLIPSIS
-            Analysed data based on PDATA (uid=...)
+            Analysed data ('...') based on PDATA (uid=...)
               created on ...
               parent: ...
 
@@ -254,19 +254,33 @@ class AData(object):
         return cls(**kwargs)
 
     def export2nii(self, filename):
+        '''
+        Export AData content to a named Nifti1 file using the visu_pars-defined
+        geometry of the associated parent processed data (PData)
+
+        :param string filename:
+            where to write the file, what did you think?
+
+        Example:
+            >>> import sarpy
+            >>> scn = sarpy.Scan('PhantomOrientation.iY1/2')
+            >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2)
+            ...                 # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+            assigning times2
+            object AData.fromfile...
+            >>> scn.adata['times2'].export2nii('/tmp/PhantomOrientation-times2.nii.gz')
+        '''
         aff, header = visu_pars_2_Nifti1Header(self.parent.visu_pars)
-        img_pair = nibabel.nifti1.Nifti1Image(self.data,
+        img_nii = nibabel.nifti1.Nifti1Image(self.data,
                                               aff,
                                               header=header)
-        img_pair.to_filename(filename)
+        img_nii.to_filename(filename)
 
 
 if __name__ == '__main__':
-#    import doctest
-#    doctest.testmod()
-    scn = BRUKER_classes.Scan('readfidTest.ix1/3')
-    print(scn.adata)
-    scn.adata['new']=AData.fromdata(parent=scn.pdata[0],
-                                data=numpy.empty([10,10,10]))
-
-#    scn = BRUKER_classes.Scan('NecS3Hs06.iJ1/9')
+    import doctest
+    doctest.testmod()
+#    scn = BRUKER_classes.Scan('readfidTest.ix1/3')
+#    print(scn.adata)
+#    scn.adata['new']=AData.fromdata(parent=scn.pdata[0],
+#                                data=numpy.empty([10,10,10]))
