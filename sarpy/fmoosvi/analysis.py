@@ -249,6 +249,10 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0):
     
     # Need to conert T1_eff to T1
     T1 = 1 / (( (1 / data_after_fitting) + numpy.log(numpy.cos(flip_angle_map))/repetition_time))
+    
+    # Establish bounds on T1 fit results    
+    T1[T1>10000] = numpy.nan
+    T1[T1<50] = numpy.nan
                                         
     return T1
                     
