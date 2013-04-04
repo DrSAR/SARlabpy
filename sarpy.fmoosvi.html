@@ -45,6 +45,7 @@
           <a href="sarpy.DCE.html" title="DCE Package"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li>
+          <li><a href="modules.html" >sarpy Documentation</a> &raquo;</li>
           <li><a href="sarpy.html" accesskey="U">sarpy Package</a> &raquo;</li> 
       </ul>
     </div>  
@@ -113,6 +114,11 @@ default reconstruction is pdata_num = 0.</li>
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="sarpy.fmoosvi.analysis.h_image_to_mask">
+<tt class="descclassname">sarpy.fmoosvi.analysis.</tt><tt class="descname">h_image_to_mask</tt><big>(</big><em>data</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/analysis.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.analysis.h_image_to_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="sarpy.fmoosvi.analysis.h_inj_point">
 <tt class="descclassname">sarpy.fmoosvi.analysis.</tt><tt class="descname">h_inj_point</tt><big>(</big><em>scan_object</em>, <em>pdata_num=0</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/analysis.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.analysis.h_inj_point" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -138,6 +144,11 @@ default reconstruction is pdata_num = 0.</li>
 <p>Created on Tue Mar 12 14:41:54 2013</p>
 <p>&#64;author: fmoosvi</p>
 <dl class="function">
+<dt id="sarpy.fmoosvi.getters.get_image_clims">
+<tt class="descclassname">sarpy.fmoosvi.getters.</tt><tt class="descname">get_image_clims</tt><big>(</big><em>data</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/getters.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.getters.get_image_clims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="sarpy.fmoosvi.getters.get_num_slices">
 <tt class="descclassname">sarpy.fmoosvi.getters.</tt><tt class="descname">get_num_slices</tt><big>(</big><em>scan_object</em>, <em>pdata_num=0</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/getters.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.getters.get_num_slices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of slices</p>
@@ -159,6 +170,16 @@ default reconstruction is pdata_num = 0.</li>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="sarpy.fmoosvi.getters.get_patients_from_experiment">
+<tt class="descclassname">sarpy.fmoosvi.getters.</tt><tt class="descname">get_patients_from_experiment</tt><big>(</big><em>Experiment_name</em>, <em>verbose=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/getters.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.getters.get_patients_from_experiment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.fmoosvi.getters.get_unique_list_elements">
+<tt class="descclassname">sarpy.fmoosvi.getters.</tt><tt class="descname">get_unique_list_elements</tt><big>(</big><em>list</em>, <em>idfun=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/getters.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.getters.get_unique_list_elements" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="module-sarpy.fmoosvi.test_suite">
 <span id="test-suite-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_suite</span></tt> Module<a class="headerlink" href="#module-sarpy.fmoosvi.test_suite" title="Permalink to this headline">¶</a></h2>
@@ -174,12 +195,22 @@ default reconstruction is pdata_num = 0.</li>
 
 <dl class="function">
 <dt id="sarpy.fmoosvi.wrappers.calculate_BSB1map">
-<tt class="descclassname">sarpy.fmoosvi.wrappers.</tt><tt class="descname">calculate_BSB1map</tt><big>(</big><em>Experiment_object</em>, <em>protocol_name='07_bSB1mapFLASH'</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/wrappers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.wrappers.calculate_BSB1map" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">sarpy.fmoosvi.wrappers.</tt><tt class="descname">calculate_BSB1map</tt><big>(</big><em>Bruker_object</em>, <em>BS_protocol_name='07_bSB1mapFLASH'</em>, <em>POI_protocol_name='04_ubcLL+'</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/wrappers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.wrappers.calculate_BSB1map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="sarpy.fmoosvi.wrappers.calculate_T1map">
 <tt class="descclassname">sarpy.fmoosvi.wrappers.</tt><tt class="descname">calculate_T1map</tt><big>(</big><em>Bruker_object</em>, <em>protocol_name='04_ubcLL2'</em>, <em>flip_angle_map=0</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/wrappers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.wrappers.calculate_T1map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.fmoosvi.wrappers.create_summary">
+<tt class="descclassname">sarpy.fmoosvi.wrappers.</tt><tt class="descname">create_summary</tt><big>(</big><em>data_list</em>, <em>key_list</em>, <em>clims=None</em>, <em>colour_map='jet'</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/wrappers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.wrappers.create_summary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.fmoosvi.wrappers.roi_distribution">
+<tt class="descclassname">sarpy.fmoosvi.wrappers.</tt><tt class="descname">roi_distribution</tt><big>(</big><em>data</em>, <em>roi_image_mask</em>, <em>bins</em>, <em>display_histogram=True</em>, <em>save_histogram=False</em>, <em>save_name='hist'</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/fmoosvi/wrappers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.fmoosvi.wrappers.roi_distribution" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -248,6 +279,7 @@ default reconstruction is pdata_num = 0.</li>
           <a href="sarpy.DCE.html" title="DCE Package"
              >previous</a> |</li>
         <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li>
+          <li><a href="modules.html" >sarpy Documentation</a> &raquo;</li>
           <li><a href="sarpy.html" >sarpy Package</a> &raquo;</li> 
       </ul>
     </div>

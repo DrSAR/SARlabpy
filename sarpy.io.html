@@ -25,6 +25,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="sarpy 0.1alpha documentation" href="index.html" />
     <link rel="up" title="sarpy Package" href="sarpy.html" />
+    <link rel="next" title="setup Module" href="setup.html" />
     <link rel="prev" title="fmoosvi Package" href="sarpy.fmoosvi.html" /> 
   </head>
   <body>
@@ -38,9 +39,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
+          <a href="setup.html" title="setup Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
           <a href="sarpy.fmoosvi.html" title="fmoosvi Package"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li>
+          <li><a href="modules.html" >sarpy Documentation</a> &raquo;</li>
           <li><a href="sarpy.html" accesskey="U">sarpy Package</a> &raquo;</li> 
       </ul>
     </div>  
@@ -64,9 +69,37 @@
 <tt class="descname">data</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.data" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="sarpy.io.AData_classes.AData.export2nii">
+<tt class="descname">export2nii</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.export2nii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export AData content to a named Nifti1 file using the visu_pars-defined
+geometry of the associated parent processed data (PData)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) &#8211; where to write the file, what did you think?</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Example:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sarpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span> <span class="o">=</span> <span class="n">sarpy</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="s">&#39;PhantomOrientation.iY1/2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">store_adata</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s">&#39;times2&#39;</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">scn</span><span class="o">.</span><span class="n">pdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">... </span>                
+<span class="go">assigning times2</span>
+<span class="go">object AData.fromfile...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">adata</span><span class="p">[</span><span class="s">&#39;times2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">export2nii</span><span class="p">(</span><span class="s">&#39;/tmp/PhantomOrientation-times2.nii.gz&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="sarpy.io.AData_classes.AData.fromdata">
-<em class="property">classmethod </em><tt class="descname">fromdata</tt><big>(</big><em>parent=None</em>, <em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.fromdata" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><tt class="descname">fromdata</tt><big>(</big><em>parent=None</em>, <em>data=None</em>, <em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.fromdata" title="Permalink to this definition">¶</a></dt>
 <dd><p>This creates an AData object from an array (maybe somehing else later)
 It does not store it on disk. This would typically be done by the
 ADataDict on assignment to a key.</p>
@@ -75,10 +108,11 @@ ADataDict on assignment to a key.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>parent</strong> (<em>BRUKER_classes.PDATA_file</em>) &#8211; A parent has to be a Scan or some object that provides a UID</li>
+<li><strong>parent</strong> (<em>BRUKER_classes.PDATA_file</em>) &#8211; A parent has to be an object that provides a UID and has a
+visu_pars attribute. Typically a PDATA_file</li>
 <li><strong>data</strong> (<em>array</em>) &#8211; sourcedata</li>
-<li><strong>meta</strong> (<em>dict</em>) &#8211; meta information in the form of a dictionary. It will have the
-Parent uid added.</li>
+<li><strong>meta</strong> (<em>dict(optional)</em>) &#8211; meta information in the form of a dictionary. The following keys
+will be added to it: paret_uid, created_datetime, parent_filename.</li>
 </ul>
 </td>
 </tr>
@@ -88,14 +122,14 @@ Parent uid added.</li>
 
 <dl class="classmethod">
 <dt id="sarpy.io.AData_classes.AData.fromfile">
-<em class="property">classmethod </em><tt class="descname">fromfile</tt><big>(</big><em>filename</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.fromfile" title="Permalink to this definition">¶</a></dt>
-<dd><p>classmethod that can be used to initiatlize the AData object 
+<em class="property">classmethod </em><tt class="descname">fromfile</tt><big>(</big><em>filename</em>, <em>parent=None</em>, <em>lazy=True</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.AData_classes.AData.fromfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>classmethod that can be used to initiatlize the AData object
 by reading the content from file. To use, issue:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">glob</span><span class="o">,</span> <span class="nn">os</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">adata_dir</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">adataroot</span><span class="o">+</span><span class="s">&#39;/*/*&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c"># take the first dir</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">adata_dir_short</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">adataroot</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">adata_dir</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">AData</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">adata_dir_short</span><span class="p">)</span>  
-<span class="go">Analysed data based on PDATA (uid=...)</span>
+<span class="go">Analysed data (&#39;...&#39;) based on PDATA (uid=...)</span>
 <span class="go">  created on ...</span>
 <span class="go">  parent: ...</span>
 </pre></div>
@@ -120,7 +154,7 @@ some other constructor.</p>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">_abcoll.MutableMapping</span></tt></p>
 <p>A dictionary which perfoms some magic on value-by-key assignment</p>
 <p>Pre-existing keys are bein checked against the new key.
-This is inspired by an 
+This is inspired by an
 <a class="reference external" href="http://stackoverflow.com/a/3387975/607562">answer on stackoverflow</a>
 to the question of how to perfectly override  a dict.</p>
 </dd></dl>
@@ -341,8 +375,10 @@ Spatial Spatial
 ['&lt;hermite.exc&gt;', 17.9862515696541, 0]
 &gt;&gt;&gt; a['TPQQ'][0][1]
 17.9862515696541
-&gt;&gt;&gt; a['ACQ_grad_matrix'][0:20]
-[1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0]</pre>
+&gt;&gt;&gt; a['ACQ_grad_matrix'][0]
+array([[1, 0, 0],
+       [0, 1, 0],
+       [0, 0, 1]])</pre>
 </div>
 </dd></dl>
 
@@ -581,7 +617,7 @@ of this structure array as a string.</p>
 <dt id="sarpy.io.BRUKER_classes.Experiment">
 <em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Experiment</tt><big>(</big><em>root=None</em>, <em>absolute_root=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#sarpy.io.BRUKER_classes.StudyCollection" title="sarpy.io.BRUKER_classes.StudyCollection"><tt class="xref py py-class docutils literal"><span class="pre">sarpy.io.BRUKER_classes.StudyCollection</span></tt></a></p>
-<p>An Experiment is not BRUKER terminology. It is a grouping of several 
+<p>An Experiment is not BRUKER terminology. It is a grouping of several
 studies (that have scans themselves) by various criteria.
 Typically, the patient name contains a root pointing to a common goal
 of the performed scans. It is a bit like a patient with the relaxation
@@ -628,6 +664,35 @@ for the 2dseq file, the d3proc and th reco file.</p>
 <tt class="descname">dimdesc</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.dimdesc" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="sarpy.io.BRUKER_classes.PDATA_file.export2nii">
+<tt class="descname">export2nii</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.export2nii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export the data originating from a 2dseq (BRUKER) reconstruction to
+a Nifti file format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) &#8211; where to write the file</td>
+</tr>
+</tbody>
+</table>
+<p>A lot of the magic happens in visu_pars_2_Nift1Header in order to
+figure out geometry.</p>
+<dl class="docutils">
+<dt>Examples:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;readfidTest.ix1&#39;</span><span class="p">,</span><span class="s">&#39;3&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span><span class="s">&#39;readfid.nii&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;writing tempfile </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span> 
+<span class="go">writing tempfile ...readfid.nii</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">pdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">export2nii</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="sarpy.io.BRUKER_classes.PDATA_file.reco">
 <tt class="descname">reco</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.reco" title="Permalink to this definition">¶</a></dt>
@@ -638,8 +703,8 @@ for the 2dseq file, the d3proc and th reco file.</p>
 <tt class="descname">store_adata</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.store_adata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store some secondary data for this PData scan.</p>
 <p>See call signature of AData_classes.AData.fromdata</p>
-<p>Would be nice to trigger an update in the adata list of the 
-parent object (Scan). This might be hard. Sounds like Traits to me.</p>
+<p>This triggers an update in the adata dictionary of the
+parent object (Scan).</p>
 </dd></dl>
 
 <dl class="method">
@@ -651,56 +716,6 @@ parent object (Scan). This might be hard. Sounds like Traits to me.</p>
 <dt id="sarpy.io.BRUKER_classes.PDATA_file.visu_pars">
 <tt class="descname">visu_pars</tt><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.visu_pars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="method">
-<dt id="sarpy.io.BRUKER_classes.PDATA_file.write2nii">
-<tt class="descname">write2nii</tt><big>(</big><em>filename</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.PDATA_file.write2nii" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Write the data originating from a 2dseq (BRUKER) reconstruction to
-a Nifti file format.</p>
-<p><a href="#id2"><span class="problematic" id="id3">`Original Header information &lt;http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/`_</span></a>
-But <cite>this site is by far the best resource for info on the Nifti header:
-&lt;http://brainder.org/2012/09/23/the-nifti-file-format/&gt;</cite></p>
-<p>There are 3 different methods by which continuous coordinates can be 
-attached to voxels. We are using method 2:
-METHOD 2 (used when qform_code &gt; 0, which should be the &#8220;normal&#8221; case):
-<a class="reference external" href="http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/nifti1fields_pages/qsform.html#ref3">Ref:</a>
-&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
-The (x,y,z) coordinates are given by the pixdim[] scales, a rotation
-matrix, and a shift.  This method is intended to represent
-&#8220;scanner-anatomical&#8221; coordinates, which are often embedded in the
-image header (e.g., DICOM fields (0020,0032), (0020,0037), (0028,0030),
-and (0018,0050)), and represent the nominal orientation and location of
-the data.  This method can also be used to represent &#8220;aligned&#8221;
-coordinates, which would typically result from some post-acquisition
-alignment of the volume to a standard orientation (e.g., the same
-subject on another day, or a rigid rotation to true anatomical
-orientation from the tilted position of the subject in the scanner).
-The formula for (x,y,z) in terms of header parameters and (i,j,k) is:</p>
-<p>[ x ]   [ R11 R12 R13 ] [        pixdim[1] * i ]   [ qoffset_x ]
-[ y ] = [ R21 R22 R23 ] [        pixdim[2]  j ] + [ qoffset_y ]
-[ z ]   [ R31 R32 R33 ] [ qfac  pixdim[3] * k ]   [ qoffset_z ]</p>
-<p>In methods 2 and 3, the (x,y,z) axes refer to a subject-based coordinate system,</p>
-</div></blockquote>
-<p>with
-+x = Right  +y = Anterior  +z = Superior.
-This is a right-handed coordinate system.  However, the exact direction
-these axes point with respect to the subject depends on qform_code</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>Examples:</dt>
-<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tempfile</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;readfidTest.ix1&#39;</span><span class="p">,</span><span class="s">&#39;3&#39;</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span><span class="s">&#39;readfid.nii&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;writing tempfile </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span> 
-<span class="go">writing tempfile ...readfid.nii</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">pdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write2nii</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd>
-</dl>
-</div></blockquote>
-</dd></dl>
 
 </dd></dl>
 
@@ -716,21 +731,21 @@ has to agree from one study to the next</p>
 <dt id="sarpy.io.BRUKER_classes.Scan">
 <em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">Scan</tt><big>(</big><em>root</em>, <em>absolute_root=False</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.Scan" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>Object to represent a BRUKER scan consisting, typically, of FID_file 
+<p>Object to represent a BRUKER scan consisting, typically, of FID_file
 and PDATA_file(s).</p>
 <p>The __init__() method expects the filename to be a directory. It will
-try around a bit (filenames inside the directory) before throwing an 
+try around a bit (filenames inside the directory) before throwing an
 exception. It will also give up if it can&#8217;t find any of the
 acqp, method, fid or one 2dseq file.</p>
 <p>Simple Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="s">&#39;readfidTest.ix1/3&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">dir</span><span class="p">(</span><span class="n">exp3</span><span class="p">)</span>    
-<span class="go">[&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__doc__&#39;, &#39;__format__&#39;, </span>
-<span class="go"> &#39;__getattribute__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__module__&#39;, &#39;__new__&#39;, </span>
-<span class="go"> &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, </span>
-<span class="go"> &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;acqp&#39;, </span>
-<span class="go"> &#39;adata&#39;, &#39;dirname&#39;, &#39;fid&#39;, &#39;method&#39;, &#39;pdata&#39;, &#39;pdata_uids&#39;, </span>
+<span class="go">[&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__doc__&#39;, &#39;__format__&#39;,</span>
+<span class="go"> &#39;__getattribute__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__module__&#39;, &#39;__new__&#39;,</span>
+<span class="go"> &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;,</span>
+<span class="go"> &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;acqp&#39;,</span>
+<span class="go"> &#39;adata&#39;, &#39;dirname&#39;, &#39;fid&#39;, &#39;method&#39;, &#39;pdata&#39;, &#39;pdata_uids&#39;,</span>
 <span class="go"> &#39;shortdirname&#39;, &#39;store_adata&#39;]</span>
 </pre></div>
 </div>
@@ -811,9 +826,9 @@ or more subdirectories which are scans.</p>
 <dt id="sarpy.io.BRUKER_classes.StudyCollection">
 <em class="property">class </em><tt class="descclassname">sarpy.io.BRUKER_classes.</tt><tt class="descname">StudyCollection</tt><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.BRUKER_classes.StudyCollection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>A StudyCollection can have multiple studies (in BRUKER speak) which can in 
-turn have multiple scans. It can be initialised by pointing it 
-to a scan or study. This should be a superclass too (?), e.g. the Patient and 
+<p>A StudyCollection can have multiple studies (in BRUKER speak) which can in
+turn have multiple scans. It can be initialised by pointing it
+to a scan or study. This should be a superclass too (?), e.g. the Patient and
 the Experiment class.</p>
 <dl class="method">
 <dt id="sarpy.io.BRUKER_classes.StudyCollection.add_study">
@@ -960,6 +975,42 @@ handlers is overwritten, logging can commence.</p>
 <p>acqp, method, fid, 2dseq. This results in a score of
 1 +   2 +     4 +  8 = 15. If one is missing, the score is less.
 ========================================</p>
+</div>
+<div class="section" id="module-sarpy.io.check_nii_vs_visu_pars">
+<span id="check-nii-vs-visu-pars-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">check_nii_vs_visu_pars</span></tt> Module<a class="headerlink" href="#module-sarpy.io.check_nii_vs_visu_pars" title="Permalink to this headline">¶</a></h2>
+<p>Loads a slew of nii that have been generated from BRUKER exported DICOM
+(BRUKER -&gt;(datamanager)-&gt; DICOM -&gt;(dcm2nii)-&gt; nii.gz )</p>
+<p>and compares the headers in those nii files with the visu_pars information</p>
+<dl class="function">
+<dt id="sarpy.io.check_nii_vs_visu_pars.nii_geom">
+<tt class="descclassname">sarpy.io.check_nii_vs_visu_pars.</tt><tt class="descname">nii_geom</tt><big>(</big><em>filename='/Users/stefan'</em>, <em>visu_dict=None</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/check_nii_vs_visu_pars.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.check_nii_vs_visu_pars.nii_geom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.io.compare_JCAMP_readers">
+<span id="compare-jcamp-readers-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">compare_JCAMP_readers</span></tt> Module<a class="headerlink" href="#module-sarpy.io.compare_JCAMP_readers" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Mar 25 22:16:02 2013</p>
+<p>&#64;author: stefan</p>
+<dl class="function">
+<dt id="sarpy.io.compare_JCAMP_readers.acycode">
+<tt class="descclassname">sarpy.io.compare_JCAMP_readers.</tt><tt class="descname">acycode</tt><big>(</big><em>fname</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/compare_JCAMP_readers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.compare_JCAMP_readers.acycode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.io.compare_JCAMP_readers.parsecode">
+<tt class="descclassname">sarpy.io.compare_JCAMP_readers.</tt><tt class="descname">parsecode</tt><big>(</big><em>fname</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/compare_JCAMP_readers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.compare_JCAMP_readers.parsecode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.io.compare_JCAMP_readers.sarcode">
+<tt class="descclassname">sarpy.io.compare_JCAMP_readers.</tt><tt class="descname">sarcode</tt><big>(</big><em>fname</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/compare_JCAMP_readers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.compare_JCAMP_readers.sarcode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.io.compare_JCAMP_readers.show_dict_comparison">
+<tt class="descclassname">sarpy.io.compare_JCAMP_readers.</tt><tt class="descname">show_dict_comparison</tt><big>(</big><em>d1</em>, <em>d2</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/compare_JCAMP_readers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.compare_JCAMP_readers.show_dict_comparison" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="module-sarpy.io.congrid">
 <span id="congrid-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">congrid</span></tt> Module<a class="headerlink" href="#module-sarpy.io.congrid" title="Permalink to this headline">¶</a></h2>
@@ -1125,6 +1176,89 @@ only performed once.</p>
 <dd></dd></dl>
 
 </div>
+<div class="section" id="module-sarpy.io.parseJCAMP">
+<span id="parsejcamp-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">parseJCAMP</span></tt> Module<a class="headerlink" href="#module-sarpy.io.parseJCAMP" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Mar 25 21:10:04 2013</p>
+<p>&#64;author: stefan</p>
+<dl class="function">
+<dt id="sarpy.io.parseJCAMP.join_JCAMP_lines">
+<tt class="descclassname">sarpy.io.parseJCAMP.</tt><tt class="descname">join_JCAMP_lines</tt><big>(</big><em>fname</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/parseJCAMP.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.parseJCAMP.join_JCAMP_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.io.parseJCAMP.parse_JCAMP">
+<tt class="descclassname">sarpy.io.parseJCAMP.</tt><tt class="descname">parse_JCAMP</tt><big>(</big><em>string_list</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/parseJCAMP.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.parseJCAMP.parse_JCAMP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.io.visu_pars_2_Nifti1Header">
+<span id="visu-pars-2-nifti1header-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">visu_pars_2_Nifti1Header</span></tt> Module<a class="headerlink" href="#module-sarpy.io.visu_pars_2_Nifti1Header" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Apr  1 00:36:03 2013</p>
+<p>&#64;author: stefan</p>
+<dl class="function">
+<dt id="sarpy.io.visu_pars_2_Nifti1Header.visu_pars_2_Nifti1Header">
+<tt class="descclassname">sarpy.io.visu_pars_2_Nifti1Header.</tt><tt class="descname">visu_pars_2_Nifti1Header</tt><big>(</big><em>visu_pars</em><big>)</big><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/io/visu_pars_2_Nifti1Header.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.io.visu_pars_2_Nifti1Header.visu_pars_2_Nifti1Header" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Take visu_pars header and extract all useful information for  Nifti1Header.
+This attempts to get all the geometry information out without requiring 
+any special flip etc in the data beyond the initial column-major-to-row- 
+major flip when reading in the 2dseq file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">param dict visu_pars:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">visu_pars structure as previded by readJCAMP</td>
+</tr>
+</tbody>
+</table>
+<p>Note: this results in  a headr that&#8217;s different from the one obtained by 
+exporting BRUKER data to dicom. Not clear why that is...</p>
+<p><a href="#id2"><span class="problematic" id="id3">`Original Header information &lt;http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/`_</span></a>
+But <cite>this site is by far the best resource for info on the Nifti header:
+&lt;http://brainder.org/2012/09/23/the-nifti-file-format/&gt;</cite></p>
+<p>There are 3 different methods by which continuous coordinates can be 
+attached to voxels. We are using method 2:
+METHOD 2 (used when qform_code &gt; 0, which should be the &#8220;normal&#8221; case):
+<a class="reference external" href="http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/nifti1fields_pages/qsform.html#ref3">Ref:</a>
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+The (x,y,z) coordinates are given by the pixdim[] scales, a rotation
+matrix, and a shift.  This method is intended to represent
+&#8220;scanner-anatomical&#8221; coordinates, which are often embedded in the
+image header (e.g., DICOM fields (0020,0032), (0020,0037), (0028,0030),
+and (0018,0050)), and represent the nominal orientation and location of
+the data.  This method can also be used to represent &#8220;aligned&#8221;
+coordinates, which would typically result from some post-acquisition
+alignment of the volume to a standard orientation (e.g., the same
+subject on another day, or a rigid rotation to true anatomical
+orientation from the tilted position of the subject in the scanner).
+The formula for (x,y,z) in terms of header parameters and (i,j,k) is:</p>
+<p>[ x ]   [ R11 R12 R13 ] [        pixdim[1] * i ]   [ qoffset_x ]
+[ y ] = [ R21 R22 R23 ] [        pixdim[2]  j ] + [ qoffset_y ]
+[ z ]   [ R31 R32 R33 ] [ qfac  pixdim[3] * k ]   [ qoffset_z ]</p>
+<p>In methods 2 and 3, the (x,y,z) axes refer to a subject-based coordinate system,</p>
+</div></blockquote>
+<p>with
++x = Right  +y = Anterior  +z = Superior.
+This is a right-handed coordinate system.  However, the exact direction
+these axes point with respect to the subject depends on qform_code</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Examples:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;readfidTest.ix1&#39;</span><span class="p">,</span><span class="s">&#39;3&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span><span class="s">&#39;readfid.nii&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;writing tempfile </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span> 
+<span class="go">writing tempfile ...readfid.nii</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">pdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write2nii</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -1142,10 +1276,14 @@ only performed once.</p>
 <li><a class="reference internal" href="#module-sarpy.io.BRUKER_classes"><tt class="docutils literal"><span class="pre">BRUKER_classes</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.SARlogger"><tt class="docutils literal"><span class="pre">SARlogger</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.check_fid_acqp_method"><tt class="docutils literal"><span class="pre">check_fid_acqp_method</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.io.check_nii_vs_visu_pars"><tt class="docutils literal"><span class="pre">check_nii_vs_visu_pars</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.io.compare_JCAMP_readers"><tt class="docutils literal"><span class="pre">compare_JCAMP_readers</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.congrid"><tt class="docutils literal"><span class="pre">congrid</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.descriptortest"><tt class="docutils literal"><span class="pre">descriptortest</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.lazy_property"><tt class="docutils literal"><span class="pre">lazy_property</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-sarpy.io.obj2dict"><tt class="docutils literal"><span class="pre">obj2dict</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.io.parseJCAMP"><tt class="docutils literal"><span class="pre">parseJCAMP</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.io.visu_pars_2_Nifti1Header"><tt class="docutils literal"><span class="pre">visu_pars_2_Nifti1Header</span></tt> Module</a></li>
 </ul>
 </li>
 </ul>
@@ -1153,6 +1291,9 @@ only performed once.</p>
   <h4>Previous topic</h4>
   <p class="topless"><a href="sarpy.fmoosvi.html"
                         title="previous chapter">fmoosvi Package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="setup.html"
+                        title="next chapter">setup Module</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/sarpy.io.txt"
@@ -1187,9 +1328,13 @@ only performed once.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
+          <a href="setup.html" title="setup Module"
+             >next</a> |</li>
+        <li class="right" >
           <a href="sarpy.fmoosvi.html" title="fmoosvi Package"
              >previous</a> |</li>
         <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li>
+          <li><a href="modules.html" >sarpy Documentation</a> &raquo;</li>
           <li><a href="sarpy.html" >sarpy Package</a> &raquo;</li> 
       </ul>
     </div>

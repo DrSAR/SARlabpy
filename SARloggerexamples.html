@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>How to use Module Logging &mdash; SARlabpy 0.1alpha documentation</title>
+    <title>How to use Module Logging &mdash; sarpy 0.1alpha documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -23,8 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="SARlabpy 0.1alpha documentation" href="index.html" />
-    <link rel="next" title="SARlabpy Documentation" href="modules.html" />
+    <link rel="top" title="sarpy 0.1alpha documentation" href="index.html" />
+    <link rel="next" title="sarpy Documentation" href="modules.html" />
     <link rel="prev" title="Examples for BRUKERIO" href="BRUKERIOexamples.html" /> 
   </head>
   <body>
@@ -38,12 +38,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="modules.html" title="SARlabpy Documentation"
+          <a href="modules.html" title="sarpy Documentation"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">SARlabpy 0.1alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -79,7 +79,7 @@ be visible.</p>
 <p>The importer of the module (e.g. BRUKERIO) needs to issue the following
 statement in addition to the actual import statement:</p>
 <div class="highlight-py"><div class="highlight"><pre><span class="c">#make the SARlogger features available</span>
-<span class="kn">from</span> <span class="nn">SARlabpy</span> <span class="kn">import</span> <span class="n">SARlogger</span>
+<span class="kn">from</span> <span class="nn">sarpy</span> <span class="kn">import</span> <span class="n">SARlogger</span>
 <span class="c">#test logging for BRUKERIO</span>
 <span class="kn">import</span> <span class="nn">BRUKERIO</span>
 <span class="n">SARlogger</span><span class="o">.</span><span class="n">initiate_logging</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
@@ -87,7 +87,7 @@ statement in addition to the actual import statement:</p>
 </div>
 <p>At this point, a console handler that issues anything that&#8217;s a WARNING or
 more sever will be written to to the console.
-Without the call to <a class="reference internal" href="SARlabpy.io.html#SARlabpy.io.SARlogger.initiate_logging" title="SARlabpy.io.SARlogger.initiate_logging"><tt class="xref py py-meth docutils literal"><span class="pre">SARlabpy.io.SARlogger.initiate_logging()</span></tt></a>, logging messages will be ignored alltogether.</p>
+Without the call to <a class="reference internal" href="sarpy.io.html#sarpy.io.SARlogger.initiate_logging" title="sarpy.io.SARlogger.initiate_logging"><tt class="xref py py-meth docutils literal"><span class="pre">sarpy.io.SARlogger.initiate_logging()</span></tt></a>, logging messages will be ignored alltogether.</p>
 <p>If you desire output to a file, another convenience function in SARlogger can be used
 to attach another handler (with another log level and formatter):</p>
 <div class="highlight-py"><div class="highlight"><pre><span class="n">SARlogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
@@ -134,7 +134,7 @@ as you desire....</p>
                         title="previous chapter">Examples for BRUKERIO</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="modules.html"
-                        title="next chapter">SARlabpy Documentation</a></p>
+                        title="next chapter">sarpy Documentation</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/SARloggerexamples.txt"
@@ -169,17 +169,16 @@ as you desire....</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="modules.html" title="SARlabpy Documentation"
+          <a href="modules.html" title="sarpy Documentation"
              >next</a> |</li>
         <li class="right" >
           <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
              >previous</a> |</li>
-        <li><a href="index.html">SARlabpy 0.1alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, SARlab members.
-      Last updated on 27 Feb, 2013.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
     </div>
   </body>

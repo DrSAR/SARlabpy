@@ -49,6 +49,14 @@ test Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`test_write2nii` Module
+----------------------------
+
+.. automodule:: test.test_write2nii
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`testuid` Module
 ---------------------
 

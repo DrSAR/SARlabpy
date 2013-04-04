@@ -49,6 +49,22 @@ io Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`check_nii_vs_visu_pars` Module
+------------------------------------
+
+.. automodule:: sarpy.io.check_nii_vs_visu_pars
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`compare_JCAMP_readers` Module
+-----------------------------------
+
+.. automodule:: sarpy.io.compare_JCAMP_readers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`congrid` Module
 ---------------------
 
@@ -77,6 +93,22 @@ io Package
 ----------------------
 
 .. automodule:: sarpy.io.obj2dict
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`parseJCAMP` Module
+------------------------
+
+.. automodule:: sarpy.io.parseJCAMP
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`visu_pars_2_Nifti1Header` Module
+--------------------------------------
+
+.. automodule:: sarpy.io.visu_pars_2_Nifti1Header
     :members:
     :undoc-members:
     :show-inheritance:
