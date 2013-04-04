@@ -5,6 +5,9 @@ Created on Tue Mar 12 14:41:54 2013
 @author: fmoosvi
 """
 
+import sarpy
+import numpy
+
 def get_num_slices(scan_object, pdata_num = 0):
     
     """
@@ -35,3 +38,43 @@ def get_num_slices(scan_object, pdata_num = 0):
                 num_slices = int(VisuFGOrderDesc_element[0])
                 
     return num_slices
+
+
+def get_patients_from_experiment(Experiment_name, verbose = False):
+    
+    subject_list = get_unique_list_elements(sarpy.Experiment(Experiment_name).get_SUBJECT_id())
+
+    Patients = []  
+    
+    for subject in subject_list:
+        curr_patient = sarpy.Patient(subject)
+        Patients.append(curr_patient)        
+        
+        if verbose:
+            print('Patient {0} has {1} sessions.'.format(subject,len(curr_patient.studies)))
+    
+    return Patients
+    
+def get_unique_list_elements(list, idfun=None):
+
+    #Get uniue items in list (maintaining order)
+    # From: http://www.peterbe.com/plog/uniqifiers-benchmark
+    
+   # order preserving
+   if idfun is None:
+       def idfun(x): return x
+   seen = {}
+   result = []
+   for item in list:
+       marker = idfun(item)
+       if marker in seen: continue
+       seen[marker] = 1
+       result.append(item)
+   return result         
+
+def get_image_clims(data):
+    
+    min_lim = numpy.median(data)
+    max_lim = data.max()
+    
+    return [min_lim, max_lim]

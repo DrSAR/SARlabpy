@@ -171,8 +171,6 @@ class PDATA_file(object):
             >>> scn.pdata[0].write2nii(fname)
 
         '''
-        print('write2nii is DEPRECATED and shoulde replaced by the new and\n'+
-              'improved export2nii (same syntax)')
         header = nibabel.nifti1.Nifti1Header()
         # Safest way to get data dimensions at the moment
         header.set_data_shape(numpy.array(self.data.shape)) 
@@ -281,6 +279,8 @@ class PDATA_file(object):
         # turns out, the data is sometimes flipped/transposed. We need to
         # make sure this is done before saving. This appears somewhat 
         # related to the offset (0,0,0) issue above being different
+
+
         data_copy = self.data[:]
         data_copy = numpy.fliplr(numpy.swapaxes(data_copy, 0, 1))
         if ori_num == 1: 
@@ -293,14 +293,7 @@ class PDATA_file(object):
 
         img_pair = nibabel.nifti1.Nifti1Image(data_copy,aff,header=header)
         img_pair.to_filename(filename)
-
-    def export2nii(self, filename):
-        from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
-        aff, header = visu_pars_2_Nifti1Header(self.visu_pars)
-        img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
-        img_pair.to_filename(filename)
         
-    
 class Scan(object):
     '''
     Object to represent a BRUKER scan consisting, typically, of FID_file 

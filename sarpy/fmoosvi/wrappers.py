@@ -5,84 +5,107 @@ Created on Wed Mar 13 14:11:03 2013
 @author: fmoosvi
 """
 
-import numpy
 import sarpy
 import sarpy.fmoosvi.analysis
+import sarpy.fmoosvi.getters
+import pylab
+import numpy
 
-def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', pdata_num = 0, time = 60):
-       
-    try:
-        scan_list = Bruker_object.find_scan_by_protocol(protocol_name)
-    except:
-        try: 
-            scan_list = []                                
-            for study in Bruker_object:
-                scan_list.append(study.find_scan(protocol_name))
-            print('You put in a list of studies, try to avoid that')
-        except:
-            raise
+def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', 
+                  pdata_num = 0, time = 60):
+
+
+    if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
+        
+        scan_list = []
+        scan_list.append(Bruker_object)
+        
+    else:
+      
+        try: # Will work for experiment and study
+            scan_list = Bruker_object.find_scan_by_protocol(protocol_name)
+        except: # check for list of studies
+            try: 
+                scan_list = []     
+    
+                if type(Bruker_object) == list:
+                    scan_list = Bruker_object
+                    print('You put in a list of scans, try to avoid that')
+    
+                elif type(Bruker_object[0]) == sarpy.io.BRUKER_classes.Study:
+                    for study in Bruker_object:
+                        scan_list.append(study.find_scan(protocol_name))
+                        print('You put in a list of studies, try to avoid that')              
+            except:
+                raise
 
     ## Now to calculate the AUC
 
     auc = []
 
     for scan in scan_list:
-        auc.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
-        
-    return auc
+        try:
+            auc.append(sarpy.fmoosvi.analysis.h_calculate_AUC(scan))
+        except:
+            print('calculate_AUC failed for Scan {0} failed, please fix.'.format(scan.shortdirname))
+            
+    # Get rid of annoying extra dimension if scan_list contains only one element
+    # Also return arrays instead of a list
+            
+    if numpy.array(auc).shape[0] == 1:     
+        return numpy.array(auc[0,:,:,:])
+    else:
+        return numpy.array(auc)
+
+def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH',
+                      POI_protocol_name = '04_ubcLL+'):
     
-def calculate_BSB1map(Experiment_object, protocol_name = '07_bSB1mapFLASH'):
+    # Can take in an experiment, a list of scans (4 - BS + 1 scan with poi),
+    # a study
     
-    # TODo = need to actually fix this!
-    
-    print ("Why are you using this!? It' not implemented yet")
+    print ("Why are you using this!? It's not fully implemented yet")
     
     try:
-        scan_list = Experiment_object.find_scan_by_protocol(protocol_name)
-    except:
-        try: 
+        if type(Bruker_object) == sarpy.io.BRUKER_classes.Experiment \
+          or type(Bruker_object) == sarpy.io.BRUKER_classes.Study:
+              
+            scan_list = Bruker_object.find_scan_by_protocol(BS_protocol_name)
+            LL_scan_list = Bruker_object.find_scan_by_protocol(POI_protocol_name)
+        else:
             scan_list = []                                
-            for study in Experiment_object:
-                scan_list.append(study.find_scan(protocol_name))
+            for study in Bruker_object:
+                scan_list.append(study.find_scan(BS_protocol_name))
+                LL_scan_list = Bruker_object.find_scan_by_protocol(POI_protocol_name)
             print('You put in a list of studies, try to avoid that')
-        except:
-            raise
+    except:
+        raise
 
     ## Now to calculate the B1 map
-
-    b1map  = []
-    for scan in scan_list:
-        b1map.append(sarpy.fmoosvi.analysis.h_BS_B1map(scan))
-        
-    return b1map
-
-#TODO: Implemen BSB1 mapwrapper around h_BS_B1map
-
-######################### Start Example #########################
-## This is for one phantom study using LL and BSB1 MSME
-#APExp = sarpy.Experiment('DiLL.iI1')
-#BS_scans = APExp.find_scan_by_protocol('09\-2DBSB1map\-MSME_bas\(modified\)')[-4:]
-#
-#LLdata = sarpy.Experiment('DiLL.iI1').find_scan_by_protocol('MOBILE*')[0]
-#
-#zero_BS_minus = BS_scans[0]
-#zero_BS_plus = BS_scans[1]
-#power_BS_minus = BS_scans[2]
-#power_BS_plus = BS_scans[3]
-#
-#b1map = sarpy.fmoosvi.analysis.h_BS_B1map(zero_BS_minus,\
-#                                          zero_BS_plus,\
-#                                          power_BS_minus,\
-#                                          power_BS_plus,\
-#                                          LLdata)
-#                                          
-#pylab.imshow(b1map[:,:,0,0], aspect = 0.5)
-#pylab.colorbar()
-######################### End Example #########################
-
-    return #b1map
+    b1map = []
     
-def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map = 0):
+    for scan in LL_scan_list:
+        zero_BSminus = scan_list[0]
+        zero_BSplus = scan_list[1]
+        high_BSminus = scan_list[2]
+        high_BSplus = scan_list[3]
+        scan_with_POI = LL_scan_list
+    
+    
+    b1map.append(sarpy.fmoosvi.analysis.h_BS_B1map(zero_BSminus, zero_BSplus, \
+                                                   high_BSminus, high_BSplus, \
+                                                   scan_with_POI))
+
+    # Get rid of annoying extra dimension if scan_list contains only one element
+    # Also return arrays instead of a list
+            
+    if numpy.array(b1map).shape[0] == 1:     
+        return numpy.array(b1map[0,:,:,:])
+    else:
+        return numpy.array(b1map)           
+
+    
+def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', 
+                    flip_angle_map = 0):
 
     try:       
         if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
@@ -112,4 +135,106 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', flip_angle_map =
         print scan
         T1_map.append(sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,\
                                                       flip_angle_map = flip_angle_map))
-    return T1_map    
+    
+    # Get rid of annoying extra dimension if scan_list contains only one element
+    # Also return arrays instead of a list
+            
+    if numpy.array(T1_map).shape[0] == 1:     
+        return numpy.array(T1_map[0,:,:,:])
+    else:
+        return numpy.array(T1_map)                                                      
+
+def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
+     
+    num_slices = data_list[0].shape[-1]
+    data_num = len(data_list)
+    
+    fig = pylab.figure(figsize = (14,3))
+    G = pylab.matplotlib.gridspec.GridSpec(data_num,num_slices)   
+    #clims = sarpy.fmoosvi.getters.get_image_clims(data_list[0])
+    
+    for slice in xrange(num_slices):
+        
+        for n in xrange(data_num):
+    
+            fig.add_subplot(G[n,slice],frameon=False, xticks=[], yticks=[])
+            
+            try:
+                data = data_list[n][0,:,:,slice]  
+            except:
+                data = data_list[n][:,:,slice] 
+            
+            a = pylab.imshow(data, cmap = colour_map )
+            
+            if isinstance(clims[0],(int, float, long)):
+                
+                a.set_clim(clims)
+                
+            else:
+                a.set_clim(600,3500)
+
+            #a.set_clim(clims)
+            #pylab.axis('off')
+
+            if n == 0:
+                pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
+    
+
+    # Colobar set up
+    cax = fig.add_axes([0.9, 0.10, 0.01, 0.7])
+    cax.set_title(key_list[1], fontsize = 12)       
+    fig.colorbar(a, cax=cax)
+    
+    # Figure spacing adjustments
+    #fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
+    G.tight_layout(fig, h_pad = 0.1, w_pad = 0.001)
+    G.update(right = 0.87)
+    
+    # Saving Figure    
+    filename = key_list[1] + key_list[0] + '.png'                
+    pylab.savefig(filename, bbox_inches=0, dpi=300)
+    pylab.close('all')
+    
+    
+def roi_distribution(data,roi_image_mask, bins,  display_histogram = True, 
+                     save_histogram = False, save_name = 'hist'):
+    
+    roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi_image_mask)
+    masked_data = data * roi_mask
+    
+    
+    if display_histogram:
+        #fig = pylab.figure()
+        pylab.hist(masked_data.flatten(), bins, alpha = 0.5)
+        pylab.title('Distribution of T1s in the ROI')
+        
+    if save_histogram:
+        
+        filename = save_name + '.png'                
+        pylab.savefig(filename, bbox_inches=0, dpi=300)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
