@@ -23,7 +23,7 @@ def pairwise(iterable):
     """
     This is a solution to the problem of looking ahead in a for loop
     mentioned in on `stackoverflow: <http://stackoverflow.com/questions/4197805/python-for-loop-look-ahead>`_
-    
+
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     """
     a, b = tee(iterable)
@@ -39,7 +39,7 @@ def convert_int_float_string(param):
         except ValueError:
             y = param.strip()
     return y
-    
+
 def readJCAMP(filename):
     """
     Parse text file in JCAMP format
@@ -63,40 +63,40 @@ def readJCAMP(filename):
     The issue of reading these is complicated due to the various
     types of data (integers, floats, strings, arrays and nested
     structures) that can be present.
-    
+
     ~/data/readfidTest.ix1/subject:
     ::
-        
+
         ##$SUBJECT_name_string=( 64 )
         <Moosvi, readfidTest>
         ##$SUBJECT_name=(<Moosvi>, <readfidTest>)
-        
+
         >>> import os
         >>> a=readJCAMP(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/subject'))
         >>> a['SUBJECT_name']
         ['<Moosvi>', '<readfidTest>']
         >>> a['SUBJECT_name_string']
         'Moosvi, readfidTest'
-        
+
     ~/data/readfidTest.ix1/1/acqp:
     ::
-        
+
         ##$ACQ_user_filter=No
         ##$ACQ_dim_desc=( 2 )
         Spatial Spatial
         ##$NR=1
         ##$D=( 64 )
-        0.00502257333333333 0 0.00066296 0.000114 0.000114 0 0.001886 0 2.5e-05 0 
-        0.000886 0.000886 0.000368 0 0 0 0 0 0 0 1e-05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+        0.00502257333333333 0 0.00066296 0.000114 0.000114 0 0.001886 0 2.5e-05 0
+        0.000886 0.000886 0.000368 0 0 0 0 0 0 0 1e-05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         ##$TPQQ=( 16 )
-        (<hermite.exc>, 17.9862515696541, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 
+        (<hermite.exc>, 17.9862515696541, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>,
         30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0)
          (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0) (<>, 30, 0)
         ##$ACQ_grad_matrix=( 15, 3, 3 )
-        1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 -0 0 1 -0 1 -0 1 
-        0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 
-        0 1 -0 1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 -0 0 1 -0 1 -0 1 0 0 -0 0 1 -0 
+        1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 -0 0 1 -0 1 -0 1
+        0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0
+        0 1 -0 1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 -0 0 1 -0 1 -0 1 0 0 -0 0 1 -0
         1 -0 1 0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0
 
         >>> import os
@@ -119,7 +119,7 @@ def readJCAMP(filename):
         array([[1, 0, 0],
                [0, 1, 0],
                [0, 0, 1]])
-         
+
 
     """
 
@@ -174,7 +174,7 @@ def readJCAMP(filename):
     # make sure to specify maxsplit=1 to the str.split function in case
     # some parameter values contain = as a sign...
     LDRdict = dict([LDR.split("=", 1) for LDR in LDRlist])
-    
+
     for k, v in LDRdict.iteritems():
         # is it an array or struct? (signified by the size indicator)
         if not re.match(r'\(', v):
@@ -184,18 +184,18 @@ def readJCAMP(filename):
             logger.debug('found {2}: {0}={1}'.format(k,LDRdict[k], type(val)))
         else:
             # this isunfortunately harder. Let's get the array dimensions:
-            # is there something following the 'array' definition? 
+            # is there something following the 'array' definition?
             struc_match = re.match(r'\(([^\)]*)\)$', v)
             if struc_match:
                 # it starts and ends with a round bracket.
                 # this is actually a structure (without dimension instructions)
                 v = struc_match.group(1)
                 shape = [1]
-                LDRdict[k] = [convert_int_float_string(val) 
+                LDRdict[k] = [convert_int_float_string(val)
                                 for val in v.split(',')]
                 logger.debug('found dim-less structure({2})): {0}={1}'.
                             format(k,v,shape))
-            else:                
+            else:
                 string_match = re.match(r'\(([^\)]*)\) *([^ ].*)', v)
                 assert string_match is not None, 'Cannot parse parameter file'
                 v = string_match.group(2)
@@ -209,11 +209,11 @@ def readJCAMP(filename):
                 elif re.match('\(', v):
                     # this is a (nested?) structure
                     list_level_one = [s.strip(' ()')
-                                      for s in re.split('\) *\(', 
+                                      for s in re.split('\) *\(',
                                       v)]
                     split_list = [list_element.
                             split(',') for list_element in list_level_one]
-                            
+
                     LDRdict[k] = [[convert_int_float_string(x) for x in listA]
                                  for listA in split_list]
                     logger.debug('found comlex structure): {0}={1}'.
@@ -222,10 +222,10 @@ def readJCAMP(filename):
                     # this is a proper array
                     split_string = [s for s in re.split(' ',v)]
                     if len(shape) > 1:
-                        LDRdict[k] = numpy.array([convert_int_float_string(s) for 
+                        LDRdict[k] = numpy.array([convert_int_float_string(s) for
                                     s in split_string if s]).reshape(shape)
                     else:
-                        LDRdict[k] = [convert_int_float_string(s) for 
+                        LDRdict[k] = [convert_int_float_string(s) for
                                     s in split_string if s]
                     logger.debug('found array({1}): {0}={2}'.
                                 format(k,shape,LDRdict[k]))
@@ -234,10 +234,10 @@ def readJCAMP(filename):
 def inner_value(somelist):
     '''
     Return somelist[0] a one-element list or the whole list otherwise
-    
+
     :param list somelist: list that might contain only one element
     :returns: element of somelist of somelist
-    
+
     >>> inner_value([42])
     42
     >>> inner_value([42,43])
@@ -252,9 +252,9 @@ def inner_value(somelist):
     'spam'
     >>> inner_value(['spam','eggs','bacon'])
     ['spam', 'eggs', 'bacon']
-    
+
     .. warning::
-       This method does not work for dictionaries (KeyError) 
+       This method does not work for dictionaries (KeyError)
        or single character strings (infinite recursion)!
 
     '''
@@ -267,17 +267,17 @@ def inner_value(somelist):
         return somelist
 
 def readfid(fptr=None,
-            acqp=None, 
-            method=None, 
+            acqp=None,
+            method=None,
             untouched=False):
     """
     Returns BRUKER's fid file as a properly dimensioned & rearranged array.
 
-    :param FileType,StringType fptr: 
+    :param FileType,StringType fptr:
         filename of fid file or filehandle to open fid file
-    :param dict acqp: dictionary of acqp parameters 
+    :param dict acqp: dictionary of acqp parameters
         (default None: parameter file will be loaded)
-    :param dict method:  dictionary of method parameters 
+    :param dict method:  dictionary of method parameters
         (default None: parameter file will be loaded)
     :param boolean untouched: do not rearrange/reshape data
     :return: Flat (untouched = True) or Rearranged and assembled array of the acquire k-space
@@ -337,7 +337,7 @@ def readfid(fptr=None,
              from different receivers are appended. The number of active receivers is
              derived from the number of selected receivers in the parameter array
              GO_ReceiverSelect.
-           * NI - Number of objects. 
+           * NI - Number of objects.
              e.g. slices, but not purely!, could be slices*echoes
            * ACQ_obj_order - Permutation of the order of the acquired objects.
            * ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
@@ -348,8 +348,8 @@ def readfid(fptr=None,
              see ACQ_rare_factor.
            * ACQ_phase_enc_mode[ ] - Ordering scheme for scans within the k-space.
 
-                .. note::  parameter seems to be renamed to ACQ_phase_encoding_mode      
-          
+                .. note::  parameter seems to be renamed to ACQ_phase_encoding_mode
+
            * ACQ_phase_enc_start[ ] - For positioning of first scan in phase encoding
              scheme.
            * ACQ_rare_factor - For positioning of the ACQ_phase_factor scans within the
@@ -359,7 +359,7 @@ def readfid(fptr=None,
            * NR - Number of repeated experiments within the dataset.
 
     Examples:
-        
+
         >>> import os
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/1/fid'))
         >>> fid['data'].shape   # TriPilot multi
@@ -420,7 +420,7 @@ def readfid(fptr=None,
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
-    
+
     # use parameter files provided by caller or load if needed
     acqp = acqp or readJCAMP(os.path.join(dirname,'acqp'))
     method = method or readJCAMP(os.path.join(dirname,'method'))
@@ -442,10 +442,10 @@ def readfid(fptr=None,
     logger.debug('BYTORDA={0}'.format(BYTORDA))
 
     # Spatial/spectroscopic dimension of the experiment.
-    ACQ_dim = acqp['ACQ_dim'] 
+    ACQ_dim = acqp['ACQ_dim']
     logger.debug('ACQ_dim={0}'.format(ACQ_dim))
     #ACQ_size[0] should be even (real valued counts)
-    ACQ_size = acqp['ACQ_size'][:] 
+    ACQ_size = acqp['ACQ_size'][:]
     logger.debug('ACQ_size={0}'.format(ACQ_size))
     assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
             'I am not clever enough to read Parallel acquired data, yet')
@@ -468,7 +468,6 @@ def readfid(fptr=None,
         ACQ_size[0] = obj_blocksize/2/int(datatype[1])
     else:
         raise IOError, 'Unexpected value for GO_block_size in acqp'
-
     # find BRUKER object order
     ACQ_obj_order = acqp['ACQ_obj_order']
     # Number of subsequent scans in the raw dataset belonging
@@ -504,10 +503,10 @@ def readfid(fptr=None,
     try:
         phase_range = max(acqp['ACQ_spatial_phase_1']) - \
                         min(acqp['ACQ_spatial_phase_1'])
-        EncSteps = (numpy.array(acqp['ACQ_spatial_phase_1']) - 
+        EncSteps = (numpy.array(acqp['ACQ_spatial_phase_1']) -
                     min(acqp['ACQ_spatial_phase_1']))
-        EncSteps *= (acqp['ACQ_spatial_size_1']-1)/phase_range   
-        # roundin of float to nearest int is a tricky business...                             
+        EncSteps *= (acqp['ACQ_spatial_size_1']-1)/phase_range
+        # roundin of float to nearest int is a tricky business...
         EncSteps = numpy.floor(EncSteps+.5).astype('int')
     except KeyError:
         logger.info('ACQ_spatial_phase_1 not found in acqp, '+
@@ -555,7 +554,7 @@ def readfid(fptr=None,
         if fid.size != (ACQ_size[0] * ACQ_size[1] * ACQ_size[2] * NR):
             logger.warning('size(fid) = {0} != {1} = ACQ_size*NR'.
                       format(numpy.shape(fid)[0], ACQ_size[0] *
-                             ACQ_size[1] * ACQ_size[2] * NR))             
+                             ACQ_size[1] * ACQ_size[2] * NR))
             NR = int(numpy.size(fid) / (ACQ_size[0]*ACQ_size[1]*ACQ_size[2]))
             logger.warning('NR reset to {0}'.format(NR))
             fid = fid[0:ACQ_size[0]*ACQ_size[1]*ACQ_size[2]*NR]
@@ -584,7 +583,7 @@ def readfid(fptr=None,
 
         # alternative using array-based index access
         # We are vectorizing the functions so they can eb c
-        
+
         index_array = (idx % (ACQ_size[1]*len(ACQ_obj_order))) // \
                     (ACQ_rare_factor*len(ACQ_obj_order))*ACQ_rare_factor \
                  + (idx % ACQ_rare_factor)
@@ -726,7 +725,7 @@ def read2dseq(scandirname,
     :raises: IOERROR if directory non-existent
 
     This relies on numpy's array functionality
-    """ 
+    """
 
     try:
         reco = readJCAMP(os.path.join(scandirname,'reco'))
@@ -735,9 +734,9 @@ def read2dseq(scandirname,
         RECO_transposition = 0
     # get relevant information from the visu_pars files
     visu_pars = visu_pars or readJCAMP(os.path.join(scandirname,'visu_pars'))
-        
+
     # determine ENDIANness and storage type
-        
+
     if visu_pars['VisuCoreWordType'] =='_16BIT_SGN_INT':
         datatype = 'i2'
     elif visu_pars['VisuCoreWordType'] =='_32BIT_SGN_INT':
@@ -754,38 +753,38 @@ def read2dseq(scandirname,
         datatype = '>'+datatype
     dtype = numpy.dtype(datatype)
 
-    # ANDREW YUNG: 
-    # load data based on the visu_pars file.  first two dimensions are the in-               
-    # plane pixels. The higher dimensions refer to things like slice, echo, 
+    # ANDREW YUNG:
+    # load data based on the visu_pars file.  first two dimensions are the in-
+    # plane pixels. The higher dimensions refer to things like slice, echo,
     # diffusion weighting, which are described by VisuGroupDepVals and
-    # VisuFGOrderDesc.  If these parameters do not exist, assume that there are     
+    # VisuFGOrderDesc.  If these parameters do not exist, assume that there are
     # only 3 dimensions and label the 3rd dimension as "frame".  Output a
     # dictionary which contains a) the image data with appropriate data slopes
-    # and offsets applied, b) string list describing each dimension, and c) 
+    # and offsets applied, b) string list describing each dimension, and c)
     # header data containing parameters from the visu_pars and reco files.
     # files.
-                      
-    # make a copy of this parameter so as not to change the original!                      
+
+    # make a copy of this parameter so as not to change the original!
     matrix_size = visu_pars['VisuCoreSize'][:]
 
     if RECO_transposition == 0:
         dimdesc=['readout','PE1']
     else:
         dimdesc=['PE1','readout']
-    dimcomment=['','']    
+    dimcomment=['','']
 
     # if VisuCoreSize has 3 elements, this is a 3D acquisition
     if len(matrix_size)==3:
         dimdesc.append('PE2')
         dimcomment.append('')
 
-    # Determine size and descriptors of frame groups (RECO_size, dimdesc and 
+    # Determine size and descriptors of frame groups (RECO_size, dimdesc and
     # dimcomment).  VisuFGOrderDesc is a  struct which describes the number of
     # images in the frame group, the type of frame (e.g. FG_SLICE, FG_ECHO),
     # and index ranges for the parameter array VisuGroupDepVals, which denotes
-    # the names of parameter arrays which depend on that particular frame 
+    # the names of parameter arrays which depend on that particular frame
     # group.  If there is a dependent parameter array called VisuFGElemComment
-    # for the frame group, it should be stored in dimcomment (e.g. DTI 
+    # for the frame group, it should be stored in dimcomment (e.g. DTI
     # generated procnos have FA, Tensor trace, etc.)
 
     if 'VisuFGOrderDesc' in visu_pars:
@@ -797,7 +796,7 @@ def read2dseq(scandirname,
             depvalend = depvalstart + v[4]
             more_dimcomment = ''
             for depval in range(depvalstart,depvalend):
-                if visu_pars['VisuGroupDepVals'][depval][0] == '<VisuFGElemComment>': 
+                if visu_pars['VisuGroupDepVals'][depval][0] == '<VisuFGElemComment>':
                     FGcommentstart=visu_pars['VisuGroupDepVals'][depval][1]
                     fullFGcomments = visu_pars['VisuFGElemComment'].split('> <')
                     more_dimcomment=fullFGcomments[FGcommentstart:
@@ -808,15 +807,15 @@ def read2dseq(scandirname,
     # the image frames are lumped together in the 3rd dimension.
     reco_offset = numpy.asarray(visu_pars['VisuCoreDataOffs'])
     assert len(set(reco_offset)) == 1, 'Cannot deal with multiple VisuCoreDataOffs'
-    reco_slope = numpy.asarray(visu_pars['VisuCoreDataSlope'])    
+    reco_slope = numpy.asarray(visu_pars['VisuCoreDataSlope'])
     assert len(set(reco_slope)) == 1, 'Cannot deal with multiple VisuCoreDataSlope'
-    
+
 
     n_frames = numpy.asarray(matrix_size)[2:].prod()
     logger.info('Guessing we have {0} when VisuCoreFrameCount = {1}'.format(
                     n_frames, visu_pars['VisuCoreFrameCount']))
     matrix_size.reverse()
-    
+
     filename = os.path.join(scandirname,'2dseq')
     logger.info('read2dseq: loading %s' % filename)
     data = numpy.fromfile(file=filename, dtype=dtype)
@@ -825,12 +824,12 @@ def read2dseq(scandirname,
                 data.shape, matrix_size))
     data=data.reshape(n_frames, matrix_size[-2],matrix_size[-1]).astype('float64')
 
-    # now apply the data slopes and offsets to transform the stored binary 
+    # now apply the data slopes and offsets to transform the stored binary
     # number into a absolute number
     data = reco_offset[0] + reco_slope[0]*data
-    
+
     # Finally, shape the data so all frames are put into separate dimensions.
-    data = data.reshape(matrix_size)        
+    data = data.reshape(matrix_size)
     # there are two kinds of transposition needed:
     #  (a) transpose so that time, z, y, x -> x, y, z, time
     #  (b) account for the row-major preference in python and for column
@@ -841,13 +840,13 @@ def read2dseq(scandirname,
     swp_axis.insert(1,len(matrix_size)-1)
     data = data.transpose(swp_axis)
     # and now we have to apply thesame logic to te axis descriptors
-    # which have already been built from revere accomplishing the 
-    # transposition (a) above. watch the beautiful pythn index swap in 
+    # which have already been built from revere accomplishing the
+    # transposition (a) above. watch the beautiful pythn index swap in
     # action. a,b = b,a ... genius!
     dimcomment[0], dimcomment[1] = dimcomment[1], dimcomment[0]
     dimdesc[0], dimdesc[1] = dimdesc[1], dimdesc[0]
 
-    return {'data':data, 
+    return {'data':data,
             'dimcomment':dimcomment,
             'dimdesc':dimdesc,
             'header':{'visu_pars': visu_pars}}
@@ -886,7 +885,7 @@ def fftbruker(array, encoding=None, DCoffset=False):
     (encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn't
     usually get FTed.
     '''
-    
+
     encoding = encoding or [1, 1, 0, 0]
 
     #find all axes that should be FTed
