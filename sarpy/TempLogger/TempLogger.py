@@ -1,6 +1,6 @@
-# Temperature Logger (for monitering Brain Tumour Freezer Temperature)
+# Temperature Logger (for monitoring Brain Tumour Freezer Temperature)
 # Clayton Wong
-# Feb 10th, 2013
+# April 5th, 2013
 
 # Main loop calls the functions:
 # 1) CheckServer
@@ -44,6 +44,7 @@ import sys
 import urllib   # Import module to check if website is up
 import time     # Import time for time.sleep(5) # Run code every 5 seconds
 
+import numpy
 
 #----------------------------------------------------------------------------------------
 ## First CHECK IF SERVER IS UP 
@@ -65,7 +66,7 @@ def ReadSerial():       # Inputs: None. Outputs: x,T,x2,T2,WixelAlive
     try:
         # Setup SerialData Read
         port='/dev/tty.usbmodemfa131'
-        ser = serial.Serial("/dev/tty.usbmodemfa131",9600,timeout=7)    # When timeout occurs, nothing is read in and code goes to EXCEPTION: WixelAlive=0 (Dead)
+        ser = serial.Serial("/dev/tty.usbmodemfa131",9600,timeout=62)    # When timeout occurs, nothing is read in and code goes to EXCEPTION: WixelAlive=0 (Dead)
         #print ser
         value = ser.readline()
         #print value
@@ -87,10 +88,11 @@ def ReadSerial():       # Inputs: None. Outputs: x,T,x2,T2,WixelAlive
         return (WixelAlive, x, T, x2, T2)
     except Exception:
         WixelAlive=0; # WIXEL PROBLEM (CAN'T READ IN)
-        x="error";
-        T="error";
-        x2="error";
-        T2="error";
+        
+        x=numpy.NaN;    # numpy.NaN are float numbers
+        T=numpy.NaN;
+        x2=numpy.NaN;
+        T2=numpy.NaN;
         return (WixelAlive, x, T, x2, T2)
 
 
@@ -108,28 +110,28 @@ def Logger(Tnorm,WixelAlive,ServerUp,x,T,x2,T2):    # Outputs: Logs Tnorm,WixelA
     if Tnorm==0:    # T is NOT normal => TEMP IS HIGH !!
         if WixelAlive==0:   # Wixel is DEAD !!
             if ServerUp==0: # If Server is down..
-                logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2=' + repr(x2) + ',' + repr(T2) 
-                    + '. Temp DUNNO, Wixel DEAD, Server DOWN. (1) ') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
+                logger.error('T1=' + repr(T) + ' T2='+ repr(T2) 
+                    + ' Temp DUNNO, Wixel DEAD, Server DOWN (1) ') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
-                print 'Temp DUNNO, Wixel DEAD, Server DOWN -> Log & Cant Email. (1)'   
+                print 'Temp DUNNO, Wixel DEAD, Server DOWN -> Log & Cant Email (1)'   
             
             elif ServerUp==1:   # Server is UP
-                logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2=' + repr(x2) + ',' + repr(T2) 
-                    + '. Temp DUNNO, Wixel DEAD, Server Up -> Email. (2)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
+                logger.error('T1=' + repr(T) + ' T2='+ T2
+                    + ' Temp DUNNO, Wixel DEAD, Server Up -> Email (2)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
-                print 'Temp DUNNO, Wixel DEAD, Server is Up -> Log & Email. (2)'
+                print 'Temp DUNNO, Wixel DEAD, Server is Up -> Log & Email (2)'
         
         
         elif WixelAlive==1:   # Wixel is Alive
             if ServerUp==0:     # Server is DOWN
-                logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2=' + repr(x2) + ',' + repr(T2) 
-                    + '. Temp HIGH, Wixel Alive, Server DOWN. (3) ') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
+                logger.error('T1=' + repr(T) + ' T2='+ repr(T2)
+                    + ' Temp HIGH, Wixel Alive, Server DOWN (3) ') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
                 print 'Temp HIGH, Wixel Alive, Server DOWN -> Log & Cant Email. (3)'
                     
             elif ServerUp==1: # Server is UP
-                logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2=' + repr(x2) + ',' + repr(T2) 
-                    + '. Temp HIGH, Wixel Alive, Server Up -> Email. (4)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
+                logger.error('T1=' + repr(T) + ' T2='+ repr(T2)
+                    + ' Temp HIGH, Wixel Alive, Server Up -> Email (4)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
                 print 'Temp HIGH, Wixel Alive, Server is Up -> Log & Email. (4)'
 
@@ -137,35 +139,35 @@ def Logger(Tnorm,WixelAlive,ServerUp,x,T,x2,T2):    # Outputs: Logs Tnorm,WixelA
     elif Tnorm==1:  # Temp is normal
         if WixelAlive==0: # Wixel is Dead !!
             if ServerUp==0: # Server is DOWN !!
-                logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2=' + repr(x2) + ',' + repr(T2) 
-                    + '. Temp DUNNO, Wixel DEAD, Server DOWN. (5)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
+                logger.error('T1=' + repr(T) + ' T2='+ repr(T2)
+                    + ' Temp DUNNO, Wixel DEAD, Server DOWN (5)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
-                print 'Temp DUNNO, Wixel DEAD, Server DOWN -> Log & Cant Email. (5)'   
+                print 'Temp DUNNO, Wixel DEAD, Server DOWN -> Log & Cant Email (5)'   
             
             elif ServerUp==1:   # Server is UP
-                logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2=' + repr(x2) + ',' + repr(T2) 
-                    + '. Temp DUNNO, Wixel DEAD, Server Up -> Email. (6)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
+                logger.error('T1=' + repr(T) + ' T2='+ repr(T2)
+                    + ' Temp DUNNO, Wixel DEAD, Server Up -> Email (6)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
-                print 'Temp DUNNO, Wixel DEAD, Server is Up -> Log & Email. (6)'
+                print 'Temp DUNNO, Wixel DEAD, Server is Up -> Log & Email (6)'
 
         elif WixelAlive==1: # Wixel Alive
             if ServerUp==0: # Server is DOWN !!
-                logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2=' + repr(x2) + ',' + repr(T2) 
-                    + '. Temp norm, Wixel Alive, Server DOWN. (7)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
+                logger.error('T1=' + repr(T) + ' T2='+ repr(T2)
+                    + ' Temp norm, Wixel Alive, Server DOWN (7)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
-                print 'Temp norm, Wixel Alive, Server DOWN -> Log & Cant Email. (7)'   
+                print 'Temp norm, Wixel Alive, Server DOWN -> Log & Cant Email (7)'   
             
             elif ServerUp==1:   # Server is UP
-                logger.error('ch1(V/3.3V,Temp)=' + repr(x) + ',' + repr(T) + ' ch2=' + repr(x2) + ',' + repr(T2) 
-                    + '. Temp norm, Wixel Alive, Server Up. (8)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
+                logger.error('T1=' + repr(T) + ' T2='+ repr(T2)
+                    + ' Temp norm, Wixel Alive, Server Up (8)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
-                print 'Temp norm, Wixel Alive, Server is Up -> Log. (8)'
+                print 'Temp norm, Wixel Alive, Server is Up -> Log (8)'
 
 
 #----------------------------------------------------------------------------------------
 ## SEND EMAIL FUNCTION
 def Email(ServerUp,EmailCount):
-    if ServerUp==1 and Tnorm==0:     # 'and' so that don't send email on case (8) (Normal Operation)
+    if (ServerUp==1 and Tnorm==0) or (ServerUp==1 and WixelAlive==0):     # 'and' so that don't send email on case (8) (Normal Operation)
         print "Email: Request"
         EmailCount=EmailCount+1;
 
@@ -178,7 +180,7 @@ def Email(ServerUp,EmailCount):
             fp.close()
 
             me = 'ubcmri7t@gmail.com'
-            you = ['clw9@sfu.ca'] #,'clayton.wong1x@gmail.com']   # Can send to 2 recipients
+            you = ['stefan@phas.ubc.ca'] #,'stefan@phas.ubc.ca','clayton.wong1x@gmail.com']   # Can send to 2 recipients
             #msg = MIMEMultipart('alternative')
             msg['Subject'] = 'Alert: 7T Freezer Temperature HOTT'  # "Hello %s, my name is %s" % ('john', 'mike') # Hello john, my name is mike".
             msg['From'] = me
@@ -213,6 +215,7 @@ def Email(ServerUp,EmailCount):
 ## MAIN LOOP
 EmailCount=0;
 print EmailCount
+
 while True: # Infinite loop (ctr-c to break)
 
     
@@ -243,7 +246,7 @@ while True: # Infinite loop (ctr-c to break)
     print EmailCount
 
     del x, T, x2, T2
-    time.sleep(5)
+    time.sleep(60)
 
 
 # To do: 
