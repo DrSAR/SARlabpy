@@ -78,3 +78,30 @@ def get_image_clims(data):
     max_lim = data.max()
     
     return [min_lim, max_lim]
+    
+def get_goodness_map(data, fit_dict):
+    
+    goodness_map = data[:]*numpy.zeros()
+    
+    # TODO: gahhh can't believe I have to use nested loops here. Fix it!
+    
+    for x in xrange(data.shape[0]):
+        
+        for y in xrange(data.shape[1]):
+            
+            for z in xrange(data.shape[2]):
+                
+                goodness_map[x,y,z] = fit_dict['goodness']
+    
+    return goodness_map
+            
+            
+    
+    
+    
+    
+    
+    
+    
+    
+    
