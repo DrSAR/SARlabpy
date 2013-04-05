@@ -5,6 +5,7 @@ Class definitions for the analysed data structures
 
 import os, errno
 import glob
+import cPickle
 import json
 import re
 import BRUKER_classes
@@ -77,9 +78,13 @@ class ADataDict(collections.MutableMapping):
         fileroot = os.path.join(absfolder, value.meta['fileroot'])
         # react if there is a pre-existing key of the same name
         if os.path.isdir(absfolder):
-           os.remove(fileroot+'.json')
-           os.remove(fileroot+'.nii')
-           logger.warning('overwriting analysed data ({0}) for {1}'.
+            try:
+                os.remove(fileroot+'.json')
+                os.remove(fileroot+'.pickle')
+            except OSError:
+                pass
+            else:
+                logger.warning('overwriting analysed data ({0}) for {1}'.
                        format(value.meta['key'], value.meta['parent_filename']))
         else:
             mkdir_p(absfolder)
@@ -88,11 +93,12 @@ class ADataDict(collections.MutableMapping):
         # AData.export2nii is better that way if analyzed-data should be made
         # available externally: in that case, visu_pars geometry information
         # will be used to populate the nifti header.
-        nibabel.Nifti1Image(value.data,numpy.eye(4)).to_filename(
-                                                            fileroot+'.nii')
+        with open(fileroot+'.pickle', 'w') as f:
+            cPickle.dump(value.data, f)
+
         with open(fileroot+'.json','w') as paramfile:
             json.dump(value.meta, paramfile, indent=4)
-        logger.info('Saving to {0}.(nii, json)'.format(fileroot))
+        logger.info('Saving to {0}.(pickle, json)'.format(fileroot))
 
         print('assigning {0} \nobject {1}'.format(key,
                           value))
@@ -123,8 +129,12 @@ def load_AData(pdatas, dirname):
             for adata_sets in os.listdir(adata_potential):
                 dirname = os.path.join(adata_potential, adata_sets)
                 logger.info('loading adata from %s' % dirname)
-                adata_candidate = AData.fromfile(dirname, parent=pdata)
-                special_dict.store[adata_candidate.key]=adata_candidate
+                try:
+                    adata_candidate = AData.fromfile(dirname, parent=pdata)
+                except IOError:
+                    logger.warning('Could not load AData')
+                else:
+                    special_dict.store[adata_candidate.key]=adata_candidate
     return special_dict
 
 
@@ -138,6 +148,7 @@ class AData(object):
 #                                 'an identifying key is required')
         if 'data' in kwargs:
             self.data = kwargs['data']
+            logger.info('stored adata in memery: {0}'.format(self.data.shape))
 
         if 'meta' in kwargs:
             self.meta = kwargs['meta']
@@ -153,9 +164,10 @@ class AData(object):
         #find in file when asked to load
         datafilename = os.path.join(adataroot,
                                     self.meta['dirname'],
-                                    self.meta['fileroot']+'.nii')
+                                    self.meta['fileroot']+'.pickle')
         logger.info('loading Nifti file %s' % datafilename)
-        data = nibabel.load(datafilename)
+        with open(datafilename) as f:
+            data = cPickle.load(f)
         self.__yet_loaded = True
         return data
 
@@ -198,14 +210,15 @@ class AData(object):
         '''
         datadir = os.path.join(adataroot,filename,'*')
         paramfilename = glob.glob(datadir+'json')
-        datafilename = glob.glob(datadir+'nii')
+        datafilename = glob.glob(datadir+'pickle')
 
 
-        assert len(paramfilename) == 1, (
-            'Need precisely one parameter file *json, found: {0}'.format(
-            paramfilename))
+        if len(paramfilename) != 1:
+            logger.warn('Need precisely one parameter file *json, found: {0}'.
+                            format(paramfilename))
+            raise IOError
         if len(datafilename) != 1:
-            logger.warn('Need precisely one nifti file *nii, found: {0}'.
+            logger.warn('Need precisely one data file *pickle, found: {0}'.
                             format(datafilename))
         with open(paramfilename[0], 'r') as paramfile:
             meta = json.load(paramfile)
