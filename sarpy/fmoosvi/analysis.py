@@ -9,33 +9,14 @@ test
 from __future__ import division
 
 import numpy
-import os
-import pylab
 import sarpy
-import pdb
 import scipy.integrate
 import scipy.optimize
 import scipy.fftpack
 import sarpy.fmoosvi.getters as getters
 import math
 
-def h_describe_object(class_object):
 
-    try: # if patient, print studies
-        for study in class_object.studies:
-            print('-'*40+'\n'+study.subject.SUBJECT_id)    
-    except: 
-        try: # if multiple studies, print study names and scans         
-            for study in class_object:
-                print('-'*40+'\n'+study.subject.SUBJECT_id)    
-                for scan in study.scans:
-                    print("  "+scan.acqp.ACQ_protocol_name)
-        except: 
-            try: #if single study, print scan names             
-                for scan in class_object.scans:
-                    print("  "+scan.acqp.ACQ_protocol_name)      
-            except: #otherwise print useless error message
-                print("I don't know what's going on")
 
 def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     
@@ -113,7 +94,7 @@ def h_enhancement_curve(scan_object, pdata_num = 0, mask=False):
         
     else:
         
-        norm_data = h_normalize_dce(scan_object, pdata_num = pdata_num)        
+        #norm_data = h_normalize_dce(scan_object, pdata_num = pdata_num)        
         
         
         print "Work in progress"
@@ -212,8 +193,8 @@ def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_P
 ##############    
 
 def h_func_T1(params,t):
-    M,B,T1 = params
-    return M*(1-B*numpy.exp(-t/T1))
+    M,B,T1_eff = params
+    return numpy.abs(M*(1-B*numpy.exp(-t/T1_eff))) #edit 2: funcion didn't have an abs!! FAIL!
     
 def h_within_bounds(params,bounds):
     try:        
@@ -223,7 +204,7 @@ def h_within_bounds(params,bounds):
         return False
     except:
         print('You have some funky inputs for the bounds, you fail.')
-        return True
+        return False # edit 1 to fix fitting
             
 
 def h_residual_T1(params, y_data, t):
@@ -241,17 +222,6 @@ def h_residual_T1(params, y_data, t):
     else:
         return 1e9
 
-#def h_fit(x_data, y_data, fit_function, initial_params):    
-#
-#    # Distance to the target function
-#    errfunc = lambda param, x_data, y_data: fit_function(param, x_data) - y_data
-#
-#    # Fit function to data    
-#    final_params, success = scipy.optimize.leastsq(errfunc, \
-#                            initial_params[:], args = (x_data, y_data))
-#    
-#    return final_params
-#        
 def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0, 
                 params = []):
     
@@ -278,9 +248,6 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0,
     t_data = numpy.linspace(inversion_time,\
         scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
         scan_object.pdata[pdata_num].data.shape[3])
-                                                       
-#    fitfunc = lambda param, x_data: numpy.abs(param[0]*\
-#                                (1 - param[1]*numpy.exp(-t_data/param[2])))
   
     for x in xrange(data.shape[0]):
         for y in range(data.shape[1]):
@@ -289,26 +256,29 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0,
                 y_data = data[x,y,slice,:]
                 fit_dict = {}
                 
-                fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq( h_residual_T1,params,args=(y_data,t_data), full_output=True)
+                fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(h_residual_T1,params,args=(y_data,t_data), full_output = True,maxfev = 200)
 
-                [M,B,T1] = fit_params
+                goodness_of_fit = h_goodness_of_fit(y_data,infodict)
+                
+                [M,B,T1_eff] = fit_params
                 fit_dict = {
                             'fit_params': fit_params,
                             'cov' : cov,
                             'infodict' : infodict,
                             'mesg' : mesg,
-                            'ier' : ier
+                            'ier' : ier,
+                            'goodness': goodness_of_fit
                             }
                             
-                data_after_fitting[x,y,slice] = T1
+                data_after_fitting[x,y,slice] = T1_eff
                 fit_results[x,y,slice] = fit_dict
-                
-                
-                #data_after_fitting[x,y,slice] = h_fit(t_data, y_data, \
-                                                #fitfunc, initial_params)[2]
     
     # Need to convert T1_eff to T1
     T1 = 1 / (( (1 / data_after_fitting) + numpy.log(numpy.cos(flip_angle_map)) / repetition_time))
+    
+    # Make absurd values nans to make my life easer:
+    T1[T1<0] = numpy.nan
+    T1[T1>1e4] = numpy.nan
 
     return T1, fit_results
                     
@@ -336,3 +306,10 @@ def h_image_to_mask(data):
     masked_data[masked_data == mask_val] = numpy.nan
     masked_data[numpy.isfinite(masked_data)] = 1
     return masked_data    
+
+def h_goodness_of_fit(data,infodict):
+    
+    ss_err=(infodict['fvec']**2).sum()
+    ss_tot=((data-data.mean())**2).sum()
+    rsquared=1-(ss_err/ss_tot)
+    return rsquared
