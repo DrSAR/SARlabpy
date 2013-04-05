@@ -281,7 +281,7 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0,
                                                        
 #    fitfunc = lambda param, x_data: numpy.abs(param[0]*\
 #                                (1 - param[1]*numpy.exp(-t_data/param[2])))
-    
+  
     for x in xrange(data.shape[0]):
         for y in range(data.shape[1]):
             for slice in range(num_slices):
