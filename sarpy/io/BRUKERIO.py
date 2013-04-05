@@ -366,25 +366,25 @@ def readfid(fptr=None,
         (128, 128, 15, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/2/fid'))
         >>> fid['data'].shape   # FLASH 2D
-        (256, 105, 5, 1)
+        (133, 105, 5, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/3/fid'))
         >>> fid['data'].shape   # FLASH 3D --- THIS IS ACTUALLY WRONG!!
-        (256, 105, 1, 1)
+        (133, 105, 1, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/4/fid'))
         >>> fid['data'].shape   # MSME 2D
-        (256, 105, 5, 1)
+        (133, 105, 5, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/5/fid'))
         >>> fid['data'].shape   # MSME 3D
-        (256, 105, 1, 1)
+        (133, 105, 1, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/6/fid'))
         >>> fid['data'].shape   # MSME 2D-TURBO  --- THIS IS ACTUALLY WRONG!!
         (256, 256, 15, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/7/fid'))
         >>> fid['data'].shape  # FLASH 2D (NR=25)
-        (256, 105, 5, 25)
+        (133, 105, 5, 25)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/8/fid'))
         >>> fid['data'].shape  # FLASH 2D, partial acq. NR auto reset to 5
-        (256, 105, 5, 5)
+        (133, 105, 5, 5)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/9/fid')) # doctest:+ELLIPSIS
         Traceback (most recent call last):
         ...
@@ -392,28 +392,44 @@ def readfid(fptr=None,
         >>> # fid fil 9 was missing due to incomplete scans
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/10/fid'))
         >>> fid['data'].shape # FLASH 2D (MATRIX 32 X 32)
-        (128, 32, 5, 1)
+        (32, 32, 5, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/11/fid'))
         >>> fid['data'].shape # FLASH 3D (MATRIX 32 X 32)
-        (128, 32, 5, 1)
+        (32, 32, 5, 1)
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/12/fid'))
         >>> fid['data'].shape # EPI "1 segment" -- OBVIOUSLY WRONG!
         (4096, 1, 5, 1)
 
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/13/fid')) # 16 segment EPI
-        ... # doctest: +ELLIPSIS  
+        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/13/fid'))
+        ... # doctest: +ELLIPSIS
+        ... # 16 segment EPI
         Traceback (most recent call last):
         ...
         IndexError: ...
         >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/14/fid'))
         >>> fid['data'].shape # DTI Standard
-        (256, 105, 10, 1)
-        
-    and some more complicated scans ...
-    15:'DTI SPIRAL (did not show)', 
-    16:'UTE 2D',
-    17:'UTE 3D',
-    18:'ZTE 3D'
+        (133, 105, 10, 1)
+
+        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/15/fid'))
+        ... # doctest: +ELLIPSIS
+        ... # DTI SPIRAL
+        Traceback (most recent call last):
+        ...
+        KeyError: 'ACQ_phase_encoding_mode'
+        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/16/fid'))
+        >>> fid['data'].shape # UTE 2D
+        (64, 402, 5, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/17/fid'))
+        >>> fid['data'].shape # UTE 3D
+        (64, 51360, 1, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/18/fid'))
+        >>> fid['data'].shape # ZTE 3D
+        (512, 51896, 1, 1)
+        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/99/fid'))
+        >>> fid['data'].shape # interrupted FLASH DCE
+        (133, 105, 5, 7)
+
+
     """
     if isinstance(fptr, FileType):
         fidname = fptr.name
@@ -560,6 +576,12 @@ def readfid(fptr=None,
             fid = fid[0:ACQ_size[0]*ACQ_size[1]*ACQ_size[2]*NR]
 
         tempfid = fid.reshape(ACQ_size[1]*ACQ_size[2]*NR, ACQ_size[0])
+        # Now is the time to lop off any spurious zero-filling added on disk
+        # due to  parameter acqp['GO_block_size'] == 'Standard_KBlock_Format'
+        # If this is set, blocks of 1k bytes make up the read lines (and might
+        # be zerofilled if not long enouhh...)
+        ACQ_size[0] = acqp['ACQ_size'][0] / 2 # to account for real/imag
+        tempfid = tempfid[:,0:ACQ_size[0]]
         fid_reorder = numpy.empty((ACQ_size[0], ACQ_size[1],
                                    len(ACQ_obj_order), NR),
                             dtype = 'complex')
