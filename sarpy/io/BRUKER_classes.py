@@ -492,6 +492,20 @@ class Study(object):
                 print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
         return(found_scans)
 
+    def scan_generator(self, **kwargs):
+        # if no criteria given, then make a criterion up for a
+        # non-existent key (dummy) to equal a terribly unlikely value (very
+        # long) integer
+        if len(kwargs)==0:
+            kwargs['dummy'] = 4242424242424242
+        for s in self.scans:
+            for criterion, criterion_val in kwargs.iteritems():
+                if s.acqp.__dict__.get(criterion, 4242424242424242) == \
+                        criterion_val:
+                    yield s
+                elif s.method.__dict__.get(criterion, 4242424242424242) == \
+                        criterion_val:
+                    yield s
 
 
 class StudyCollection(object):
