@@ -299,17 +299,31 @@ def h_mag_from_fid(scan_object):
     
     return mag_data
     
-def h_image_to_mask(data):
+def h_image_to_mask(scan_object, adata_key):
+    
+    img_data = scan_object.adata[adata_key].data.get_data()
 
-    masked_data = data[:] 
-    mask_val = scipy.percentile(data.flatten(),95)
+    masked_data = img_data[:] 
+    
+    mask_val = scipy.percentile(masked_data.flatten(),95)
     masked_data[masked_data == mask_val] = numpy.nan
     masked_data[numpy.isfinite(masked_data)] = 1
+    
     return masked_data    
 
-def h_goodness_of_fit(data,infodict):
+def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     
-    ss_err=(infodict['fvec']**2).sum()
-    ss_tot=((data-data.mean())**2).sum()
-    rsquared=1-(ss_err/ss_tot)
-    return rsquared
+    if indicator == 'rsquared':
+        ss_err=(infodict['fvec']**2).sum()
+        ss_tot=((data-data.mean())**2).sum()
+        rsquared=1-(ss_err/ss_tot)
+        
+        print type(rsquared)
+        
+        return rsquared
+        
+    else:
+        print ('There is no code to produce that indicator. Do it first.')
+        raise Exception
+        
+    

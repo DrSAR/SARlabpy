@@ -9,6 +9,8 @@ import sarpy
 import pylab
 import scipy
 
+pylab.close('all')
+
 # Trying to display data correctly
 
 def histeq(image_data,bins=256, cnum= 255):

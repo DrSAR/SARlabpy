@@ -23,18 +23,22 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+',
       
         try: # Will work for experiment and study
             scan_list = Bruker_object.find_scan_by_protocol(protocol_name)
-        except: # check for list of studies
+        except: # check for a list
             try: 
                 scan_list = []     
-    
-                if type(Bruker_object) == list:
-                    scan_list = Bruker_object
+                    
+                try:    
+                    if type(Bruker_object[0]) == sarpy.io.BRUKER_classes.Study:
+                        for study in Bruker_object:
+                            scan_list.append(study.find_scan_by_protocol(protocol_name))
+                        print('You put in a list of studies, try to avoid that')       
+                
+                except:
+                                            
+                    scan_list = Bruker_object[:]
                     print('You put in a list of scans, try to avoid that')
     
-                elif type(Bruker_object[0]) == sarpy.io.BRUKER_classes.Study:
-                    for study in Bruker_object:
-                        scan_list.append(study.find_scan(protocol_name))
-                        print('You put in a list of studies, try to avoid that')              
+                
             except:
                 raise
 
@@ -134,8 +138,7 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
 
     for scan in scan_list:
         
-        print scan
-        curr_T1map, curr_fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL(Bruker_object,flip_angle_map = FA_map)
+        curr_T1map, curr_fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,flip_angle_map = FA_map)
 
         T1_map.append(curr_T1map)
         fit_dicts.append(curr_fit_dict)
@@ -145,7 +148,7 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
     # Also return arrays instead of a list
             
     if numpy.array(T1_map).shape[0] == 1:     
-        return numpy.array(T1_map)[0,:,:,:], numpy.array(fit_dicts)[0,:,:,:]
+        return numpy.array(T1_map)[0,:,:,0], numpy.array(fit_dicts)[0,:,:,:]
     else:
         return numpy.array(T1_map), numpy.array(fit_dicts)                                                
 
@@ -211,17 +214,3 @@ def roi_distribution(data,roi_image_mask, bins,  display_histogram = True,
         filename = save_name + '.png'                
         pylab.savefig(filename, bbox_inches=0, dpi=300)
         
-
-#import sarpy
-#
-#NecS3_exp = sarpy.Experiment('NecS3')
-#
-## Look-Locker T1 maps
-#NecS3_LLscans = NecS3_exp.find_scan_by_protocol('04_ubcLL+')
-#
-#scan = NecS3_LLscans[0]
-#
-#T1map_LL,T1_fit_dict = calculate_T1map(scan, protocol_name = '04_ubcLL+')
-#scan.store_adata(key='T1map_LL', data = T1map_LL)
-#scan.store_adata(key='T1_fit_dict', data = T1_fit_dict)
-
