@@ -6,24 +6,20 @@ import re
 list_of_dicts = [{'s1':'abcd', 's2':'ABC', 'i':42, 'f':4.2},
                  {'s2':'xyz', 'i':84, 'f':8.4}]
 
-def regex_comp(a,b):
-    return re.match(a,b)
-def int_comp(a,b):
-    return a==b
-def float_comp(a,b): # just making up some comparisons
-    return round(a,-1) == round (b,-1)
+ # just making up some comparison strategies
+def regex_comp(a,b): return re.match(a,b)
+def int_comp(a,b): return a==b
+def float_comp(a,b): return round(a,-1) == round (b,-1)
 
-pre_specified_comp_dict = {
-frozenset(['s1','s2']) : regex_comp,
-frozenset(['i']): int_comp,
-frozenset(['f']): float_comp
-}
+pre_specified_comp_dict = {frozenset(['s1','s2']) : regex_comp,
+                           frozenset(['i']): int_comp,
+                           frozenset(['f']): float_comp}
 
 def fle_new(**kwargs):
     chosen_comps={}
     for key in kwargs.keys():
-        cand_comp = filter(lambda a: key in a,
-                            pre_specified_comp_dict.keys())
+        # remember, the keys here are frozensets
+        cand_comp = [x for x in pre_specified_comp_dict if key in x]
         chosen_comps[key] = pre_specified_comp_dict[cand_comp[0]]
 
     matches = lambda d: all(k in d and chosen_comps[k](v, d[k])
@@ -34,10 +30,10 @@ def fle_new(**kwargs):
 def fle_vivekpoddar(**kwargs):
     for data in list_of_dicts:
         for key, val in kwargs.iteritems():
-                 if not data.get(key, False) == val:
-                     return False
-        else:
-            return data
+            if not data.get(key, False) == val:
+                return []
+            else:
+                return data
 
 
 def fle_orig(**kwargs):
@@ -64,9 +60,9 @@ for method in [fle_orig,
     print method.__name__
     print '-'*49
 
-    print [a for a in method()]       #
-    print [a for a in method(i=41)]       #
-    print [a for a in method(i=42)]       #
-    print [a for a in method(s2='xyz')]   #
-    print [a for a in method(s2='[a-z]')]   #
-    print [a for a in method(i=42, f=4.2)]   #
+    print 'no key        {0}'.format(list(method()))
+    print 'key missing   {0}'.format(list(method(i=41)))
+    print 'key there     {0}'.format(list(method(i=42)))
+    print 'string search {0}'.format(list(method(s2='xyz')))
+    print 'regex search  {0}'.format(list(method(s2='[a-z]')))
+    print 'keys combined {0}'.format(list(method(i=42, f=4.2)))
