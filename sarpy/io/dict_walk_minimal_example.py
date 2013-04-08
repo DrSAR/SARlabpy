@@ -1,0 +1,72 @@
+# -*- coding: utf-8 -*-
+"""
+Copyright: SARlab members, UBC, Vancouver, 2013
+"""
+import re
+list_of_dicts = [{'s1':'abcd', 's2':'ABC', 'i':42, 'f':4.2},
+                 {'s2':'xyz', 'i':84, 'f':8.4}]
+
+def regex_comp(a,b):
+    return re.match(a,b)
+def int_comp(a,b):
+    return a==b
+def float_comp(a,b): # just making up some comparisons
+    return round(a,-1) == round (b,-1)
+
+pre_specified_comp_dict = {
+frozenset(['s1','s2']) : regex_comp,
+frozenset(['i']): int_comp,
+frozenset(['f']): float_comp
+}
+
+def fle_new(**kwargs):
+    chosen_comps={}
+    for key in kwargs.keys():
+        cand_comp = filter(lambda a: key in a,
+                            pre_specified_comp_dict.keys())
+        chosen_comps[key] = pre_specified_comp_dict[cand_comp[0]]
+
+    matches = lambda d: all(k in d and chosen_comps[k](v, d[k])
+                            for k, v in kwargs.items())
+
+    return filter(matches, list_of_dicts)
+
+def fle_vivekpoddar(**kwargs):
+    for data in list_of_dicts:
+        for key, val in kwargs.iteritems():
+                 if not data.get(key, False) == val:
+                     return False
+        else:
+            return data
+
+
+def fle_orig(**kwargs):
+    for s in list_of_dicts:
+        for criterion, criterion_val in kwargs.iteritems():
+            if type(criterion_val) is str:
+                if re.match(criterion_val, s.get(criterion, 'unlikely_return_val')):
+                    yield s
+                    continue
+            if s.get(criterion, None) == criterion_val:
+                yield s
+
+
+def fle_srgerg(**kwargs):
+    compare = lambda e, a: re.match(e, a) is not None if isinstance(e, basestring) else e == a
+    matches = lambda d: all(k in d and compare(v, d[k]) for k, v in kwargs.iteritems())
+    return filter(matches, list_of_dicts)
+
+for method in [fle_orig,
+               fle_new,
+#               fle_vivekpoddar,
+               fle_srgerg]:
+    print '-'*49
+    print method.__name__
+    print '-'*49
+
+    print [a for a in method()]       #
+    print [a for a in method(i=41)]       #
+    print [a for a in method(i=42)]       #
+    print [a for a in method(s2='xyz')]   #
+    print [a for a in method(s2='[a-z]')]   #
+    print [a for a in method(i=42, f=4.2)]   #
