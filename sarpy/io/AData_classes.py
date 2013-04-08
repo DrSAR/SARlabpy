@@ -55,7 +55,9 @@ class ADataDict(collections.MutableMapping):
 
     def __setitem__(self, key, value):
         if key in self.store:
-            logger.warn('ADate set is being overwriten for key %s' % key)
+            raise AttributeError(('AData (key="%s") exists\nTo force overwrite'+
+                                ', use store_adata with option force=True')
+                                % key)
 
         # here we receive the key from the dictionary access
         # hence, we should store it in the meta-data
@@ -148,7 +150,7 @@ class AData(object):
 #                                 'an identifying key is required')
         if 'data' in kwargs:
             self.data = kwargs['data']
-            logger.info('stored adata in memery: {0}'.format(self.data.shape))
+            logger.info('stored adata in memory: {0}'.format(self.data.shape))
 
         if 'meta' in kwargs:
             self.meta = kwargs['meta']
