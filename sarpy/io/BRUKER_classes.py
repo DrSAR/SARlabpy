@@ -339,11 +339,16 @@ class Scan(object):
         except AttributeError:
             return self.__str__()
 
-    def store_adata(self, pdata_idx=0, **kwargs):
+    def store_adata(self, pdata_idx=0, force=False, **kwargs):
         '''
         Store an AData set for one of the processed children of this scan.
         Typically the first one (pdata_idx=0)
+        
+        :param boolean force:
+            overwrite pre-existing AData sets, (default  False)
         '''
+        if force:
+            self.adata.pop(kwargs['key'], None)
         self.adata[kwargs['key']] = AData_classes.AData.fromdata(
                     self.pdata[pdata_idx], **kwargs)
 
