@@ -20,8 +20,11 @@ def resample_onto(source_fname, target_fname):
 
     Example:
         >>> import os, nibabel
-        >>> fname = os.path.expanduser('~/data/nii/2.16.756.5.5.100.1384712661.16188.1363828008.19.nii.gz')
-        >>> fname_ref = os.path.expanduser('~/data/nii/2.16.756.5.5.100.1384712661.16188.1363827270.15.nii.gz')
+        >>> import sarpy
+        >>> scan_a = sarpy.Scan("PhantomOrientation.iY1/4")
+        >>> scan_ref = sarpy.Scan("PhantomOrientation.iY1/7")
+        >>> fname = 'axial.nii.gz'
+        >>> fname_ref = '3D.nii.gz'
         >>> nibabel.load(fname).shape
         (150, 150, 75)
         >>> nibabel.load(fname_ref).shape
