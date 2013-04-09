@@ -390,8 +390,8 @@ class Study(object):
                 filename)
 
         sep=os.path.sep
-        self.shortdirname = re.sub(dataroot+sep+'[^'+sep+']+'+
-                                   sep+'nmr'+sep, '', self.dirname)
+        self.shortdirname = re.sub('^.*' + sep.encode('string-escape') + 'nmr' + sep.encode('string-escape'),
+                                   '', self.dirname)
         self.subject = JCAMP_file(os.path.join(self.dirname,'subject'))
 
     @lazy_property
