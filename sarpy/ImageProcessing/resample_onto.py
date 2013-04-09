@@ -21,10 +21,12 @@ def resample_onto(source_fname, target_fname):
     Example:
         >>> import os, nibabel
         >>> import sarpy
-        >>> scan_a = sarpy.Scan("PhantomOrientation.iY1/4")
-        >>> scan_ref = sarpy.Scan("PhantomOrientation.iY1/7")
-        >>> fname = 'axial.nii.gz'
-        >>> fname_ref = '3D.nii.gz'
+        >>> scan_a = sarpy.Scan("PhantomOrientation.iY1/7")
+        >>> scan_ref = sarpy.Scan("PhantomOrientation.iY1/4")
+        >>> fname = '3D.nii.gz'
+        >>> fname_ref = 'coronal.nii.gz'
+        >>> scan_a.pdata[0].export2nii(fname)
+        >>> scan_ref.pdata[0].export2nii(fname_ref)
         >>> nibabel.load(fname).shape
         (150, 150, 75)
         >>> nibabel.load(fname_ref).shape
@@ -32,6 +34,22 @@ def resample_onto(source_fname, target_fname):
         >>> new = resample_onto(fname, fname_ref)
         >>> new.shape
         (256, 256, 5)
+        >>> scan_a = sarpy.Experiment('NecS3Hs04').studies[-1].scans[7]
+        >>> scan_ref = sarpy.Experiment('NecS3Hs04').studies[-1].scans[8]
+        >>> fname = '3D.nii.gz'
+        >>> fname_ref = 'coronal.nii.gz'
+        >>> scan_a.pdata[0].export2nii(fname)
+        >>> scan_ref.pdata[0].export2nii(fname_ref)
+        >>> nibabel.load(fname).shape
+        (64, 64, 64, 2)
+        >>> nibabel.load(fname_ref).shape
+        (64, 128, 6, 25)
+        >>> new = resample_onto(fname, fname_ref)
+        >>> new.shape
+
+    SimpleITK.Image is either 2D or 3D not more...
+    check out possibilty of creating SimpleITK:image orientations from visu_para
+
     '''
     img_input = sitk.ReadImage(source_fname)
     ref_input = sitk.ReadImage(target_fname)
