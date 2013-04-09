@@ -965,8 +965,8 @@ def readRFshape(filename):
 
     # make a consecutive list of float values stored in the XYPOINTS field
     XYlist = ' '.join(RFshape['XYPOINTS'].split(', ')).split()
-    RFshape['amp'] = [float(dummy) for dummy in XYlist[::2]]
-    RFshape['phase'] = [float(dummy) for dummy in XYlist[1::2]]
+    RFshape['amp'] = [float(dummy) for dummy in XYlist[1::2]]
+    RFshape['phase'] = [float(dummy) for dummy in XYlist[2::2]]
 
     return RFshape
 
