@@ -257,8 +257,8 @@ class Scan(object):
                 filename)
 
         sep=os.path.sep
-        self.shortdirname = re.sub(dataroot+sep+'[^'+sep+']+'+
-                                   sep+'nmr'+sep, '', self.dirname)
+        self.shortdirname = re.sub('^.*' + sep.encode('string-escape') + 'nmr' + sep.encode('string-escape'),
+                                   '', self.dirname)
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
         # is also present - this was true for ca 9000 scans we tested thi in

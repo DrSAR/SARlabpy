@@ -21,6 +21,8 @@ Several function wrappers exist for calculation of flip angle maps of a pulse of
 3) calc_BS_flipangle:  arrays for the individual Bloch-Siegert acquired scans
 
 write_BS_flipangle_2dseq creates a 2dseq and visu_pars file for the calculated flip angle map, thus enabling direct visualization of the results in Paravision image display. 
+
+Test functions assume that sample data is available in the ~/data, and the RF shape files are in ~/wave.  Use symbolic links if they are somewhere else.
 """
 
 from __future__ import division
@@ -35,17 +37,32 @@ import scipy.optimize
 import scipy.fftpack
 import sarpy.fmoosvi.getters as getters
 import math
+import collections
 
-def BS_flipangle_wrt_Bruker2dseq(BS_2dseq_path, POI_2dseq_path, shapefile_path):
-
-    BS_scan = BRUKER_classes.Scan(BS_2dseq_path)
-    POI_scan = BRUKER_classes.Scan(POI_2dseq_path)
+def BS_test(username,studyname,BS_expno,BS_procno,POI_expno,offConsole=True):
     
-    flipanglemap = BS_flipangle_wrt_ScanObject(BS_scan, POI_scan, shapefile_path)
+    datapath = os.path.expanduser(os.path.join('~','data',username,'nmr',studyname))
+    BS_path = os.path.join(datapath,BS_expno)
+    POI_path = os.path.join(datapath,POI_expno)
+
+    if offConsole:
+        shapefile_path = os.path.expanduser(os.path.join('~','wave'))
+    else:
+        shapefile_path = 'opt/PV5.1/exp/stan/nmr/lists/wave'
+
+    BS_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path)
+
+
+def BS_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path):
+
+    BS_scan = sarpy.BRUKER_classes.Scan(BS_path)
+    POI_scan = sarpy.BRUKER_classes.Scan(POI_path)
+    
+    flipanglemap = BS_flipangle_wrt_ScanObject(BS_scan, BS_procno, POI_scan, shapefile_path)
 
     return flipanglemap
     
-def BS_flipangle_wrt_ScanObject(BS_scan, POI_scan, shapefile_path):
+def BS_flipangle_wrt_ScanObject(BS_scan, BS_procno, POI_scan, shapefile_path):
 
     try:
         dBpwr_BS = BS_scan.method.BSPulse[3]
@@ -69,36 +86,71 @@ def BS_flipangle_wrt_ScanObject(BS_scan, POI_scan, shapefile_path):
     KBS = calc_KBS(freqoffset, width_BS, BS_shape, shapefile_path)
 
     B1peak_BS = calc_BS_B1peak(KBS, on_BSminus_phase, on_BSplus_phase, off_BSminus_phase, off_BSplus_phase)
-    flipanglemap = calc_BS_flipangle(B1peak_BS, dBpwr_BS, dBpwr_POI, integralratio_POI, width_POI)
+    POI_maps = calc_POI_B1_flipangle(B1peak_BS, dBpwr_BS, dBpwr_POI, integralratio_POI, width_POI)
         
-    return flipanglemap
+    return POI_maps['flipangle']
     
-def calc_BS_flipangle(B1peak_BS, dBpwr_BS, dBpwr_POI, integralratio_POI, width_POI):
+def calc_POI_B1_flipangle(B1peak_BS, dBpwr_BS, dBpwr_POI, integralratio_POI, width_POI):
     
     gamma = 267.513e6
-    flipangle_POI = (gamma*B1peak_BS/10000) * (math.pow(10,(dBpwr_BS-dBpwr_POI)/20)) *\
-                integralratio_POI*width_POI
-                
-    return flipangle_POI
+    B1peak_POI = B1peak_BS * (math.pow(10,(dBpwr_BS-dBpwr_POI)/20))
+    flipangle_POI = gamma*B1peak_POI*integralratio_POI*width_POI
+         
+    return {'flipangle':flipangle_POI, 'B1peak':B1peak_POI}
     
-def calc_BS_B1peak(KBS, on_BSminus_phase, on_BSplus_phase, off_BSminus_phase=0, off_BSplus_phase=0):
+def calc_BS_B1peak(KBS, on_BSminus_phase, on_BSplus_phase, off_BSminus_phase, off_BSplus_phase):
+    '''
+    calculates B1peak of an off-resonant pulse, based on phase differences  
+
+    :param float KBS: Bloch-Siegert calibration constant in radians/T^2
+    :param array on_BSminus_phase: imageset with BS pulse on (-ve offset)
+    :param array on_BSplus_phase: imageset with BS pulse on (+ve offset)
+    :param array off_BSminus_phase: imageset with zero flip angle BS pulse (-ve offset)
+    :param array off_BSplus_phase: imageset with zero flip angle BS pulse (+ve offset)
+    :return:
+        imageset of B1peak values of the Bloch-Siegert pulse
+    :rtype: array
     
+Example:
+    
+    >>> shapefile_path = os.path.expanduser(os.path.join('~','wave'))
+    >>> KBS = calc_KBS(4000,8e-3,'fermi.exc',shapefile_path)
+    >>> KBS
+    7109603109.3280497
+    '''    
     if (off_BSminus_phase & off_BSplus_phase):
         offset = off_BSplus_phase - off_BSminus_phase
     else:
         offset = 0
     
     phase_diff = on_BSplus_phase - on_BSminus_phase + offset
-    B1peak = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
+    B1peak_BS = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
 
-    return B1peak
+    return B1peak_BS
     
    
 
 def calc_KBS(freqoffset, pulsewidth, pulseshape, shapefile_path, mode='gradientecho'):
     '''
-calculates KBS in the units of radians/T^2.  Divide the result by 1e8 if units of   radians/Gauss^2.  See literature reference in the module docstring for details.
+    calculates KBS in the units of radians/T^2 (see lit reference in module docstring).  
 
+    :param float freqoffset: BS offset in Hz
+    :param float pulsewidth: length of pulse in seconds
+    :param string pulseshape: filename of pulse shape
+    :param string shapefile_path: directory of pulse_shape
+    :param string mode: 'gradientecho' or 'spinecho'
+    :return:
+        value of KBS in radians/T^2
+    :rtype: float
+    
+    Divide the result by 1e8 if units of radians/Gauss^2.  See literature reference in      the module docstring for details.
+
+Example:
+    
+    >>> shapefile_path = os.path.expanduser(os.path.join('~','wave'))
+    >>> KBS = calc_KBS(4000,8e-3,'fermi.exc',shapefile_path)
+    >>> KBS
+    7109603109.3280497
     '''
     filename = os.path.join(shapefile_path, pulseshape)
     pulse = sarpy.io.BRUKERIO.readRFshape(filename)
@@ -110,31 +162,25 @@ calculates KBS in the units of radians/T^2.  Divide the result by 1e8 if units o
     integrand = (gamma*amp)**2/(2*2*3.141592654*freqoffset)
     KBS = scipy.integrate.trapz(integrand, None, dt)
 
-    return KBS
+    assert mode == 'gradientecho' or mode == 'spinecho', (
+        'mode is not gradientecho or spinecho')
+    
+    if mode == 'spinecho':
+        return 2*KBS
+    else:
+        return KBS
     
             
-def h_phase_from_fid(scan_object):
-    
-    phase_data = numpy.angle(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
-    
-    return phase_data
-    
-def h_mag_from_fid(scan_object):
-
-    mag_data = numpy.abs(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
-    
-    return mag_data
-    
-    
-    
+   
 if __name__ == '__main__':
 #    shapefile_path = 'opt/PV5.1/exp/stan/nmr/lists/wave'
-    shapefile_path = os.path.expanduser(os.path.join('~','wave'))
-#    KBS = calc_KBS(-4000,8e-3,'fermi.exc',shapefile_path)
-    KBS = calc_KBS(4000,8e-3,'sech.exc',shapefile_path)
-    print KBS/1e8
-#    import doctest
-#    doctest.testmod()
+#    shapefile_path = os.path.expanduser(os.path.join('~','wave'))
+#    KBS = calc_KBS(4000,8e-3,'fermi.exc',shapefile_path)
+#    print KBS/1e8
+    from sarpy.io.BRUKER_classes import *
+    BSexp = Scan('dBlochSiegert2.j41\\3')
+    import doctest
+    doctest.testmod()
 
 
 
