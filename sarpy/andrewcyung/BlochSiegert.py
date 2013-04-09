@@ -39,24 +39,25 @@ import sarpy.fmoosvi.getters as getters
 import math
 import collections
 
-def BS_test(username,studyname,BS_expno,BS_procno,POI_expno,offConsole=True):
+def BS_test(studyname,BS_expno,BS_procno,POI_expno,offConsole=True):
     
-    datapath = os.path.expanduser(os.path.join('~','data',username,'nmr',studyname))
-    BS_path = os.path.join(datapath,BS_expno)
-    POI_path = os.path.join(datapath,POI_expno)
+    import     
+    
+    BS_path = os.path.join(studyname,str(BS_expno))
+    POI_path = os.path.join(studyname,str(POI_expno))
 
     if offConsole:
         shapefile_path = os.path.expanduser(os.path.join('~','wave'))
     else:
         shapefile_path = 'opt/PV5.1/exp/stan/nmr/lists/wave'
 
-    BS_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path)
+    flipanglemap = BS_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path)
 
 
 def BS_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path):
 
-    BS_scan = sarpy.BRUKER_classes.Scan(BS_path)
-    POI_scan = sarpy.BRUKER_classes.Scan(POI_path)
+    BS_scan = sarpy.io.BRUKER_classes.Scan(BS_path)
+    POI_scan = sarpy.io.BRUKER_classes.Scan(POI_path)
     
     flipanglemap = BS_flipangle_wrt_ScanObject(BS_scan, BS_procno, POI_scan, shapefile_path)
 
@@ -64,22 +65,25 @@ def BS_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path):
     
 def BS_flipangle_wrt_ScanObject(BS_scan, BS_procno, POI_scan, shapefile_path):
 
+    import re
+    
     try:
         dBpwr_BS = BS_scan.method.BSPulse[3]
         dBpwr_POI = POI_scan.method.ExcPulse[3]
         integralratio_POI = POI_scan.method.ExcPulse[10]
         width_BS = BS_scan.method.BSPulse[0]*1e-3
         width_POI = POI_scan.method.ExcPulse[0]*1e-3
-        freqoffset = BS_scan.method.BSOffset
-        BS_shape = BS_scan.method.BSPulse[1]
+        freqoffset = BS_scan.method.BSFreqOffset
+        BS_shape = BS_scan.method.BSPulse[8]
+        BS_shape = re.findall(r'<\s*(\S+)\s*>',BS_shape)[0]  #regex to strip off <>      
     except:
         print('something wrong happened with pulse parameter query')
         
     try:
-        on_BSplus_phase = BS_scan.pdata[:,:,0]
-        on_BSminus_phase = BS_scan.pdata[:,:,1]
-        off_BSplus_phase = BS_scan.pdata[:,:,2]
-        off_BSminus_phase = BS_scan.pdata[:,:,3]
+        on_BSplus_phase = BS_scan.pdata[BS_procno-1].data[:,:,:,0]
+        on_BSminus_phase = BS_scan.pdata[BS_procno-1].data[:,:,:,1]
+        off_BSplus_phase = BS_scan.pdata[BS_procno-1].data[:,:,:,2]
+        off_BSminus_phase = BS_scan.pdata[BS_procno-1].data[:,:,:,3]
     except:
         print('error in retrieving phase images')
         
@@ -118,10 +122,7 @@ Example:
     >>> KBS
     7109603109.3280497
     '''    
-    if (off_BSminus_phase & off_BSplus_phase):
-        offset = off_BSplus_phase - off_BSminus_phase
-    else:
-        offset = 0
+    offset = off_BSplus_phase - off_BSminus_phase
     
     phase_diff = on_BSplus_phase - on_BSminus_phase + offset
     B1peak_BS = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
@@ -132,7 +133,7 @@ Example:
 
 def calc_KBS(freqoffset, pulsewidth, pulseshape, shapefile_path, mode='gradientecho'):
     '''
-    calculates KBS in the units of radians/T^2 (see lit reference in module docstring).  
+    calculates KBS in the units of radians/T^2 (assumes freq offset is constant in time).  
 
     :param float freqoffset: BS offset in Hz
     :param float pulsewidth: length of pulse in seconds
@@ -177,8 +178,7 @@ if __name__ == '__main__':
 #    shapefile_path = os.path.expanduser(os.path.join('~','wave'))
 #    KBS = calc_KBS(4000,8e-3,'fermi.exc',shapefile_path)
 #    print KBS/1e8
-    from sarpy.io.BRUKER_classes import *
-    BSexp = Scan('dBlochSiegert2.j41\\3')
+    BS_test('dBlochSiegert2.j41',3,2,1)
     import doctest
     doctest.testmod()
 
