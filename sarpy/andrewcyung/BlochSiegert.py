@@ -31,17 +31,14 @@ import numpy
 import os
 import pylab
 import sarpy
+import sarpy.utils.plt_utils
 import pdb
 import scipy.integrate
 import scipy.optimize
 import scipy.fftpack
-import sarpy.fmoosvi.getters as getters
 import math
-import collections
 
 def BS_test(studyname,BS_expno,BS_procno,POI_expno,offConsole=True):
-    
-    import     
     
     BS_path = os.path.join(studyname,str(BS_expno))
     POI_path = os.path.join(studyname,str(POI_expno))
@@ -52,6 +49,10 @@ def BS_test(studyname,BS_expno,BS_procno,POI_expno,offConsole=True):
         shapefile_path = 'opt/PV5.1/exp/stan/nmr/lists/wave'
 
     flipanglemap = BS_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path)
+    
+    i_slice = 4
+    pylab.imshow(flipanglemap[:,:,i_slice],interpolation='none')
+    pylab.show()
 
 
 def BS_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path):
@@ -68,6 +69,7 @@ def BS_flipangle_wrt_ScanObject(BS_scan, BS_procno, POI_scan, shapefile_path):
     import re
     
     try:
+        BS_method = BS_scan.method.Method
         dBpwr_BS = BS_scan.method.BSPulse[3]
         dBpwr_POI = POI_scan.method.ExcPulse[3]
         integralratio_POI = POI_scan.method.ExcPulse[10]
@@ -86,8 +88,13 @@ def BS_flipangle_wrt_ScanObject(BS_scan, BS_procno, POI_scan, shapefile_path):
         off_BSminus_phase = BS_scan.pdata[BS_procno-1].data[:,:,:,3]
     except:
         print('error in retrieving phase images')
+
+    if BS_method=='bSB1mapFLASH':
+        seqtype = 'gradientecho'
+    elif BS_method=='bSB1mapMSME':
+        seqtype = 'spinecho'
         
-    KBS = calc_KBS(freqoffset, width_BS, BS_shape, shapefile_path)
+    KBS = calc_KBS(freqoffset, width_BS, BS_shape, shapefile_path, seqtype)
 
     B1peak_BS = calc_BS_B1peak(KBS, on_BSminus_phase, on_BSplus_phase, off_BSminus_phase, off_BSplus_phase)
     POI_maps = calc_POI_B1_flipangle(B1peak_BS, dBpwr_BS, dBpwr_POI, integralratio_POI, width_POI)
@@ -121,9 +128,15 @@ Example:
     >>> KBS = calc_KBS(4000,8e-3,'fermi.exc',shapefile_path)
     >>> KBS
     7109603109.3280497
-    '''    
+    '''
+    debug=True
+    
     offset = off_BSplus_phase - off_BSminus_phase
     
+    if debug:
+        pylab.imshow(offset[:,:,4],interpolation='None')
+        pylab.show()
+        
     phase_diff = on_BSplus_phase - on_BSminus_phase + offset
     B1peak_BS = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
 
