@@ -281,6 +281,7 @@ class Scan(object):
                 filename)
 
         self.shortdirname = last_path_components(self.dirname, depth=2)
+
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
         # is also present - this was true for ca 9000 scans we tested thi in
