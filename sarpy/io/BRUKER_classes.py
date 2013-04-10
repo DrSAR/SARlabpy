@@ -6,7 +6,6 @@ import os
 import re
 import glob
 
-import numpy
 import nibabel
 
 import BRUKERIO
@@ -42,6 +41,25 @@ def strip_all_but_classname(obj, class_str):
         class_name = class_str
     return class_name
 
+def last_path_components(absdirname, depth=1):
+    '''
+    Return the last two parts of a path. Should be platform independent and
+    fairly immune to trailing '/' and other irregularities. Used to determine
+    the shortdirname in Scan and Study.
+
+    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9')
+    '9'
+    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9/')
+    '9'
+    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9/', depth=2)
+    'readfidTest.ix1/9'
+    '''
+    head = absdirname.rstrip(os.sep)
+    rval = []
+    for i in range(depth):
+        head, tail = os.path.split(head)
+        rval.insert(0,tail)
+    return os.sep.join(rval)
 
 # ===========================================================
 
@@ -256,9 +274,7 @@ class Scan(object):
                 'Filename "%s" is neither a directory nor a file inside one' %
                 filename)
 
-        sep=os.path.sep
-        self.shortdirname = re.sub(dataroot+sep+'[^'+sep+']+'+
-                                   sep+'nmr'+sep, '', self.dirname)
+        self.shortdirname = last_path_components(self.dirname, depth=2)
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
         # is also present - this was true for ca 9000 scans we tested thi in
@@ -343,7 +359,7 @@ class Scan(object):
         '''
         Store an AData set for one of the processed children of this scan.
         Typically the first one (pdata_idx=0)
-        
+
         :param boolean force:
             overwrite pre-existing AData sets, (default  False)
         '''
@@ -394,9 +410,7 @@ class Study(object):
                 'Filename "%s" is neither a directory nor a file inside one' %
                 filename)
 
-        sep=os.path.sep
-        self.shortdirname = re.sub(dataroot+sep+'[^'+sep+']+'+
-                                   sep+'nmr'+sep, '', self.dirname)
+        self.shortdirname = last_path_components(self.dirname)
         self.subject = JCAMP_file(os.path.join(self.dirname,'subject'))
 
     @lazy_property
