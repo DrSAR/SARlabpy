@@ -54,6 +54,27 @@ class ADataDict(collections.MutableMapping):
         return self.store[key]
 
     def __setitem__(self, key, value):
+        '''attribute setter for elements of this souped-up dictionary.
+        CHecks for pre-existin keys and only overwrites of forced. This
+        has to happen throuh wrapper script. Example:
+
+        >>> import sarpy
+        >>> scn = sarpy.Scan('PhantomOrientation.iY1/2')
+        >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2, force=True)
+
+        # If the adata exists, do not overwrite!
+        >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2) # doctests: ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        AttributeError: AData (key="times2") exists
+        To force overwrite, use store_adata with option force=True
+        >>> scn.adata['times2']=sarpy.AData.fromdata(parent=scn.pdata[0],
+        ...                     data=scn.pdata[0].data*2) # doctests: ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        AttributeError: AData (key="times2") exists
+        To force overwrite, use store_adata with option force=True
+        '''
         if key in self.store:
             raise AttributeError(('AData (key="%s") exists\nTo force overwrite'+
                                 ', use store_adata with option force=True')
@@ -102,8 +123,7 @@ class ADataDict(collections.MutableMapping):
             json.dump(value.meta, paramfile, indent=4)
         logger.info('Saving to {0}.(pickle, json)'.format(fileroot))
 
-        print('assigning {0} \nobject {1}'.format(key,
-                          value))
+        logger.info('assigning {0} \nobject {1}'.format(key, value))
         self.store[key] = value
 
 
@@ -279,10 +299,7 @@ class AData(object):
         Example:
             >>> import sarpy
             >>> scn = sarpy.Scan('PhantomOrientation.iY1/2')
-            >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2)
-            ...                 # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-            assigning times2
-            object AData.fromfile...
+            >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2, force=True)
             >>> scn.adata['times2'].export2nii('/tmp/PhantomOrientation-times2.nii.gz')
         '''
         aff, header = visu_pars_2_Nifti1Header(self.parent.visu_pars)
