@@ -72,6 +72,7 @@ def h_normalize_dce(scan_object, pdata_num = 0):
     num_slices = getters.get_num_slices(scan_object,pdata_num)
 
     # Method params
+    #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
     reps =  scan_object.method.PVM_NRepetitions
 
     # Calculated params      
@@ -85,6 +86,40 @@ def h_normalize_dce(scan_object, pdata_num = 0):
 
     return norm_data
  
+def h_enhancement_curve(scan_object, roi_data, pdata_num = 0):
+
+    try:
+        roi_mask = copy.deepcopy(roi_data)
+        data = h_normalize_dce(scan_object)
+
+        x_size = data.shape[0]
+        y_size = data.shape[1]        
+        num_slices = getters.get_num_slices(scan_object,pdata_num)
+
+        # Method params
+        #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
+        reps =  scan_object.method.PVM_NRepetitions
+
+        enhancement_curve = numpy.empty([x_size,y_size,num_slices,reps])
+        
+        for slice in range(num_slices):
+            ## TODO:WARNING: THIS ASSUMES THAT the slices are the same and only pixel dims are being matched. This is OBVIOUSLY WRONG and needs to be fixed!!!            
+            curr_data = data[:,:,slice,:]
+            curr_mask = roi_mask[:,:,slice]
+            
+            tiled_mask = numpy.reshape(numpy.tile(numpy.reshape(curr_mask, [curr_mask.shape[0], curr_mask.shape[1],1]),reps),[curr_data.shape[0], curr_data.shape[1],reps])
+            
+            masked_data = curr_data * tiled_mask
+                    
+            enhancement_curve[slice,:] = numpy.mean(numpy.mean(masked_data[:,:,slice,:], axis=0), axis =0)
+
+        return enhancement_curve
+    except:    
+        print("Perhaps you didn't pass in a valid mask or passed bad data")
+        raise
+        
+
+
 def h_inj_point(scan_object, pdata_num = 0):
 
     from collections import Counter   

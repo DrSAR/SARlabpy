@@ -6,6 +6,9 @@ Created on Tue Mar 12 14:41:54 2013
 """
 
 import sarpy
+import sarpy.ImageProcessing.resample_onto
+import nibabel 
+
 import numpy
 
 def get_num_slices(scan_object, pdata_num = 0):
@@ -95,13 +98,44 @@ def get_goodness_map(data, fit_dict):
     
     return goodness_map
             
-            
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+#def get_resampled_data(roi_scan_object, resampled_scan_object, adata_key = 'IR_tumour_rois', pdata = 0):
+#
+#
+#    roi_data = roi_scan_object.adata[adata_key].data
+#    roi_scan_object.adata[adata_key].export2nii('res_data.nii')
+#    
+#    fixed_data = resampled_scan_object.pdata[pdata].data
+#    resampled_scan_object.pdata[pdata].export2nii('fixed_data.nii')
+#    
+#    resampled_data = sarpy.ImageProcessing.resample_onto.resample_onto('res_data.nii','fixed_data.nii')
+#    
+#    
+#    if fixed_data.shape == roi_data.shape:
+#        
+#        # continue
+#        
+#    else:
+#    
+##        sarpy.Scan(master_sheet[k][key_list[2]][0]).adata[key_list[6]].export2nii('LL1.nii')
+##        sarpy.Scan(master_sheet[k][key_list[3]][0]).adata[key_list[6]].export2nii('LL2.nii')
+##        
+##        roi1 = sarpy.Scan(master_sheet[k][key_list[4]][0]).adata[key_list[7]]
+##        roi1.export2nii('roi1.nii')
+##        
+##        roi2 = sarpy.Scan(master_sheet[k][key_list[5]][0]).adata[key_list[7]]
+##        roi2.export2nii('roi2.nii')
+##      
+##        LLresample1 = sarpy.ImageProcessing.resample_onto.resample_onto('LL1.nii','roi1.nii')          
+#    
+#
+#
+#
+#
+#    
+#    resampled_data = sarpy.ImageProcessing.resample_onto.resample_onto('res_data.nii','fixed_data.nii')
+#    
+#    
+#    
+#    
+#    return resampled_data
