@@ -80,18 +80,18 @@ def resample_onto(source_fname, target_fname):
 
     '''
     img_input = sitk.ReadImage(source_fname)
+
     ref_input = sitk.ReadImage(target_fname)
     resample_filter = sitk.ResampleImageFilter()
     resample_filter.SetDefaultPixelValue(float('nan'))
     resample_filter.SetReferenceImage(ref_input)
+
     # return the resampled image as an SimpleITK Image object
     output=resample_filter.Execute(img_input)
-    print output.GetSize()
-    print type(output.GetSize()[0])
     # make a numpy array from that image
     # NB: this appears to return the thing in reverse order of dimensions
     dims = range(output.GetDimension())
-    dims = dims.reverse()
+    dims.reverse()
     return (sitk.GetArrayFromImage(output).transpose(dims), output)
 
 def resample_onto_pdata(source_pdata, target_pdata):
@@ -137,13 +137,19 @@ def resample_onto_pdata(source_pdata, target_pdata):
     pixdim_ref = numpy.tile(header_ref['pixdim'][1:4], (3,1))
     # convert the affine transformation to a SimpleITK.Image direction, offset
     # and Origin.
-    direction = aff[0:3,0:3] / pixdim
-    direction_ref = aff_ref[0:3,0:3] / pixdim_ref
+    sign_matrix = numpy.array([[-1,-1,-1],[-1,-1,-1],[1,1,1]])
+    direction = aff[0:3,0:3] / pixdim * sign_matrix
+    direction_ref = aff_ref[0:3,0:3] / pixdim_ref * sign_matrix
+    
+    sign_vector = numpy.array([-1,-1,1])
+    ori = aff[0:3,3] * sign_vector
+    ori_ref = aff_ref[0:3,3] * sign_vector
     # setup resample filter
     resample_filter = sitk.ResampleImageFilter()
     resample_filter.SetOutputDirection(direction_ref.flatten())
-    resample_filter.SetOutputOrigin(aff_ref[0:3,3].flatten())
+    resample_filter.SetOutputOrigin(ori_ref)
     resample_filter.SetSize(matrix_size_ref.tolist())
+    resample_filter.SetOutputSpacing(header_ref['pixdim'][1:4].tolist())
     resample_filter.SetDefaultPixelValue(float('nan'))
 
     # loop over all non-3D dimensions:
@@ -159,22 +165,33 @@ def resample_onto_pdata(source_pdata, target_pdata):
     mixed_dims.reverse() # ITK reverse spatial dimensions
     mixed_dims.append(extra_dims)
     output = numpy.empty(mixed_dims)
-
     for i in xrange(extra_dims):
         tobetrfx = flat_input_img[:,:,:,i]
-        src = sitk.GetImageFromArray(tobetrfx) # this is a 3D array
+        src = sitk.GetImageFromArray(tobetrfx.transpose([2,1,0])) # this is a 3D array
         src.SetDirection(direction.flatten())
-        #src.SetSize(matrix_size[1:4])
-        src.SetOrigin(aff[3,0:3].flatten())
-        
-        res = sitk.GetArrayFromImage(resample_filter.Execute(src))
+        src.SetSpacing(header['pixdim'][1:4].tolist())
+        src.SetOrigin(ori)
+
+        res_ITK = resample_filter.Execute(src)
+        res = sitk.GetArrayFromImage(res_ITK)
         output[:,:,:,i] = res
         
     # Now: reverse the spatial dimensions again from the itk to our xyz order
-    output = output.transpose([2,1,0,3])
+    dims = [2,1,0,3]
+    output = output.transpose(dims)
     result_dim = list(matrix_size_ref[0:3])+list(matrix_size[3:])
     return output.reshape(result_dim).squeeze()
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+    import sarpy
+    necs3 = sarpy.Experiment('NecS3').studies[7]
+    dce = necs3.find_scan_by_protocol('06')[0].pdata[0]
+    rare = necs3.find_scan_by_protocol('05')[0].pdata[0]
+    rare.export2nii('/tmp/rare.nii')
+    dce.export2nii('/tmp/dce.nii')
+    # the following line only works for 3D input data (use resample_onto_pdata)
+#    res_old = resample_onto('/tmp/rare.nii','/tmp/dce.nii')
+    res_self = resample_onto_pdata(rare, dce)
+    
