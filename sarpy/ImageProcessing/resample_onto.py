@@ -130,10 +130,10 @@ def resample_onto_pdata(source_pdata, target_pdata):
     # into the. We need information from the header to extricate that.
     aff_discard, header = visu_pars_2_Nifti1Header(source_pdata.visu_pars)
     aff = header.get_qform()
-    assert sum(abs(aff_discard-aff)) < 1e-5, 'affine not the same as qform'
+    assert sum(abs(aff_discard-aff).flatten()) < 1e-5, 'affine not the same as qform'
     aff_discard, header_ref = visu_pars_2_Nifti1Header(target_pdata.visu_pars)
     aff_ref = header_ref.get_qform()
-    assert sum(abs(aff_discard-aff_ref)) < 1e-5, 'affine not the same as qform'
+    assert sum(abs(aff_discard-aff_ref).flatten()) < 1e-5, 'affine not the same as qform'
     
     matrix_size, d1, d2 = visu_pars_2_matrix_size(source_pdata.visu_pars)
     matrix_size_ref, d1, d2 = visu_pars_2_matrix_size(target_pdata.visu_pars)
