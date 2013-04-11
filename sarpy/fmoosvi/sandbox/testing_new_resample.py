@@ -38,3 +38,27 @@ res2 = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(roi_scan,dce_scan
 
 pylab.imshow(res2[:,:,0]) #results in all nans!
 
+## Scenario 2: LL and RARE
+necs3 = sarpy.Experiment('NecS3').studies[7]
+ll_scan = necs3.find_scan_by_protocol('04')[0].pdata[0]
+roi_scan = necs3.find_scan_by_protocol('05')[0].pdata[0]
+
+fig2 = pylab.figure()
+
+res2 = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(roi_scan,dce_scan)
+
+pylab.imshow(res2[:,:,0]) #results in all nans!
+
+## Scenario 3: LL and RARE adata (ROI)
+necs3 = sarpy.Experiment('NecS3').studies[7]
+ll_scan = necs3.find_scan_by_protocol('04')[0].pdata[0]
+roi_scan = necs3.find_scan_by_protocol('05')[0].adata['IR_tumour_rois']
+
+fig2 = pylab.figure()
+
+res3= sarpy.ImageProcessing.resample_onto.resample_onto_pdata(roi_scan,dce_scan)
+
+pylab.imshow(res3[:,:,3]) #results in all nans!
+
+
+
