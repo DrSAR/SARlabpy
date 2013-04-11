@@ -192,6 +192,10 @@ class AData(object):
             data = cPickle.load(f)
         self.__yet_loaded = True
         return data
+        
+    @lazy_property
+    def visu_pars(self):
+        return self.parent.visu_pars
 
     def __str__(self):
         '''

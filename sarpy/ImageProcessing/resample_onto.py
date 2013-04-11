@@ -128,8 +128,13 @@ def resample_onto_pdata(source_pdata, target_pdata):
     '''
     # the affine transform information has the pixel dimensions (sizes) rolled
     # into the. We need information from the header to extricate that.
-    aff, header = visu_pars_2_Nifti1Header(source_pdata.visu_pars)
-    aff_ref, header_ref = visu_pars_2_Nifti1Header(target_pdata.visu_pars)
+    aff_discard, header = visu_pars_2_Nifti1Header(source_pdata.visu_pars)
+    aff = header.get_qform()
+    assert sum(abs(aff_discard-aff)) < 1e-5, 'affine not the same as qform'
+    aff_discard, header_ref = visu_pars_2_Nifti1Header(target_pdata.visu_pars)
+    aff_ref = header_ref.get_qform()
+    assert sum(abs(aff_discard-aff_ref)) < 1e-5, 'affine not the same as qform'
+    
     matrix_size, d1, d2 = visu_pars_2_matrix_size(source_pdata.visu_pars)
     matrix_size_ref, d1, d2 = visu_pars_2_matrix_size(target_pdata.visu_pars)
 
@@ -183,8 +188,8 @@ def resample_onto_pdata(source_pdata, target_pdata):
     return output.reshape(result_dim).squeeze()
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+#    import doctest
+#    doctest.testmod()
     import sarpy
     necs3 = sarpy.Experiment('NecS3').studies[7]
     dce = necs3.find_scan_by_protocol('06')[0].pdata[0]
