@@ -11,6 +11,73 @@ import nibabel
 import logging
 logger=logging.getLogger('sarpy.io.visu_pars_2_Nifti1Header')
 
+def visu_pars_2_matrix_size(visu_pars, reco=None):
+    """
+    Returns the matrix size as calculated from visu_pars
+    
+    :param dict visu_pars:
+        parameter files (as dict) that can be provided by caller
+    :return: array of size
+    :rtype: array
+
+    This relies on numpy's array functionality. The whole routine is quite the
+    contortion since we are swapping the x y dimensional size (because of the 
+    row-major, column major confusion). As a result the outut here corresponds
+    to the shape produced by read2dseq and also results in images which when
+    shown with imshow will have x-axis along the horizontal...
+    """
+
+    if reco:
+        RECO_transposition = reco['RECO_transposition']
+    else:
+        RECO_transposition = 0
+      
+    # make a copy of this parameter so as not to change the original!
+    matrix_size = visu_pars.VisuCoreSize[:]
+
+    if RECO_transposition == 0:
+        dimdesc=['readout','PE1']
+    else:
+        dimdesc=['PE1','readout']
+    dimcomment=['','']
+
+    # if VisuCoreSize has 3 elements, this is a 3D acquisition
+    if len(matrix_size)==3:
+        dimdesc.append('PE2')
+        dimcomment.append('')
+
+    # Determine size and descriptors of frame groups (RECO_size, dimdesc and
+    # dimcomment).  VisuFGOrderDesc is a  struct which describes the number of
+    # images in the frame group, the type of frame (e.g. FG_SLICE, FG_ECHO),
+    # and index ranges for the parameter array VisuGroupDepVals, which denotes
+    # the names of parameter arrays which depend on that particular frame
+    # group.  If there is a dependent parameter array called VisuFGElemComment
+    # for the frame group, it should be stored in dimcomment (e.g. DTI
+    # generated procnos have FA, Tensor trace, etc.)
+
+    if 'VisuFGOrderDesc' in visu_pars.__dict__:
+        for v in visu_pars.VisuFGOrderDesc:
+            FGdim = v[0]
+            matrix_size.append(FGdim)
+            dimdesc.append(v[1])
+            depvalstart = v[3]
+            depvalend = depvalstart + v[4]
+            more_dimcomment = ''
+            for depval in range(depvalstart,depvalend):
+                if visu_pars.VisuGroupDepVals[depval][0] == '<VisuFGElemComment>':
+                    FGcommentstart=visu_pars.VisuGroupDepVals[depval][1]
+                    fullFGcomments = visu_pars.VisuFGElemComment.split('> <')
+                    more_dimcomment=fullFGcomments[FGcommentstart:
+                                                   FGcommentstart+FGdim]
+            dimcomment.append(more_dimcomment)
+
+    swp_axis = numpy.arange(0, len(matrix_size))
+    swp_axis[0], swp_axis[1] = swp_axis[1], swp_axis[0]
+    return (numpy.array(matrix_size)[swp_axis], 
+            numpy.array(dimdesc)[swp_axis], 
+            numpy.array(dimcomment)[swp_axis])
+
+
 def visu_pars_2_Nifti1Header(visu_pars):
     '''
     Take visu_pars header and extract all useful information for  Nifti1Header.
@@ -92,6 +159,9 @@ def visu_pars_2_Nifti1Header(visu_pars):
         inter = 0
 
     header.set_slope_inter(slope = slope, inter = inter)
+
+    matrix_size, dimdesc, dimcomment = visu_pars_2_matrix_size(visu_pars)
+    header.set_data_shape(matrix_size)
 
     # Let's figure out the rotation matrix. You ready? Here we go ...
     try:

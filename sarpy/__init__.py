@@ -13,5 +13,8 @@ from io.BRUKER_classes import (natural_sort,
                                Patient, Experiment,
                                dataroot)
 from io.AData_classes import (adataroot, AData)
-                        
+
+from io.visu_pars_2_Nifti1Header import (visu_pars_2_Nifti1Header,
+                                      visu_pars_2_matrix_size)
+                                      
 from io.SARlogger import initiate_logging
