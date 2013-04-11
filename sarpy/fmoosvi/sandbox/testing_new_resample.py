@@ -15,21 +15,6 @@ import pylab
 
 pylab.close('all')
 
-## Scenario 0: Example Scenario
-
-source_pdata = sarpy.Scan("readfidTest.ix1/7").pdata[0]
-print source_pdata.data.shape
-#        (105, 133, 5, 25)
-target_pdata = sarpy.Scan("readfidTest.ix1/3").pdata[0]
-print target_pdata.data.shape
-#        (105, 133, 25)
-res0 = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(source_pdata, target_pdata)
-print res0.shape
-#        (105, 133, 25, 25)
-fig0 = pylab.figure()
-pylab.imshow(res0[:,:,0,10])
-
-
 ## Scenario 1: dce and rare both pdata
 necs3 = sarpy.Experiment('NecS3').studies[7]
 dce_scan = necs3.find_scan_by_protocol('06')[0].pdata[0]
