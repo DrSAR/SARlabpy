@@ -77,6 +77,9 @@ class JCAMP_file(object):
         for k,v in acqp.iteritems():
             self.__dict__[k] = v
 
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
 class PDATA_file(object):
     '''
     Initialize a processed data set that usually sits in `*/pdata/[1-9]`.
