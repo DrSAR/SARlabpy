@@ -15,7 +15,7 @@ import scipy.optimize
 import scipy.fftpack
 import sarpy.fmoosvi.getters as getters
 import math
-
+import copy
 
 
 def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
@@ -282,17 +282,26 @@ def h_mag_from_fid(scan_object):
     
     return mag_data
     
-def h_image_to_mask(scan_object, adata_key):
-    
-    img_data = scan_object.adata[adata_key].data.get_data()
+def h_image_to_mask(roi_data):
 
-    masked_data = img_data[:] 
-    
-    mask_val = scipy.percentile(masked_data.flatten(),95)
-    masked_data[masked_data == mask_val] = numpy.nan
-    masked_data[numpy.isfinite(masked_data)] = 1
-    
-    return masked_data    
+    roi_mask = copy.deepcopy(roi_data)
+   
+    try:
+        for slice in xrange(roi_mask.shape[2]):
+        
+            curr_slice = roi_mask[:,:,slice]
+            
+            mask_val = scipy.percentile(curr_slice.flatten(),95)
+            curr_slice[curr_slice == mask_val] = numpy.nan
+            curr_slice[numpy.isfinite(curr_slice)] = 1
+    except:
+        #TODO WARNING THIS IS GOING TO FAIL SOOOO BADLY FOR 4D Data...FIX IT
+
+        print('still working on expanding this function')
+        raise
+            
+
+    return roi_mask    
 
 def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     
@@ -300,9 +309,7 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         ss_err=(infodict['fvec']**2).sum()
         ss_tot=((data-data.mean())**2).sum()
         rsquared=1-(ss_err/ss_tot)
-        
-        print type(rsquared)
-        
+               
         return rsquared
         
     else:

@@ -148,7 +148,7 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
     # Also return arrays instead of a list
             
     if numpy.array(T1_map).shape[0] == 1:     
-        return numpy.array(T1_map)[0,:,:,0], numpy.array(fit_dicts)[0,:,:,:]
+        return numpy.array(T1_map)[0,:,:,:], numpy.array(fit_dicts)[0,:,:,:]
     else:
         return numpy.array(T1_map), numpy.array(fit_dicts)                                                
 
@@ -197,12 +197,12 @@ def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
     pylab.close('all')
     
     
-def roi_distribution(data,roi_image_mask, bins,  display_histogram = True, 
+def roi_distribution(data, roi, bins,  display_histogram = True, 
                      save_histogram = False, save_name = 'hist'):
+   
     
-    roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi_image_mask)
+    roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
     masked_data = data * roi_mask
-    
     
     if display_histogram:
         #fig = pylab.figure()
