@@ -26,9 +26,8 @@ def atleast_4d(arr):
         >>> atleast_4d(numpy.arange(120).reshape(120)).shape
         (120, 1, 1, 1)
     '''
-    stshape = arr.shape
-    while len(stshape)<4: stshape+=(1,)
-    return arr.reshape(stshape)
+    arr.shape += (1,) * (4 - arr.ndim)
+    return arr
 
 def resample_onto(source_fname, target_fname):
     '''
@@ -128,12 +127,10 @@ def resample_onto_pdata(source_pdata, target_pdata):
     '''
     # the affine transform information has the pixel dimensions (sizes) rolled
     # into the. We need information from the header to extricate that.
-    aff_discard, header = visu_pars_2_Nifti1Header(source_pdata.visu_pars)
+    header = visu_pars_2_Nifti1Header(source_pdata.visu_pars)
     aff = header.get_qform()
-    assert numpy.sum(abs(aff_discard-aff)) < 1e-5, 'affine not the same as qform'
-    aff_discard, header_ref = visu_pars_2_Nifti1Header(target_pdata.visu_pars)
+    header_ref = visu_pars_2_Nifti1Header(target_pdata.visu_pars)
     aff_ref = header_ref.get_qform()
-    assert numpy.sum(abs(aff_discard-aff_ref)) < 1e-5, 'affine not the same as qform'
     
     matrix_size, d1, d2 = visu_pars_2_matrix_size(source_pdata.visu_pars)
     matrix_size_ref, d1, d2 = visu_pars_2_matrix_size(target_pdata.visu_pars)
@@ -188,15 +185,16 @@ def resample_onto_pdata(source_pdata, target_pdata):
     return output.reshape(result_dim).squeeze()
 
 if __name__ == "__main__":
-#    import doctest
-#    doctest.testmod()
-    import sarpy
-    necs3 = sarpy.Experiment('NecS3').studies[7]
-    dce = necs3.find_scan_by_protocol('06')[0].pdata[0]
-    rare = necs3.find_scan_by_protocol('05')[0].pdata[0]
-    rare.export2nii('/tmp/rare.nii')
-    dce.export2nii('/tmp/dce.nii')
-    # the following line only works for 3D input data (use resample_onto_pdata)
-#    res_old = resample_onto('/tmp/rare.nii','/tmp/dce.nii')
-    res_self = resample_onto_pdata(rare, dce)
-    
+    import doctest
+    doctest.testmod()
+#    import sarpy
+#    necs3 = sarpy.Experiment('NecS3').studies[7]
+#    dce = necs3.find_scan_by_protocol('06')[0].pdata[0]
+#    rare = necs3.find_scan_by_protocol('05')[0].pdata[0]
+#    rare.export2nii('/tmp/rare.nii')
+#    dce.export2nii('/tmp/dce.nii')
+#    # the following line only works for 3D input data (use resample_onto_pdata)
+##    res_old = resample_onto('/tmp/rare.nii','/tmp/dce.nii')
+#    res_self = resample_onto_pdata(rare, dce)
+#    
+#    

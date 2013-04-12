@@ -166,7 +166,8 @@ class PDATA_file(object):
 
         '''
         from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
-        aff, header = visu_pars_2_Nifti1Header(self.visu_pars)
+        header = visu_pars_2_Nifti1Header(self.visu_pars)
+        aff = header.get_qform()
         img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
         img_pair.to_filename(filename)
 

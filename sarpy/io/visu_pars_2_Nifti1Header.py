@@ -247,7 +247,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
     header.set_qform(aff, code='scanner')
     header.set_sform(aff, code='scanner')
 
-    return aff, header
+    return header
     
     
 if __name__ == '__main__':
