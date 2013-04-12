@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Temperature Logger (for monitoring Brain Tumour Freezer Temperature)
 # Clayton Wong
 # April 5th, 2013
@@ -21,7 +22,6 @@
 #   1          1           0     || Tn,WA,SU     0     ||     7
 #   1          1           1     || Tn,WA,SU     0     ||     8 (WANT THIS! Everything Working)
 
-
 import serial # import serial for serial input
 #import datetime # import datetime for getting localtime
 import smtplib # import smtplib simple mail transfer protocol for EMAIL
@@ -29,9 +29,13 @@ import smtplib # import smtplib simple mail transfer protocol for EMAIL
 from email.mime.text import MIMEText
 #from email.mime.multipart import MIMEMultipart
 
+T1HIGH = 32  # room temp getting too hot
+T2HIGH = -20 # freezer is getting too warm
+LogFileName = '/var/log/SystemsHealth/TemperatureLogFile'
+
 import logging, logging.handlers    # Import logger modules
 logger = logging.getLogger('TemperatureLogFile') # create logger instance
-hdlr = logging.handlers.TimedRotatingFileHandler("TemperatureLogFile",when="midnight") # create filehandler (handler sends log to specified destination)
+hdlr = logging.handlers.TimedRotatingFileHandler(LogFileName, when="midnight")
 formatter = logging.Formatter('%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')    # create formatter (Layout of log)
 
 hdlr.setFormatter(formatter)    # attach formatter to handler
@@ -42,7 +46,7 @@ logger.setLevel(logging.WARNING)    # sets debug level for logger
 import sys
 
 import urllib   # Import module to check if website is up
-import time     # Import time for time.sleep(5) # Run code every 5 seconds
+import time     # Import time for time.sleep()
 
 import numpy
 
@@ -65,18 +69,14 @@ def CheckServer():      # CodeFolding Shortcut: option+command+[
 def ReadSerial():       # Inputs: None. Outputs: x,T,x2,T2,WixelAlive
     try:
         # Setup SerialData Read
-        port='/dev/tty.usbmodemfa131'
-        ser = serial.Serial("/dev/tty.usbmodemfa131",9600,timeout=62)    # When timeout occurs, nothing is read in and code goes to EXCEPTION: WixelAlive=0 (Dead)
-        #print ser
+        port='/dev/ttyACM0'
+        ser = serial.Serial(port,9600,timeout=50)    # When timeout occurs, nothing is read in and code goes to EXCEPTION: WixelAlive=0 (Dead)
         value = ser.readline()
-        #print value
-        #print value.split()[2] # This reads channel 1 (the [2] reads the 2nd col sep by white space)
 
         x=float(value.split()[2])   # [2] for ch1, [3] for ch2, [4] for ch3 monitor battery
         x2=float(value.split()[3])
         T=(x-500)/10 # T is degrees in celsius
         T2=(x2-500)/10
-        #print x , T , x2 , T2
 
         # FAKING DATA (Uncomment while Wixel connected and ACTUALLY reading data in)
         # x=700; # x is raw voltage from TMP36 (max Vwixel=3400mV)
@@ -162,19 +162,22 @@ def Logger(Tnorm,WixelAlive,ServerUp,x,T,x2,T2):    # Outputs: Logs Tnorm,WixelA
                     + ' Temp norm, Wixel Alive, Server Up (8)') #%(Tnorm,WixelAlive,ServerUp) )      # This is the message 
                 print 'Tnorm, WixelAlive, ServerUp = %i%i%i' %(Tnorm,WixelAlive,ServerUp) # Prints action
                 print 'Temp norm, Wixel Alive, Server is Up -> Log (8)'
+		EmailCount = 0
+		EmailThreshold = 1 # back to normal email threshold
 
 
 #----------------------------------------------------------------------------------------
 ## SEND EMAIL FUNCTION
-def Email(ServerUp,EmailCount):
+def Email(ServerUp,EmailCount, EmailThreshold):
     if (ServerUp==1 and Tnorm==0) or (ServerUp==1 and WixelAlive==0):     # 'and' so that don't send email on case (8) (Normal Operation)
         print "Email: Request"
         EmailCount=EmailCount+1;
 
-        if EmailCount%5==1:     # Send an email every 5th time get an email request 
+        if EmailCount > EmailThreshold:     # Send an email if we are above the Threshold
+	    EmailThreshold = EmailThreshold*2 # this should lead to message every 1min, 2min, 4min, 8min, 16min etc after disaster...
             logger.error('Email Actually sent!')
             # Open .txt file for sending latest temperature values  
-            fp = open("TemperatureLogFile", 'rb')
+            fp = open(LogFileName, 'rb')
             # Create a text/plain message
             msg = MIMEText(fp.read())
             fp.close()
@@ -206,7 +209,7 @@ def Email(ServerUp,EmailCount):
     elif ServerUp==0:   #Server is down => Don't send email
         print ('Email: No email because server is DOWN')
 
-    return EmailCount
+    return EmailCount, EmailThreshold
 
 
 
@@ -214,6 +217,7 @@ def Email(ServerUp,EmailCount):
 ##----------------------------------------------------------------------------------------
 ## MAIN LOOP
 EmailCount=0;
+EmailThreshold=1;
 print EmailCount
 
 while True: # Infinite loop (ctr-c to break)
@@ -233,16 +237,15 @@ while True: # Infinite loop (ctr-c to break)
 
 
     # Logger
-    if T > 30:   # High Temperature
+    if (T > T1HIGH) or (T2 > T2HIGH):   # High Temperature
         Tnorm=0;
     else:         # Normal Temperature
         Tnorm=1;
         
     Logger(Tnorm,WixelAlive,ServerUp,x,T,x2,T2)    # Calls Function 'Logger'
     
-    # Call 'Email' Function  # Actually send an email every 5th time get an email request
-    # Send Email when mod(EmailCount,5)==1
-    EmailCount=Email(ServerUp,EmailCount)     
+    # Call 'Email' Function  # Actually send an email if we are above EmailThreshold
+    (EmailCount, EmailThreshold) = Email(ServerUp, EmailCount, EmailThreshold)     
     print EmailCount
 
     del x, T, x2, T2
@@ -250,15 +253,4 @@ while True: # Infinite loop (ctr-c to break)
 
 
 # To do: 
-# - ACTUAL Wixel Serial in (no more fake data)
-# - Read every 1minute
 # - Alert when Temp too COLD?
-
-
-
-
-
-
-
-
-
