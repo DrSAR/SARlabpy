@@ -62,6 +62,7 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+',
     else:
         return numpy.array(auc)
 
+
 def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH',
                       POI_protocol_name = '04_ubcLL+'):
     
@@ -148,7 +149,7 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
     # Also return arrays instead of a list
             
     if numpy.array(T1_map).shape[0] == 1:     
-        return numpy.array(T1_map)[0,:,:,0], numpy.array(fit_dicts)[0,:,:,:]
+        return numpy.array(T1_map)[0,:,:,:], numpy.array(fit_dicts)[0,:,:,:]
     else:
         return numpy.array(T1_map), numpy.array(fit_dicts)                                                
 
@@ -169,7 +170,7 @@ def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
             try:
                 data = data_list[n][0,:,:,slice]  
             except:
-                data = data_list[n][:,:,slice] 
+                data = data_list[n][:,:,slice]
             
             a = pylab.imshow(data, cmap = colour_map )
             
@@ -195,14 +196,48 @@ def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
     filename = key_list[1] + key_list[0] + '.png'                
     pylab.savefig(filename, bbox_inches=0, dpi=300)
     pylab.close('all')
+
+def create_plot(data_list, key_list):
+        
+    num_slices = data_list[0].shape[0]
+    data_num = len(data_list)
+    
+    fig = pylab.figure(figsize = (14,3))
+    G = pylab.matplotlib.gridspec.GridSpec(data_num,num_slices)   
+    
+    for slice in xrange(num_slices):
+        
+        for n in xrange(data_num):    
+        
+#            fig.add_subplot(G[n,slice],frameon=False, xticks=[], yticks=[])
+            fig.add_subplot(G[n,slice])
+        
+            try:
+                data = data_list[n][slice]  
+            except:
+                raise
+        
+        pylab.plot(data)
+        
+        pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
+      
+    # Figure spacing adjustments
+    #fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
+    G.tight_layout(fig, h_pad = 0.3, w_pad = 0.3)
+    #G.update(right = 0.87)
+    
+    # Saving Figure    
+    filename = key_list[1] + key_list[0] + '.png'                
+    pylab.savefig(filename, bbox_inches=0, dpi=300)
+    pylab.close('all')
     
     
-def roi_distribution(data,roi_image_mask, bins,  display_histogram = True, 
+def roi_distribution(data, roi, bins,  display_histogram = True, 
                      save_histogram = False, save_name = 'hist'):
+   
     
-    roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi_image_mask)
+    roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
     masked_data = data * roi_mask
-    
     
     if display_histogram:
         #fig = pylab.figure()
