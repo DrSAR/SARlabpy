@@ -306,7 +306,8 @@ class AData(object):
             >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2, force=True)
             >>> scn.adata['times2'].export2nii('/tmp/PhantomOrientation-times2.nii.gz')
         '''
-        aff, header = visu_pars_2_Nifti1Header(self.parent.visu_pars)
+        header = visu_pars_2_Nifti1Header(self.parent.visu_pars)
+        aff = header.get_qform()
         img_nii = nibabel.nifti1.Nifti1Image(self.data,
                                               aff,
                                               header=header)
