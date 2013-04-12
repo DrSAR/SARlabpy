@@ -13,7 +13,9 @@ import sarpy
 import scipy.integrate
 import scipy.optimize
 import scipy.fftpack
+import scipy.stats
 import sarpy.fmoosvi.getters as getters
+import sarpy.ImageProcessing.resample_onto
 import math
 import copy
 
@@ -86,32 +88,34 @@ def h_normalize_dce(scan_object, pdata_num = 0):
 
     return norm_data
  
-def h_enhancement_curve(scan_object, roi_data, pdata_num = 0):
+def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
 
     try:
-        roi_mask = copy.deepcopy(roi_data)
-        data = h_normalize_dce(scan_object)
+        norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
+        num_slices = norm_data.shape[-2]
+        reps = norm_data.shape[-1]        
+                
+        ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
+        new_scan_object = copy.deepcopy(scan_object)
+        new_scan_object.pdata[pdata_num].data = norm_data
+        data_scan = new_scan_object.pdata[pdata_num]
+        
+        print data_scan
+        ## END SKETCHY BIT
+        
+        roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
 
-        x_size = data.shape[0]
-        y_size = data.shape[1]        
-        num_slices = getters.get_num_slices(scan_object,pdata_num)
+        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image)
+        
+        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
+roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
 
-        # Method params
-        #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
-        reps =  scan_object.method.PVM_NRepetitions
 
-        enhancement_curve = numpy.empty([x_size,y_size,num_slices,reps])
+        enhancement_curve = numpy.empty(shape = [num_slices, reps])
         
         for slice in range(num_slices):
-            ## TODO:WARNING: THIS ASSUMES THAT the slices are the same and only pixel dims are being matched. This is OBVIOUSLY WRONG and needs to be fixed!!!            
-            curr_data = data[:,:,slice,:]
-            curr_mask = roi_mask[:,:,slice]
-            
-            tiled_mask = numpy.reshape(numpy.tile(numpy.reshape(curr_mask, [curr_mask.shape[0], curr_mask.shape[1],1]),reps),[curr_data.shape[0], curr_data.shape[1],reps])
-            
-            masked_data = curr_data * tiled_mask
-                    
-            enhancement_curve[slice,:] = numpy.mean(numpy.mean(masked_data[:,:,slice,:], axis=0), axis =0)
+
+            enhancement_curve[slice,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)
 
         return enhancement_curve
     except:    
