@@ -495,7 +495,14 @@ class Study(object):
                       '%s has no acqp attribute' %str(s.shortdirname))
         return(found_scans)
 
-    def scan_generator(self, **kwargs):
+    def scan_finder(self, **kwargs):
+        '''
+        This is the non-generator version and is provided for convenience.
+        See difference between range and xrange
+        '''
+        return list(self.xscan_finder(**kwargs))
+
+    def xscan_finder(self, **kwargs):
         '''
         Generator of all scans in urrent study that fit the criteria as
         given by kwargs.
@@ -504,22 +511,22 @@ class Study(object):
         in the submodule JCAMP_comparison.
         '''
         chosen_comparison = {}
+        # find comparison type (regex, array comparison or plain vanilla '==')
+        for key in kwargs.keys():
+                # remember, the keys here are frozensets
+            possible_comp = [k for k in
+                             JCAMP_comparison.dictionary
+                             if key in k] or [frozenset(['default'])]
+            chosen_comparison[key] = JCAMP_comparison.dictionary[
+                                                            possible_comp[0]]
         for scn in self.scans:
-            for key in kwargs.keys():
-                    # remember, the keys here are frozensets
-                possible_comp = [frozenset(['default'])] or [x
-                                     for x in JCAMP_comparison.dictionary
-                                                             if key in x]
-                chosen_comparison[key] = JCAMP_comparison.dictionary[
-                                                        possible_comp[0]]
-
-                if (all(k in scn.visu_pars.__dict__ and
-                        chosen_comparison[k](v, scn.acqp.__dict__[k])
-                                             for k, v in kwargs.items()) or
-                    all(k in scn.method.__dict__ and
-                        chosen_comparison[k](v, scn.method.__dict__[k])
-                                             for k, v in kwargs.items())):
-                    yield scn
+            if (all(k in scn.acqp.__dict__ and
+                    chosen_comparison[k](v, scn.acqp.__dict__[k])
+                                         for k, v in kwargs.items()) or
+                all(k in scn.method.__dict__ and
+                    chosen_comparison[k](v, scn.method.__dict__[k])
+                                         for k, v in kwargs.items())):
+                yield scn
 
 
 class StudyCollection(object):
@@ -625,6 +632,21 @@ class StudyCollection(object):
             found_scans.extend(study.find_scan_by_protocol(protocol_name))
         return(found_scans)
 
+    def xscan_finder(self, **kwargs):
+        '''
+        Generator to yield all scans that match te criteria given in kwargs.
+
+        The meat of the code is in Study.xscan_finder()
+        '''
+        for stdy in self.studies:
+            for scn in stdy.xscan_finder(**kwargs):
+                yield scn
+    def scan_finder(self, **kwargs):
+        '''
+        This is the non-generator version and is provided for convenience.
+        See difference between range and xrange
+        '''
+        return list(self.xscan_finder(**kwargs))
 
 
 
@@ -759,5 +781,43 @@ class Experiment(StudyCollection):
             self.add_study(study)
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+#    import doctest
+#    doctest.testmod()
+    import numpy
+    stdy = Study('PhantomOrientation.iY1')
+    print stdy.__repr__()
+    gm=numpy.array([[1,0,0],[0,1,0],[0,0,1]])
+    sr = stdy.xscan_finder(ACQ_grad_matrix = gm)
+    for x in sr:
+        print x
+    sr = stdy.xscan_finder(ACQ_size = [512, 256])
+    for x in sr:
+        print x
+    print '-'*40+'\n initializing ...'
+    NecS3 =Experiment('NecS3')
+    print 'initialized the experiment.done.'
+    import time
+
+    # doing this the firt timeround is slow because all the loading is being
+    # triggered with the JCAMP_file lookups
+    start = time.time()
+    srA = NecS3.find_scan_by_protocol('05')
+    print time.time()-start
+
+    # this run is still slow but that s due to addition loading of the method
+    # files.
+    start = time.time()
+    srB = list(NecS3.xscan_finder(ACQ_protocol_name='05'))
+    print time.time()-start
+    print 'same result from both methods? '+{True:'Yes!',
+                                             False:'No!'}[srA == srB]
+
+    # these ones are positively blazing through once the data is in memory
+    start = time.time()
+    sr = NecS3.find_scan_by_protocol('05')
+    print time.time()-start
+
+    # these ones are positively blazing through once the data is in memory
+    start = time.time()
+    sr = list(NecS3.xscan_finder(ACQ_protocol_name='05'))
+    print time.time()-start
