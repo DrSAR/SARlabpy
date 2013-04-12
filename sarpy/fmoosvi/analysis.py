@@ -85,23 +85,6 @@ def h_normalize_dce(scan_object, pdata_num = 0):
 
     return norm_data
  
-def h_enhancement_curve(scan_object, pdata_num = 0, mask=False):
-
-    if mask:
-        print "I don't know how to deal with masks quite yet"
-        
-        #TODO: Complete this to read in an ROI somehow
-        
-    else:
-        
-        #norm_data = h_normalize_dce(scan_object, pdata_num = pdata_num)        
-        
-        
-        print "Work in progress"
-
-                
-        return
-
 def h_inj_point(scan_object, pdata_num = 0):
 
     from collections import Counter   
