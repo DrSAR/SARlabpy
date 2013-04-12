@@ -12,7 +12,6 @@ import BRUKER_classes
 from lazy_property import lazy_property
 from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
 import nibabel
-import numpy
 from datetime import datetime
 
 import logging
@@ -192,7 +191,7 @@ class AData(object):
             data = cPickle.load(f)
         self.__yet_loaded = True
         return data
-        
+
     @lazy_property
     def visu_pars(self):
         return self.parent.visu_pars

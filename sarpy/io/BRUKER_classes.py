@@ -12,6 +12,8 @@ import BRUKERIO
 import AData_classes
 from lazy_property import lazy_property
 
+import JCAMP_comparison
+
 import logging
 logger=logging.getLogger('sarpy.io.BRUKER_classes')
 
@@ -489,23 +491,35 @@ class Study(object):
                 if re.match(protocol_name, s.acqp.ACQ_protocol_name):
                     found_scans.append(s)
             except AttributeError:
-                print('Warning: Scan in dir %s has no acqp attribute' %str(s.shortdirname))
+                print('Warning: Scan in dir '+
+                      '%s has no acqp attribute' %str(s.shortdirname))
         return(found_scans)
 
     def scan_generator(self, **kwargs):
-        # if no criteria given, then make a criterion up for a
-        # non-existent key (dummy) to equal a terribly unlikely value (very
-        # long) integer
-        if len(kwargs)==0:
-            kwargs['dummy'] = 4242424242424242
-        for s in self.scans:
-            for criterion, criterion_val in kwargs.iteritems():
-                if s.acqp.__dict__.get(criterion, 4242424242424242) == \
-                        criterion_val:
-                    yield s
-                elif s.method.__dict__.get(criterion, 4242424242424242) == \
-                        criterion_val:
-                    yield s
+        '''
+        Generator of all scans in urrent study that fit the criteria as
+        given by kwargs.
+
+        All possible keys are listed and associated to a comparison function
+        in the submodule JCAMP_comparison.
+        '''
+        chosen_comparison = {}
+        for scn in self.scans:
+            for key in kwargs.keys():
+                    # remember, the keys here are frozensets
+                possible_comp = [frozenset(['default'])] or [x
+                                     for x in JCAMP_comparison.dictionary
+                                                             if key in x]
+                chosen_comparison[key] = JCAMP_comparison.dictionary[
+                                                        possible_comp[0]]
+
+                if (all(k in scn.visu_pars.__dict__ and
+                        chosen_comparison[k](v, scn.acqp.__dict__[k])
+                                             for k, v in kwargs.items()) or
+                    all(k in scn.method.__dict__ and
+                        chosen_comparison[k](v, scn.method.__dict__[k])
+                                             for k, v in kwargs.items())):
+                    yield scn
 
 
 class StudyCollection(object):
