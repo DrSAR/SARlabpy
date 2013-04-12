@@ -7,7 +7,9 @@ Created on Tue Mar 12 14:41:54 2013
 
 import sarpy
 import sarpy.ImageProcessing.resample_onto
-import nibabel 
+import nibabel
+import scipy
+import scipy.stats
 
 import numpy
 import copy
