@@ -62,6 +62,7 @@ def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+',
     else:
         return numpy.array(auc)
 
+
 def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH',
                       POI_protocol_name = '04_ubcLL+'):
     

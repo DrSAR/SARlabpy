@@ -10,6 +10,8 @@ import sarpy.ImageProcessing.resample_onto
 import nibabel 
 
 import numpy
+import copy
+
 
 def get_num_slices(scan_object, pdata_num = 0):
     
@@ -97,3 +99,48 @@ def get_goodness_map(data, fit_dict):
                 goodness_map[x,y,z] = fit_dict['goodness']
     
     return goodness_map
+            
+def get_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
+
+    try:
+        norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
+        num_slices = norm_data.shape[-2]
+        reps = norm_data.shape[-1]        
+                
+        ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
+        new_scan_object = copy.deepcopy(scan_object)
+        new_scan_object.pdata[pdata_num].data = norm_data
+        data_scan = new_scan_object.pdata[pdata_num]
+        
+        print data_scan
+        ## END SKETCHY BIT
+        
+        roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
+
+        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image)
+        
+        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
+roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
+
+
+        enhancement_curve = numpy.empty(shape = [num_slices, reps])
+        
+        for slice in range(num_slices):
+
+            enhancement_curve[slice,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)
+
+        return enhancement_curve
+    except:    
+        print("Perhaps you didn't pass in a valid mask or passed bad data")
+        raise
+        
+            
+    
+    
+    
+    
+    
+    
+    
+    
+    
