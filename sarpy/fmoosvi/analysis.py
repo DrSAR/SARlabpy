@@ -13,9 +13,11 @@ import sarpy
 import scipy.integrate
 import scipy.optimize
 import scipy.fftpack
+import scipy.stats
 import sarpy.fmoosvi.getters as getters
+import sarpy.ImageProcessing.resample_onto
 import math
-
+import copy
 
 
 def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
@@ -72,6 +74,7 @@ def h_normalize_dce(scan_object, pdata_num = 0):
     num_slices = getters.get_num_slices(scan_object,pdata_num)
 
     # Method params
+    #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
     reps =  scan_object.method.PVM_NRepetitions
 
     # Calculated params      
@@ -85,6 +88,42 @@ def h_normalize_dce(scan_object, pdata_num = 0):
 
     return norm_data
  
+def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
+
+    try:
+        norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
+        num_slices = norm_data.shape[-2]
+        reps = norm_data.shape[-1]        
+                
+        ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
+        new_scan_object = copy.deepcopy(scan_object)
+        new_scan_object.pdata[pdata_num].data = norm_data
+        data_scan = new_scan_object.pdata[pdata_num]
+        
+        print data_scan
+        ## END SKETCHY BIT
+        
+        roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
+
+        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image)
+        
+        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
+roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
+
+
+        enhancement_curve = numpy.empty(shape = [num_slices, reps])
+        
+        for slice in range(num_slices):
+
+            enhancement_curve[slice,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)
+
+        return enhancement_curve
+    except:    
+        print("Perhaps you didn't pass in a valid mask or passed bad data")
+        raise
+        
+
+
 def h_inj_point(scan_object, pdata_num = 0):
 
     from collections import Counter   
@@ -282,17 +321,26 @@ def h_mag_from_fid(scan_object):
     
     return mag_data
     
-def h_image_to_mask(scan_object, adata_key):
-    
-    img_data = scan_object.adata[adata_key].data.get_data()
+def h_image_to_mask(roi_data):
 
-    masked_data = img_data[:] 
-    
-    mask_val = scipy.percentile(masked_data.flatten(),95)
-    masked_data[masked_data == mask_val] = numpy.nan
-    masked_data[numpy.isfinite(masked_data)] = 1
-    
-    return masked_data    
+    roi_mask = copy.deepcopy(roi_data)
+   
+    try:
+        for slice in xrange(roi_mask.shape[2]):
+        
+            curr_slice = roi_mask[:,:,slice]
+            
+            mask_val = scipy.percentile(curr_slice.flatten(),95)
+            curr_slice[curr_slice == mask_val] = numpy.nan
+            curr_slice[numpy.isfinite(curr_slice)] = 1
+    except:
+        #TODO WARNING THIS IS GOING TO FAIL SOOOO BADLY FOR 4D Data...FIX IT
+
+        print('still working on expanding this function')
+        raise
+            
+
+    return roi_mask    
 
 def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     
@@ -300,9 +348,7 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         ss_err=(infodict['fvec']**2).sum()
         ss_tot=((data-data.mean())**2).sum()
         rsquared=1-(ss_err/ss_tot)
-        
-        print type(rsquared)
-        
+               
         return rsquared
         
     else:
