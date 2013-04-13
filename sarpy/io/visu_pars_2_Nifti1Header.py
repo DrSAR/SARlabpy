@@ -73,9 +73,10 @@ def visu_pars_2_matrix_size(visu_pars, reco=None):
 
     swp_axis = numpy.arange(0, len(matrix_size))
     swp_axis[0], swp_axis[1] = swp_axis[1], swp_axis[0]
-    return (numpy.array(matrix_size)[swp_axis], 
-            numpy.array(dimdesc)[swp_axis], 
-            numpy.array(dimcomment)[swp_axis])
+    dimcomment_T = [dimcomment[i] for i in swp_axis]
+    return (numpy.array(matrix_size)[swp_axis],
+            numpy.array(dimdesc)[swp_axis],
+            dimcomment_T)
 
 
 def visu_pars_2_Nifti1Header(visu_pars):
