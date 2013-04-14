@@ -215,7 +215,7 @@ def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_P
 
 def h_func_T1(params,t):
     M,B,T1_eff = params
-    return numpy.abs(M*(1-B*numpy.exp(-t/T1_eff))) #edit 2: funcion didn't have an abs!! FAIL!
+    return numpy.abs(M*(1-B*numpy.exp(-t/T1_eff)))
     
 def h_within_bounds(params,bounds):
     try:        
@@ -225,7 +225,7 @@ def h_within_bounds(params,bounds):
         return False
     except:
         print('You have some funky inputs for the bounds, you fail.')
-        return False # edit 1 to fix fitting
+        return False
             
 
 def h_residual_T1(params, y_data, t):
@@ -332,14 +332,30 @@ def h_image_to_mask(roi_data):
             mask_val = scipy.percentile(curr_slice.flatten(),95)
             curr_slice[curr_slice == mask_val] = numpy.nan
             curr_slice[numpy.isfinite(curr_slice)] = 1
-    except:
+        return roi_mask    
+    
+    except AttributeError:
+        roi_data = roi_mask.data
+        
+        for slice in xrange(roi_data.shape[2]):
+        
+            curr_slice = roi_data[:,:,slice]
+            
+            mask_val = scipy.percentile(curr_slice.flatten(),95)
+            curr_slice[curr_slice == mask_val] = numpy.nan
+            curr_slice[numpy.isfinite(curr_slice)] = 1
+            
+        roi_mask.data = roi_data
+        
+        return roi_mask
+        
+    except:    
         #TODO WARNING THIS IS GOING TO FAIL SOOOO BADLY FOR 4D Data...FIX IT
 
         print('still working on expanding this function')
         raise
             
 
-    return roi_mask    
 
 def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     
