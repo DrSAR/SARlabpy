@@ -177,10 +177,11 @@ def create_summary(data_list, key_list, clims = None,
             
             a = pylab.imshow(data, cmap = colour_map )
             
-            if isinstance(clims[0],(int, float, long)):                
+            if isinstance(clims,list):                
                 a.set_clim(clims)
             else:
-                a.set_clim(600,3500)
+                clims = sarpy.fmoosvi.getters.get_image_clims(data)
+                a.set_clim(clims[0],clims[1])
             if n == 0:
                 pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
     
@@ -238,10 +239,15 @@ def create_plot(data_list, key_list):
 def roi_distribution(data, roi, bins,  display_histogram = True, 
                      save_histogram = False, save_name = 'hist'):
    
-    
-    roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
-    masked_data = data * roi_mask
-    
+    if type(roi) == numpy.ndarray and data == numpy.ndarray :
+        masked_data = data * roi
+    elif type(roi) == numpy.ndarray :
+        masked_data = data.data * roi
+    elif type(roi) == sarpy.io.AData_classes.AData:
+        roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi.data)
+        masked_data = data.data * roi_mask
+      
+        
     if display_histogram:
         #fig = pylab.figure()
         pylab.hist(masked_data.flatten(), bins, alpha = 0.5)
