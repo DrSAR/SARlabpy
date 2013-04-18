@@ -163,7 +163,6 @@ def create_summary(data_list, key_list, clims = None,
     
     fig = pylab.figure(figsize = (14,3))
     G = pylab.matplotlib.gridspec.GridSpec(data_num,num_slices)   
-    #clims = sarpy.fmoosvi.getters.get_image_clims(data_list[0])
     
     for slice in xrange(num_slices):
         

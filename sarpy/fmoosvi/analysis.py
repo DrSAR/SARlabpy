@@ -227,7 +227,6 @@ def h_within_bounds(params,bounds):
         print('You have some funky inputs for the bounds, you fail.')
         return False
             
-
 def h_residual_T1(params, y_data, t):
     
     bounds = numpy.zeros(shape=[3,2])
