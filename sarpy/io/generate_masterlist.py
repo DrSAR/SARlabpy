@@ -50,7 +50,12 @@ labels = [lbl for lbl in config.sections() if not((lbl=='MasterList') or
                                             re.match('EXCEPTION.',lbl))]
 exc_labels = [lbl for lbl in config.sections() if (not(lbl=='MasterList') and
                                             re.match('EXCEPTION.',lbl))] 
-
+try:
+    patient_exclude = [x.strip() for x in 
+                   config.get('MasterList','patient_exclude').split(',')]
+except ConfigParser.NoOptionError:
+    patient_exclude = []
+    
 # get unique name of patients
 expt = sarpy.Experiment(defaults['experimentname'])
 patname_list=sorted(list(set(expt.get_SUBJECT_id())))
@@ -62,22 +67,37 @@ master_sheet = collections.OrderedDict()
 #    protocol_name=05_IR-RARE-anatomy_highres
 #    study=1
 #    scan=0
-print patname_list
-for patname in patname_list:
-    pat = sarpy.Patient(patname)
-    for stdy in pat.studies:
-        master_sheet[patname]={}
-        for lbl in labels:
-            study_nr = int(config.get(lbl,'study'))
-            prot_name = config.get(lbl,'protocol_name')
-            scns = pat.studies[study_nr].find_scan_by_protocol(prot_name)
-            try:
-                scn = scns[int(config.get(lbl,'scan'))]
-            except IndexError:
-                master_sheet[patname][lbl] = ""
-            else:
-                master_sheet[patname][lbl] = scn.shortdirname                
 
+for patname in (x for x in patname_list if x not in patient_exclude):
+    print patname
+    pat = sarpy.Patient(patname)
+    master_sheet[patname]={}
+
+    for lbl in labels:
+        study_nr = int(config.get(lbl,'study'))
+        prot_name = config.get(lbl,'protocol_name')
+        master_sheet[patname][lbl] = ["",[]]          
+        try:
+            bbox =  [float(x.strip()) for x in 
+                 config.get(lbl,'bounding_box').split()]
+        except ConfigParser.NoOptionError:
+            bbox=[0,1,0,1]
+
+        try:
+            scns = pat.studies[study_nr].find_scan_by_protocol(prot_name)
+        except IndexError:
+            print('warning (STUDY #%i not found) "%s" for %s' 
+                % (study_nr, lbl, patname))                
+        else:
+            scn_nr = int(config.get(lbl,'scan'))
+            try:
+                scn = scns[scn_nr]
+            except IndexError:
+                print('warning (SCAN #%i not found amongst the %s) "%s" for %s' 
+                    % (scn_nr, prot_name, lbl, patname))                
+            else:
+                master_sheet[patname][lbl] = [scn.shortdirname, bbox]
+                
 # now, take care of the exceptions.
 # as an example, this is what the cponfig file looks like
 #    [EXCEPTION.24h-LL.HerP2Bs03]
@@ -98,12 +118,15 @@ for exc_lbl in exc_labels:
     else:
         master_sheet[patname][lbl] = scn.shortdirname                
 
-
+print('ignoring {0}'.format(' '.join(patient_exclude)))
 if args.test:
     print('test mode:\n')
     print('%s\n' % args)
-    print(json.dumps(master_sheet, indent=4))
+    print(json.dumps(master_sheet))#, indent=4))
 else:
-    with open(args.output,'wb') as outfile:
-        json.dump(master_sheet, outfile, indent=4)
+    with open(args.output,'w') as outfile:
+        json_str = json.dumps(master_sheet, outfile, indent=4)
+        y = re.sub(r'\s\s+(\d+)', lambda match: r' {}'.format(
+                    match.group(1), json_str), json_str)
+        outfile.write(y)
         print('wrote to %s' % args.output)

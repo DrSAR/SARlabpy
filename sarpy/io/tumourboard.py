@@ -16,10 +16,10 @@ import json
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-plt.plot([1,2,3])
-plt.savefig('myfig')
 import numpy
 import sarpy
+import sarpy.ImageProcessing.resample_onto as sir
+import tempfile
 
 conf_parser = argparse.ArgumentParser(
     # Turn off help, so we print all options in response to -h
@@ -63,17 +63,22 @@ rows = [row for row in config.sections() if not((row=='Defaults'))]
 n_rows = len(rows)
 ref_lbl = config.get(args.ref_row,'label')
 ref_pat = master_list.keys()[0]
-scn = sarpy.Scan(master_list[ref_pat][ref_lbl])
+ref_scn = sarpy.Scan(master_list[ref_pat][ref_lbl][0])
 try:
-    ref_data = scn.adata[config.get(row,'adata')]
+    ref_data = ref_scn.adata[config.get(defaults['ref_row'],'adata')]
 except ConfigParser.NoOptionError:
-    ref_data = scn.pdata[0].data
-n_cols=ref_data.shape[2]
+    ref_data = ref_scn.pdata[0]
 
+ref_filename = tempfile.mktemp(suffix='png')
+ref_data.export2nii(ref_filename)
+
+n_cols=ref_data.data.shape[2]
+for i in xrange(n_cols):
+    ref_data.data[:,:,i]=i
 
 # for every patient we will create the same board
 for k,v in master_list.iteritems():
-    title=k
+    title = k
     # assume an inch x inch for each square with an addition half inch all around
     fig = plt.figure(figsize = (n_cols+1, n_rows+1))
     fig.suptitle(k)
@@ -82,34 +87,54 @@ for k,v in master_list.iteritems():
     row_idx = 0
     for row in rows:
         lbl = config.get(row,'label')
+        fname = v[lbl][0]
+        bbox = numpy.array([float(x) for x in v[lbl][1]])
+        fig.add_subplot(G[row_idx, 0])
+        plt.axis('off')
+        plt.text(0,.5,lbl+'\n'+fname, horizontalalignment='right', 
+                     fontsize=8, rotation='vertical')
+
         if config.get(row,'type') == 'histo':
             print(lbl,'HISTO!')
+        elif fname == "":
+            print('no scan in masterlist')
+            continue
         else:
-            scn = sarpy.Scan(v[lbl])
-            print(lbl, v[lbl])            
+            scn = sarpy.Scan(fname)
+            print(lbl, fname,scn.acqp.ACQ_protocol_name)            
             try:
                 data = scn.adata[config.get(row,'adata')]
             except ConfigParser.NoOptionError:
-                data = scn.pdata[0].data
-                #if not 3D, then squash
-                if data.ndim>3:
-                    print('squashing array')
-                    data = data.sum(axis=3)
-            print(data.shape)
-        for col_idx in xrange(n_cols):
+                data = scn.pdata[0]
+            xdata = data.data
+            print(xdata.shape)
+        try:
+            resample = config.getboolean(row,'resample')
+        except ConfigParser.NoOptionError:
+            resample = False
+        if resample:
+            print('resampling {0}\n{1}\n onto {2}'.format(scn,data, ref_data))
+            src_filename = tempfile.mktemp(suffix='png')
+            data.export2nii(src_filename)            
+            xdata, xdata_sitk_image = sir.resample_onto(src_filename, ref_filename)
+            print xdata.shape
+            #find out where the 0 1 etc end up.
+#            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
+
+            
+        for col_idx in xrange(min(n_cols, xdata.shape[2])):
             fig.add_subplot(G[row_idx, col_idx])
-            plt.imshow(data[:,:,col_idx])        
+            bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:1]).T.flatten()
+            print bbox, bbox_pxl
+            plt.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
+                             bbox_pxl[2]:bbox_pxl[3],col_idx])        
             plt.axis('off')
-            if row_idx == 0:
-                plt.title('Slice {0}'.format(col_idx+1), fontsize=12)
-            if col_idx == 0:
-                plt.text(0,0,lbl, horizontalalignment='right', 
-                         fontsize=10, rotation='vertical')
+            plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
         row_idx += 1
         
     # Figure spacing adjustments
-    fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
-    G.tight_layout(fig, h_pad = 0.1, w_pad = 0.1)
+#    fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
+#    G.tight_layout(fig, h_pad = 0.01, w_pad = 0.01)
     #G.update(right = 0.87)
     
     # Saving Figure    
