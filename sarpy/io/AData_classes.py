@@ -54,7 +54,7 @@ class ADataDict(collections.MutableMapping):
 
     def __setitem__(self, key, value):
         '''attribute setter for elements of this souped-up dictionary.
-        CHecks for pre-existin keys and only overwrites of forced. This
+        Checks for pre-existing keys and only overwrites if forced. This
         has to happen throuh wrapper script. Example:
 
         >>> import sarpy
@@ -74,6 +74,8 @@ class ADataDict(collections.MutableMapping):
         AttributeError: AData (key="times2") exists
         To force overwrite, use store_adata with option force=True
         '''
+        import getpass
+    
         if key in self.store:
             raise AttributeError(('AData (key="%s") exists\nTo force overwrite'+
                                 ', use store_adata with option force=True')
@@ -82,6 +84,7 @@ class ADataDict(collections.MutableMapping):
         # here we receive the key from the dictionary access
         # hence, we should store it in the meta-data
         value.meta['key'] = key
+        value.meta['username'] = getpass.getuser()
 
         # store data on disk
 

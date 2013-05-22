@@ -370,8 +370,16 @@ class Scan(object):
         :param boolean force:
             overwrite pre-existing AData sets, (default  False)
         '''
-        if force:
-            self.adata.pop(kwargs['key'], None)
+        import getpass
+        # only get rid of adata when forced and when from our user! 
+        if self.adata.get(kwargs['key']) is not None:
+            owner = self.adata.get(kwargs['key']).meta.get('username', None)
+            if owner != getpass.getuser():
+                raise AttributeError(
+                            'existing ADATA "%s" belongs to other user (%s)' % 
+                            (kwargs['key'], owner))
+            elif force:
+                self.adata.pop(kwargs['key'], None)
         self.adata[kwargs['key']] = AData_classes.AData.fromdata(
                     self.pdata[pdata_idx], **kwargs)
 
