@@ -4,6 +4,7 @@ Class definitions for the analysed data structures
 """
 
 import os, errno
+import shutil
 import glob
 import cPickle
 import json
@@ -130,6 +131,9 @@ class ADataDict(collections.MutableMapping):
 
 
     def __delitem__(self, key):
+        print('deleting item %s' % key)
+        shutil.rmtree(os.path.join(adataroot, 
+                                   self.store[key].meta['dirname']))
         del self.store[key]
 
     def __iter__(self):

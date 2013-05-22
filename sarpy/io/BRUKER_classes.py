@@ -537,6 +537,23 @@ class Study(object):
                                          for k, v in kwargs.items())):
                 yield scn
 
+    def find_adata(self):
+        '''
+        All keys of adata sets attached to scans in this study
+        '''
+        adatas = set()
+        for scn in self.scans:
+            for k in scn.adata.keys():
+                adatas.add(k)
+        return adatas
+        
+    def rm_adata(self, key):
+        '''
+        Remove adata with given *key* by iterating over the lot
+        '''
+        for scn in self.scans:
+            scn.adata.pop(key, None) # remove but be quiet if not there...
+
 
 class StudyCollection(object):
     '''
@@ -656,7 +673,20 @@ class StudyCollection(object):
         See difference between range and xrange
         '''
         return list(self.xscan_finder(**kwargs))
-
+        
+    def find_adata(self):
+        adatas=set()
+        for stdy in self.studies:
+            ret = stdy.find_adata()
+            adatas = adatas.union(ret)
+        return adatas
+        
+    def rm_adata(self, key):
+        '''
+        Remove adata with given *key* by iterating over all studies
+        '''
+        for stdy in self.studies:
+            stdy.rm_adata(key)
 
 
 class Patient(StudyCollection):
