@@ -369,6 +369,8 @@ class Scan(object):
 
         :param boolean force:
             overwrite pre-existing AData sets, (default  False)
+        :param boolean compressed:
+            compress adata files on write to disk, (default  True)
         '''
         import getpass
         # only get rid of adata when forced and when from our user! 
