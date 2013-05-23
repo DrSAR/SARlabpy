@@ -4,8 +4,10 @@ Class definitions for the analysed data structures
 """
 
 import os, errno
+import shutil
 import glob
 import cPickle
+import zlib
 import json
 import re
 import BRUKER_classes
@@ -34,6 +36,16 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else: raise
+
+def silentremove(filename):
+    '''
+    remove files and don't get upset if they don't exist
+    '''
+    try:
+        os.remove(filename)
+    except OSError, e: # this would be "except OSError as e:" in python 3.x
+        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            raise # re-raise exception if a different error occured
 
 import collections
 class ADataDict(collections.MutableMapping):
@@ -103,13 +115,10 @@ class ADataDict(collections.MutableMapping):
         fileroot = os.path.join(absfolder, value.meta['fileroot'])
         # react if there is a pre-existing key of the same name
         if os.path.isdir(absfolder):
-            try:
-                os.remove(fileroot+'.json')
-                os.remove(fileroot+'.pickle')
-            except OSError:
-                pass
-            else:
-                logger.warning('overwriting analysed data ({0}) for {1}'.
+            silentremove(fileroot+'.json')
+            silentremove(fileroot+'.pickle')
+            silentremove(fileroot+'.zippickle')
+            logger.warning('overwriting analysed data ({0}) for {1}'.
                        format(value.meta['key'], value.meta['parent_filename']))
         else:
             mkdir_p(absfolder)
@@ -118,18 +127,25 @@ class ADataDict(collections.MutableMapping):
         # AData.export2nii is better that way if analyzed-data should be made
         # available externally: in that case, visu_pars geometry information
         # will be used to populate the nifti header.
-        with open(fileroot+'.pickle', 'w') as f:
-            cPickle.dump(value.data, f)
+        if value.meta['compressed']:
+            with open(fileroot+'.zippickle', 'wb') as f:
+                f.write(zlib.compress(cPickle.dumps(value.data)))
+        else:
+            with open(fileroot+'.pickle', 'w') as f:
+                cPickle.dump(value.data, f)
 
         with open(fileroot+'.json','w') as paramfile:
             json.dump(value.meta, paramfile, indent=4)
-        logger.info('Saving to {0}.(pickle, json)'.format(fileroot))
+        logger.info('Saving to {0}.(*pickle, json)'.format(fileroot))
 
         logger.info('assigning {0} \nobject {1}'.format(key, value))
         self.store[key] = value
 
 
     def __delitem__(self, key):
+        print('deleting item %s' % key)
+        shutil.rmtree(os.path.join(adataroot, 
+                                   self.store[key].meta['dirname']))
         del self.store[key]
 
     def __iter__(self):
@@ -186,12 +202,30 @@ class AData(object):
     @lazy_property
     def data(self):
         #find in file when asked to load
-        datafilename = os.path.join(adataroot,
+        unzippeddatafilename = os.path.join(adataroot,
                                     self.meta['dirname'],
                                     self.meta['fileroot']+'.pickle')
-        logger.info('loading Nifti file %s' % datafilename)
-        with open(datafilename) as f:
-            data = cPickle.load(f)
+        zippeddatafilename = os.path.join(adataroot,
+                                    self.meta['dirname'],
+                                    self.meta['fileroot']+'.zippickle')
+        if os.path.exists(zippeddatafilename):
+            datafilename = zippeddatafilename
+            compressed = True
+        elif os.path.exists(unzippeddatafilename):
+            datafilename = unzippeddatafilename
+            compressed = False
+        else:
+            raise IOError('Found neither pickle nor zippickle file')
+            
+        logger.info('loading adata file %s' % datafilename)
+        
+        with open(datafilename, 'rb') as f:
+            if compressed:
+                pickledata = zlib.decompress(f.read())
+            else:
+                pickledata = f.read()
+        data = cPickle.loads(pickledata)
+                    
         self.__yet_loaded = True
         return data
 
@@ -270,14 +304,16 @@ class AData(object):
             sourcedata
         :param dict(optional) meta:
             meta information in the form of a dictionary. The following keys
-            will be added to it: paret_uid, created_datetime, parent_filename.
+            will be added to it: paret_uid, created_datetime, parent_filename,
+            compressed.
         '''
         if 'meta' in kwargs:
             meta = kwargs['meta']
         else:
             meta = {}
             meta['parent_uid'] = parent.uid()
-            meta['created_datetime'] = datetime.now().strftime('%c')
+            meta['created_datetime'] = datetime.now().strftime('%c')            
+            meta['compressed'] = kwargs.get('compressed',True)
 
         if parent is None:
             raise ValueError('analysed data has to be based on a parent')
