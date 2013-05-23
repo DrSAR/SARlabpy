@@ -82,7 +82,6 @@ def h_normalize_dce(scan_object, pdata_num = 0):
     for slice in range(num_slices):
         baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
         norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1    
-
     return norm_data
  
 def h_inj_point(scan_object, pdata_num = 0):
@@ -206,7 +205,7 @@ def h_residual_T1(params, y_data, t):
         return 1e9
 
 def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0, 
-                params = []):
+                params = [], bounding_box):
     
     if len(params) == 0:      
         params = [3E5, 2, 350]
@@ -231,9 +230,9 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0,
     t_data = numpy.linspace(inversion_time,\
         scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
         scan_object.pdata[pdata_num].data.shape[3])
-  
-    for x in xrange(data.shape[0]):
-        for y in range(data.shape[1]):
+ 
+    for x in xrange(bounding_box[0],bounding_box[0]+bounding_box[2]):
+        for y in range(bounding_box[1],bounding_box[1]+bounding_box[3]):
             for slice in range(num_slices):
                 
                 y_data = data[x,y,slice,:]
