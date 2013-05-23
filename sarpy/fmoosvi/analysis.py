@@ -204,8 +204,8 @@ def h_residual_T1(params, y_data, t):
     else:
         return 1e9
 
-def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0, 
-                params = [], bounding_box):
+def h_fit_T1_LL(scan_object, bounding_box, flip_angle_map = 0, pdata_num = 0, 
+                params = []):
     
     if len(params) == 0:      
         params = [3E5, 2, 350]

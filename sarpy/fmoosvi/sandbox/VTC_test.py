@@ -17,47 +17,45 @@ dce = necs3.studies[0].find_scan_by_protocol('06_FLASH2D.6sl-DCE')[0]
 data = sarpy.fmoosvi.analysis.h_normalize_dce(dce)
 
 fig = pylab.figure()
-top_left = (50, 20)
+top_left = (20, 60)
 
 def create_bounding_box(data, top_left_coord):
     
     dshape = data.shape
     
-    x = dshape[0]
-    y = dshape[1]
+    y = dshape[0]
+    x = dshape[1]    
+
+    y_size = top_left_coord[0] + int(0.60*y)    
+    x_size = top_left_coord[1] + int(0.40*x)
     
-    x_size = top_left_coord[0] + int(0.4*x)
-    y_size = top_left_coord[1] + int(0.2*y)
+    box_tuple = (top_left_coord[0],top_left_coord[1], y_size, x_size)
     
-    box_size = (x,y,x_size, y_size)
+    return box_tuple,(int(0.60*y),int(0.40*x))
+
+
+bounding_box,box_size = create_bounding_box(data,top_left)
+
+G = pylab.matplotlib.gridspec.GridSpec(box_size[0], box_size[1])
+i = 0
+
+for x in xrange(bounding_box[1],bounding_box[3]):
     
-    return box_tuple
-
-
-box_tuple = create_bounding_box(data,top_left)
-
-
-
-
-
-
-G = pylab.matplotlib.gridspec.GridSpec(60, 60)
-
-#for i in xrange(40, 50):
-#    
-#    for j in xrange(30, 40):
-#        
-#        fig.add_subplot(G[i,j],frameon=False,xticks=[],yticks=[])
-#        
-#        d = data[i,j,3,:]
-#        
-#        pylab.plot(d,'-',linewidth=0.3)
-#        pylab.ylim([-0.2,2])
-#        
-#
-
-
-
+    j=0 # Reset counter for next x line
+    
+    for y in range(bounding_box[0],bounding_box[2]):
+        
+        fig.add_subplot(G[j,i],frameon=False,xticks=[],yticks=[])
+        
+        d = data[y,x,3,:]
+        
+        pylab.plot(d,'-',linewidth=0.3)
+        pylab.ylim([-0.2,2])
+        j+=1 # increment counter for the subplot (y) 
+    
+    i+=1 # increment counter for the subplot (x) 
+        
+fig.savefig('youwinfiras.png')
 
 
 #Nbig = 6
@@ -154,7 +152,7 @@ def rebin(a, new_shape):
 #    doctest.testmod()
     
     
-bata = rebin(data[:,:,:,:], (16,32))
+#bata = rebin(data[:,:,:,:], (16,32))
 
 
 
