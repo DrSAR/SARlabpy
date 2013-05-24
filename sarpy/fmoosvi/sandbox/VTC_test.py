@@ -55,7 +55,11 @@ for x in xrange(bounding_box[1],bounding_box[3]):
     
     i+=1 # increment counter for the subplot (x) 
         
-fig.savefig('youwinfiras.png')
+fig.savefig('youwinfiras.pdf')
+
+
+
+
 
 
 #Nbig = 6
@@ -73,10 +77,6 @@ fig.savefig('youwinfiras.png')
 #array([[  3.5,   5.5,   7.5],
 #       [ 15.5,  17.5,  19.5],
 #       [ 27.5,  29.5,  31.5]])
-
-
-
-
 
 
 def rebin(a, new_shape):
