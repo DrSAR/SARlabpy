@@ -85,7 +85,6 @@ def h_normalize_dce(scan_object, pdata_num = 0):
     for slice in range(num_slices):
         baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
         norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1    
-
     return norm_data
  
 def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
@@ -216,7 +215,7 @@ def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_P
 
 def h_func_T1(params,t):
     M,B,T1_eff = params
-    return numpy.abs(M*(1-B*numpy.exp(-t/T1_eff))) #edit 2: funcion didn't have an abs!! FAIL!
+    return numpy.abs(M*(1-B*numpy.exp(-t/T1_eff)))
     
 def h_within_bounds(params,bounds):
     try:        
@@ -226,9 +225,8 @@ def h_within_bounds(params,bounds):
         return False
     except:
         print('You have some funky inputs for the bounds, you fail.')
-        return False # edit 1 to fix fitting
+        return False
             
-
 def h_residual_T1(params, y_data, t):
     
     bounds = numpy.zeros(shape=[3,2])
@@ -244,7 +242,7 @@ def h_residual_T1(params, y_data, t):
     else:
         return 1e9
 
-def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0, 
+def h_fit_T1_LL(scan_object, bounding_box, flip_angle_map = 0, pdata_num = 0, 
                 params = []):
     
     if len(params) == 0:      
@@ -270,9 +268,9 @@ def h_fit_T1_LL(scan_object, flip_angle_map = 0, pdata_num = 0,
     t_data = numpy.linspace(inversion_time,\
         scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
         scan_object.pdata[pdata_num].data.shape[3])
-  
-    for x in xrange(data.shape[0]):
-        for y in range(data.shape[1]):
+ 
+    for x in xrange(bounding_box[0],bounding_box[0]+bounding_box[2]):
+        for y in range(bounding_box[1],bounding_box[1]+bounding_box[3]):
             for slice in range(num_slices):
                 
                 y_data = data[x,y,slice,:]
@@ -333,14 +331,30 @@ def h_image_to_mask(roi_data):
             mask_val = scipy.percentile(curr_slice.flatten(),95)
             curr_slice[curr_slice == mask_val] = numpy.nan
             curr_slice[numpy.isfinite(curr_slice)] = 1
-    except:
+        return roi_mask    
+    
+    except AttributeError:
+        roi_data = roi_mask.data
+        
+        for slice in xrange(roi_data.shape[2]):
+        
+            curr_slice = roi_data[:,:,slice]
+            
+            mask_val = scipy.percentile(curr_slice.flatten(),95)
+            curr_slice[curr_slice == mask_val] = numpy.nan
+            curr_slice[numpy.isfinite(curr_slice)] = 1
+            
+        roi_mask.data = roi_data
+        
+        return roi_mask
+        
+    except:    
         #TODO WARNING THIS IS GOING TO FAIL SOOOO BADLY FOR 4D Data...FIX IT
 
         print('still working on expanding this function')
         raise
             
 
-    return roi_mask    
 
 def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     
