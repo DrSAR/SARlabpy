@@ -12,7 +12,7 @@ import pylab
 import numpy
 
 def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', 
-                  pdata_num = 0, time = 60):
+                  pdata_num = 0, time = 60, bounding_box = (50,20,100,60)):
 
     if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
         
@@ -111,7 +111,7 @@ def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH',
 
     
 def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', 
-                    FA_map = 0):
+                    FA_map = 0, bounding_box = (50,20,100,60)):
 
     try:       
         if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
@@ -133,13 +133,15 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
         except:
             raise
 
-    ## Now to calculate the AUC
+    ## Now to calculate the T1
     T1_map = []
     fit_dicts = []
 
     for scan in scan_list:
         
-        curr_T1map, curr_fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,flip_angle_map = FA_map)
+        curr_T1map, curr_fit_dict = \
+        sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,flip_angle_map = FA_map, 
+                                           bounding_box = (50,20,100,60))
 
         T1_map.append(curr_T1map)
         fit_dicts.append(curr_fit_dict)
@@ -153,14 +155,14 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
     else:
         return numpy.array(T1_map), numpy.array(fit_dicts)                                                
 
-def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
+def create_summary(data_list, key_list, clims = None, 
+                   colour_map = 'jet', bounding_box = (50,20,100,60)):
      
     num_slices = data_list[0].shape[-1]
     data_num = len(data_list)
     
     fig = pylab.figure(figsize = (14,3))
     G = pylab.matplotlib.gridspec.GridSpec(data_num,num_slices)   
-    #clims = sarpy.fmoosvi.getters.get_image_clims(data_list[0])
     
     for slice in xrange(num_slices):
         
@@ -174,10 +176,11 @@ def create_summary(data_list, key_list, clims = None, colour_map = 'jet'):
             
             a = pylab.imshow(data, cmap = colour_map )
             
-            if isinstance(clims[0],(int, float, long)):                
+            if isinstance(clims,list):                
                 a.set_clim(clims)
             else:
-                a.set_clim(600,3500)
+                clims = sarpy.fmoosvi.getters.get_image_clims(data)
+                a.set_clim(clims[0],clims[1])
             if n == 0:
                 pylab.title('Slice {0}'.format(slice+1), fontsize = 14)
     
@@ -235,10 +238,15 @@ def create_plot(data_list, key_list):
 def roi_distribution(data, roi, bins,  display_histogram = True, 
                      save_histogram = False, save_name = 'hist'):
    
-    
-    roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
-    masked_data = data * roi_mask
-    
+    if type(roi) == numpy.ndarray and data == numpy.ndarray :
+        masked_data = data * roi
+    elif type(roi) == numpy.ndarray :
+        masked_data = data.data * roi
+    elif type(roi) == sarpy.io.AData_classes.AData:
+        roi_mask = sarpy.fmoosvi.analysis.h_image_to_mask(roi.data)
+        masked_data = data.data * roi_mask
+      
+        
     if display_histogram:
         #fig = pylab.figure()
         pylab.hist(masked_data.flatten(), bins, alpha = 0.5)
