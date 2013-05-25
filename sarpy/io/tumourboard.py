@@ -64,25 +64,20 @@ with open(args.master_list,'r') as master_file:
 rows = [row for row in config.sections() if not((row=='Defaults'))]
 n_rows = len(rows)
 ref_lbl = config.get(args.ref_row,'label')
-ref_pat = master_list.keys()[0]
-ref_scn = sarpy.Scan(master_list[ref_pat][ref_lbl][0])
-try:
-    ref_data = ref_scn.adata[config.get(defaults['ref_row'],'adata')]
-except ConfigParser.NoOptionError:
-    ref_data = ref_scn.pdata[0]
-
-ref_filename = tempfile.mktemp(suffix='png')
-ref_data.export2nii(ref_filename)
-
-n_cols=ref_data.data.shape[2]
-for i in xrange(n_cols):
-    ref_data.data[:,:,i]=i
 
 testPDF = PdfPages('testPDF.pdf')
 
 
 # for every patient we will create the same board
 for k,v in master_list.iteritems():
+    ref_scn = sarpy.Scan(v[ref_lbl][0])
+    try:
+        ref_data = ref_scn.adata[config.get(defaults['ref_row'],'adata')]
+    except ConfigParser.NoOptionError:
+        ref_data = ref_scn.pdata[0]
+    ref_filename = tempfile.mktemp(suffix='.nii')
+    ref_data.export2nii(ref_filename)
+    n_cols=ref_data.data.shape[2]
 
     # Start a PDF file of all the animals
     
@@ -91,7 +86,8 @@ for k,v in master_list.iteritems():
     fig = plt.figure(figsize = (n_cols+1, n_rows+1))
     fig.suptitle(k)
     G = plt.matplotlib.gridspec.GridSpec(n_rows, n_cols)   
-    print('\n'+title)
+    print('\n'+'-'*80+'\n'+title)
+
     row_idx = 0
     for row in rows:
         row_conf = dict(config.items(row))
@@ -121,12 +117,15 @@ for k,v in master_list.iteritems():
                 data = scn.pdata[0]
             xdata = data.data
         
-        resample_flag = row_conf.pop('resample', False)
+        resample_flag = row_conf.pop('resample', False) 
         if resample_flag and config.getboolean(row,'resample'):
-            print('resampling {0}\n{1}\n onto {2}'.format(scn,data, ref_data))
-            src_filename = tempfile.mktemp(suffix='png')
-            data.export2nii(src_filename)            
-            xdata, xdata_sitk_image = sir.resample_onto(src_filename, ref_filename)
+            raise NotImplementedError('please fix resampling')
+            #print('resampling {0}\n{1}\n onto {2}'.format(scn,data,ref_data))
+            #src_filename = tempfile.mktemp(suffix='.nii')
+            #data.export2nii(src_filename)            
+            #xdata, xdata_sitk_image = sir.resample_onto(src_filename, ref_filename)
+            #xdata = sir.resample_onto_pdata(data, ref_data)
+            #os.remove(src_filename)
             #find out where the 0 1 etc end up.
 #            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
 
@@ -151,5 +150,7 @@ for k,v in master_list.iteritems():
     filename = os.path.join(args.output, k + '.png')                
     plt.savefig(filename, bbox_inches=0, dpi=500)
     plt.close('all')
+
+#os.remove(ref_filename)
 
 testPDF.close()
