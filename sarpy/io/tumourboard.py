@@ -94,32 +94,35 @@ for k,v in master_list.iteritems():
     print('\n'+title)
     row_idx = 0
     for row in rows:
-        lbl = config.get(row,'label')
+        row_conf = dict(config.items(row))
+        lbl =row_conf.pop('label')
+        subtitle = row_conf.pop('subtitle','')
         fname = v[lbl][0]
         bbox = numpy.array([float(x) for x in v[lbl][1]])
         fig.add_subplot(G[row_idx, 0])
         plt.axis('off')
-        plt.text(-0.1,0.6,lbl, horizontalalignment='center', 
-                     fontsize=5, rotation='vertical')
+        plt.text(0,.5,'\n'.join([lbl,subtitle,fname]), 
+                 horizontalalignment='right', 
+                 fontsize=8, rotation='vertical')
 
-        if config.get(row,'type') == 'histo':
+        if row_conf.pop('type', None) is None:
             print(lbl,'HISTO!')
-        elif fname == "":
-            print('no scan in masterlist')
+        elif fname == '':
+            plt.title('no data found', fontsize=8)
+            row_idx += 1
             continue
         else:
             scn = sarpy.Scan(fname)
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
-            try:
-                data = scn.adata[config.get(row,'adata')]
-            except ConfigParser.NoOptionError:
+            adata_key = row_conf.pop('adata', None)
+            if adata_key is not None:
+                data = scn.adata[adata_key]
+            else:
                 data = scn.pdata[0]
             xdata = data.data
-        try:
-            resample = config.getboolean(row,'resample')
-        except ConfigParser.NoOptionError:
-            resample = False
-        if resample:
+        
+        resample_flag = row_conf.pop('resample', False)
+        if resample_flag and config.getboolean(row,'resample'):
             print('resampling {0}\n{1}\n onto {2}'.format(scn,data, ref_data))
             src_filename = tempfile.mktemp(suffix='png')
             data.export2nii(src_filename)            
@@ -131,7 +134,8 @@ for k,v in master_list.iteritems():
             fig.add_subplot(G[row_idx, col_idx])
             bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
             plt.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
-                             bbox_pxl[2]:bbox_pxl[3],col_idx])        
+                             bbox_pxl[2]:bbox_pxl[3],col_idx],
+                       **row_sconf)        
             plt.axis('off')
             plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
         row_idx += 1
