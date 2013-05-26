@@ -17,21 +17,24 @@ dce = necs3.studies[0].find_scan_by_protocol('06_FLASH2D.6sl-DCE')[0]
 data = sarpy.fmoosvi.analysis.h_normalize_dce(dce)
 
 fig = pylab.figure()
-top_left = (20, 60)
+bbox = [0.2, 0.4, 0.4, 0.8]
 
-def create_bounding_box(data, top_left_coord):
+def get_bbox(value,label,data,type='px'):
     
-    dshape = data.shape
+    shape = data.shape
     
-    y = dshape[0]
-    x = dshape[1]    
+    bbox = numpy.array([float(x) for x in value[label][1]])
+    bbox_px = (bbox.reshape(2,2).T*shape[0:1]).T.flatten()
+    
+    #TODO: this will need to be updated for python 3.x+
+    map(int,bbox_px) # Casts all elements to ints
+    
+    if type == 'px':
+        return bbox
+    
+    elif type == 'pct':
+        return bbox_px
 
-    y_size = top_left_coord[0] + int(0.60*y)    
-    x_size = top_left_coord[1] + int(0.40*x)
-    
-    box_tuple = (top_left_coord[0],top_left_coord[1], y_size, x_size)
-    
-    return box_tuple,(int(0.60*y),int(0.40*x))
 
 
 bounding_box,box_size = create_bounding_box(data,top_left)
