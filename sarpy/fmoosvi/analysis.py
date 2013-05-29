@@ -58,10 +58,11 @@ def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     
     for slice in range(num_slices):
         auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        
     return auc_data
 
 
-def h_normalize_dce(scan_object, pdata_num = 0):
+def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
 
     ########### Getting and defining parameters
     
@@ -72,10 +73,32 @@ def h_normalize_dce(scan_object, pdata_num = 0):
     x_size = data.shape[0]
     y_size = data.shape[1]
     num_slices = getters.get_num_slices(scan_object,pdata_num)
-
+    
     # Method params
     #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
     reps =  scan_object.method.PVM_NRepetitions
+
+    ## Check for bbox traits and create bbox_mask to output only partial data
+
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
+
+    if bbox.shape == (4,):            
+    
+        bbox_mask = numpy.empty([x_size,y_size])
+
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+        # Next tile for reps
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)
+
+    else:      
+        raise ValueError('Please supply a bbox for h_normalize_dce')
+    
+
 
     # Calculated params      
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
@@ -84,8 +107,9 @@ def h_normalize_dce(scan_object, pdata_num = 0):
 
     for slice in range(num_slices):
         baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
-        norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1    
-    return norm_data
+        norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
+               
+    return norm_data*bbox_mask
  
 def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
 
@@ -242,20 +266,14 @@ def h_residual_T1(params, y_data, t):
     else:
         return 1e9
 
-def h_fit_T1_LL(scan_object, bounding_box, flip_angle_map = 0, pdata_num = 0, 
+def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0, 
                 params = []):
     
     if len(params) == 0:      
         params = [3E5, 2, 350]
-
-    num_slices = getters.get_num_slices(scan_object, pdata_num)
-    repetition_time = scan_object.method.PVM_RepetitionTime
-    inversion_time = scan_object.method.PVM_InversionTime
-    
+  
     if type(flip_angle_map) != numpy.ndarray:
         flip_angle_map = math.radians(scan_object.acqp.ACQ_flip_angle)
-   
-    # Visu_pars params 
         
     data = scan_object.pdata[pdata_num].data[:]
 
@@ -263,14 +281,42 @@ def h_fit_T1_LL(scan_object, bounding_box, flip_angle_map = 0, pdata_num = 0,
                                        data.shape[1],\
                                        data.shape[2]] )
                                        
+    repetition_time = scan_object.method.PVM_RepetitionTime
+    inversion_time = scan_object.method.PVM_InversionTime   
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    num_slices = getters.get_num_slices(scan_object,pdata_num)                                        
+                                       
+                                       
     fit_results = numpy.array(data_after_fitting[:], dtype=dict)                       
             
     t_data = numpy.linspace(inversion_time,\
         scan_object.pdata[pdata_num].data.shape[3]*repetition_time,\
         scan_object.pdata[pdata_num].data.shape[3])
- 
-    for x in xrange(bounding_box[0],bounding_box[0]+bounding_box[2]):
-        for y in range(bounding_box[1],bounding_box[1]+bounding_box[3]):
+   
+    ## Check for bbox traits and create bbox_mask to output only partial data
+
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
+
+    if bbox.shape == (4,):            
+    
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+        # Next tile for reps
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)
+
+    else:      
+        raise ValueError('Please supply a bbox for h_fit_T1_LL')      
+        
+    # Start the fitting process        
+        
+    for x in xrange(bbox_px[0],bbox_px[1]):
+        for y in range(bbox_px[2],bbox_px[3]):
             for slice in range(num_slices):
                 
                 y_data = data[x,y,slice,:]
@@ -368,5 +414,3 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     else:
         print ('There is no code to produce that indicator. Do it first.')
         raise Exception
-        
-    
