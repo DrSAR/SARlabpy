@@ -12,7 +12,7 @@ import pylab
 import numpy
 
 def calculate_AUC(Bruker_object, protocol_name = '06_FLASH2D+', 
-                  pdata_num = 0, time = 60, bounding_box = (50,20,100,60)):
+                  pdata_num = 0, time = 60):
 
     if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
         
@@ -110,8 +110,7 @@ def calculate_BSB1map(Bruker_object, BS_protocol_name = '07_bSB1mapFLASH',
         return numpy.array(b1map)           
 
     
-def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2', 
-                    FA_map = 0, bounding_box = (50,20,100,60)):
+def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',FA_map = 0):
 
     try:       
         if type(Bruker_object) == sarpy.io.BRUKER_classes.Scan:
@@ -140,8 +139,7 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
     for scan in scan_list:
         
         curr_T1map, curr_fit_dict = \
-        sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,flip_angle_map = FA_map, 
-                                           bounding_box = (50,20,100,60))
+        sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,flip_angle_map = FA_map)
 
         T1_map.append(curr_T1map)
         fit_dicts.append(curr_fit_dict)
@@ -156,7 +154,7 @@ def calculate_T1map(Bruker_object, protocol_name = '04_ubcLL2',
         return numpy.array(T1_map), numpy.array(fit_dicts)                                                
 
 def create_summary(data_list, key_list, clims = None, 
-                   colour_map = 'jet', bounding_box = (50,20,100,60)):
+                   colour_map = 'jet'):
      
     num_slices = data_list[0].shape[-1]
     data_num = len(data_list)
@@ -257,3 +255,43 @@ def roi_distribution(data, roi, bins,  display_histogram = True,
         filename = save_name + '.png'                
         pylab.savefig(filename, bbox_inches=0, dpi=300)
         
+def bulk_analyze(masterlist_name, data_label, analysis_label):
+    
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,'.json'))
+    
+    with open(mdata,'r') as master_file:
+        master_list = json.load(master_file)
+        
+    if analysis_label == 'auc60':
+        
+        
+        #do stuff
+        
+    elif analysis_label == 'T1map_LL':
+        
+        #do stuff
+        
+    else:
+        
+        print('This type of analysis has not yet been implemented. \
+                Do so in the wrappers file.)
+        
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+    

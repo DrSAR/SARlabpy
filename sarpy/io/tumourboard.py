@@ -14,7 +14,7 @@ import ConfigParser
 import os
 import json
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')# where did I come from !?
 import matplotlib.pyplot as plt
 import numpy
 import sarpy
