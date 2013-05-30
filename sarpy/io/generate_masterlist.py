@@ -12,6 +12,7 @@ import collections
 import ConfigParser
 import re
 import json
+import pprint
 import sarpy
 
 conf_parser = argparse.ArgumentParser(
@@ -48,8 +49,11 @@ if defaults == {}:
 
 labels = [lbl for lbl in config.sections() if not((lbl=='MasterList') or
                                             re.match('EXCEPTION.',lbl))]
-exc_labels = [lbl for lbl in config.sections() if (not(lbl=='MasterList') and
-                                            re.match('EXCEPTION.',lbl))] 
+exc_labels=collections.defaultdict(list)
+for lbl in  [lbl for lbl in config.sections() if re.match('EXCEPTION.',lbl)]:
+    (exc, lbl, patname) = lbl.split('.')
+    exc_labels[lbl].append(patname)
+    
 try:
     patient_exclude = [x.strip() for x in 
                    config.get('MasterList','patient_exclude').split(',')]
@@ -74,14 +78,22 @@ for patname in (x for x in patname_list if x not in patient_exclude):
     master_sheet[patname]={}
 
     for lbl in labels:
-        study_nr = int(config.get(lbl,'study'))
-        prot_name = config.get(lbl,'protocol_name')
+        configuration = dict(config.items(lbl))
         master_sheet[patname][lbl] = ["",[]]          
-        try:
-            bbox =  [float(x.strip()) for x in 
-                 config.get(lbl,'bounding_box').split()]
-        except ConfigParser.NoOptionError:
-            bbox=[0,1,0,1]
+
+# now, see whether there are exceptions defined or this label
+# as an example, this is what the cponfig file looks like
+#    [EXCEPTION.24h-LL.HerP2Bs03]
+#    protocol_name=04_ubcLL2
+#    study=3 # instead of 1
+#    scan=0
+        if patname in exc_labels[lbl]:
+            configuration = dict(config.items(
+                            '.'.join(['EXCEPTION',lbl,patname])))
+
+        bbox=configuration.get('bounding_box', '0 1 0 1').split()
+        prot_name = configuration['protocol_name']
+        study_nr = int(configuration['study'])
 
         try:
             scns = pat.studies[study_nr].find_scan_by_protocol(prot_name)
@@ -97,32 +109,12 @@ for patname in (x for x in patname_list if x not in patient_exclude):
                     % (scn_nr, prot_name, lbl, patname))                
             else:
                 master_sheet[patname][lbl] = [scn.shortdirname, bbox]
-                
-# now, take care of the exceptions.
-# as an example, this is what the cponfig file looks like
-#    [EXCEPTION.24h-LL.HerP2Bs03]
-#    protocol_name=04_ubcLL2
-#    study=3 # instead of 1
-#    scan=0
-for exc_lbl in exc_labels:
-    (exc, lbl, patname) = exc_lbl.split('.')
-    study_nr = int(config.get(exc_lbl,'study'))
-    prot_name = config.get(exc_lbl,'protocol_name')
-    pat = sarpy.Patient(patname)
-    scns = pat.studies[study_nr].find_scan_by_protocol(prot_name)
-    try:
-        scn = scns[int(config.get(exc_lbl,'scan'))]
-    except IndexError:
-        master_sheet[patname][lbl] = ""
-        print('WARNING: exception for %s could not be satisfied ' % exc_lbl)
-    else:
-        master_sheet[patname][lbl] = scn.shortdirname                
 
 print('ignoring {0}'.format(' '.join(patient_exclude)))
 if args.test:
     print('test mode:\n')
     print('%s\n' % args)
-    print(json.dumps(master_sheet))#, indent=4))
+    pprint.pprint(json.loads(json.dumps(master_sheet)))
 else:
     with open(args.output,'w') as outfile:
         json_str = json.dumps(master_sheet, outfile, indent=4)
