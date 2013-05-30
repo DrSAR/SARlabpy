@@ -121,7 +121,6 @@ for k,v in master_list.iteritems():
             #find out where the 0 1 etc end up.
 #            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
 
-            
         for col_idx in xrange(min(n_cols, xdata.shape[2])):
             fig.add_subplot(G[row_idx, col_idx])
             bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:1]).T.flatten()
