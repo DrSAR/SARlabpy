@@ -414,3 +414,36 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     else:
         print ('There is no code to produce that indicator. Do it first.')
         raise Exception
+
+def h_generate_VTC(masterlist_name, key, data_label):
+  
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name + '.json'))
+    
+    with open(mdata,'r') as master_file:
+        master_list = json.load(master_file)
+    
+    value = master_list[key]
+    
+    data = sarpy.Scan(value[data_label][0])
+    bbox_px = sarpy.fmoosvi.getters.get_bbox(value,data_label)
+
+    # Normalize data
+    ndata = sarpy.fmoosvi.analysis.h_normalize_dce(data)
+
+    # Set bounding boxes and get ready to join together
+    ndata[bbox_px[0]:bbox_px[1],bbox_px[2]:bbox_px[3],:,:] = numpy.nan
+    ndata[:,:,:,-1] = numpy.nan
+
+    # Get useful params        
+    x_size = ndata.shape[0]
+    y_size = ndata.shape[1]
+    num_slices = ndata.shape[2]
+    reps = ndata.shape[3]
+
+    # Reshape it  to stitch together all the data
+    nrdata = numpy.empty([x_size,y_size*reps,num_slices])
+    
+    for s in xrange(num_slices):
+        nrdata[:,:,s] = ndata[:,:,s,:].reshape([x_size,y_size*reps])
+        
+    return nrdata

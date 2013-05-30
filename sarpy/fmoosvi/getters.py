@@ -136,7 +136,22 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
         
-            
+def get_bbox(value,data_label,type=None):
+    
+    data = sarpy.Scan(value[data_label][0])
+    shape = data.pdata[0].data.shape
+    
+    bbox = numpy.array([float(x) for x in value[data_label][1]])    
+    bbox_px = (bbox.reshape(2,2).T*shape[0:1]).T.flatten()
+    
+    #TODO: this will need to be updated for python 3.x+
+    bbox_px = map(int,bbox_px) # Casts all elements to ints
+    
+    if type is None:
+        return bbox_px
+    
+    elif type == 'pct':
+        return bbox            
     
     
     

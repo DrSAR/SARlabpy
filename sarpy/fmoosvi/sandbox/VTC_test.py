@@ -6,120 +6,20 @@ Created on Wed May 15 14:30:17 2013
 """
 
 import sarpy
-import sarpy.fmoosvi.analysis
-import numpy
-import pylab
-import os
-import json
-
-def get_bbox(value,data_label,type=None):
-    
-    data = sarpy.Scan(value[data_label][0])
-    shape = data.pdata[0].data.shape
-    
-    bbox = numpy.array([float(x) for x in value[data_label][1]])    
-    bbox_px = (bbox.reshape(2,2).T*shape[0:1]).T.flatten()
-    
-    #TODO: this will need to be updated for python 3.x+
-    bbox_px = map(int,bbox_px) # Casts all elements to ints
-    
-    if type is None:
-        return bbox_px
-    
-    elif type == 'pct':
-        return bbox
-        
-        
-        
-
-def generate_VTC(masterlist_name, data_label):
-  
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name + '.json'))
-    
-    with open(mdata,'r') as master_file:
-        master_list = json.load(master_file)
-    
-    for k,v in master_list.iteritems():
-        
-        try:
-            data = sarpy.Scan(v[data_label][0])
-            bbox_px = get_bbox(v,data_label)
-    
-            # Normalize data
-            ndata = sarpy.fmoosvi.analysis.h_normalize_dce(data)
-
-            # Set bounding boxes and get ready to join together
-            ndata[bbox_px[0]:bbox_px[1],bbox_px[2]:bbox_px[3],:,:] = numpy.nan
-            ndata[:,:,:,-1] = numpy.nan
-    
-            # Get useful params        
-            x_size = ndata.shape[0]
-            y_size = ndata.shape[1]
-            num_slices = ndata.shape[2]
-            reps = ndata.shape[3]
-    
-            # Reshape it  to stitch together all the data
-            nrdata = numpy.empty([x_size,y_size*reps,num_slices])
-            
-            for s in xrange(num_slices):
-                nrdata[:,:,s] = ndata[:,:,s,:].reshape([x_size,y_size*reps])
-                
-            data.store_adata(key='VTC', data = nrdata)
-            
-        except IOError:
-            
-            pass   
+import sarpy.fmoosvi.wrappers
 
 
 masterlist_name = 'HerP2'
 data_label = '24h-DCE'
 
-a = generate_VTC(masterlist_name, data_label)
 
-def plotVTC(value, data_label, adata_label = None):
+try:
+    #sarpy.fmoosvi.wrappers.generate_VTC(masterlist_name, data_label)
+    sarpy.fmoosvi.wrappers.plotVTC(masterlist_name,'HerP2Bs05', data_label)
 
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name + '.json'))
+except AttributeError:
     
-    data = sarpy.Scan(value[data_label][0])
-    bbox_px = get_bbox(value,data_label)
-    
-    if adata_label is None:
-        
-        dffd
-        
-    else:
-        
-        nrdata = sarpy.Scan(value[adata_label][0])
- 
-    x_bbox_px = bbox_px[1] - bbox_px[0] +1
-
-    # Handle the special case of a corner bbox at origin
-    if bbox_px[0]==0: x_bbox_px - 1
-    
-#    pylab.figure(figsize = [10,data.method.PVM_FovCm[1]/data.method.PVM_FovCm[0]*10])
-#    pylab.imshow(data.pdata[0].data[:,:,3,80])
-#    
-    G = pylab.matplotlib.gridspec.GridSpec(x_bbox_px, 1)
-    fig = pylab.figure(figsize = [10,data.method.PVM_FovCm[1]/data.method.PVM_FovCm[0]*10])       
-
-    i = 0
-    
-    for x in xrange(bbox_px[0],bbox_px[1]):
-     
-        fig.add_subplot(G[i],frameon=False,xticks=[],yticks=[])
-    
-        d = nrdata[x,:,3]
-    
-        pylab.plot(d,'-',linewidth=0.3)
-        pylab.ylim([-0.2,2])
-        
-        i+=1 # increment counter for the subplot (x)     
-
-
-
-
-
-
+    pass
 
 
 
