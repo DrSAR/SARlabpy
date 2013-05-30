@@ -15,7 +15,7 @@ import json
 
 def bulk_analyze(masterlist_name, data_label, analysis_label):
     
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,'.json'))
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name+'.json'))
     
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
@@ -24,45 +24,71 @@ def bulk_analyze(masterlist_name, data_label, analysis_label):
 
         for k,v in master_list.iteritems():
             
-            scan = sarpy.Scan(v[data_label][0])           
-            bbox = get_bbox(v, data_label)
-            
-            curr_auc = sarpy.fmoosvi.analysis.h_calculate_AUC(scan):
-          
-            try: 
-                scan.store_adata(key=analysis_label, data = curr_auc)
-            except AttributeError:
-                print('Could not store adata for %s',scan)
-                pass                
+            try:
+                print k
+                scan = sarpy.Scan(v[data_label][0])           
+                bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+                
+                #curr_auc = sarpy.fmoosvi.analysis.h_calculate_AUC(scan, bbox)
+              
+#                try: 
+#                    scan.store_adata(key=analysis_label, data = curr_auc)
+#                except AttributeError:
+#                    print('Could not store adata for %s',scan)
+#                    pass 
+                
+            except IOError:
+                
+                print('Could not find something for {0} and {1}'.format(analysis_label,analysis_label) )
+                
+                pass
         
     elif analysis_label == 'T1map_LL':
         
         for k,v in master_list.iteritems():
             
-            scan = sarpy.Scan(v[data_label][0])           
-            bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
-            
-            T1map_LL, T1map_fitdict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,bbox)
-          
             try: 
-                scan.store_adata(key=analysis_label, data = T1map_LL)
-                scan.store_adata(key=analysis_label+'_fitdict', data = T1map_fitdict)
-            except AttributeError:
-                print('Could not store adata for %s',scan)
-                pass                
+                print k
+                scan = sarpy.Scan(v[data_label][0])           
+                bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+                
+                #T1map_LL, T1map_fitdict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,bbox)
+              
+#                try: 
+#                    scan.store_adata(key=analysis_label, data = T1map_LL)
+#                    scan.store_adata(key=analysis_label+'_fitdict', data = T1map_fitdict)
+#                except AttributeError:
+#                    print('Could not store adata for %s',scan)
+#                    pass                
+            except IOError:
+                
+                print('Could not find something for {0} and {1}'.format(analysis_label,analysis_label) )
+
+                
+                pass
+
                 
     elif analysis_label == 'vtc':
         
         for k,v in master_list.iteritems():
-        
-            vtc = sarpy.fmoosvi.analysis.h_generate_VTC(masterlist_name, k, data_label):
+            
+            try:
+                print k
+                scan = sarpy.Scan(v[data_label][0])           
+                bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+                 
+                #vtc = sarpy.fmoosvi.analysis.h_generate_VTC(scan, bbox)
+                    
+#                try: 
+#                    scan.store_adata(key=analysis_label, data = vtc)
+#                except AttributeError:
+#                    print('Could not store adata for %s',scan)
+#                    pass                      
+            except:
                 
-            try: 
-                scan.store_adata(key=analysis_label, data = vtc)
-            except AttributeError:
-                print('Could not store adata for %s',scan)
-                pass                      
+                print('Could not find something for {0} and {1}'.format(analysis_label,analysis_label) )
 
+                pass
     else:
         print('This type of analysis has not yet been implemented. \
                 Do so in the wrappers file.')     

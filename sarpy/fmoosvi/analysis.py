@@ -20,7 +20,7 @@ import math
 import copy
 
 
-def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
+def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     
     """
     Returns an area under the curve data for the scan object
@@ -44,7 +44,7 @@ def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     time_per_rep = repetition_time * phase_encodes
     auc_reps = int(numpy.round(time / time_per_rep))
     time_points = numpy.arange(time_per_rep,time_per_rep*auc_reps + time_per_rep,time_per_rep)
-    
+
     ########### Start AUC code
       
     # Determine point of injection by averaging one slice in the entire image
@@ -53,13 +53,36 @@ def h_calculate_AUC(scan_object, time = 60, pdata_num = 0):
     # Now calculate the Normalized Intesity voxel by voxel
     norm_data = h_normalize_dce(scan_object)
 
+    # Size info
+    x_size = norm_data.shape[0]
+    y_size = norm_data.shape[1]
+    num_slices = norm_data.shape[2]
+    
+
     # Now calculate the actual AUC
-    auc_data = numpy.empty([norm_data.shape[0],norm_data.shape[1],num_slices])
+    auc_data = numpy.empty([x_size,y_size,num_slices])
     
     for slice in range(num_slices):
         auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
-        
-    return auc_data
+    
+    # Deal with bounding boxes
+
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+       
+    if bbox.shape == (4,):            
+    
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+
+    else:      
+        raise ValueError('Please supply a bbox for h_fit_T1_LL')   
+     
+    return auc_data*bbox_mask
 
 
 def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
@@ -97,8 +120,6 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
 
     else:      
         raise ValueError('Please supply a bbox for h_normalize_dce')
-    
-
 
     # Calculated params      
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
@@ -224,6 +245,7 @@ def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_P
     return alpha_BS
     
     
+### T1 fitting section
     
 ##############
     #
@@ -299,24 +321,18 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])
 
-    if bbox.shape == (4,):            
-    
-        bbox_mask = numpy.empty([x_size,y_size])
-        bbox_mask[:] = numpy.nan        
-        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
-    
-        # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
-        # Next tile for reps
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)
-
-    else:      
+    if bbox.shape != (4,):    
         raise ValueError('Please supply a bbox for h_fit_T1_LL')      
         
     # Start the fitting process        
         
-    for x in xrange(bbox_px[0],bbox_px[1]):
-        for y in range(bbox_px[2],bbox_px[3]):
+    data_after_fitting = numpy.empty([x_size,y_size,num_slices])
+    data_after_fitting[:] = numpy.nan
+
+#    fit_results = numpy.empty([x_size,y_size,num_slices])
+    
+    for x in xrange(bbox[0],bbox[1]):
+        for y in range(bbox[2],bbox[3]):
             for slice in range(num_slices):
                 
                 y_data = data[x,y,slice,:]
@@ -352,6 +368,9 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
         # e.g., IR, VFA
         # NecS3Exp= sarpy.Experiment('NecS3')
         # scan_object = NecS3Exp.studies[0].find_scan_by_protocol('04_ubcLL2')
+
+### Other Helpers
+
         
 def h_phase_from_fid(scan_object):
     
@@ -415,23 +434,13 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         print ('There is no code to produce that indicator. Do it first.')
         raise Exception
 
-def h_generate_VTC(masterlist_name, key, data_label):
-  
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name + '.json'))
-    
-    with open(mdata,'r') as master_file:
-        master_list = json.load(master_file)
-    
-    value = master_list[key]
-    
-    data = sarpy.Scan(value[data_label][0])
-    bbox_px = sarpy.fmoosvi.getters.get_bbox(value,data_label)
+def h_generate_VTC(scan, bbox = None, pdata_num = 0):
 
     # Normalize data
-    ndata = sarpy.fmoosvi.analysis.h_normalize_dce(data)
+    ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scan)
 
     # Set bounding boxes and get ready to join together
-    ndata[bbox_px[0]:bbox_px[1],bbox_px[2]:bbox_px[3],:,:] = numpy.nan
+    ndata[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = numpy.nan
     ndata[:,:,:,-1] = numpy.nan
 
     # Get useful params        

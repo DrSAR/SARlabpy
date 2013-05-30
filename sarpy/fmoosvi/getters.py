@@ -148,10 +148,10 @@ def get_bbox(value,data_label,type=None):
     bbox_px = map(int,bbox_px) # Casts all elements to ints
     
     if type is None:
-        return bbox_px
+        return numpy.array(bbox_px)
     
     elif type == 'pct':
-        return bbox            
+        return numpy.array(bbox)
     
     
     
