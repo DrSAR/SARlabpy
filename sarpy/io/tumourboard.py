@@ -14,12 +14,14 @@ import ConfigParser
 import os
 import json
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')# where did I come from !?
 import matplotlib.pyplot as plt
 import numpy
 import sarpy
 import sarpy.ImageProcessing.resample_onto as sir
 import tempfile
+from matplotlib.backends.backend_pdf import PdfPages
+
 
 conf_parser = argparse.ArgumentParser(
     # Turn off help, so we print all options in response to -h
@@ -76,8 +78,14 @@ n_cols=ref_data.data.shape[2]
 for i in xrange(n_cols):
     ref_data.data[:,:,i]=i
 
+testPDF = PdfPages('testPDF.pdf')
+
+
 # for every patient we will create the same board
 for k,v in master_list.iteritems():
+
+    # Start a PDF file of all the animals
+    
     title = k
     # assume an inch x inch for each square with an addition half inch all around
     fig = plt.figure(figsize = (n_cols+1, n_rows+1))
@@ -91,8 +99,8 @@ for k,v in master_list.iteritems():
         bbox = numpy.array([float(x) for x in v[lbl][1]])
         fig.add_subplot(G[row_idx, 0])
         plt.axis('off')
-        plt.text(0,.5,lbl+'\n'+fname, horizontalalignment='right', 
-                     fontsize=8, rotation='vertical')
+        plt.text(-0.1,0.6,lbl, horizontalalignment='center', 
+                     fontsize=5, rotation='vertical')
 
         if config.get(row,'type') == 'histo':
             print(lbl,'HISTO!')
@@ -107,7 +115,6 @@ for k,v in master_list.iteritems():
             except ConfigParser.NoOptionError:
                 data = scn.pdata[0]
             xdata = data.data
-            print(xdata.shape)
         try:
             resample = config.getboolean(row,'resample')
         except ConfigParser.NoOptionError:
@@ -117,15 +124,12 @@ for k,v in master_list.iteritems():
             src_filename = tempfile.mktemp(suffix='png')
             data.export2nii(src_filename)            
             xdata, xdata_sitk_image = sir.resample_onto(src_filename, ref_filename)
-            print xdata.shape
             #find out where the 0 1 etc end up.
 #            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
 
-            
         for col_idx in xrange(min(n_cols, xdata.shape[2])):
             fig.add_subplot(G[row_idx, col_idx])
-            bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:1]).T.flatten()
-            print bbox, bbox_pxl
+            bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
             plt.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
                              bbox_pxl[2]:bbox_pxl[3],col_idx])        
             plt.axis('off')
@@ -133,11 +137,15 @@ for k,v in master_list.iteritems():
         row_idx += 1
         
     # Figure spacing adjustments
-#    fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
-#    G.tight_layout(fig, h_pad = 0.01, w_pad = 0.01)
+    #fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
+    #G.tight_layout(fig, h_pad = 0.01, w_pad = 0.01)
     #G.update(right = 0.87)
+        
+    testPDF.savefig(fig)      
     
     # Saving Figure    
     filename = os.path.join(args.output, k + '.png')                
-    plt.savefig(filename, bbox_inches=0, dpi=300)
+    plt.savefig(filename, bbox_inches=0, dpi=500)
     plt.close('all')
+
+testPDF.close()
