@@ -126,10 +126,32 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-    for slice in range(num_slices):
-        baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
-        norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
-               
+    try:
+        for slice in range(num_slices):
+            baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
+            norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
+    except ValueError: # Basically means there is incomplete dce data
+        
+        reps =  scan_object.pdata[pdata_num].data.shape[-1]
+        norm_data = numpy.empty([x_size,y_size,num_slices,reps])
+        
+        bbox_mask = numpy.empty([x_size,y_size])
+
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+        # Next tile for reps
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)        
+        
+
+        for slice in range(num_slices):
+            baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
+            norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
+            
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+     
     return norm_data*bbox_mask
  
 def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):

@@ -13,7 +13,7 @@ import numpy
 import os
 import json
 
-def bulk_analyze(masterlist_name, data_label, analysis_label):
+def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
     
     mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name+'.json'))
     
@@ -25,21 +25,21 @@ def bulk_analyze(masterlist_name, data_label, analysis_label):
         for k,v in master_list.iteritems():
             
             try:
-                print k
                 scan = sarpy.Scan(v[data_label][0])           
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
                 
-                #curr_auc = sarpy.fmoosvi.analysis.h_calculate_AUC(scan, bbox)
-              
-#                try: 
-#                    scan.store_adata(key=analysis_label, data = curr_auc)
-#                except AttributeError:
-#                    print('Could not store adata for %s',scan)
-#                    pass 
+                if (not analysis_label in [analysis_label]) or forceVal is True:
+                
+                    curr_auc = sarpy.fmoosvi.analysis.h_calculate_AUC(scan, bbox)
+                    scan.store_adata(key=analysis_label, data = curr_auc, force = forceVal)
+                
+                else:
+                    print('adata already exists {0}'.format(scan.shortdirname))
+                    pass 
                 
             except IOError:
                 
-                print('Could not find something for {0} and {1}'.format(analysis_label,analysis_label) )
+                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
                 
                 pass
         
@@ -48,23 +48,19 @@ def bulk_analyze(masterlist_name, data_label, analysis_label):
         for k,v in master_list.iteritems():
             
             try: 
-                print k
                 scan = sarpy.Scan(v[data_label][0])           
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+            
+                if (not analysis_label in [analysis_label]) or forceVal is True:
+                    T1map_LL, T1map_fitdict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,bbox)
+                    scan.store_adata(key=analysis_label, data = T1map_LL,force = forceVal)
+                    scan.store_adata(key=analysis_label+'_fitdict', data = T1map_fitdict, force = forceVal)
+                else:
+                    print('adata already exists {0}'.format(scan.shortdirname))
+                    pass
                 
-                #T1map_LL, T1map_fitdict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,bbox)
-              
-#                try: 
-#                    scan.store_adata(key=analysis_label, data = T1map_LL)
-#                    scan.store_adata(key=analysis_label+'_fitdict', data = T1map_fitdict)
-#                except AttributeError:
-#                    print('Could not store adata for %s',scan)
-#                    pass                
             except IOError:
-                
-                print('Could not find something for {0} and {1}'.format(analysis_label,analysis_label) )
-
-                
+                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
                 pass
 
                 
@@ -73,21 +69,19 @@ def bulk_analyze(masterlist_name, data_label, analysis_label):
         for k,v in master_list.iteritems():
             
             try:
-                print k
                 scan = sarpy.Scan(v[data_label][0])           
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
-                 
-                #vtc = sarpy.fmoosvi.analysis.h_generate_VTC(scan, bbox)
-                    
-#                try: 
-#                    scan.store_adata(key=analysis_label, data = vtc)
-#                except AttributeError:
-#                    print('Could not store adata for %s',scan)
-#                    pass                      
+
+                if (not analysis_label in [analysis_label]) or forceVal is True:
+                    vtc = sarpy.fmoosvi.analysis.h_generate_VTC(scan, bbox)
+                    scan.store_adata(key=analysis_label, data = vtc, force = forceVal)
+                else:
+                    print('adata already exists {0}'.format(scan.shortdirname))
+                    pass
+                               
             except:
                 
-                print('Could not find something for {0} and {1}'.format(analysis_label,analysis_label) )
-
+                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
                 pass
     else:
         print('This type of analysis has not yet been implemented. \
