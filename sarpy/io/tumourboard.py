@@ -99,7 +99,7 @@ for k,v in master_list.iteritems():
         plt.axis('off')
         plt.text(0,.5,'\n'.join([lbl,subtitle,fname]), 
                  horizontalalignment='right', 
-                 fontsize=8, rotation='vertical')
+                 fontsize=5, rotation='vertical')
 
         if row_conf.pop('type', None) is None:
             print(lbl,'HISTO!')
@@ -134,7 +134,7 @@ for k,v in master_list.iteritems():
             bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
             plt.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
                              bbox_pxl[2]:bbox_pxl[3],col_idx],
-                       **row_sconf)        
+                       **row_conf)        
             plt.axis('off')
             plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
         row_idx += 1
