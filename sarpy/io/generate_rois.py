@@ -40,7 +40,6 @@ ioType = args.iotype
 
 #TODO: Integrate this intothe parser for cleaner code!
 
-
 try:
     adata_label = args.adata_label
 except AttributeError:

@@ -79,10 +79,35 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                     print('adata already exists {0}'.format(scan.shortdirname))
                     pass
                                
-            except:
+            except IOError:
                 
                 print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
                 pass
+
+    elif analysis_label == 'roi_check':
+        
+        for k,v in master_list.iteritems():
+            
+            try:
+                
+                if (not analysis_label in [analysis_label]) or forceVal is True:
+                    scan = sarpy.Scan(v[data_label][0])
+    
+                    roi = scan.adata['roi'].data
+                    bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+    
+                    masked_data = roi * scan.pdata[0].data
+                    
+                    scan.store_adata(key=analysis_label, data = masked_data, force = forceVal)
+                else:
+                    print('adata already exists {0}'.format(scan.shortdirname))
+                    pass
+                               
+            except IOError:
+                
+                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
+                pass            
+            
     else:
         print('This type of analysis has not yet been implemented. \
                 Do so in the wrappers file.')     
