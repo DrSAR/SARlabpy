@@ -18,7 +18,8 @@ import sarpy.fmoosvi.getters as getters
 import sarpy.ImageProcessing.resample_onto
 import math
 import copy
-
+import os
+import json
 
 def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     
@@ -416,9 +417,13 @@ def h_image_to_mask(roi_data):
             curr_slice = roi_mask[:,:,slice]
             
             mask_val = scipy.percentile(curr_slice.flatten(),95)
+                      
             curr_slice[curr_slice == mask_val] = numpy.nan
             curr_slice[numpy.isfinite(curr_slice)] = 1
+            
         return roi_mask    
+
+# TODO: WHY IS THIS HERE !?! ADD A COMMENT WHEN YOU FIGURE IT OUT! FAIL.
     
     except AttributeError:
         roi_data = roi_mask.data
@@ -428,10 +433,14 @@ def h_image_to_mask(roi_data):
             curr_slice = roi_data[:,:,slice]
             
             mask_val = scipy.percentile(curr_slice.flatten(),95)
+
+
+            
             curr_slice[curr_slice == mask_val] = numpy.nan
             curr_slice[numpy.isfinite(curr_slice)] = 1
             
         roi_mask.data = roi_data
+        
         
         return roi_mask
         
@@ -459,18 +468,25 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
 def h_generate_VTC(scan, bbox = None, pdata_num = 0):
 
     # Normalize data
-    ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scan)
-
-    # Set bounding boxes and get ready to join together
-    ndata[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = numpy.nan
-    ndata[:,:,:,-1] = numpy.nan
-
-    # Get useful params        
+    #ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scan)
+    
+    # Try without normalization
+    ndata = scan.pdata[pdata_num].data
+    
+   # Get useful params        
     x_size = ndata.shape[0]
     y_size = ndata.shape[1]
     num_slices = ndata.shape[2]
     reps = ndata.shape[3]
-
+    
+    mask = numpy.empty([x_size,y_size,num_slices,reps])
+    mask[:] = numpy.nan
+    # Set bounding boxes and get ready to join together
+    mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
+        
+    ndata[:,:,:,-1] = numpy.nan
+    
+    ndata = mask * ndata
     # Reshape it  to stitch together all the data
     nrdata = numpy.empty([x_size,y_size*reps,num_slices])
     
@@ -478,3 +494,53 @@ def h_generate_VTC(scan, bbox = None, pdata_num = 0):
         nrdata[:,:,s] = ndata[:,:,s,:].reshape([x_size,y_size*reps])
         
     return nrdata
+
+def generate_ROI(masterlist_name, data_label, adata_label = None, 
+                 ioType = None, path = None, forceVal = False):
+
+    mdata = os.path.expanduser(os.path.join(
+    '~','mdata',masterlist_name+'.json'))
+  
+    with open(mdata,'r') as master_file:
+        master_list = json.load(master_file)
+
+    if path is None:
+        path = os.path.expanduser(os.path.join('~','adata'))
+    
+    for k,v in master_list.iteritems():
+              
+        try:
+            scan = sarpy.Scan(v[data_label][0])
+            sdir = scan.shortdirname
+            sdir = sdir.replace('/','_')
+            
+            if ioType == 'export':
+                fname = os.path.join(path, sdir + '.nii')
+                scan.pdata[0].export2nii(fname)
+            
+            elif ioType == 'import':
+                    
+                if adata_label is None:
+                    adata_label = 'roi'
+                
+                fname = os.path.join(path, sdir + 'a.nii')
+                roi = nibabel.load(fname).get_data()[:,:,:,0]
+                
+                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
+                scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
+                print("saved roi in adata with generic 'roi' label")                    
+
+            else:
+                
+                print("Please specify either 'import' or 'export' \
+                for the ioType!")
+        
+        except IOError:
+            
+            print('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,data_label) )
+            pass
+
+        except:
+            raise
+            
+    print('Nifti images were processed in {0}'.format(path))
