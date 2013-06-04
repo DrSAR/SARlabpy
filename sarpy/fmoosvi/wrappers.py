@@ -12,6 +12,7 @@ import pylab
 import numpy
 import os
 import json
+import re
 
 def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
     
@@ -20,7 +21,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
         
-    if analysis_label == 'auc60':
+    if re.match('auc60', analysis_label):
 
         for k,v in master_list.iteritems():
             
@@ -43,7 +44,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 
                 pass
         
-    elif analysis_label == 'T1map_LL':
+    elif re.match('T1map_LL', analysis_label):
         
         for k,v in master_list.iteritems():
             
@@ -64,7 +65,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 pass
 
                 
-    elif analysis_label == 'vtc':
+    elif re.match('vtc', analysis_label):
         
         for k,v in master_list.iteritems():
             
