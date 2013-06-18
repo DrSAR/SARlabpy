@@ -20,6 +20,7 @@ import math
 import copy
 import os
 import json
+import nibabel
 
 def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     

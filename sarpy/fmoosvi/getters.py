@@ -158,7 +158,7 @@ def get_roi_bbox(scan, roi_adata_label = 'roi'):
     roi = scan.adata[roi_adata_label].data   
     
     # First prepare the roi array to have it contain only 0s and 1s
-    mask = where(isnan(roi),0,1) # where ever roi is nan, give it a value of 0, else 1
+    mask = numpy.where(numpy.isnan(roi),0,1) # where ever roi is nan, give it a value of 0, else 1
     
     # Next, sum up the array in the slice dimension and convert the aray to a float
     mask_sum = numpy.array(numpy.sum(mask,axis=2))
@@ -170,14 +170,14 @@ def get_roi_bbox(scan, roi_adata_label = 'roi'):
     
     a = numpy.sum(mask_sum,axis=0) 
     a[a==0] = numpy.nan 
-    a_low = numpy.where(~isnan(a))[0][0]
-    a_high = numpy.where(~isnan(a))[0][-1]
+    a_low = numpy.where(~numpy.isnan(a))[0][0]
+    a_high = numpy.where(~numpy.isnan(a))[0][-1]
  
     b = numpy.sum(mask_sum,axis=1)
     b[b==0] = numpy.nan
 
-    b_low = numpy.where(~isnan(b))[0][0]
-    b_high = numpy.where(~isnan(b))[0][-1]
+    b_low = numpy.where(~numpy.isnan(b))[0][0]
+    b_high = numpy.where(~numpy.isnan(b))[0][-1]
        
     return numpy.array([b_low, b_high, a_low, a_high])    
     
