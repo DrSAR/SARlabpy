@@ -97,7 +97,7 @@ if dt > 60*10: # Send email if dt (time diff b/w now and last update) > 10mins
 
         me = 'ubcmri7t@gmail.com'
         #you = ['stefan@phas.ubc.ca'] #,'stefan@phas.ubc.ca','clayton.wong1x@gmail.com']   # Can send to 2 recipients
-        you = ['clw9@sfu.ca']
+        you = ['stefan@phas.ubc.ca']
         #msg = MIMEMultipart('alternative')
         msg['Subject'] = 'No update to T2.json'  # "Hello %s, my name is %s" % ('john', 'mike') # Hello john, my name is mike".
         msg['From'] = me
