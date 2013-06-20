@@ -10,6 +10,8 @@ Created on Wed Jun 19 17:11:44 2013
 
 import numpy
 import sarpy
+import pylab
+import math
 import sarpy.fmoosvi.analysis
 import sarpy.fmoosvi.getters as getters
 import sarpy.ImageProcessing.resample_onto
@@ -70,7 +72,7 @@ def h_conc_from_signal(scan_object, scan_object_LL,
                 E1 = numpy.exp(-TR/data_t1map_pre.data[x,y,slice])
                 c = numpy.cos(FA)
                 
-                T1[x,y,slice,0:inj_point = data_t1map_pre.data[x,y,slice]
+                T1[x,y,slice,0:inj_point] = data_t1map_pre.data[x,y,slice]
                                
                 for rep in xrange(inj_point,reps):
                     
