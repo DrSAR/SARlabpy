@@ -93,7 +93,7 @@ def resample_onto(source_fname, target_fname):
     dims.reverse()
     return (sitk.GetArrayFromImage(output).transpose(dims), output)
 
-def resample_onto_pdata(source_pdata, target_pdata):
+def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False):
     '''
     Resamples the data 
     
@@ -106,7 +106,11 @@ def resample_onto_pdata(source_pdata, target_pdata):
         the new grid to resample source_pdata.data onto. This means that the 
         dimensions beyond the first 3 do not matter. It also means that image 
         stacks with more than just one orientation will be ignored (e.g Tri-
-        Pilot)G
+        Pilot)
+    :param boolean use_source_dims:
+        Ignore the matrix size derived from visu_pars and use actual matrix size
+        as obtained from source data. Default False (good for pdata), True
+        useful for adata that has a different shape from its parent pdata
     :return:
         resampled image as numpy.array, or maybe ITK image? or maybe nifti1?
 
@@ -132,7 +136,10 @@ def resample_onto_pdata(source_pdata, target_pdata):
     header_ref = visu_pars_2_Nifti1Header(target_pdata.visu_pars)
     aff_ref = header_ref.get_qform()
     
-    matrix_size, d1, d2 = visu_pars_2_matrix_size(source_pdata.visu_pars)
+    if use_source_dims:
+        matrix_size = source_pdata.data.shape
+    else:
+        matrix_size, d1, d2 = visu_pars_2_matrix_size(source_pdata.visu_pars)
     matrix_size_ref, d1, d2 = visu_pars_2_matrix_size(target_pdata.visu_pars)
 
     pixdim = numpy.tile(header['pixdim'][1:4], (3,1))
