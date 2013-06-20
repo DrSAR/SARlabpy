@@ -93,8 +93,7 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     
     # Data
     data = scan_object.pdata[pdata_num].data
-        
-    # Visu_pars params
+
     x_size = data.shape[0]
     y_size = data.shape[1]
     num_slices = getters.get_num_slices(scan_object,pdata_num)
@@ -224,7 +223,7 @@ def h_inj_point(scan_object, pdata_num = 0):
             print "Could not find the injection point, possibly okay" + str(slice)
             injection_point.append(0)
             
-    # look through the list of elements in injection pont and report the most common (mode)
+    # look through the list of elements in injection point and report the most common (mode)
     injection_point_counter = Counter(injection_point)
     injection_point = injection_point_counter.most_common(1)
 
@@ -393,9 +392,11 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
         # NecS3Exp= sarpy.Experiment('NecS3')
         # scan_object = NecS3Exp.studies[0].find_scan_by_protocol('04_ubcLL2')
 
+
+
 ### Other Helpers
 
-        
+
 def h_phase_from_fid(scan_object):
     
     phase_data = numpy.angle(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))

@@ -13,6 +13,7 @@ import numpy
 import os
 import json
 import re
+import sarpy.ImageProcessing.resample_onto
 
 def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
     
@@ -26,7 +27,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
         for k,v in master_list.iteritems():
             
             try:
-                scan = sarpy.Scan(v[data_label][0])           
+                scan = sarpy.Scan(v[data_label][0])
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
                 
                 if (not analysis_label in [analysis_label]) or forceVal is True:
@@ -85,7 +86,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
                 pass
 
-    elif analysis_label == 'roi_check':
+    elif re.match('roi_check',analysis_label):
         
         for k,v in master_list.iteritems():
             
@@ -95,7 +96,6 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                     scan = sarpy.Scan(v[data_label][0])
     
                     roi = scan.adata['roi'].data
-                    bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
     
                     masked_data = roi * scan.pdata[0].data
                     
@@ -103,7 +103,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 else:
                     print('adata already exists {0}'.format(scan.shortdirname))
                     pass
-                               
+                                               
             except IOError:
                 
                 print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
@@ -113,6 +113,39 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
         print('This type of analysis has not yet been implemented. \
                 Do so in the wrappers file.')     
 
+def bulk_transfer_roi(masterlist_name, src_data_label, dest_data_label, 
+                 analysis_label, forceVal = False):
+
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name+'.json'))
+    
+    with open(mdata,'r') as master_file:
+        master_list = json.load(master_file)
+          
+    for k,v in master_list.iteritems():
+        
+        try:
+            src_scan = sarpy.Scan(v[src_data_label][0])
+            dest_scan = sarpy.Scan(v[dest_data_label][0])
+            
+            curr_adata = dest_scan.adata.keys()
+                            
+            if (not analysis_label in curr_adata) or forceVal is True:
+
+                pd = dest_scan.pdata[0]
+                roi = src_scan.adata['roi']
+
+                resampled_roi = sarpy.ImageProcessing.resample_onto.\
+                resample_onto_pdata(roi,pd)
+                                                 
+                dest_scan.store_adata(key=analysis_label, data = resampled_roi,
+                                 force = forceVal)
+            else:
+                print('adata already exists {0}'.format(dest_scan.shortdirname))
+                pass                
+        except IOError:
+            
+            print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
+            pass
 
 def roi_distribution(data, roi, bins,  display_histogram = True, 
                      save_histogram = False, save_name = 'hist'):
