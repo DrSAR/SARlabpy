@@ -65,7 +65,7 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
     for slice in range(num_slices):
-        auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        auc_data[:,:,slice] = scipy.integrate.simps(numpy.isfinite(norm_data[:,:,slice,inj_point:inj_point+auc_reps]),x=time_points)
     
     # Deal with bounding boxes
 
@@ -82,7 +82,7 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
         bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
 
     else:      
-        raise ValueError('Please supply a bbox for h_fit_T1_LL')   
+        raise ValueError('Please supply a bbox for h_calculate_AUC')   
      
     return auc_data*bbox_mask
 
@@ -228,46 +228,76 @@ def h_inj_point(scan_object, pdata_num = 0):
     injection_point = injection_point_counter.most_common(1)
 
     return injection_point[0][0]+1
-    
-def h_calculate_KBS(scan_object):
-    
-    KBS = 71.16*2
-    # print('Still working on it')
-    
-    return KBS
+def h_conc_from_signal(scan_object, scan_object_LL, 
+                       adata_label = 'T1map_LL', relaxivity=4.3e-3, 
+                       bbox = None, pdata_num = 0):
 
-def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_POI):
+    ########### Getting and defining parameters
     
-    try:
-        TPQQ_POI = scan_with_POI.method.ExcPulse[3] #11.3493504066491 # 5.00591 #11.3493504066491
-        pulse_width_POI = scan_with_POI.method.ExcPulse[0]*1E-3
-    except:
-        print('Please use a scan that has a valid power level for the pulse \
-                of interest. scan_with_POI.method.ExcPulse[3]')
+    # Data
+    data = scan_object.pdata[pdata_num].data
     
-    TPQQ_BS = high_BSminus.method.BSPulse[3]
+    # resample the t1map onto the dce
+    data_t1map_pre = scan_object_LL.adata[adata_label]
     
-    integral_ratio = high_BSminus.method.ExcPulse[10] #0.071941 default from AY
+    data_t1map = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(data_t1map_pre,scan_object.pdata[pdata_num],use_source_dims=True)
 
-    #TODO: Write function to calculateKBS
-    KBS = h_calculate_KBS(high_BSminus)
-    gamma = 267.513e6
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    num_slices = getters.get_num_slices(scan_object,pdata_num)
     
-    # Get phase data from fid
-    offset = h_phase_from_fid(zero_BSplus) - h_phase_from_fid(zero_BSminus)
-    phase_diff = h_phase_from_fid(high_BSplus) - h_phase_from_fid(high_BSminus) + offset
+    # Method params
+    #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
+    reps =  scan_object.method.PVM_NRepetitions
     
-    # Calculate B1 peak
-    B1peak = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
+    TR = scan_object.method.PVM_RepetitionTime
+    FA = math.radians(scan_object.acqp.ACQ_flip_angle)
     
-    # Calculate Flip Angle for the pulse of interest
-    alpha_BS = (gamma*B1peak/10000) * (math.pow(10,(TPQQ_BS-TPQQ_POI)/20)) *\
-                integral_ratio*pulse_width_POI
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object, pdata_num = 0)    
+    
+    # Deal with bounding boxes
 
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+       
+    if bbox.shape == (4,):            
+    
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
 
-    return alpha_BS
+    else:      
+        raise ValueError('Please supply a bbox for h_conc_from_signal')   
+
+    T1 = numpy.empty([x_size,y_size,num_slices,reps])
+    T1[:] = numpy.nan
     
+    for x in xrange(bbox[0],bbox[1]):
+        for y in xrange(bbox[2],bbox[3]):
+            for slice in xrange(num_slices):
+                               
+                baseline_s = numpy.mean(data[x,y,slice,0:inj_point])
+                
+                E1 = numpy.exp(-TR/data_t1map_pre.data[x,y,slice])
+                c = numpy.cos(FA)
+                
+                T1[x,y,slice,0:inj_point] = data_t1map_pre.data[x,y,slice]
+                               
+                for rep in xrange(inj_point,reps):
+                    
+                    s = data[x,y,slice,rep] / baseline_s
+                    E2 = (-E1*c + E1*s - s + 1) / (E1*s*c - E1*c - s*c +1)
+                    
+                    T1[x,y,slice,rep] = -TR / numpy.log(E2)
     
+    T1baseline = data_t1map_pre.data*bbox_mask
+    T1baseline =  numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),reps)
+    conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
+                
+    return conc
 ### T1 fitting section
     
 ##############
@@ -385,7 +415,7 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
     T1[T1<0] = numpy.nan
     T1[T1>1e4] = numpy.nan
 
-    return T1, fit_results
+    return numpy.squeeze(T1), fit_results
                     
         #TODO: Implement code to deal with other methos of calculating T1
         # e.g., IR, VFA
@@ -546,3 +576,47 @@ def generate_ROI(masterlist_name, data_label, adata_label = None,
             raise
             
     print('Nifti images were processed in {0}'.format(path))
+
+
+## Not working, or of unknown reliability
+
+    
+def h_calculate_KBS(scan_object):
+    
+    KBS = 71.16*2
+    # print('Still working on it')
+    
+    return KBS
+
+def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_POI):
+    
+    try:
+        TPQQ_POI = scan_with_POI.method.ExcPulse[3] #11.3493504066491 # 5.00591 #11.3493504066491
+        pulse_width_POI = scan_with_POI.method.ExcPulse[0]*1E-3
+    except:
+        print('Please use a scan that has a valid power level for the pulse \
+                of interest. scan_with_POI.method.ExcPulse[3]')
+    
+    TPQQ_BS = high_BSminus.method.BSPulse[3]
+    
+    integral_ratio = high_BSminus.method.ExcPulse[10] #0.071941 default from AY
+
+    #TODO: Write function to calculateKBS
+    KBS = h_calculate_KBS(high_BSminus)
+    gamma = 267.513e6
+    
+    # Get phase data from fid
+    offset = h_phase_from_fid(zero_BSplus) - h_phase_from_fid(zero_BSminus)
+    phase_diff = h_phase_from_fid(high_BSplus) - h_phase_from_fid(high_BSminus) + offset
+    
+    # Calculate B1 peak
+    B1peak = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
+    
+    # Calculate Flip Angle for the pulse of interest
+    alpha_BS = (gamma*B1peak/10000) * (math.pow(10,(TPQQ_BS-TPQQ_POI)/20)) *\
+                integral_ratio*pulse_width_POI
+
+
+    return alpha_BS
+    
+    
