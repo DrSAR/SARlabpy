@@ -65,7 +65,7 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
     for slice in range(num_slices):
-        auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        auc_data[:,:,slice] = scipy.integrate.simps(numpy.isfinite(norm_data[:,:,slice,inj_point:inj_point+auc_reps]),x=time_points)
     
     # Deal with bounding boxes
 
@@ -82,7 +82,7 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
         bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
 
     else:      
-        raise ValueError('Please supply a bbox for h_fit_T1_LL')   
+        raise ValueError('Please supply a bbox for h_calculate_AUC')   
      
     return auc_data*bbox_mask
 
@@ -93,8 +93,7 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     
     # Data
     data = scan_object.pdata[pdata_num].data
-        
-    # Visu_pars params
+
     x_size = data.shape[0]
     y_size = data.shape[1]
     num_slices = getters.get_num_slices(scan_object,pdata_num)
@@ -102,6 +101,10 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     # Method params
     #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
     reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
 
     ## Check for bbox traits and create bbox_mask to output only partial data
 
@@ -128,32 +131,11 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-    try:
-        for slice in range(num_slices):
-            baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
-            norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
-    except ValueError: # Basically means there is incomplete dce data
-        
-        reps =  scan_object.pdata[pdata_num].data.shape[-1]
-        norm_data = numpy.empty([x_size,y_size,num_slices,reps])
-        
-        bbox_mask = numpy.empty([x_size,y_size])
 
-        bbox_mask[:] = numpy.nan        
-        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
-    
-        # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
-        # Next tile for reps
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)        
-        
+    for slice in range(num_slices):
+        baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
+        norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
 
-        for slice in range(num_slices):
-            baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
-            norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
-            
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
-     
     return norm_data*bbox_mask
  
 def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
@@ -224,49 +206,154 @@ def h_inj_point(scan_object, pdata_num = 0):
             print "Could not find the injection point, possibly okay" + str(slice)
             injection_point.append(0)
             
-    # look through the list of elements in injection pont and report the most common (mode)
+    # look through the list of elements in injection point and report the most common (mode)
     injection_point_counter = Counter(injection_point)
     injection_point = injection_point_counter.most_common(1)
 
     return injection_point[0][0]+1
-    
-def h_calculate_KBS(scan_object):
-    
-    KBS = 71.16*2
-    # print('Still working on it')
-    
-    return KBS
 
-def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_POI):
+def h_calculate_AUGC(scan_object, adata_label='gd_conc', bbox = None, time = 60, pdata_num = 0):
     
-    try:
-        TPQQ_POI = scan_with_POI.method.ExcPulse[3] #11.3493504066491 # 5.00591 #11.3493504066491
-        pulse_width_POI = scan_with_POI.method.ExcPulse[0]*1E-3
-    except:
-        print('Please use a scan that has a valid power level for the pulse \
-                of interest. scan_with_POI.method.ExcPulse[3]')
-    
-    TPQQ_BS = high_BSminus.method.BSPulse[3]
-    
-    integral_ratio = high_BSminus.method.ExcPulse[10] #0.071941 default from AY
+    """
+    Returns an area under the gadolinium concentration curve adata for the scan object
 
-    #TODO: Write function to calculateKBS
-    KBS = h_calculate_KBS(high_BSminus)
-    gamma = 267.513e6
+    :param object scan_object: scan object from a study
+    :param integer pdata_num: reconstruction number, according to python numbering.
+            default reconstruction is pdata_num = 0.
+    :return: array with augc data
+    """
+
+    # Get the concentration data stored as an adata
+    data = scan_object.adata[adata_label].data
     
-    # Get phase data from fid
-    offset = h_phase_from_fid(zero_BSplus) - h_phase_from_fid(zero_BSminus)
-    phase_diff = h_phase_from_fid(high_BSplus) - h_phase_from_fid(high_BSminus) + offset
     
-    # Calculate B1 peak
-    B1peak = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
+    ########### Getting and defining parameters
     
-    # Calculate Flip Angle for the pulse of interest
-    alpha_BS = (gamma*B1peak/10000) * (math.pow(10,(TPQQ_BS-TPQQ_POI)/20)) *\
-                integral_ratio*pulse_width_POI
+    # Visu_pars params
+    num_slices = getters.get_num_slices(scan_object,pdata_num)
+    phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
+  
+    # Method params
+    repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
+
+    # Calculated parms
+    time_per_rep = repetition_time * phase_encodes
+    augc_reps = int(numpy.round(time / time_per_rep))
+    time_points = numpy.arange(time_per_rep,time_per_rep*augc_reps + time_per_rep,time_per_rep)
+
+    ########### Start AUGC code
+      
+    # Determine point of injection by averaging one slice in the entire image
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
+    
+    # Size info
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    num_slices = data.shape[2]
+    
+    # Now calculate the actual AUGC
+    augc_data = numpy.empty([x_size,y_size,num_slices])
+    
+    for slice in range(num_slices):
+        augc_data[:,:,slice] = scipy.integrate.simps(numpy.isfinite(data[:,:,slice,inj_point:inj_point+augc_reps]),x=time_points)
+    
+    # Deal with bounding boxes
+
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+       
+    if bbox.shape == (4,):            
+    
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+
+    else:      
+        raise ValueError('Please supply a bbox for h_calculate_AUGC')   
+
+        # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
+    return augc_data*bbox_mask     
+    
+def h_conc_from_signal(scan_object, scan_object_T1map, 
+                       adata_label = 'T1map_LL', bbox = None,
+                       relaxivity=4.3e-3, pdata_num = 0):
+
+    ########### Getting and defining parameters
+    
+    # Data
+    data = scan_object.pdata[pdata_num].data
+    
+    # resample the t1map onto the dce
+    data_t1map_pre = scan_object_T1map.adata[adata_label]
+    
+    data_t1map = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(data_t1map_pre,scan_object.pdata[pdata_num],use_source_dims=True)
+
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    num_slices = getters.get_num_slices(scan_object,pdata_num)
+    
+    # Method params
+    #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
+    reps =  scan_object.method.PVM_NRepetitions
+
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+    
+    
+    TR = scan_object.method.PVM_RepetitionTime
+    FA = math.radians(scan_object.acqp.ACQ_flip_angle)
+    
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object, pdata_num = 0)    
+    
+    # Deal with bounding boxes
+
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+       
+    if bbox.shape == (4,):            
+    
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+
+    else:      
+        raise ValueError('Please supply a bbox for h_conc_from_signal')   
+
+    T1 = numpy.empty([x_size,y_size,num_slices,reps])
+    T1[:] = numpy.nan
+    
+    for x in xrange(bbox[0],bbox[1]):
+        for y in xrange(bbox[2],bbox[3]):
+            for slice in xrange(num_slices):
+                               
+                baseline_s = numpy.mean(data[x,y,slice,0:inj_point])
+                
+                E1 = numpy.exp(-TR/data_t1map_pre.data[x,y,slice])
+                c = numpy.cos(FA)
+                
+                T1[x,y,slice,0:inj_point] = data_t1map_pre.data[x,y,slice]
+                               
+                for rep in xrange(inj_point,reps):
+                    
+                    s = data[x,y,slice,rep] / baseline_s
+                    E2 = (-E1*c + E1*s - s + 1) / (E1*s*c - E1*c - s*c +1)
+                    
 
 
-    return alpha_BS
+    # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
+
+    T1baseline = numpy.squeeze(data_t1map_pre.data)*bbox_mask
+    T1baseline =  numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),reps)
+    conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
+                
+    return conc
     
     
 ### T1 fitting section
@@ -386,16 +473,18 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
     T1[T1<0] = numpy.nan
     T1[T1>1e4] = numpy.nan
 
-    return T1, fit_results
+    return numpy.squeeze(T1), fit_results
                     
         #TODO: Implement code to deal with other methos of calculating T1
         # e.g., IR, VFA
         # NecS3Exp= sarpy.Experiment('NecS3')
         # scan_object = NecS3Exp.studies[0].find_scan_by_protocol('04_ubcLL2')
 
+
+
 ### Other Helpers
 
-        
+
 def h_phase_from_fid(scan_object):
     
     phase_data = numpy.angle(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
@@ -545,3 +634,47 @@ def generate_ROI(masterlist_name, data_label, adata_label = None,
             raise
             
     print('Nifti images were processed in {0}'.format(path))
+
+
+## Not working, or of unknown reliability
+
+    
+def h_calculate_KBS(scan_object):
+    
+    KBS = 71.16*2
+    # print('Still working on it')
+    
+    return KBS
+
+def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_POI):
+    
+    try:
+        TPQQ_POI = scan_with_POI.method.ExcPulse[3] #11.3493504066491 # 5.00591 #11.3493504066491
+        pulse_width_POI = scan_with_POI.method.ExcPulse[0]*1E-3
+    except:
+        print('Please use a scan that has a valid power level for the pulse \
+                of interest. scan_with_POI.method.ExcPulse[3]')
+    
+    TPQQ_BS = high_BSminus.method.BSPulse[3]
+    
+    integral_ratio = high_BSminus.method.ExcPulse[10] #0.071941 default from AY
+
+    #TODO: Write function to calculateKBS
+    KBS = h_calculate_KBS(high_BSminus)
+    gamma = 267.513e6
+    
+    # Get phase data from fid
+    offset = h_phase_from_fid(zero_BSplus) - h_phase_from_fid(zero_BSminus)
+    phase_diff = h_phase_from_fid(high_BSplus) - h_phase_from_fid(high_BSminus) + offset
+    
+    # Calculate B1 peak
+    B1peak = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
+    
+    # Calculate Flip Angle for the pulse of interest
+    alpha_BS = (gamma*B1peak/10000) * (math.pow(10,(TPQQ_BS-TPQQ_POI)/20)) *\
+                integral_ratio*pulse_width_POI
+
+
+    return alpha_BS
+    
+    
