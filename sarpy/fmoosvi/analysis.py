@@ -101,6 +101,10 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     # Method params
     #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
     reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
 
     ## Check for bbox traits and create bbox_mask to output only partial data
 
@@ -127,32 +131,11 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-    try:
-        for slice in range(num_slices):
-            baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
-            norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
-    except ValueError: # Basically means there is incomplete dce data
-        
-        reps =  scan_object.pdata[pdata_num].data.shape[-1]
-        norm_data = numpy.empty([x_size,y_size,num_slices,reps])
-        
-        bbox_mask = numpy.empty([x_size,y_size])
 
-        bbox_mask[:] = numpy.nan        
-        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
-    
-        # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
-        # Next tile for reps
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)        
-        
+    for slice in range(num_slices):
+        baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
+        norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
 
-        for slice in range(num_slices):
-            baseline = numpy.mean(data[:,:,slice,0:inj_point],axis=2)
-            norm_data[:,:,slice,:] = (data[:,:,slice,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
-            
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
-     
     return norm_data*bbox_mask
  
 def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
@@ -228,9 +211,75 @@ def h_inj_point(scan_object, pdata_num = 0):
     injection_point = injection_point_counter.most_common(1)
 
     return injection_point[0][0]+1
-def h_conc_from_signal(scan_object, scan_object_LL, 
-                       adata_label = 'T1map_LL', relaxivity=4.3e-3, 
-                       bbox = None, pdata_num = 0):
+
+def h_calculate_AUGC(scan_object, adata_label='gd_conc', bbox = None, time = 60, pdata_num = 0):
+    
+    """
+    Returns an area under the gadolinium concentration curve adata for the scan object
+
+    :param object scan_object: scan object from a study
+    :param integer pdata_num: reconstruction number, according to python numbering.
+            default reconstruction is pdata_num = 0.
+    :return: array with augc data
+    """
+
+    # Get the concentration data stored as an adata
+    data = scan_object.adata[adata_label].data
+    
+    
+    ########### Getting and defining parameters
+    
+    # Visu_pars params
+    num_slices = getters.get_num_slices(scan_object,pdata_num)
+    phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
+  
+    # Method params
+    repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
+
+    # Calculated parms
+    time_per_rep = repetition_time * phase_encodes
+    augc_reps = int(numpy.round(time / time_per_rep))
+    time_points = numpy.arange(time_per_rep,time_per_rep*augc_reps + time_per_rep,time_per_rep)
+
+    ########### Start AUGC code
+      
+    # Determine point of injection by averaging one slice in the entire image
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
+    
+    # Size info
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    num_slices = data.shape[2]
+    
+    # Now calculate the actual AUGC
+    augc_data = numpy.empty([x_size,y_size,num_slices])
+    
+    for slice in range(num_slices):
+        augc_data[:,:,slice] = scipy.integrate.simps(numpy.isfinite(data[:,:,slice,inj_point:inj_point+augc_reps]),x=time_points)
+    
+    # Deal with bounding boxes
+
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+       
+    if bbox.shape == (4,):            
+    
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+
+    else:      
+        raise ValueError('Please supply a bbox for h_calculate_AUGC')   
+
+        # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
+    return augc_data*bbox_mask     
+    
+def h_conc_from_signal(scan_object, scan_object_T1map, 
+                       adata_label = 'T1map_LL', bbox = None,
+                       relaxivity=4.3e-3, pdata_num = 0):
 
     ########### Getting and defining parameters
     
@@ -238,7 +287,7 @@ def h_conc_from_signal(scan_object, scan_object_LL,
     data = scan_object.pdata[pdata_num].data
     
     # resample the t1map onto the dce
-    data_t1map_pre = scan_object_LL.adata[adata_label]
+    data_t1map_pre = scan_object_T1map.adata[adata_label]
     
     data_t1map = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(data_t1map_pre,scan_object.pdata[pdata_num],use_source_dims=True)
 
@@ -249,6 +298,11 @@ def h_conc_from_signal(scan_object, scan_object_LL,
     # Method params
     #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
     reps =  scan_object.method.PVM_NRepetitions
+
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+    
     
     TR = scan_object.method.PVM_RepetitionTime
     FA = math.radians(scan_object.acqp.ACQ_flip_angle)
@@ -291,13 +345,17 @@ def h_conc_from_signal(scan_object, scan_object_LL,
                     s = data[x,y,slice,rep] / baseline_s
                     E2 = (-E1*c + E1*s - s + 1) / (E1*s*c - E1*c - s*c +1)
                     
-                    T1[x,y,slice,rep] = -TR / numpy.log(E2)
-    
-    T1baseline = data_t1map_pre.data*bbox_mask
+
+
+    # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
+
+    T1baseline = numpy.squeeze(data_t1map_pre.data)*bbox_mask
     T1baseline =  numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),reps)
     conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
                 
     return conc
+    
+    
 ### T1 fitting section
     
 ##############

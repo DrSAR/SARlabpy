@@ -21,7 +21,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
     
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
-        
+                      
     if re.match('augc60', analysis_label):
         
         for k,v in master_list.iteritems():
@@ -32,8 +32,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 
                 if (not analysis_label in scan.adata.keys()) or forceVal is True:
                 
-                    print ("\n \n this might be working?")
-                    curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, bbox)
+                    curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, bbox=bbox)
                     scan.store_adata(key=analysis_label, data = curr_augc, force = forceVal)
                 
                 else:
@@ -47,13 +46,15 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 pass        
         
         
-    if re.match('auc60', analysis_label):
+    elif re.match('auc60', analysis_label):
 
         for k,v in master_list.iteritems():
             
             try:
                 scan = sarpy.Scan(v[data_label][0])
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+
+                if (not analysis_label in scan.adata.keys()) or forceVal is True:
                 
                     curr_auc = sarpy.fmoosvi.analysis.h_calculate_AUC(scan, bbox)
                     scan.store_adata(key=analysis_label, data = curr_auc, force = forceVal)
@@ -135,6 +136,46 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
     else:
         print('This type of analysis has not yet been implemented. \
                 Do so in the wrappers file.')     
+
+def conc_from_signal(masterlist_name, data_label, data_label_T1map, 
+                     adata_label = 'T1map_LL', analysis_label='gd_conc', 
+                     forceVal = False):
+
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name+'.json'))
+    
+    with open(mdata,'r') as master_file:
+        master_list = json.load(master_file)
+        
+    for k,v in master_list.iteritems():
+        
+        try:
+            scan = sarpy.Scan(v[data_label][0])
+            scan_T1map = sarpy.Scan(v[data_label_T1map][0])
+            bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+            
+            if (not analysis_label in scan.adata.keys()) or forceVal is True:
+            
+                conc = sarpy.fmoosvi.analysis.h_conc_from_signal(scan, scan_T1map, adata_label, bbox)
+                scan.store_adata(key=analysis_label, data = conc, force = forceVal)
+            
+            else:
+                print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
+                pass 
+            
+        except IOError:
+            
+            print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
+            
+            pass          
+
+
+
+
+
+
+
+
+
 
 def bulk_transfer_roi(masterlist_name, src_data_label, dest_data_label, 
                  analysis_label, forceVal = False):
