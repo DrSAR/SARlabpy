@@ -22,6 +22,31 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
         
+    if re.match('augc60', analysis_label):
+        
+        for k,v in master_list.iteritems():
+            
+            try:
+                scan = sarpy.Scan(v[data_label][0])
+                bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+                
+                if (not analysis_label in scan.adata.keys()) or forceVal is True:
+                
+                    print ("\n \n this might be working?")
+                    curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, bbox)
+                    scan.store_adata(key=analysis_label, data = curr_augc, force = forceVal)
+                
+                else:
+                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
+                    pass 
+                
+            except IOError:
+                
+                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
+                
+                pass        
+        
+        
     if re.match('auc60', analysis_label):
 
         for k,v in master_list.iteritems():
@@ -30,13 +55,11 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 scan = sarpy.Scan(v[data_label][0])
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
                 
-                if (not analysis_label in [analysis_label]) or forceVal is True:
-                
                     curr_auc = sarpy.fmoosvi.analysis.h_calculate_AUC(scan, bbox)
                     scan.store_adata(key=analysis_label, data = curr_auc, force = forceVal)
                 
                 else:
-                    print('adata already exists {0}'.format(scan.shortdirname))
+                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
                     pass 
                 
             except IOError:
@@ -53,12 +76,12 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 scan = sarpy.Scan(v[data_label][0])           
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
             
-                if (not analysis_label in [analysis_label]) or forceVal is True:
+                if (not analysis_label in scan.adata.keys()) or forceVal is True:
                     T1map_LL, T1map_fitdict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,bbox)
                     scan.store_adata(key=analysis_label, data = T1map_LL,force = forceVal)
                     scan.store_adata(key=analysis_label+'_fitdict', data = T1map_fitdict, force = forceVal)
                 else:
-                    print('adata already exists {0}'.format(scan.shortdirname))
+                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
                     pass
                 
             except IOError:
@@ -74,11 +97,11 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                 scan = sarpy.Scan(v[data_label][0])           
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
 
-                if (not analysis_label in [analysis_label]) or forceVal is True:
+                if (not analysis_label in scan.adata.keys()) or forceVal is True:
                     vtc = sarpy.fmoosvi.analysis.h_generate_VTC(scan, bbox)
                     scan.store_adata(key=analysis_label, data = vtc, force = forceVal)
                 else:
-                    print('adata already exists {0}'.format(scan.shortdirname))
+                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
                     pass
                                
             except IOError:
@@ -92,7 +115,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
             
             try:
                 
-                if (not analysis_label in [analysis_label]) or forceVal is True:
+                if (not analysis_label in scan.adata.keys()) or forceVal is True:
                     scan = sarpy.Scan(v[data_label][0])
     
                     roi = scan.adata['roi'].data
@@ -101,7 +124,7 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                     
                     scan.store_adata(key=analysis_label, data = masked_data, force = forceVal)
                 else:
-                    print('adata already exists {0}'.format(scan.shortdirname))
+                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
                     pass
                                                
             except IOError:
