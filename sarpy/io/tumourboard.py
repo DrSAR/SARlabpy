@@ -100,14 +100,15 @@ for k,v in master_list.iteritems():
         plt.text(0,.5,'\n'.join([lbl,subtitle,fname]), 
                  horizontalalignment='right', 
                  fontsize=5, rotation='vertical')
+    
+        # allowed types can be:
+        # img, plot, vtc, histo
 
-        if row_conf.pop('type', None) is None:
-            print(lbl,'HISTO!')
-        elif fname == '':
-            plt.title('no data found', fontsize=8)
-            row_idx += 1
-            continue
-        else:
+        if row_conf.pop('type', None) == 'img':
+            if fname == '':
+                plt.title('no data found', fontsize=8)
+                row_idx += 1
+                continue
             scn = sarpy.Scan(fname)
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
             adata_key = row_conf.pop('adata', None)
@@ -116,10 +117,9 @@ for k,v in master_list.iteritems():
             else:
                 data = scn.pdata[0]
             xdata = data.data
-        
-        resample_flag = row_conf.pop('resample', False) 
-        if resample_flag and config.getboolean(row,'resample'):
-            raise NotImplementedError('please fix resampling')
+            resample_flag = row_conf.pop('resample', False) 
+            if resample_flag and config.getboolean(row,'resample'):
+                raise NotImplementedError('please fix resampling')
             #print('resampling {0}\n{1}\n onto {2}'.format(scn,data,ref_data))
             #src_filename = tempfile.mktemp(suffix='.nii')
             #data.export2nii(src_filename)            
@@ -129,20 +129,23 @@ for k,v in master_list.iteritems():
             #find out where the 0 1 etc end up.
 #            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
 
-        for col_idx in xrange(min(n_cols, xdata.shape[2])):
-            fig.add_subplot(G[row_idx, col_idx])
-            bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
-            plt.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
-                             bbox_pxl[2]:bbox_pxl[3],col_idx],
-                       **row_conf)        
-            plt.axis('off')
-            plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
-        row_idx += 1
+            for col_idx in xrange(min(n_cols, xdata.shape[2])):
+                fig.add_subplot(G[row_idx, col_idx])
+                bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
+                plt.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
+                                 bbox_pxl[2]:bbox_pxl[3],col_idx],
+                           **row_conf)        
+                plt.axis('off')
+                plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
+            row_idx += 1
         
-    # Figure spacing adjustments
-    #fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
-    #G.tight_layout(fig, h_pad = 0.01, w_pad = 0.01)
-    #G.update(right = 0.87)
+        elif row_conf.pop('type', None) == 'vtc':
+            raise NotImplementedError('do not know how to draw VTCs')
+        elif row_conf.pop('type', None) == 'plot':
+            raise NotImplementedError('do not know how to draw plots')
+        elif row_conf.pop('type', None) == 'histo':
+            raise NotImplementedError('do not know how to draw histos')
+
         
     testPDF.savefig(fig)      
     
