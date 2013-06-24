@@ -57,7 +57,7 @@ if args.test:
     print(args)
 
 # load the master_list to have easy access to data
-with open(args.master_list,'r') as master_file:
+with open(os.path.join(os.path.expanduser('~/mdata'),args.master_list),'r') as master_file:
     master_list = json.load(master_file)
 
 # determine the layout
@@ -147,7 +147,8 @@ for k,v in master_list.iteritems():
     testPDF.savefig(fig)      
     
     # Saving Figure    
-    filename = os.path.join(args.output, k + '.png')                
+    outputfilename = os.path.expanduser(args.output)
+    filename = os.path.join(outputfilename, k + '.png')                
     plt.savefig(filename, bbox_inches=0, dpi=500)
     plt.close('all')
 

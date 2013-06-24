@@ -7,6 +7,7 @@ A config file is used to describe the construction of this master list.
 
 Copyright: SARlab members, UBC, Vancouver, 2013
 """
+import os
 import argparse
 import collections
 import ConfigParser
@@ -116,9 +117,10 @@ if args.test:
     print('%s\n' % args)
     pprint.pprint(json.loads(json.dumps(master_sheet)))
 else:
-    with open(args.output,'w') as outfile:
+    outputfilename = os.path.join(os.path.expanduser('~/mdata'),args.output)
+    with open(outputfilename,'w') as outfile:
         json_str = json.dumps(master_sheet, outfile, indent=4)
         y = re.sub(r'\s\s+(\d+)', lambda match: r' {}'.format(
                     match.group(1), json_str), json_str)
         outfile.write(y)
-        print('wrote to %s' % args.output)
+        print('wrote to %s' % outputfilename)
