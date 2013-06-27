@@ -179,6 +179,15 @@ def conc_from_signal(masterlist_name, data_label, data_label_T1map,
 
 def bulk_transfer_roi(masterlist_name, src_data_label, dest_data_label, 
                  analysis_label, forceVal = False):
+    '''
+    Move an ROI from one scan to another. E.g., Moving an roi from an anatomy 
+    scan to a LL scan. 
+
+    Example:
+        
+        sarpy.fmoosvi.wrappers.bulk_transfer_roi(masterlist, src_data_label, 
+                                                  dest_data_label, analysis_label)
+    '''
 
     mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name+'.json'))
     

@@ -65,8 +65,13 @@ rows = [row for row in config.sections() if not((row=='Defaults'))]
 n_rows = len(rows)
 ref_lbl = config.get(args.ref_row,'label')
 
-testPDF = PdfPages('testPDF.pdf')
+# Start a PDF file of all the animals
 
+#TODO: figure out a way to capture the root of the experiment fast. This willwork
+# for XXXSY. But will fail for Y >9
+ 
+rootName = sarpy.Experiment(master_list.keys()[0]).root[0:5]
+testPDF = PdfPages(os.path.join(os.path.expanduser('~/mdata'),rootName,rootName+'.pdf'))
 
 # for every patient we will create the same board
 for k,v in master_list.iteritems():
@@ -79,13 +84,11 @@ for k,v in master_list.iteritems():
     ref_data.export2nii(ref_filename)
     n_cols=ref_data.data.shape[2]
 
-    # Start a PDF file of all the animals
     
     title = k
-    # assume an inch x inch for each square with an addition half inch all around
-    fig = plt.figure(figsize = (n_cols+1, n_rows+1))
+    fig = plt.figure()
     fig.suptitle(k)
-    G = plt.matplotlib.gridspec.GridSpec(n_rows, n_cols)   
+    G = plt.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
     print('\n'+'-'*80+'\n'+title)
 
     row_idx = 0
@@ -97,9 +100,9 @@ for k,v in master_list.iteritems():
         bbox = numpy.array([float(x) for x in v[lbl][1]])
         fig.add_subplot(G[row_idx, 0])
         plt.axis('off')
-        plt.text(0,.5,'\n'.join([lbl,subtitle,fname]), 
-                 horizontalalignment='right', 
-                 fontsize=5, rotation='vertical')
+        plt.text(-0.15,0.5,'\n'.join([lbl,subtitle,fname]), 
+                 horizontalalignment='center', 
+                 fontsize=3, rotation='vertical')
     
         # allowed types can be:
         # img, plot, vtc, histo
@@ -136,7 +139,10 @@ for k,v in master_list.iteritems():
                                  bbox_pxl[2]:bbox_pxl[3],col_idx],
                            **row_conf)        
                 plt.axis('off')
-                plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
+                
+                if row_idx == 0:
+                    plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
+                    
             row_idx += 1
         
         elif row_conf.pop('type', None) == 'vtc':

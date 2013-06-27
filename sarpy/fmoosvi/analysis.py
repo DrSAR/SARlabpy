@@ -589,13 +589,13 @@ def generate_ROI(masterlist_name, data_label, adata_label = None,
                  ioType = None, path = None, forceVal = False):
 
     mdata = os.path.expanduser(os.path.join(
-    '~','mdata',masterlist_name+'.json'))
+    '~','mdata',masterlist_name,masterlist_name+'.json'))
   
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
 
     if path is None:
-        path = os.path.expanduser(os.path.join('~','adata'))
+        path = os.path.expanduser(os.path.join('~','mdata',masterlist_name))
     
     for k,v in master_list.iteritems():
               
