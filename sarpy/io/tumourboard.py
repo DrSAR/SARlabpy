@@ -148,6 +148,33 @@ for k,v in master_list.iteritems():
         elif row_conf.pop('type', None) == 'vtc':
             raise NotImplementedError('do not know how to draw VTCs')
         elif row_conf.pop('type', None) == 'plot':
+
+            if fname == '':
+                plt.title('no data found', fontsize=8)
+                row_idx += 1
+                continue
+
+            scn = sarpy.Scan(fname)
+            print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+            adata_key = row_conf.pop('adata', None)
+            if adata_key is not None:
+                data = scn.adata[adata_key]
+            else:
+                data = scn.pdata[0]
+            xdata = data.data
+
+            for col_idx in xrange(min(n_cols, xdata.shape[2])):
+                fig.add_subplot(G[row_idx, col_idx])
+                bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
+                plt.plot(xdata[0,:],xdata[1,:],
+                           **row_conf)        
+                #plt.axis('off')
+                
+                if row_idx == 0:
+                    plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
+                    
+            row_idx += 1
+
             raise NotImplementedError('do not know how to draw plots')
         elif row_conf.pop('type', None) == 'histo':
             raise NotImplementedError('do not know how to draw histos')
