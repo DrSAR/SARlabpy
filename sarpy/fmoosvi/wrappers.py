@@ -15,38 +15,17 @@ import json
 import re
 import sarpy.ImageProcessing.resample_onto
 
-def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
+def bulk_analyze(masterlist_name, 
+                 data_label, 
+                 analysis_label, 
+                 forceVal = False):
     
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name+'.json'))
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,masterlist_name+'.json'))
     
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
-                      
-    if re.match('augc60', analysis_label):
-        
-        for k,v in master_list.iteritems():
-            
-            try:
-                scan = sarpy.Scan(v[data_label][0])
-                bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
-                
-                if (not analysis_label in scan.adata.keys()) or forceVal is True:
-                
-                    curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, bbox=bbox)
-                    scan.store_adata(key=analysis_label, data = curr_augc, force = forceVal)
-                
-                else:
-                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
-                    pass 
-                
-            except IOError:
-                
-                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
-                
-                pass        
-        
-        
-    elif re.match('auc60', analysis_label):
+                        
+    if re.match('auc60', analysis_label):
 
         for k,v in master_list.iteritems():
             
@@ -60,13 +39,14 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                     scan.store_adata(key=analysis_label, data = curr_auc, force = forceVal)
                 
                 else:
-                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
+                    print('{0}: adata already exists {1}'.format(
+                    analysis_label,scan.shortdirname))
                     pass 
                 
             except IOError:
                 
-                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
-                
+                print('{0}: Not found: {1} and {2}'.format(
+                analysis_label,k,data_label) )                
                 pass
         
     elif re.match('T1map_LL', analysis_label):
@@ -82,11 +62,13 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                     scan.store_adata(key=analysis_label, data = T1map_LL,force = forceVal)
                     scan.store_adata(key=analysis_label+'_fitdict', data = T1map_fitdict, force = forceVal)
                 else:
-                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
-                    pass
+                    print('{0}: adata already exists {1} '.format(
+                    analysis_label,scan.shortdirname))
+                    pass 
                 
             except IOError:
-                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
+                print('{0}: Not found: {1} and {2}'.format(
+                analysis_label,k,data_label) )                
                 pass
 
                 
@@ -102,12 +84,12 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
                     vtc = sarpy.fmoosvi.analysis.h_generate_VTC(scan, bbox)
                     scan.store_adata(key=analysis_label, data = vtc, force = forceVal)
                 else:
-                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
+                    print('{0}: adata already exists {1}'.format(analysis_label,scan.shortdirname))
                     pass
                                
             except IOError:
-                
-                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
+                print('{0}: Not found: {1} and {2}'.format(
+                analysis_label,k,data_label) )                
                 pass
 
     elif re.match('roi_check',analysis_label):
@@ -115,33 +97,67 @@ def bulk_analyze(masterlist_name, data_label, analysis_label, forceVal = False):
         for k,v in master_list.iteritems():
             
             try:
-                
+                scan = sarpy.Scan(v[data_label][0])
                 if (not analysis_label in scan.adata.keys()) or forceVal is True:
-                    scan = sarpy.Scan(v[data_label][0])
-    
                     roi = scan.adata['roi'].data
-    
-                    masked_data = roi * scan.pdata[0].data
-                    
+                    masked_data = roi * scan.pdata[0].data   
                     scan.store_adata(key=analysis_label, data = masked_data, force = forceVal)
                 else:
-                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
+                    print('{0}: adata already exists {1}'.format(analysis_label,scan.shortdirname))
                     pass
                                                
             except IOError:
-                
-                print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
-                pass            
+                print('{0}: Not found: {1} and {2}'.format(
+                analysis_label,k,data_label) )                
+                pass     
             
     else:
         print('This type of analysis has not yet been implemented. \
-                Do so in the wrappers file.')     
+                Do so in the wrappers file.')
+                
+def calc_AUGC(masterlist_name,
+              data_label,
+              adata_scan_label,
+              analysis_label='augc60',
+              forceVal = False):
+                  
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,masterlist_name+'.json'))
+    
+    with open(mdata,'r') as master_file:
+        master_list = json.load(master_file)
+        
+    for k,v in master_list.iteritems():
+        
+        try:
+            scan = sarpy.Scan(v[data_label][0])
+            bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+            
+            if (not analysis_label in scan.adata.keys()) or forceVal is True:
+            
+                curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, adata_scan_label, bbox=bbox)
+                scan.store_adata(key=analysis_label, data = curr_augc, force = forceVal)
+            
+            else:
+                print('{0}: adata already exists {1} '.format(
+                analysis_label,scan.shortdirname))
+                pass 
+            
+        except IOError:
+            
+            print('{0}: Not found: {1} and {2}'.format(
+            analysis_label,k,data_label) )
+            
+            pass        
 
-def conc_from_signal(masterlist_name, data_label, data_label_T1map, 
-                     adata_label = 'T1map_LL', analysis_label='gd_conc', 
+def conc_from_signal(masterlist_name, 
+                     data_label, 
+                     data_label_T1map, 
+                     adata_label = 'T1map_LL', 
+                     analysis_label='gd_conc', 
                      forceVal = False):
 
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name+'.json'))
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,
+                                            masterlist_name+'.json'))
     
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
@@ -166,59 +182,96 @@ def conc_from_signal(masterlist_name, data_label, data_label_T1map,
             
             print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
             
-            pass          
-
-
-
-
-
-
-
-
-
-
-def bulk_transfer_roi(masterlist_name, src_data_label, dest_data_label, 
-                 analysis_label, forceVal = False):
+            pass       
+### ROI based code
+def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
     '''
     Move an ROI from one scan to another. E.g., Moving an roi from an anatomy 
     scan to a LL scan. 
+    
+    dest_adata_label: Label specifying the destination of the roi transfer    
+    
+    Note: this routine looks for the special 'roi' label. This is the canonical
+    label used to specify ROIs and other scans will 'inherit' - by way of resample
+    - this roi. 
 
     Example:
         
-        sarpy.fmoosvi.wrappers.bulk_transfer_roi(masterlist, src_data_label, 
-                                                  dest_data_label, analysis_label)
+    sarpy.fmoosvi.wrappers.bulk_transfer_roi('NecS3',dest_adata_label,
+                                             forceVal = False)
     '''
 
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name+'.json'))
+    # Set the name of the destination scan
+    dest_label = dest_adata_label + '_roi'
+
+    # Get all the studies in the experiment
+
+    exp = sarpy.Experiment(exp_name)
+    
+    for study in exp.studies:
+        adata_list = study.find_adata_scans()
+        
+        try:
+            src = sarpy.Scan(adata_list['roi'][0])                    
+            dest = sarpy.Scan(adata_list[dest_adata_label][0])      
+       
+            if (not dest_label in dest.adata.keys()) or forceVal is True:
+                
+                dest_pd = dest.pdata[0]
+                roi = src.adata['roi']
+                
+                resampled_roi = sarpy.ImageProcessing.resample_onto.\
+                    resample_onto_pdata(roi,dest_pd)
+
+                dest.store_adata(key = dest_label, data = resampled_roi, 
+                                 force = forceVal)   
+            else:
+                print('{0}: adata already exists {1}'.format(dest_label, 
+                      dest.shortdirname))
+                pass  
+
+        except KeyError:
+            print('bulk_transfer_roi: Problem with roi or dest scan for study {0}'.format(study.shortdirname))
+            pass
+
+
+def calc_enhancement_curve(masterlist_name, 
+                           data_label,
+                           analysis_label = 'ec', 
+                           roi_label = 'auc60_roi',
+                           forceVal = False):
+
+
+    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,
+                                            masterlist_name+'.json'))
     
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
-          
+        
     for k,v in master_list.iteritems():
         
         try:
-            src_scan = sarpy.Scan(v[src_data_label][0])
-            dest_scan = sarpy.Scan(v[dest_data_label][0])
+            scan = sarpy.Scan(v[data_label][0])
             
-            curr_adata = dest_scan.adata.keys()
-                            
-            if (not analysis_label in curr_adata) or forceVal is True:
-
-                pd = dest_scan.pdata[0]
-                roi = src_scan.adata['roi']
-
-                resampled_roi = sarpy.ImageProcessing.resample_onto.\
-                resample_onto_pdata(roi,pd)
-                                                 
-                dest_scan.store_adata(key=analysis_label, data = resampled_roi,
-                                 force = forceVal)
+            try: # check if the roi_label is good or not
+                roi = scan.adata[roi_label].data
+                 
+                if (not analysis_label in scan.adata.keys()) or forceVal is True:
+            
+                    conc = sarpy.fmoosvi.analysis.h_enhancement_curve(scan, roi_label)
+                    scan.store_adata(key=analysis_label, data = conc, force = forceVal)                                         
+            except KeyError:
+                print('enhancement_curve: {0} adata for scan {1} does not exist'.format(roi_label,scan.shortdirname) )
             else:
-                print('adata already exists {0}'.format(dest_scan.shortdirname))
-                pass                
+                print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
+                pass 
+            
         except IOError:
             
             print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
-            pass
+            
+            pass    
+
 
 def roi_distribution(data, roi, bins,  display_histogram = True, 
                      save_histogram = False, save_name = 'hist'):

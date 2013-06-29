@@ -138,40 +138,40 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
 
     return norm_data*bbox_mask
  
-def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
+def h_enhancement_curve(scan_object, adata_roi_label, pdata_num = 0):
 
     try:
         norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
         num_slices = norm_data.shape[-2]
-        reps = norm_data.shape[-1]        
-                
+        reps = norm_data.shape[-1]
+        
+        #Calculating the time per rep.
+        phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
+        repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
+        time_per_rep = repetition_time * phase_encodes
+        time = numpy.linspace(0,99,num=100)*time_per_rep
+                       
         ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
         new_scan_object = copy.deepcopy(scan_object)
         new_scan_object.pdata[pdata_num].data = norm_data
         data_scan = new_scan_object.pdata[pdata_num]
-        
-        print data_scan
         ## END SKETCHY BIT
         
-        roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
+        roi = scan_object.adata[adata_roi_label].data
+         
+        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi,[
+roi.shape[0], roi.shape[1], roi.shape[2],1]),reps)
 
-        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image)
-        
-        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
-roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
-
-
-        enhancement_curve = numpy.empty(shape = [num_slices, reps])
+        enhancement_curve = numpy.empty(shape = [num_slices, 2, reps])
         
         for slice in range(num_slices):
-
-            enhancement_curve[slice,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)
-
+            
+            enhancement_curve[slice,0,:] = time
+            enhancement_curve[slice,1,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)            
         return enhancement_curve
     except:    
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
-        
 
 
 def h_inj_point(scan_object, pdata_num = 0):
@@ -212,19 +212,24 @@ def h_inj_point(scan_object, pdata_num = 0):
 
     return injection_point[0][0]+1
 
-def h_calculate_AUGC(scan_object, adata_label='gd_conc', bbox = None, time = 60, pdata_num = 0):
+def h_calculate_AUGC(scan_object, adata_label, bbox = None, time = 60, pdata_num = 0):
     
     """
     Returns an area under the gadolinium concentration curve adata for the scan object
 
     :param object scan_object: scan object from a study
+    :param str adata_label: indicates the label with which gd_conc is stored
     :param integer pdata_num: reconstruction number, according to python numbering.
             default reconstruction is pdata_num = 0.
     :return: array with augc data
     """
 
     # Get the concentration data stored as an adata
-    data = scan_object.adata[adata_label].data
+
+    try:
+        data = scan_object.adata[adata_label].data
+    except KeyError:
+        print('h_caculate_AUGC: Source data {0} does not exist yet.'.format(adata_label))
     
     
     ########### Getting and defining parameters
