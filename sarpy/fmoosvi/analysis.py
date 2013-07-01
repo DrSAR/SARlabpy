@@ -65,8 +65,8 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
     for slice in range(num_slices):
-        auc_data[:,:,slice] = scipy.integrate.simps(numpy.isfinite(norm_data[:,:,slice,inj_point:inj_point+auc_reps]),x=time_points)
-    
+        auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        
     # Deal with bounding boxes
 
     if bbox is None:        
@@ -145,11 +145,16 @@ def h_enhancement_curve(scan_object, adata_roi_label, pdata_num = 0):
         num_slices = norm_data.shape[-2]
         reps = norm_data.shape[-1]
         
+        if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+            reps = scan_object.pdata[pdata_num].data.shape[-1]
+            print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+
+        
         #Calculating the time per rep.
         phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
         repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
         time_per_rep = repetition_time * phase_encodes
-        time = numpy.linspace(0,99,num=100)*time_per_rep
+        time = numpy.linspace(0,reps-1,num=reps)*time_per_rep
                        
         ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
         new_scan_object = copy.deepcopy(scan_object)

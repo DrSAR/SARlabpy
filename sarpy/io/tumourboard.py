@@ -15,9 +15,10 @@ import os
 import json
 import matplotlib
 matplotlib.use('Agg')# where did I come from !?
-import matplotlib.pyplot as plt
+import pylab
 import numpy
 import sarpy
+import sarpy.fmoosvi.getters
 import sarpy.ImageProcessing.resample_onto as sir
 import tempfile
 from matplotlib.backends.backend_pdf import PdfPages
@@ -86,9 +87,9 @@ for k,v in master_list.iteritems():
 
     
     title = k
-    fig = plt.figure()
+    fig = pylab.figure()
     fig.suptitle(k)
-    G = plt.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
+    G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
     print('\n'+'-'*80+'\n'+title)
 
     row_idx = 0
@@ -99,27 +100,44 @@ for k,v in master_list.iteritems():
         fname = v[lbl][0]
         bbox = numpy.array([float(x) for x in v[lbl][1]])
         fig.add_subplot(G[row_idx, 0])
-        plt.axis('off')
-        plt.text(-0.15,0.5,'\n'.join([lbl,subtitle,fname]), 
+        pylab.axis('off')
+        pylab.text(-0.35,0.5,'\n'.join([lbl,subtitle,fname]), 
                  horizontalalignment='center', 
                  fontsize=3, rotation='vertical')
-    
+
+        if fname == '':
+            pylab.text(0.5,0.5,'Data not available',
+                       horizontalalignment='center',
+                       fontsize=8)
+
+            row_idx += 1
+            continue
+
         # allowed types can be:
         # img, plot, vtc, histo
 
-        if row_conf.pop('type', None) == 'img':
-            if fname == '':
-                plt.title('no data found', fontsize=8)
-                row_idx += 1
-                continue
+        if row_conf.get('type', None) == 'img':
+            
+            #TODO: this statement is hre because of **row_conf in imhow
+            row_conf.pop('type', None)
+
             scn = sarpy.Scan(fname)
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
             adata_key = row_conf.pop('adata', None)
             if adata_key is not None:
                 data = scn.adata[adata_key]
+                # Set the image limits for adata
+                
+                cl = sarpy.fmoosvi.getters.get_image_clims(data.data)
+
             else:
                 data = scn.pdata[0]
+                cl = None
+                
             xdata = data.data
+            
+            
+            
             resample_flag = row_conf.pop('resample', False) 
             if resample_flag and config.getboolean(row,'resample'):
                 raise NotImplementedError('please fix resampling')
@@ -135,24 +153,45 @@ for k,v in master_list.iteritems():
             for col_idx in xrange(min(n_cols, xdata.shape[2])):
                 fig.add_subplot(G[row_idx, col_idx])
                 bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
-                plt.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
+                t=pylab.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
                                  bbox_pxl[2]:bbox_pxl[3],col_idx],
-                           **row_conf)        
-                plt.axis('off')
+                           **row_conf)
+                           
+                if cl is not None:
+                    t.set_clim(cl)
+                pylab.axis('off')
                 
                 if row_idx == 0:
-                    plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
+                    pylab.title('Slice {0}'.format(col_idx+1), fontsize=8)
                     
             row_idx += 1
         
-        elif row_conf.pop('type', None) == 'vtc':
+        elif row_conf.get('type', None) == 'vtc':
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             raise NotImplementedError('do not know how to draw VTCs')
-        elif row_conf.pop('type', None) == 'plot':
-
-            if fname == '':
-                plt.title('no data found', fontsize=8)
-                row_idx += 1
-                continue
+        elif row_conf.get('type', None) == 'plot':
 
             scn = sarpy.Scan(fname)
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
@@ -163,20 +202,37 @@ for k,v in master_list.iteritems():
                 data = scn.pdata[0]
             xdata = data.data
 
-            for col_idx in xrange(min(n_cols, xdata.shape[2])):
+            for col_idx in xrange(min(n_cols, xdata.shape[0])):
                 fig.add_subplot(G[row_idx, col_idx])
-                bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
-                plt.plot(xdata[0,:],xdata[1,:],
-                           **row_conf)        
-                #plt.axis('off')
+                pylab.plot(xdata[col_idx,0,:],xdata[col_idx,1,:])  
+
+                pylab.xlim(0,numpy.nanmax(xdata[:,0,:]))
+                pylab.ylim(0,numpy.nanmax(xdata[:,1,:]*1.3))
+                pylab.locator_params(axis='both',which='both',
+                                     nbins=3) 
+                pylab.xlabel('Time (ms)',fontsize=5)
+                pylab.ylabel('Enhancement (au)',fontsize=3)
+                
+                ax = pylab.gca()
                 
                 if row_idx == 0:
-                    plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
-                    
-            row_idx += 1
+                    pylab.title('Slice {0}'.format(col_idx+1), fontsize=8)
+                if col_idx != 0:
+                    ax.axes.get_yaxis().set_visible([])
+                    ax.axes.get_xaxis().set_visible([])
+                
+#TODO: finda way to put the axis labels on th INSIDE of the plot
+                
+                for label in ax.get_xticklabels():
+                    label.set_fontsize(2)
 
-            raise NotImplementedError('do not know how to draw plots')
-        elif row_conf.pop('type', None) == 'histo':
+                for label in ax.get_yticklabels():
+                    label.set_fontsize(2)
+
+            row_idx += 1
+            
+            
+        elif row_conf.get('type', None) == 'histo':
             raise NotImplementedError('do not know how to draw histos')
 
         
@@ -185,8 +241,8 @@ for k,v in master_list.iteritems():
     # Saving Figure    
     outputfilename = os.path.expanduser(args.output)
     filename = os.path.join(outputfilename, k + '.png')                
-    plt.savefig(filename, bbox_inches=0, dpi=500)
-    plt.close('all')
+    pylab.savefig(filename, bbox_inches=0, dpi=500)
+    pylab.close('all')
 
 #os.remove(ref_filename)
 

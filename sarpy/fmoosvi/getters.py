@@ -81,8 +81,16 @@ def get_unique_list_elements(list, idfun=None):
 
 def get_image_clims(data):
     
-    min_lim = numpy.median(data)
-    max_lim = data.max()
+    xd = data[numpy.isfinite(data)].flatten()
+    
+    mean = numpy.mean(xd)
+    std = numpy.std(xd)
+    
+    min_lim = mean - 2.5*std
+    max_lim = mean + 2.5*std
+    
+    if min_lim < 0:
+        min_lim = 0
     
     return [min_lim, max_lim]
     
@@ -178,7 +186,24 @@ def get_roi_bbox(scan, roi_adata_label = 'roi'):
 
     b_low = numpy.where(~numpy.isnan(b))[0][0]
     b_high = numpy.where(~numpy.isnan(b))[0][-1]
-       
+    
+    # Add a 2 px border around this to avoid cliping (aesthetics mostly)
+    b_low=b_low-2
+    b_high=b_high+2
+    a_low=a_low-2
+    a_high=a_high+2
+    
+    # Now perform some checks to make sure the value are within the orig. data
+    
+    if b_low < 0:
+        b_low = 0
+    if a_low < 0:
+        a_low= 0
+    if b_high > roi.shape[0]:
+        b_high = roi.shape[0]
+    if a_high > roi.shape[1]:
+        a_high = roi.shape[1]
+    
     return numpy.array([b_low, b_high, a_low, a_high])    
     
     

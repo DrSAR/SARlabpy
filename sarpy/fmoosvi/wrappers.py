@@ -45,7 +45,7 @@ def bulk_analyze(masterlist_name,
                 
             except IOError:
                 
-                print('{0}: Not found: {1} and {2}'.format(
+                print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
                 pass
         
@@ -67,7 +67,7 @@ def bulk_analyze(masterlist_name,
                     pass 
                 
             except IOError:
-                print('{0}: Not found: {1} and {2}'.format(
+                print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
                 pass
 
@@ -88,7 +88,7 @@ def bulk_analyze(masterlist_name,
                     pass
                                
             except IOError:
-                print('{0}: Not found: {1} and {2}'.format(
+                print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
                 pass
 
@@ -107,7 +107,7 @@ def bulk_analyze(masterlist_name,
                     pass
                                                
             except IOError:
-                print('{0}: Not found: {1} and {2}'.format(
+                print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
                 pass     
             
@@ -144,7 +144,7 @@ def calc_AUGC(masterlist_name,
             
         except IOError:
             
-            print('{0}: Not found: {1} and {2}'.format(
+            print('{0}: Not found {1} and {2}'.format(
             analysis_label,k,data_label) )
             
             pass        
@@ -175,14 +175,16 @@ def conc_from_signal(masterlist_name,
                 scan.store_adata(key=analysis_label, data = conc, force = forceVal)
             
             else:
-                print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
+                print('{0}: adata already exists {1} '.format(
+                analysis_label,scan.shortdirname))
                 pass 
             
         except IOError:
             
-            print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
+            print('{0}: Not found {1} and {2}'.format(
+            analysis_label,k,data_label) )
             
-            pass       
+            pass        
 ### ROI based code
 def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
     '''
@@ -268,7 +270,7 @@ def calc_enhancement_curve(masterlist_name,
             
         except IOError:
             
-            print('Not found: {0} and {1} and {2}'.format(k,data_label,analysis_label) )
+            print('{0}: Not found {1} and {2}'.format(k,data_label,analysis_label) )
             
             pass    
 
