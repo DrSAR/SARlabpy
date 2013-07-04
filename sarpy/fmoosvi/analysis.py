@@ -121,7 +121,7 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) )
 
     ## Check for bbox traits and create bbox_mask to output only partial data
 
@@ -272,7 +272,7 @@ def h_calculate_AUGC(scan_object, adata_label, bbox = None, time = 60, pdata_num
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n '.format(scan_object.shortdirname) )
     
     # there are problems with using phase encodes for certain cases (maybe 3D)
     # so now I have to use the tuid time
@@ -347,7 +347,7 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
 
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) )
     
     
     TR = scan_object.method.PVM_RepetitionTime

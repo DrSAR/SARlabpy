@@ -24,6 +24,42 @@ import tempfile
 from matplotlib.backends.backend_pdf import PdfPages
 
 
+def determine_figure_size(n_rows,n_cols):
+    
+    aspect = numpy.true_divide(n_rows,n_cols)
+       
+    if n_rows <= 4 and n_cols <= 6:
+        #moderately tested
+        figure_size = (6,5*aspect)
+        font_modifier = 0
+        
+    elif (n_rows >= 4 and n_rows <=8) and (n_cols>6 and n_cols <= 10) :
+        #moderately tested               
+
+        figure_size = (8,8*aspect)
+        font_modifier = 3
+    
+    elif n_rows <=4 and n_cols >=10:
+        #moderately tested               
+        figure_size = (10,14*aspect)
+        font_modifier = 1
+
+    elif n_rows >=8 and n_cols <=10:
+        #moderately tested        
+        figure_size = (16,8*aspect)
+        font_modifier = 6
+
+    elif n_rows > 8 and n_cols > 10:
+
+        figure_size = (10,7*aspect)
+        font_modifier = 6
+        
+    else:
+        print('row_size = {0} and col_size = {1}'.format(n_rows,n_cols))
+        raise NotImplementedError('Please code in this situation, missed it, figure size')
+        
+    return figure_size,font_modifier
+
 conf_parser = argparse.ArgumentParser(
     # Turn off help, so we print all options in response to -h
         add_help=False
@@ -76,7 +112,12 @@ testPDF = PdfPages(os.path.join(os.path.expanduser('~/mdata'),rootName,rootName+
 
 # for every patient we will create the same board
 for k,v in master_list.iteritems():
-    ref_scn = sarpy.Scan(v[ref_lbl][0])
+
+    try:
+        ref_scn = sarpy.Scan(v[ref_lbl][0])
+    except IOError:
+        print('Ref Scan load failed for {0},{1} \n \n'.format(k,ref_lbl))
+        continue
     try:
         ref_data = ref_scn.adata[config.get(defaults['ref_row'],'adata')]
     except ConfigParser.NoOptionError:
@@ -85,10 +126,11 @@ for k,v in master_list.iteritems():
     ref_data.export2nii(ref_filename)
     n_cols=ref_data.data.shape[2]
 
+    fig_size,mod = determine_figure_size(n_rows,n_cols)
     
     title = k
-    fig = pylab.figure()
-    fig.suptitle(k)
+    fig = pylab.figure(figsize=fig_size)
+    fig.suptitle(k,fontsize=10+mod)
     G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
     print('\n'+'-'*80+'\n'+title)
 
@@ -98,17 +140,25 @@ for k,v in master_list.iteritems():
         lbl =row_conf.pop('label')
         subtitle = row_conf.pop('subtitle','')
         fname = v[lbl][0]
-        bbox = numpy.array([float(x) for x in v[lbl][1]])
+        bbox_pct = numpy.array([float(x) for x in v[lbl][1]])
+        #bbox = sarpy.fmoosvi.getters.get_bbox(v,lbl)
         fig.add_subplot(G[row_idx, 0])
         pylab.axis('off')
-        pylab.text(-0.35,0.5,'\n'.join([lbl,subtitle,fname]), 
+        pylab.text(-0.5,0.5,'\n'.join([lbl,subtitle]), 
                  horizontalalignment='center', 
-                 fontsize=3, rotation='vertical')
+                 verticalalignment='center',
+                 fontsize=5+mod, rotation='vertical')
+
+        pylab.text(-0.35,0.5,'{0}'.format(fname), 
+                 horizontalalignment='center', 
+                 verticalalignment='center',
+                 fontsize=2+mod, rotation='vertical')
+
 
         if fname == '':
             pylab.text(0.5,0.5,'Data not available',
                        horizontalalignment='center',
-                       fontsize=8)
+                       fontsize=4+mod)
 
             row_idx += 1
             continue
@@ -135,9 +185,7 @@ for k,v in master_list.iteritems():
                 cl = None
                 
             xdata = data.data
-            
-            
-            
+
             resample_flag = row_conf.pop('resample', False) 
             if resample_flag and config.getboolean(row,'resample'):
                 raise NotImplementedError('please fix resampling')
@@ -152,45 +200,55 @@ for k,v in master_list.iteritems():
 
             for col_idx in xrange(min(n_cols, xdata.shape[2])):
                 fig.add_subplot(G[row_idx, col_idx])
-                bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
-                t=pylab.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
-                                 bbox_pxl[2]:bbox_pxl[3],col_idx],
-                           **row_conf)
+                bbox = (bbox_pct.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
+                t=pylab.imshow(xdata[bbox[0]:bbox[1],
+                                 bbox[2]:bbox[3],col_idx],
+                                 **row_conf)
                            
                 if cl is not None:
                     t.set_clim(cl)
                 pylab.axis('off')
                 
                 if row_idx == 0:
-                    pylab.title('Slice {0}'.format(col_idx+1), fontsize=8)
+                    pylab.title('{0}'.format(col_idx+1), fontsize=6+mod)
                     
             row_idx += 1
         
         elif row_conf.get('type', None) == 'vtc':
             
+            scn = sarpy.Scan(fname)
+            print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+            adata_key = row_conf.pop('adata', None)
             
+            assert(adata_key is not None), 'Please supply a valid label for VTC'
+            data = scn.adata[adata_key]
+            reps = data.data.shape[-1]
             
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            raise NotImplementedError('do not know how to draw VTCs')
+            for col_idx in xrange(min(n_cols, data.data.shape[0])):
+                imgdata = numpy.mean(scn.pdata[0].data[:,:,col_idx,:],axis=2)
+                vtcdata = data.data[:,:,col_idx]
+                bbox = (bbox_pct.reshape(2,2).T*imgdata.shape[0:2]).T.flatten()
+                #roi_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,'auc60_roi')
+                axs=fig.add_subplot(G[row_idx, col_idx])
+                                
+                axs.imshow(imgdata[bbox[0]:bbox[1],\
+                                   bbox[2]:bbox[3]],\
+                                   cmap='gray', interpolation='none')
+                axs.set_axis_off()
+                fig.canvas.draw()
+                
+                box = axs.get_position().bounds
+                
+                height = box[3] / (bbox[1]-bbox[0])
+                
+                for i in xrange(int(bbox[0]),int(bbox[1])):
+                    tmpax = fig.add_axes([box[0], 
+                                         box[1]+box[3]-(i-bbox[0]+1)*height, 
+                                         box[2], height])
+                    tmpax.set_axis_off()
+                    tmpax.plot(vtcdata[i,(bbox[2]*reps):(bbox[3]*reps)],
+                                       color='r', linewidth=.9)
+                                       
         elif row_conf.get('type', None) == 'plot':
 
             scn = sarpy.Scan(fname)
@@ -210,13 +268,13 @@ for k,v in master_list.iteritems():
                 pylab.ylim(0,numpy.nanmax(xdata[:,1,:]*1.3))
                 pylab.locator_params(axis='both',which='both',
                                      nbins=3) 
-                pylab.xlabel('Time (ms)',fontsize=5)
-                pylab.ylabel('Enhancement (au)',fontsize=3)
+                pylab.xlabel('Time (ms)',fontsize=0+mod)
+                pylab.ylabel('Enhancement (au)',fontsize=0+mod)                
                 
                 ax = pylab.gca()
                 
                 if row_idx == 0:
-                    pylab.title('Slice {0}'.format(col_idx+1), fontsize=8)
+                    pylab.title('{0}'.format(col_idx+1), fontsize=6+mod)
                 if col_idx != 0:
                     ax.axes.get_yaxis().set_visible([])
                     ax.axes.get_xaxis().set_visible([])
@@ -224,10 +282,10 @@ for k,v in master_list.iteritems():
 #TODO: finda way to put the axis labels on th INSIDE of the plot
                 
                 for label in ax.get_xticklabels():
-                    label.set_fontsize(2)
+                    label.set_fontsize(0+mod)
 
                 for label in ax.get_yticklabels():
-                    label.set_fontsize(2)
+                    label.set_fontsize(0+mod)
 
             row_idx += 1
             
@@ -241,9 +299,10 @@ for k,v in master_list.iteritems():
     # Saving Figure    
     outputfilename = os.path.expanduser(args.output)
     filename = os.path.join(outputfilename, k + '.png')                
-    pylab.savefig(filename, bbox_inches=0, dpi=500)
+    pylab.savefig(filename, bbox_inches=0, dpi=300)
     pylab.close('all')
 
 #os.remove(ref_filename)
 
 testPDF.close()
+
