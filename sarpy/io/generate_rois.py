@@ -16,7 +16,7 @@ import os
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-m', '--masterlist_name', type=str, required=True,
-                   help='Name of the masterlist file. e.g. NecS3. \
+                   help='Name of the masterlist file. e.g. NecS3 \
                    Usage: python generate_rois.py -m HerP2 -d axref -a roi -i export ')
 
 parser.add_argument('-d', '--data_label', type=str, required=True,
@@ -56,5 +56,5 @@ try:
 except AttributeError:
     forceVal = False
 
-sarpy.fmoosvi.analysis.generate_ROI(masterlist_name, data_label, 
+sarpy.fmoosvi.analysis.h_generate_ROI(masterlist_name, data_label, 
                                     adata_label, ioType, path, forceVal = forceVal)

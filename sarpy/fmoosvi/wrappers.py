@@ -19,9 +19,17 @@ def bulk_analyze(masterlist_name,
                  data_label, 
                  analysis_label, 
                  forceVal = False):
+                     
+    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
     
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,masterlist_name+'.json'))
-    
+    if os.path.exists(os.path.join(root+'_updated.json')):
+        
+        with open(os.path.join(root+'_updated.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()   
+    else:
+        with open(os.path.join(root+'.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()                     
+       
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
                         
@@ -35,7 +43,7 @@ def bulk_analyze(masterlist_name,
 
                 if (not analysis_label in scan.adata.keys()) or forceVal is True:
                 
-                    curr_auc = sarpy.fmoosvi.analysis.h_calculate_AUC(scan, bbox)
+                    curr_auc = sarpy.fmoosvi.analysis.h_calculate_AUC(scan, bbox)           
                     scan.store_adata(key=analysis_label, data = curr_auc, force = forceVal)
                 
                 else:
@@ -48,7 +56,11 @@ def bulk_analyze(masterlist_name,
                 print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
                 pass
-        
+            
+            except ZeroDivisionError:
+                pass            
+            
+                            
     elif re.match('T1map_LL', analysis_label):
         
         for k,v in master_list.iteritems():
@@ -109,7 +121,9 @@ def bulk_analyze(masterlist_name,
             except IOError:
                 print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
-                pass     
+                pass   
+            
+
             
     else:
         print('This type of analysis has not yet been implemented. \
@@ -121,11 +135,16 @@ def calc_AUGC(masterlist_name,
               analysis_label='augc60',
               forceVal = False):
                   
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,masterlist_name+'.json'))
+    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
     
-    with open(mdata,'r') as master_file:
-        master_list = json.load(master_file)
+    if os.path.exists(os.path.join(root+'_updated.json')):
         
+        with open(os.path.join(root+'_updated.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()   
+    else:
+        with open(os.path.join(root+'.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()                     
+       
     for k,v in master_list.iteritems():
         
         try:
@@ -156,11 +175,15 @@ def conc_from_signal(masterlist_name,
                      analysis_label='gd_conc', 
                      forceVal = False):
 
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,
-                                            masterlist_name+'.json'))
+    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
     
-    with open(mdata,'r') as master_file:
-        master_list = json.load(master_file)
+    if os.path.exists(os.path.join(root+'_updated.json')):
+        
+        with open(os.path.join(root+'_updated.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()   
+    else:
+        with open(os.path.join(root+'.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()                     
         
     for k,v in master_list.iteritems():
         
@@ -227,8 +250,11 @@ def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
 
                 dest.store_adata(key = dest_label, data = resampled_roi, 
                                  force = forceVal)   
+                                 
+                print('bulk_transfer_roi: Success. Saved {0} in {1}'.format(dest_label, 
+                              dest.shortdirname))                                 
             else:
-                print('{0}: adata already exists {1}'.format(dest_label, 
+                print('bulk_transfer_roi: {0} adata already exists {1}'.format(dest_label, 
                       dest.shortdirname))
                 pass  
 
@@ -244,11 +270,16 @@ def calc_enhancement_curve(masterlist_name,
                            forceVal = False):
 
 
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name,
-                                            masterlist_name+'.json'))
+    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
     
-    with open(mdata,'r') as master_file:
-        master_list = json.load(master_file)
+    if os.path.exists(os.path.join(root+'_updated.json')):
+        
+        with open(os.path.join(root+'_updated.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()   
+    else:
+        with open(os.path.join(root+'.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()                     
+       
         
     for k,v in master_list.iteritems():
         
@@ -261,13 +292,15 @@ def calc_enhancement_curve(masterlist_name,
                 if (not analysis_label in scan.adata.keys()) or forceVal is True:
             
                     conc = sarpy.fmoosvi.analysis.h_enhancement_curve(scan, roi_label)
-                    scan.store_adata(key=analysis_label, data = conc, force = forceVal)                                         
+                    scan.store_adata(key=analysis_label, data = conc, force = forceVal)
+
+                else:
+                    print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
+                    pass 
+                                                 
             except KeyError:
                 print('enhancement_curve: {0} adata for scan {1} does not exist'.format(roi_label,scan.shortdirname) )
-            else:
-                print('{0} adata already exists {1}'.format(analysis_label,scan.shortdirname))
-                pass 
-            
+
         except IOError:
             
             print('{0}: Not found {1} and {2}'.format(k,data_label,analysis_label) )
@@ -299,10 +332,16 @@ def roi_distribution(data, roi, bins,  display_histogram = True,
           
 def plotVTC(masterlist_name, key, data_label, adata_label = None):
 
-    mdata = os.path.expanduser(os.path.join('~','mdata',masterlist_name + '.json'))
+    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
     
-    with open(mdata,'r') as master_file:
-        master_list = json.load(master_file)
+    if os.path.exists(os.path.join(root+'_updated.json')):
+        
+        with open(os.path.join(root+'_updated.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()   
+    else:
+        with open(os.path.join(root+'.json'),'r') as master_file:
+            master_list = json.load(master_file).copy()                     
+       
         
     value = master_list[key]
         
