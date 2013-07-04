@@ -144,12 +144,12 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
         
-def get_bbox(value,data_label,type=None):
+def get_bbox(masterlist_value,data_label,type=None):
     
-    data = sarpy.Scan(value[data_label][0])
+    data = sarpy.Scan(masterlist_value[data_label][0])
     shape = data.pdata[0].data.shape
     
-    bbox = numpy.array([float(x) for x in value[data_label][1]])    
+    bbox = numpy.array([float(x) for x in masterlist_value[data_label][1]])    
     bbox_px = (bbox.reshape(2,2).T*shape[0:2]).T.flatten()
     
     #TODO: this will need to be updated for python 3.x+
@@ -161,7 +161,7 @@ def get_bbox(value,data_label,type=None):
     elif type == 'pct':
         return numpy.array(bbox)
     
-def get_roi_bbox(scan, roi_adata_label = 'roi'):
+def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
     
     roi = scan.adata[roi_adata_label].data   
     
@@ -188,10 +188,10 @@ def get_roi_bbox(scan, roi_adata_label = 'roi'):
     b_high = numpy.where(~numpy.isnan(b))[0][-1]
     
     # Add a 2 px border around this to avoid cliping (aesthetics mostly)
-    b_low=b_low-2
-    b_high=b_high+2
-    a_low=a_low-2
-    a_high=a_high+2
+    b_low=b_low -numpy.round(roi.shape[0]*0.10)
+    b_high=b_high+numpy.round(roi.shape[0]*0.10)
+    a_low=a_low-numpy.round(roi.shape[0]*0.10)
+    a_high=a_high+numpy.round(roi.shape[0]*0.10)
     
     # Now perform some checks to make sure the value are within the orig. data
     
@@ -204,7 +204,24 @@ def get_roi_bbox(scan, roi_adata_label = 'roi'):
     if a_high > roi.shape[1]:
         a_high = roi.shape[1]
     
-    return numpy.array([b_low, b_high, a_low, a_high])    
+    bbox = [b_low, b_high, a_low, a_high]    
+        
+    # Add code segment to convert the bbox into percent as well as pixels
+        
+    bbox_arr =numpy.array(bbox)
+    shape = roi.shape
+        
+    bbox_px = (bbox_arr.reshape(2,2).T*shape[0:2]).T.flatten()
+
+    if type is None:
+        return bbox_px
+    
+    elif type == 'pct':
+        bbox[0] = numpy.true_divide(bbox[0],shape[0])
+        bbox[1] = numpy.true_divide(bbox[1],shape[0])
+        bbox[2] = numpy.true_divide(bbox[2],shape[1])
+        bbox[3] = numpy.true_divide(bbox[3],shape[1])
+        return bbox
     
     
     
