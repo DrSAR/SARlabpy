@@ -21,6 +21,7 @@ import copy
 import os
 import json
 import nibabel
+import datetime
 
 def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     
@@ -37,14 +38,30 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     
     # Visu_pars params
     num_slices = getters.get_num_slices(scan_object,pdata_num)
-    phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
-  
-    # Method params
-    repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
+    
+    reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+    
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
 
-    # Calculated parms
-    time_per_rep = repetition_time * phase_encodes
-    auc_reps = int(numpy.round(time / time_per_rep))
+    time_per_rep = numpy.round(numpy.divide(total_time,reps))
+    
+    try:  
+        auc_reps = int(numpy.round(time / time_per_rep))
+        
+    except ZeroDivisionError:
+        print('h_calculate_auc: Insufficient data for AUC (0 reps) in scan {0}'.format(scan_object.shortdirname))
+        raise ZeroDivisionError
+
+        
     time_points = numpy.arange(time_per_rep,time_per_rep*auc_reps + time_per_rep,time_per_rep)
 
     ########### Start AUC code
@@ -149,11 +166,16 @@ def h_enhancement_curve(scan_object, adata_roi_label, pdata_num = 0):
             reps = scan_object.pdata[pdata_num].data.shape[-1]
             print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
 
-        
+        # there are problems with using phase encodes for certain cases (maybe 3D)
+        # so now I have to use the tuid time
+        total_time = scan_object.method.PVM_ScanTimeStr
+        format = "%Hh%Mm%Ss%fms"
+        t=datetime.datetime.strptime(total_time,format)
+        total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+    
+        time_per_rep = numpy.divide(total_time,reps)
+            
         #Calculating the time per rep.
-        phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
-        repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
-        time_per_rep = repetition_time * phase_encodes
         time = numpy.linspace(0,reps-1,num=reps)*time_per_rep
                        
         ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
@@ -194,7 +216,7 @@ def h_inj_point(scan_object, pdata_num = 0):
         img_mean = data[:,:,:,:].sum(0).sum(0)
 
     except IndexError:
-        print "You might only have 2D or 3D data, need 4D data check data source! "
+        print('h_inj_point: Scan {0}: You might only have 2D or 3D data, need 4D data check data source!'.format(scan_object.shortdirname))
         raise IndexError
         
 
@@ -245,9 +267,23 @@ def h_calculate_AUGC(scan_object, adata_label, bbox = None, time = 60, pdata_num
   
     # Method params
     repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
+    
+    reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+    
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+
+    time_per_rep = numpy.divide(total_time,reps)
 
     # Calculated parms
-    time_per_rep = repetition_time * phase_encodes
     augc_reps = int(numpy.round(time / time_per_rep))
     time_points = numpy.arange(time_per_rep,time_per_rep*augc_reps + time_per_rep,time_per_rep)
 
@@ -595,7 +631,7 @@ def h_generate_VTC(scan, bbox = None, pdata_num = 0):
         
     return nrdata
 
-def generate_ROI(masterlist_name, data_label, adata_label = None, 
+def h_generate_ROI(masterlist_name, data_label, adata_label = None, 
                  ioType = None, path = None, forceVal = False):
 
     mdata = os.path.expanduser(os.path.join(
@@ -622,13 +658,22 @@ def generate_ROI(masterlist_name, data_label, adata_label = None,
                     
                 if adata_label is None:
                     adata_label = 'roi'
-                
-                fname = os.path.join(path, sdir + 'a.nii')
-                roi = nibabel.load(fname).get_data()[:,:,:,0]
-                
-                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
-                scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
-                print("saved roi in adata with generic 'roi' label")                    
+                    
+                if (not adata_label in scan.adata.keys()) or forceVal is True:
+                    
+                    fname = os.path.join(path, sdir + 'a.nii')
+                    roi = nibabel.load(fname).get_data()[:,:,:,0]
+                    
+                    roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
+                    
+                    
+                    scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
+                    print("h_generate_roi: saved roi in adata with generic 'roi' label")
+                else:
+
+                    print('{0}: adata already exists {1} '.format(
+                    adata_label,scan.shortdirname))
+                    pass 
 
             else:
                 
