@@ -187,7 +187,7 @@ def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
     b_low = numpy.where(~numpy.isnan(b))[0][0]
     b_high = numpy.where(~numpy.isnan(b))[0][-1]
     
-    # Add a 2 px border around this to avoid cliping (aesthetics mostly)
+    # Add a border around this to avoid cliping (aesthetics mostly)
     b_low=b_low -numpy.round(roi.shape[0]*0.10)
     b_high=b_high+numpy.round(roi.shape[0]*0.10)
     a_low=a_low-numpy.round(roi.shape[0]*0.10)
@@ -204,19 +204,17 @@ def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
     if a_high > roi.shape[1]:
         a_high = roi.shape[1]
     
+   
     bbox = [b_low, b_high, a_low, a_high]    
-        
+
     # Add code segment to convert the bbox into percent as well as pixels
         
     bbox_arr =numpy.array(bbox)
-    shape = roi.shape
-        
-    bbox_px = (bbox_arr.reshape(2,2).T*shape[0:2]).T.flatten()
 
     if type is None:
-        return bbox_px
-    
+        return bbox_arr.astype(int)
     elif type == 'pct':
+        shape = roi.shape
         bbox[0] = numpy.true_divide(bbox[0],shape[0])
         bbox[1] = numpy.true_divide(bbox[1],shape[0])
         bbox[2] = numpy.true_divide(bbox[2],shape[1])

@@ -75,9 +75,9 @@ for k,v in master_list.iteritems():
                 v[j][1] = new_bbox
                 # leave the empty ones as is...        
             
-    except IOError:
+    except(IOError,KeyError):
         
-        print('update_bbox: Coud not find {0}, {1} \n'.format(k,v))
+        print('update_bbox: Coud not find {0}, {1} \n'.format(k,adata_label))
 
 json.dump(master_list, open(os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name+'_updated.json'),'w'), indent=4)
 

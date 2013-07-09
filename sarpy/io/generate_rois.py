@@ -52,9 +52,10 @@ except AttributeError:
     path = os.path.expanduser(os.path.join('~','mdata',masterlist_name))
 
 try:
-    forceVal = args.forceVal
+    force = args.force
+    force = True
 except AttributeError:
-    forceVal = False
+    force = False
 
 sarpy.fmoosvi.analysis.h_generate_ROI(masterlist_name, data_label, 
-                                    adata_label, ioType, path, forceVal = forceVal)
+                                    adata_label, ioType, path, forceVal = force)

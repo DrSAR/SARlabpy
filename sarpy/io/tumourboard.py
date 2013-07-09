@@ -51,7 +51,7 @@ def determine_figure_size(n_rows,n_cols):
 
     elif n_rows > 8 and n_cols > 10:
 
-        figure_size = (10,7*aspect)
+        figure_size = (18,19*aspect)
         font_modifier = 6
         
     else:
@@ -115,8 +115,8 @@ for k,v in master_list.iteritems():
 
     try:
         ref_scn = sarpy.Scan(v[ref_lbl][0])
-    except IOError:
-        print('Ref Scan load failed for {0},{1} \n \n'.format(k,ref_lbl))
+    except(IOError,KeyError):
+        print('Ref Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
         continue
     try:
         ref_data = ref_scn.adata[config.get(defaults['ref_row'],'adata')]
@@ -175,9 +175,14 @@ for k,v in master_list.iteritems():
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
             adata_key = row_conf.pop('adata', None)
             if adata_key is not None:
-                data = scn.adata[adata_key]
-                # Set the image limits for adata
                 
+                try:
+                    data = scn.adata[adata_key]
+                except KeyError:
+                    print('Adata Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+                    continue
+                    
+                # Set the image limits for adata
                 cl = sarpy.fmoosvi.getters.get_image_clims(data.data)
 
             else:
@@ -222,13 +227,12 @@ for k,v in master_list.iteritems():
             
             assert(adata_key is not None), 'Please supply a valid label for VTC'
             data = scn.adata[adata_key]
-            reps = data.data.shape[-1]
-            
+            reps = scn.pdata[0].data.shape[-1]
+
             for col_idx in xrange(min(n_cols, data.data.shape[0])):
                 imgdata = numpy.mean(scn.pdata[0].data[:,:,col_idx,:],axis=2)
                 vtcdata = data.data[:,:,col_idx]
-                bbox = (bbox_pct.reshape(2,2).T*imgdata.shape[0:2]).T.flatten()
-                #roi_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,'auc60_roi')
+                bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,'auc60_roi')
                 axs=fig.add_subplot(G[row_idx, col_idx])
                                 
                 axs.imshow(imgdata[bbox[0]:bbox[1],\
@@ -240,14 +244,14 @@ for k,v in master_list.iteritems():
                 box = axs.get_position().bounds
                 
                 height = box[3] / (bbox[1]-bbox[0])
-                
-                for i in xrange(int(bbox[0]),int(bbox[1])):
+               
+                for i in xrange(bbox[0], bbox[1]):
                     tmpax = fig.add_axes([box[0], 
                                          box[1]+box[3]-(i-bbox[0]+1)*height, 
                                          box[2], height])
                     tmpax.set_axis_off()
                     tmpax.plot(vtcdata[i,(bbox[2]*reps):(bbox[3]*reps)],
-                                       color='r', linewidth=.9)
+                                       color='r', linewidth=.2)
                                        
         elif row_conf.get('type', None) == 'plot':
 

@@ -29,10 +29,7 @@ def bulk_analyze(masterlist_name,
     else:
         with open(os.path.join(root+'.json'),'r') as master_file:
             master_list = json.load(master_file).copy()                     
-       
-    with open(mdata,'r') as master_file:
-        master_list = json.load(master_file)
-                        
+
     if re.match('auc60', analysis_label):
 
         for k,v in master_list.iteritems():
@@ -51,7 +48,7 @@ def bulk_analyze(masterlist_name,
                     analysis_label,scan.shortdirname))
                     pass 
                 
-            except IOError:
+            except(IOError):
                 
                 print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
@@ -78,7 +75,7 @@ def bulk_analyze(masterlist_name,
                     analysis_label,scan.shortdirname))
                     pass 
                 
-            except IOError:
+            except(IOError):
                 print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
                 pass
@@ -99,7 +96,7 @@ def bulk_analyze(masterlist_name,
                     print('{0}: adata already exists {1}'.format(analysis_label,scan.shortdirname))
                     pass
                                
-            except IOError:
+            except(IOError):
                 print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
                 pass
@@ -116,9 +113,8 @@ def bulk_analyze(masterlist_name,
                     scan.store_adata(key=analysis_label, data = masked_data, force = forceVal)
                 else:
                     print('{0}: adata already exists {1}'.format(analysis_label,scan.shortdirname))
-                    pass
-                                               
-            except IOError:
+                    pass                                       
+            except(IOError,KeyError):
                 print('{0}: Not found {1} and {2}'.format(
                 analysis_label,k,data_label) )                
                 pass   
@@ -161,7 +157,7 @@ def calc_AUGC(masterlist_name,
                 analysis_label,scan.shortdirname))
                 pass 
             
-        except IOError:
+        except(IOError):
             
             print('{0}: Not found {1} and {2}'.format(
             analysis_label,k,data_label) )
@@ -202,7 +198,7 @@ def conc_from_signal(masterlist_name,
                 analysis_label,scan.shortdirname))
                 pass 
             
-        except IOError:
+        except(IOError):
             
             print('{0}: Not found {1} and {2}'.format(
             analysis_label,k,data_label) )
@@ -258,7 +254,7 @@ def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
                       dest.shortdirname))
                 pass  
 
-        except KeyError:
+        except(IOError):
             print('bulk_transfer_roi: Problem with roi or dest scan for study {0}'.format(study.shortdirname))
             pass
 

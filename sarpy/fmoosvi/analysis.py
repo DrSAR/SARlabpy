@@ -57,6 +57,11 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     try:  
         auc_reps = int(numpy.round(time / time_per_rep))
         
+        if auc_reps == 0:
+            raise ZeroDivisionError
+
+            
+        
     except ZeroDivisionError:
         print('h_calculate_auc: Insufficient data for AUC (0 reps) in scan {0}'.format(scan_object.shortdirname))
         raise ZeroDivisionError
@@ -81,8 +86,10 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     # Now calculate the actual AUC
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
+
     for slice in range(num_slices):
         auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+
         
     # Deal with bounding boxes
 
