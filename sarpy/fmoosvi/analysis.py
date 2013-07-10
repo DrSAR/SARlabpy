@@ -550,48 +550,31 @@ def h_mag_from_fid(scan_object):
     
     return mag_data
     
-def h_image_to_mask(roi_data):
+def h_image_to_mask(roi_data, background=None, foreground=None):
+    
+    if background is None:
+        background = numpy.nan
+    if foreground is None:
+        foreground = 1
 
     roi_mask = copy.deepcopy(roi_data)
-   
-    try:
-        for slice in xrange(roi_mask.shape[2]):
-        
-            curr_slice = roi_mask[:,:,slice]
-            
-            mask_val = scipy.percentile(curr_slice.flatten(),95)
-                      
-            curr_slice[curr_slice == mask_val] = numpy.nan
-            curr_slice[numpy.isfinite(curr_slice)] = 1
-            
-        return roi_mask    
-
-# TODO: WHY IS THIS HERE !?! ADD A COMMENT WHEN YOU FIGURE IT OUT! FAIL.
+ 
+    for slice in xrange(roi_mask.shape[2]):
     
-    except AttributeError:
-        roi_data = roi_mask.data
+        curr_slice = roi_mask[:,:,slice]
         
-        for slice in xrange(roi_data.shape[2]):
-        
-            curr_slice = roi_data[:,:,slice]
-            
-            mask_val = scipy.percentile(curr_slice.flatten(),95)
+        # the most common value will be the background; We assume the ROI 
+        # occupies only a small region in the image (less than 50%). 
+        # By choosin the median we could have a few pixel values higher or 
+        # lower than the very common background pixel intensity.
+        mask_val = scipy.median(curr_slice.flatten())
+        places = numpy.where(curr_slice == mask_val)
+        notplaces = numpy.where(curr_slice != mask_val)
+        curr_slice[places] = background
+        curr_slice[notplaces] = foreground
 
-
-            
-            curr_slice[curr_slice == mask_val] = numpy.nan
-            curr_slice[numpy.isfinite(curr_slice)] = 1
-            
-        roi_mask.data = roi_data
         
-        
-        return roi_mask
-        
-    except:    
-        #TODO WARNING THIS IS GOING TO FAIL SOOOO BADLY FOR 4D Data...FIX IT
-
-        print('still working on expanding this function')
-        raise
+    return roi_mask    
             
 
 
@@ -652,48 +635,50 @@ def h_generate_ROI(masterlist_name, data_label, adata_label = None,
     
     for k,v in master_list.iteritems():
               
-        try:
-            scan = sarpy.Scan(v[data_label][0])
-            sdir = scan.shortdirname
-            sdir = sdir.replace('/','_')
-            
-            if ioType == 'export':
-                fname = os.path.join(path, sdir + '.nii')
-                scan.pdata[0].export2nii(fname)
-            
-            elif ioType == 'import':
-                    
-                if adata_label is None:
-                    adata_label = 'roi'
-                    
-                if (not adata_label in scan.adata.keys()) or forceVal is True:
-                    
-                    fname = os.path.join(path, sdir + 'a.nii')
-                    roi = nibabel.load(fname).get_data()[:,:,:,0]
-                    
-                    roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
-                    
-                    
-                    scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
-                    print("h_generate_roi: saved roi in adata with generic 'roi' label")
-                else:
-
-                    print('{0}: adata already exists {1} '.format(
-                    adata_label,scan.shortdirname))
-                    pass 
-
-            else:
-                
-                print("Please specify either 'import' or 'export' \
-                for the ioType!")
+#        try:
+        scan = sarpy.Scan(v[data_label][0])
+        sdir = scan.shortdirname
+        sdir = sdir.replace('/','_')
         
-        except IOError:
-            
-            print('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,data_label) )
-            pass
+        if ioType == 'export':
+            fname = os.path.join(path, sdir + '.nii')
+            scan.pdata[0].export2nii(fname)
+        
+        elif ioType == 'import':
+                
+            if adata_label is None:
+                adata_label = 'roi'
+                
+            if (not adata_label in scan.adata.keys()) or forceVal is True:
+                
+                fname = os.path.join(path, sdir + 'a.nii')
+                roi = nibabel.load(fname).get_data()[:,:,:,0]
+                
+                # the default foreground and background in h_image_to_mask
+                # will result in a roi_m that has NaN and 1 only (aka
+                # 'proper mask')
+                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)               
+                
+                scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
+                print("h_generate_roi: saved roi in adata with generic 'roi' label")
+            else:
 
-        except:
-            raise
+                print('{0}: adata already exists {1} '.format(
+                adata_label,scan.shortdirname))
+                pass 
+
+        else:
+            
+            print("Please specify either 'import' or 'export' \
+            for the ioType!")
+        
+#        except IOError:
+#            
+#            print('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,data_label) )
+#            pass
+#
+#        except:
+#            raise
             
     print('Nifti images were processed in {0}'.format(path))
 

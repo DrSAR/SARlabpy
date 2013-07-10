@@ -93,7 +93,8 @@ def resample_onto(source_fname, target_fname):
     dims.reverse()
     return (sitk.GetArrayFromImage(output).transpose(dims), output)
 
-def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False):
+def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False,
+                        replace_nan = None):
     '''
     Resamples the data 
     
@@ -111,6 +112,11 @@ def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False):
         Ignore the matrix size derived from visu_pars and use actual matrix size
         as obtained from source data. Default False (good for pdata), True
         useful for adata that has a different shape from its parent pdata
+    :param int relace_nan:
+        Replace values of NaN with 0 (and back to NaN after the resampling).
+        The default is None (don't do it) since this can have undesirable side
+        effects: if the image contains the replacement value it will be changed
+        to NaN after the resampling
     :return:
         resampled image as numpy.array, or maybe ITK image? or maybe nifti1?
 
@@ -159,7 +165,7 @@ def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False):
     resample_filter.SetOutputOrigin(ori_ref)
     resample_filter.SetSize(matrix_size_ref.tolist())
     resample_filter.SetOutputSpacing(header_ref['pixdim'][1:4].tolist())
-    resample_filter.SetDefaultPixelValue(float('nan'))
+    resample_filter.SetDefaultPixelValue(0)
 
     # loop over all non-3D dimensions:
     # We have to flatten all higher dimensions and then go through them.
@@ -176,6 +182,8 @@ def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False):
     output = numpy.empty(mixed_dims)
     for i in xrange(extra_dims):
         tobetrfx = flat_input_img[:,:,:,i]
+        if replace_nan is not None:
+            tobetrfx[numpy.where(numpy.isnan(tobetrfx))] = replace_nan
         src = sitk.GetImageFromArray(tobetrfx.transpose([2,1,0])) # this is a 3D array
         src.SetDirection(direction.flatten())
         src.SetSpacing(header['pixdim'][1:4].tolist())

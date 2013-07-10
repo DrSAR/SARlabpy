@@ -127,7 +127,9 @@ def get_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
         
         roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
 
-        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image)
+        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image, 
+                                                         background=None, 
+                                                         foreground=None)
         
         masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
 roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)

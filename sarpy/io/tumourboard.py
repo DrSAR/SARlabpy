@@ -168,8 +168,10 @@ for k,v in master_list.iteritems():
 
         if row_conf.get('type', None) == 'img':
             
-            #TODO: this statement is hre because of **row_conf in imhow
+            #TODO: this statement is here because of **row_conf in imhow
             row_conf.pop('type', None)
+            clim_min = row_conf.pop('clim_min',None)
+            clim_max = row_conf.pop('clim_max',None)
 
             scn = sarpy.Scan(fname)
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
@@ -183,12 +185,12 @@ for k,v in master_list.iteritems():
                     continue
                     
                 # Set the image limits for adata
-                cl = sarpy.fmoosvi.getters.get_image_clims(data.data)
-
+                if (clim_min is None) and (clim_max is None):
+                    (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(
+                                                data.data)
             else:
                 data = scn.pdata[0]
-                cl = None
-                
+                                
             xdata = data.data
 
             resample_flag = row_conf.pop('resample', False) 
@@ -206,12 +208,12 @@ for k,v in master_list.iteritems():
             for col_idx in xrange(min(n_cols, xdata.shape[2])):
                 fig.add_subplot(G[row_idx, col_idx])
                 bbox = (bbox_pct.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
+                
                 t=pylab.imshow(xdata[bbox[0]:bbox[1],
                                  bbox[2]:bbox[3],col_idx],
                                  **row_conf)
                            
-                if cl is not None:
-                    t.set_clim(cl)
+                t.set_clim([clim_min, clim_max])
                 pylab.axis('off')
                 
                 if row_idx == 0:

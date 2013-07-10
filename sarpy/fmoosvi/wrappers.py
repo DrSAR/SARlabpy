@@ -230,11 +230,11 @@ def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
     exp = sarpy.Experiment(exp_name)
     
     for study in exp.studies:
-        adata_list = study.find_adata_scans()
+        adata_dict = study.find_adata_scans()
         
         try:
-            src = sarpy.Scan(adata_list['roi'][0])                    
-            dest = sarpy.Scan(adata_list[dest_adata_label][0])      
+            src = sarpy.Scan(adata_dict['roi'][0])
+            dest = sarpy.Scan(adata_dict[dest_adata_label][0])      
        
             if (not dest_label in dest.adata.keys()) or forceVal is True:
                 
@@ -242,7 +242,14 @@ def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
                 roi = src.adata['roi']
                 
                 resampled_roi = sarpy.ImageProcessing.resample_onto.\
-                    resample_onto_pdata(roi,dest_pd)
+                    resample_onto_pdata(roi, dest_pd, replace_nan=0)
+                    
+#                resampled_roi = sarpy.fmoosvi.analysis.h_image_to_mask(
+#                                    resampled_roi)
+                places = numpy.where(resampled_roi < .5)
+                other_places = numpy.where(resampled_roi >= .5)
+                resampled_roi[places] = numpy.nan
+                resampled_roi[other_places] = 1
 
                 dest.store_adata(key = dest_label, data = resampled_roi, 
                                  force = forceVal)   
@@ -253,6 +260,8 @@ def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
                 print('bulk_transfer_roi: {0} adata already exists {1}'.format(dest_label, 
                       dest.shortdirname))
                 pass  
+        except(KeyError):
+            print('bulk_transfer_roi: AProblem with roi or dest scan for study {0}'.format(study.shortdirname))
 
         except(IOError):
             print('bulk_transfer_roi: Problem with roi or dest scan for study {0}'.format(study.shortdirname))
