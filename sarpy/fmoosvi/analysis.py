@@ -21,6 +21,7 @@ import copy
 import os
 import json
 import nibabel
+import datetime
 
 def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     
@@ -37,14 +38,35 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     
     # Visu_pars params
     num_slices = getters.get_num_slices(scan_object,pdata_num)
-    phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
-  
-    # Method params
-    repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
+    
+    reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+    
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
 
-    # Calculated parms
-    time_per_rep = repetition_time * phase_encodes
-    auc_reps = int(numpy.round(time / time_per_rep))
+    time_per_rep = numpy.round(numpy.divide(total_time,reps))
+    
+    try:  
+        auc_reps = int(numpy.round(time / time_per_rep))
+        
+        if auc_reps == 0:
+            raise ZeroDivisionError
+
+            
+        
+    except ZeroDivisionError:
+        print('h_calculate_auc: Insufficient data for AUC (0 reps) in scan {0}'.format(scan_object.shortdirname))
+        raise ZeroDivisionError
+
+        
     time_points = numpy.arange(time_per_rep,time_per_rep*auc_reps + time_per_rep,time_per_rep)
 
     ########### Start AUC code
@@ -64,9 +86,11 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     # Now calculate the actual AUC
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
+
     for slice in range(num_slices):
-        auc_data[:,:,slice] = scipy.integrate.simps(numpy.isfinite(norm_data[:,:,slice,inj_point:inj_point+auc_reps]),x=time_points)
-    
+        auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+
+        
     # Deal with bounding boxes
 
     if bbox is None:        
@@ -104,7 +128,7 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) )
 
     ## Check for bbox traits and create bbox_mask to output only partial data
 
@@ -138,40 +162,50 @@ def h_normalize_dce(scan_object, bbox = None, pdata_num = 0):
 
     return norm_data*bbox_mask
  
-def h_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
+def h_enhancement_curve(scan_object, adata_roi_label, pdata_num = 0):
 
     try:
         norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
         num_slices = norm_data.shape[-2]
-        reps = norm_data.shape[-1]        
-                
+        reps = norm_data.shape[-1]
+        
+        if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+            reps = scan_object.pdata[pdata_num].data.shape[-1]
+            print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+
+        # there are problems with using phase encodes for certain cases (maybe 3D)
+        # so now I have to use the tuid time
+        total_time = scan_object.method.PVM_ScanTimeStr
+        format = "%Hh%Mm%Ss%fms"
+        t=datetime.datetime.strptime(total_time,format)
+        total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+    
+        time_per_rep = numpy.divide(total_time,reps)
+            
+        #Calculating the time per rep.
+        time = numpy.linspace(0,reps-1,num=reps)*time_per_rep
+                       
         ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
         new_scan_object = copy.deepcopy(scan_object)
         new_scan_object.pdata[pdata_num].data = norm_data
         data_scan = new_scan_object.pdata[pdata_num]
-        
-        print data_scan
         ## END SKETCHY BIT
         
-        roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
+        roi = scan_object.adata[adata_roi_label].data
+         
+        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi,[
+roi.shape[0], roi.shape[1], roi.shape[2],1]),reps)
 
-        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image)
-        
-        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
-roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
-
-
-        enhancement_curve = numpy.empty(shape = [num_slices, reps])
+        enhancement_curve = numpy.empty(shape = [num_slices, 2, reps])
         
         for slice in range(num_slices):
-
-            enhancement_curve[slice,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)
-
+            
+            enhancement_curve[slice,0,:] = time
+            enhancement_curve[slice,1,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)            
         return enhancement_curve
     except:    
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
-        
 
 
 def h_inj_point(scan_object, pdata_num = 0):
@@ -189,7 +223,7 @@ def h_inj_point(scan_object, pdata_num = 0):
         img_mean = data[:,:,:,:].sum(0).sum(0)
 
     except IndexError:
-        print "You might only have 2D or 3D data, need 4D data check data source! "
+        print('h_inj_point: Scan {0}: You might only have 2D or 3D data, need 4D data check data source!'.format(scan_object.shortdirname))
         raise IndexError
         
 
@@ -212,19 +246,24 @@ def h_inj_point(scan_object, pdata_num = 0):
 
     return injection_point[0][0]+1
 
-def h_calculate_AUGC(scan_object, adata_label='gd_conc', bbox = None, time = 60, pdata_num = 0):
+def h_calculate_AUGC(scan_object, adata_label, bbox = None, time = 60, pdata_num = 0):
     
     """
     Returns an area under the gadolinium concentration curve adata for the scan object
 
     :param object scan_object: scan object from a study
+    :param str adata_label: indicates the label with which gd_conc is stored
     :param integer pdata_num: reconstruction number, according to python numbering.
             default reconstruction is pdata_num = 0.
     :return: array with augc data
     """
 
     # Get the concentration data stored as an adata
-    data = scan_object.adata[adata_label].data
+
+    try:
+        data = scan_object.adata[adata_label].data
+    except KeyError:
+        print('h_caculate_AUGC: Source data {0} does not exist yet.'.format(adata_label))
     
     
     ########### Getting and defining parameters
@@ -235,9 +274,23 @@ def h_calculate_AUGC(scan_object, adata_label='gd_conc', bbox = None, time = 60,
   
     # Method params
     repetition_time = scan_object.method.PVM_RepetitionTime*1E-3
+    
+    reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n '.format(scan_object.shortdirname) )
+    
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+
+    time_per_rep = numpy.divide(total_time,reps)
 
     # Calculated parms
-    time_per_rep = repetition_time * phase_encodes
     augc_reps = int(numpy.round(time / time_per_rep))
     time_points = numpy.arange(time_per_rep,time_per_rep*augc_reps + time_per_rep,time_per_rep)
 
@@ -301,7 +354,7 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
 
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) )
     
     
     TR = scan_object.method.PVM_RepetitionTime
@@ -497,48 +550,31 @@ def h_mag_from_fid(scan_object):
     
     return mag_data
     
-def h_image_to_mask(roi_data):
+def h_image_to_mask(roi_data, background=None, foreground=None):
+    
+    if background is None:
+        background = numpy.nan
+    if foreground is None:
+        foreground = 1
 
     roi_mask = copy.deepcopy(roi_data)
-   
-    try:
-        for slice in xrange(roi_mask.shape[2]):
-        
-            curr_slice = roi_mask[:,:,slice]
-            
-            mask_val = scipy.percentile(curr_slice.flatten(),95)
-                      
-            curr_slice[curr_slice == mask_val] = numpy.nan
-            curr_slice[numpy.isfinite(curr_slice)] = 1
-            
-        return roi_mask    
-
-# TODO: WHY IS THIS HERE !?! ADD A COMMENT WHEN YOU FIGURE IT OUT! FAIL.
+ 
+    for slice in xrange(roi_mask.shape[2]):
     
-    except AttributeError:
-        roi_data = roi_mask.data
+        curr_slice = roi_mask[:,:,slice]
         
-        for slice in xrange(roi_data.shape[2]):
-        
-            curr_slice = roi_data[:,:,slice]
-            
-            mask_val = scipy.percentile(curr_slice.flatten(),95)
+        # the most common value will be the background; We assume the ROI 
+        # occupies only a small region in the image (less than 50%). 
+        # By choosin the median we could have a few pixel values higher or 
+        # lower than the very common background pixel intensity.
+        mask_val = scipy.median(curr_slice.flatten())
+        places = numpy.where(curr_slice == mask_val)
+        notplaces = numpy.where(curr_slice != mask_val)
+        curr_slice[places] = background
+        curr_slice[notplaces] = foreground
 
-
-            
-            curr_slice[curr_slice == mask_val] = numpy.nan
-            curr_slice[numpy.isfinite(curr_slice)] = 1
-            
-        roi_mask.data = roi_data
         
-        
-        return roi_mask
-        
-    except:    
-        #TODO WARNING THIS IS GOING TO FAIL SOOOO BADLY FOR 4D Data...FIX IT
-
-        print('still working on expanding this function')
-        raise
+    return roi_mask    
             
 
 
@@ -585,53 +621,64 @@ def h_generate_VTC(scan, bbox = None, pdata_num = 0):
         
     return nrdata
 
-def generate_ROI(masterlist_name, data_label, adata_label = None, 
+def h_generate_ROI(masterlist_name, data_label, adata_label = None, 
                  ioType = None, path = None, forceVal = False):
 
     mdata = os.path.expanduser(os.path.join(
-    '~','mdata',masterlist_name+'.json'))
+    '~','mdata',masterlist_name,masterlist_name+'.json'))
   
     with open(mdata,'r') as master_file:
         master_list = json.load(master_file)
 
     if path is None:
-        path = os.path.expanduser(os.path.join('~','adata'))
+        path = os.path.expanduser(os.path.join('~','mdata',masterlist_name))
     
     for k,v in master_list.iteritems():
               
-        try:
-            scan = sarpy.Scan(v[data_label][0])
-            sdir = scan.shortdirname
-            sdir = sdir.replace('/','_')
-            
-            if ioType == 'export':
-                fname = os.path.join(path, sdir + '.nii')
-                scan.pdata[0].export2nii(fname)
-            
-            elif ioType == 'import':
-                    
-                if adata_label is None:
-                    adata_label = 'roi'
+#        try:
+        scan = sarpy.Scan(v[data_label][0])
+        sdir = scan.shortdirname
+        sdir = sdir.replace('/','_')
+        
+        if ioType == 'export':
+            fname = os.path.join(path, sdir + '.nii')
+            scan.pdata[0].export2nii(fname)
+        
+        elif ioType == 'import':
+                
+            if adata_label is None:
+                adata_label = 'roi'
+                
+            if (not adata_label in scan.adata.keys()) or forceVal is True:
                 
                 fname = os.path.join(path, sdir + 'a.nii')
                 roi = nibabel.load(fname).get_data()[:,:,:,0]
                 
-                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)
-                scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
-                print("saved roi in adata with generic 'roi' label")                    
-
-            else:
+                # the default foreground and background in h_image_to_mask
+                # will result in a roi_m that has NaN and 1 only (aka
+                # 'proper mask')
+                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)               
                 
-                print("Please specify either 'import' or 'export' \
-                for the ioType!")
-        
-        except IOError:
-            
-            print('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,data_label) )
-            pass
+                scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
+                print("h_generate_roi: saved roi in adata with generic 'roi' label")
+            else:
 
-        except:
-            raise
+                print('{0}: adata already exists {1} '.format(
+                adata_label,scan.shortdirname))
+                pass 
+
+        else:
+            
+            print("Please specify either 'import' or 'export' \
+            for the ioType!")
+        
+#        except IOError:
+#            
+#            print('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,data_label) )
+#            pass
+#
+#        except:
+#            raise
             
     print('Nifti images were processed in {0}'.format(path))
 

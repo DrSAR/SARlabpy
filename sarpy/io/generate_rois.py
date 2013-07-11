@@ -9,13 +9,14 @@ Created on Thu May 30 17:49:35 2013
 
 import sarpy.fmoosvi.analysis
 import argparse
+import os
 
 #TODO: for some reason the required args still show up as optional
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-m', '--masterlist_name', type=str, required=True,
-                   help='Name of the masterlist file. e.g. NecS3. \
+                   help='Name of the masterlist file. e.g. NecS3 \
                    Usage: python generate_rois.py -m HerP2 -d axref -a roi -i export ')
 
 parser.add_argument('-d', '--data_label', type=str, required=True,
@@ -28,7 +29,7 @@ parser.add_argument('-a', '--adata_label', type=str,
                    help='Optional: adata label, defaults to roi') 
                                      
 parser.add_argument('-p', '--path', type=str,
-                   help='Optional: Path to/from export/import data, default to adata')
+                   help='Optional: Path to/from export/import data, default to mdata')
                    
 parser.add_argument('-f', '--force', type=str, choices = ['True','False'],
                     help='Optional: Replace data? True or False, defaults to False')   
@@ -46,14 +47,15 @@ except AttributeError:
     adata_label = 'roi'
 
 try:
-    path = args.path
+    path = os.path.expanduser(os.path.join(args.path))
 except AttributeError:
-    path = os.path.expanduser(os.path.join('~','adata'))
+    path = os.path.expanduser(os.path.join('~','mdata',masterlist_name))
 
 try:
-    forceVal = args.forceVal
+    force = args.force
+    force = True
 except AttributeError:
-    forceVal = False
+    force = False
 
-sarpy.fmoosvi.analysis.generate_ROI(masterlist_name, data_label, 
-                                    adata_label, ioType, path, forceVal = forceVal)
+sarpy.fmoosvi.analysis.h_generate_ROI(masterlist_name, data_label, 
+                                    adata_label, ioType, path, forceVal = force)
