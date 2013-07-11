@@ -15,13 +15,50 @@ import os
 import json
 import matplotlib
 matplotlib.use('Agg')# where did I come from !?
-import matplotlib.pyplot as plt
+import pylab
 import numpy
 import sarpy
+import sarpy.fmoosvi.getters
 import sarpy.ImageProcessing.resample_onto as sir
 import tempfile
 from matplotlib.backends.backend_pdf import PdfPages
 
+
+def determine_figure_size(n_rows,n_cols):
+    
+    aspect = numpy.true_divide(n_rows,n_cols)
+       
+    if n_rows <= 4 and n_cols <= 6:
+        #moderately tested
+        figure_size = (6,5*aspect)
+        font_modifier = 0
+        
+    elif (n_rows >= 4 and n_rows <=8) and (n_cols>6 and n_cols <= 10) :
+        #moderately tested               
+
+        figure_size = (8,8*aspect)
+        font_modifier = 3
+    
+    elif n_rows <=4 and n_cols >=10:
+        #moderately tested               
+        figure_size = (10,14*aspect)
+        font_modifier = 1
+
+    elif n_rows >=8 and n_cols <=10:
+        #moderately tested        
+        figure_size = (16,8*aspect)
+        font_modifier = 6
+
+    elif n_rows > 8 and n_cols > 10:
+
+        figure_size = (18,19*aspect)
+        font_modifier = 6
+        
+    else:
+        print('row_size = {0} and col_size = {1}'.format(n_rows,n_cols))
+        raise NotImplementedError('Please code in this situation, missed it, figure size')
+        
+    return figure_size,font_modifier
 
 conf_parser = argparse.ArgumentParser(
     # Turn off help, so we print all options in response to -h
@@ -65,12 +102,22 @@ rows = [row for row in config.sections() if not((row=='Defaults'))]
 n_rows = len(rows)
 ref_lbl = config.get(args.ref_row,'label')
 
-testPDF = PdfPages('testPDF.pdf')
+# Start a PDF file of all the animals
 
+#TODO: figure out a way to capture the root of the experiment fast. This willwork
+# for XXXSY. But will fail for Y >9
+ 
+rootName = sarpy.Experiment(master_list.keys()[0]).root[0:5]
+testPDF = PdfPages(os.path.join(os.path.expanduser('~/mdata'),rootName,rootName+'.pdf'))
 
 # for every patient we will create the same board
 for k,v in master_list.iteritems():
-    ref_scn = sarpy.Scan(v[ref_lbl][0])
+
+    try:
+        ref_scn = sarpy.Scan(v[ref_lbl][0])
+    except(IOError,KeyError):
+        print('Ref Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+        continue
     try:
         ref_data = ref_scn.adata[config.get(defaults['ref_row'],'adata')]
     except ConfigParser.NoOptionError:
@@ -79,13 +126,12 @@ for k,v in master_list.iteritems():
     ref_data.export2nii(ref_filename)
     n_cols=ref_data.data.shape[2]
 
-    # Start a PDF file of all the animals
+    fig_size,mod = determine_figure_size(n_rows,n_cols)
     
     title = k
-    # assume an inch x inch for each square with an addition half inch all around
-    fig = plt.figure(figsize = (n_cols+1, n_rows+1))
-    fig.suptitle(k)
-    G = plt.matplotlib.gridspec.GridSpec(n_rows, n_cols)   
+    fig = pylab.figure(figsize=fig_size)
+    fig.suptitle(k,fontsize=10+mod)
+    G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
     print('\n'+'-'*80+'\n'+title)
 
     row_idx = 0
@@ -94,32 +140,62 @@ for k,v in master_list.iteritems():
         lbl =row_conf.pop('label')
         subtitle = row_conf.pop('subtitle','')
         fname = v[lbl][0]
-        bbox = numpy.array([float(x) for x in v[lbl][1]])
+        bbox_pct = numpy.array([float(x) for x in v[lbl][1]])
+        #bbox = sarpy.fmoosvi.getters.get_bbox(v,lbl)
         fig.add_subplot(G[row_idx, 0])
-        plt.axis('off')
-        plt.text(0,.5,'\n'.join([lbl,subtitle,fname]), 
-                 horizontalalignment='right', 
-                 fontsize=5, rotation='vertical')
+        pylab.axis('off')
+        pylab.text(-0.5,0.5,'\n'.join([lbl,subtitle]), 
+                 horizontalalignment='center', 
+                 verticalalignment='center',
+                 fontsize=5+mod, rotation='vertical')
 
-        if row_conf.pop('type', None) is None:
-            print(lbl,'HISTO!')
-        elif fname == '':
-            plt.title('no data found', fontsize=8)
+        pylab.text(-0.35,0.5,'{0}'.format(fname), 
+                 horizontalalignment='center', 
+                 verticalalignment='center',
+                 fontsize=2+mod, rotation='vertical')
+
+
+        if fname == '':
+            pylab.text(0.5,0.5,'Data not available',
+                       horizontalalignment='center',
+                       fontsize=4+mod)
+
             row_idx += 1
             continue
-        else:
+
+        # allowed types can be:
+        # img, plot, vtc, histo
+
+        if row_conf.get('type', None) == 'img':
+            
+            #TODO: this statement is here because of **row_conf in imhow
+            row_conf.pop('type', None)
+            clim_min = row_conf.pop('clim_min',None)
+            clim_max = row_conf.pop('clim_max',None)
+
             scn = sarpy.Scan(fname)
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
             adata_key = row_conf.pop('adata', None)
             if adata_key is not None:
-                data = scn.adata[adata_key]
+                
+                try:
+                    data = scn.adata[adata_key]
+                except KeyError:
+                    print('Adata Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+                    continue
+                    
+                # Set the image limits for adata
+                if (clim_min is None) and (clim_max is None):
+                    (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(
+                                                data.data)
             else:
                 data = scn.pdata[0]
+                                
             xdata = data.data
-        
-        resample_flag = row_conf.pop('resample', False) 
-        if resample_flag and config.getboolean(row,'resample'):
-            raise NotImplementedError('please fix resampling')
+
+            resample_flag = row_conf.pop('resample', False) 
+            if resample_flag and config.getboolean(row,'resample'):
+                raise NotImplementedError('please fix resampling')
             #print('resampling {0}\n{1}\n onto {2}'.format(scn,data,ref_data))
             #src_filename = tempfile.mktemp(suffix='.nii')
             #data.export2nii(src_filename)            
@@ -129,29 +205,110 @@ for k,v in master_list.iteritems():
             #find out where the 0 1 etc end up.
 #            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
 
-        for col_idx in xrange(min(n_cols, xdata.shape[2])):
-            fig.add_subplot(G[row_idx, col_idx])
-            bbox_pxl = (bbox.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
-            plt.imshow(xdata[bbox_pxl[0]:bbox_pxl[1],
-                             bbox_pxl[2]:bbox_pxl[3],col_idx],
-                       **row_conf)        
-            plt.axis('off')
-            plt.title('Slice {0}'.format(col_idx+1), fontsize=8)
-        row_idx += 1
+            for col_idx in xrange(min(n_cols, xdata.shape[2])):
+                fig.add_subplot(G[row_idx, col_idx])
+                bbox = (bbox_pct.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
+                
+                t=pylab.imshow(xdata[bbox[0]:bbox[1],
+                                 bbox[2]:bbox[3],col_idx],
+                                 **row_conf)
+                           
+                t.set_clim([clim_min, clim_max])
+                pylab.axis('off')
+                
+                if row_idx == 0:
+                    pylab.title('{0}'.format(col_idx+1), fontsize=6+mod)
+                    
+            row_idx += 1
         
-    # Figure spacing adjustments
-    #fig.subplots_adjust(right = 0.85, wspace = 0.0001, hspace=0.0001)
-    #G.tight_layout(fig, h_pad = 0.01, w_pad = 0.01)
-    #G.update(right = 0.87)
+        elif row_conf.get('type', None) == 'vtc':
+            
+            scn = sarpy.Scan(fname)
+            print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+            adata_key = row_conf.pop('adata', None)
+            
+            assert(adata_key is not None), 'Please supply a valid label for VTC'
+            data = scn.adata[adata_key]
+            reps = scn.pdata[0].data.shape[-1]
+
+            for col_idx in xrange(min(n_cols, data.data.shape[0])):
+                imgdata = numpy.mean(scn.pdata[0].data[:,:,col_idx,:],axis=2)
+                vtcdata = data.data[:,:,col_idx]
+                bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,'auc60_roi')
+                axs=fig.add_subplot(G[row_idx, col_idx])
+                                
+                axs.imshow(imgdata[bbox[0]:bbox[1],\
+                                   bbox[2]:bbox[3]],\
+                                   cmap='gray', interpolation='none')
+                axs.set_axis_off()
+                fig.canvas.draw()
+                
+                box = axs.get_position().bounds
+                
+                height = box[3] / (bbox[1]-bbox[0])
+               
+                for i in xrange(bbox[0], bbox[1]):
+                    tmpax = fig.add_axes([box[0], 
+                                         box[1]+box[3]-(i-bbox[0]+1)*height, 
+                                         box[2], height])
+                    tmpax.set_axis_off()
+                    tmpax.plot(vtcdata[i,(bbox[2]*reps):(bbox[3]*reps)],
+                                       color='r', linewidth=.2)
+                                       
+        elif row_conf.get('type', None) == 'plot':
+
+            scn = sarpy.Scan(fname)
+            print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+            adata_key = row_conf.pop('adata', None)
+            if adata_key is not None:
+                data = scn.adata[adata_key]
+            else:
+                data = scn.pdata[0]
+            xdata = data.data
+
+            for col_idx in xrange(min(n_cols, xdata.shape[0])):
+                fig.add_subplot(G[row_idx, col_idx])
+                pylab.plot(xdata[col_idx,0,:],xdata[col_idx,1,:])  
+
+                pylab.xlim(0,numpy.nanmax(xdata[:,0,:]))
+                pylab.ylim(0,numpy.nanmax(xdata[:,1,:]*1.3))
+                pylab.locator_params(axis='both',which='both',
+                                     nbins=3) 
+                pylab.xlabel('Time (ms)',fontsize=0+mod)
+                pylab.ylabel('Enhancement (au)',fontsize=0+mod)                
+                
+                ax = pylab.gca()
+                
+                if row_idx == 0:
+                    pylab.title('{0}'.format(col_idx+1), fontsize=6+mod)
+                if col_idx != 0:
+                    ax.axes.get_yaxis().set_visible([])
+                    ax.axes.get_xaxis().set_visible([])
+                
+#TODO: finda way to put the axis labels on th INSIDE of the plot
+                
+                for label in ax.get_xticklabels():
+                    label.set_fontsize(0+mod)
+
+                for label in ax.get_yticklabels():
+                    label.set_fontsize(0+mod)
+
+            row_idx += 1
+            
+            
+        elif row_conf.get('type', None) == 'histo':
+            raise NotImplementedError('do not know how to draw histos')
+
         
     testPDF.savefig(fig)      
     
     # Saving Figure    
     outputfilename = os.path.expanduser(args.output)
     filename = os.path.join(outputfilename, k + '.png')                
-    plt.savefig(filename, bbox_inches=0, dpi=500)
-    plt.close('all')
+    pylab.savefig(filename, bbox_inches=0, dpi=300)
+    pylab.close('all')
 
 #os.remove(ref_filename)
 
 testPDF.close()
+

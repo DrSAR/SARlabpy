@@ -548,6 +548,24 @@ class Study(object):
             for k in scn.adata.keys():
                 adatas.add(k)
         return adatas
+
+    def find_adata_scans(self):
+        '''
+        All keys *AND SCANS* of adata sets attached to scans in this study
+        '''
+        
+        klist = self.find_adata()
+        ad_dict ={}
+        
+        for k in klist: # Populate the ad_dict with the existing keys
+            ad_dict[k] = []
+            
+        for scn in self.scans:
+            for ke in scn.adata.keys():
+                ad_dict[ke].append(scn.shortdirname)
+                
+        return ad_dict
+        
         
     def rm_adata(self, key):
         '''
@@ -675,7 +693,7 @@ class StudyCollection(object):
         See difference between range and xrange
         '''
         return list(self.xscan_finder(**kwargs))
-        
+
     def find_adata(self):
         adatas=set()
         for stdy in self.studies:
@@ -683,6 +701,21 @@ class StudyCollection(object):
             adatas = adatas.union(ret)
         return adatas
         
+    def find_adata_scans(self):
+        
+        klist = self.find_adata()
+        
+        ad_dict = {}
+        for k in klist:
+            ad_dict[k] = []
+            
+        for stdy in self.studies:
+            c_dict = stdy.find_adata_scans()
+            for k in stdy.find_adata():
+                ad_dict[k].append(c_dict[k])
+                
+        return ad_dict
+       
     def rm_adata(self, key):
         '''
         Remove adata with given *key* by iterating over all studies

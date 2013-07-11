@@ -81,8 +81,16 @@ def get_unique_list_elements(list, idfun=None):
 
 def get_image_clims(data):
     
-    min_lim = numpy.median(data)
-    max_lim = data.max()
+    xd = data[numpy.isfinite(data)].flatten()
+    
+    mean = numpy.mean(xd)
+    std = numpy.std(xd)
+    
+    min_lim = mean - 2.5*std
+    max_lim = mean + 2.5*std
+    
+    if min_lim < 0:
+        min_lim = 0
     
     return [min_lim, max_lim]
     
@@ -119,7 +127,9 @@ def get_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
         
         roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
 
-        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image)
+        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image, 
+                                                         background=None, 
+                                                         foreground=None)
         
         masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
 roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
@@ -136,12 +146,12 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
         
-def get_bbox(value,data_label,type=None):
+def get_bbox(masterlist_value,data_label,type=None):
     
-    data = sarpy.Scan(value[data_label][0])
+    data = sarpy.Scan(masterlist_value[data_label][0])
     shape = data.pdata[0].data.shape
     
-    bbox = numpy.array([float(x) for x in value[data_label][1]])    
+    bbox = numpy.array([float(x) for x in masterlist_value[data_label][1]])    
     bbox_px = (bbox.reshape(2,2).T*shape[0:2]).T.flatten()
     
     #TODO: this will need to be updated for python 3.x+
@@ -153,7 +163,7 @@ def get_bbox(value,data_label,type=None):
     elif type == 'pct':
         return numpy.array(bbox)
     
-def get_roi_bbox(scan, roi_adata_label = 'roi'):
+def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
     
     roi = scan.adata[roi_adata_label].data   
     
@@ -178,8 +188,40 @@ def get_roi_bbox(scan, roi_adata_label = 'roi'):
 
     b_low = numpy.where(~numpy.isnan(b))[0][0]
     b_high = numpy.where(~numpy.isnan(b))[0][-1]
-       
-    return numpy.array([b_low, b_high, a_low, a_high])    
+    
+    # Add a border around this to avoid cliping (aesthetics mostly)
+    b_low=b_low -numpy.round(roi.shape[0]*0.10)
+    b_high=b_high+numpy.round(roi.shape[0]*0.10)
+    a_low=a_low-numpy.round(roi.shape[0]*0.10)
+    a_high=a_high+numpy.round(roi.shape[0]*0.10)
+    
+    # Now perform some checks to make sure the value are within the orig. data
+    
+    if b_low < 0:
+        b_low = 0
+    if a_low < 0:
+        a_low= 0
+    if b_high > roi.shape[0]:
+        b_high = roi.shape[0]
+    if a_high > roi.shape[1]:
+        a_high = roi.shape[1]
+    
+   
+    bbox = [b_low, b_high, a_low, a_high]    
+
+    # Add code segment to convert the bbox into percent as well as pixels
+        
+    bbox_arr =numpy.array(bbox)
+
+    if type is None:
+        return bbox_arr.astype(int)
+    elif type == 'pct':
+        shape = roi.shape
+        bbox[0] = numpy.true_divide(bbox[0],shape[0])
+        bbox[1] = numpy.true_divide(bbox[1],shape[0])
+        bbox[2] = numpy.true_divide(bbox[2],shape[1])
+        bbox[3] = numpy.true_divide(bbox[3],shape[1])
+        return bbox
     
     
     
