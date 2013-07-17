@@ -13,8 +13,11 @@ import os
 import glob
 import re
 from collections import defaultdict
+import tempfile
 
-
+def shellquote(s):
+    return "'" + s.replace("'", "'\\''") + "'"
+    
 def natural_sort(l):
     '''
     Sort a list by a natural sort order (number ascending) and even if
@@ -58,6 +61,8 @@ parser.add_argument("--test","-t",default=False, action="store_true",
                     help='dry run of tumour-board creation')
 parser.add_argument("--force",default=False, action="store_true", 
                     help='ignore violations and attempt to run anyway')                    
+parser.add_argument("--scale",default=False, action="store_true", 
+                    help='create thumbnail of 5000 pixels width')                    
 args = parser.parse_args(remaining_argv)
 
 markers = dict(config.items("Markers"))
@@ -119,8 +124,23 @@ for patient in patients:
     # find all the images for the current patient
     imges = [x for x in patient_ID_sorted 
                         if re.match(patient+'[a-z].*', x) is not None]                
+    tmpfiles = []
     for k,v in markers.iteritems():
         img_fnames = [glob.glob(os.path.join(root, v, x+'*jpg'))[0] for x in imges]
         print patient, v
-        print img_fnames
+        tmpfiles.append(tempfile.mktemp(prefix='histoboardtmp', suffix='.png'))
+        cmd = 'convert +append {0} {1}'.format(
+                        ' '.join([shellquote(x) for x in img_fnames]),
+                        tmpfiles[-1])
+        print(cmd)
+        if not args.test: os.system(cmd)
+        
+    cmd = 'convert -append {0} {1}'.format(' '.join(tmpfiles), patient+'.png')
+    print(cmd)        
+    if not args.test: 
+        os.system(cmd)
+        if args.scale:
+            cmd = 'convert -scale 5000 {0} {1}'.format(patient+'.png', patient+'-scaled.png')
+            print(cmd)        
+            os.system(cmd)        
         
