@@ -151,6 +151,8 @@ def calc_AUGC(masterlist_name,
             
                 curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, adata_scan_label, bbox=bbox)
                 scan.store_adata(key=analysis_label, data = curr_augc, force = forceVal)
+                print('{0}: Success. Saved {1}'.format(analysis_label, 
+                                  scan.shortdirname))
             
             else:
                 print('{0}: adata already exists {1} '.format(
@@ -158,7 +160,6 @@ def calc_AUGC(masterlist_name,
                 pass 
             
         except(IOError):
-            
             print('{0}: Not found {1} and {2}'.format(
             analysis_label,k,data_label) )
             
@@ -189,10 +190,12 @@ def conc_from_signal(masterlist_name,
             bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
             
             if (not analysis_label in scan.adata.keys()) or forceVal is True:
-            
                 conc = sarpy.fmoosvi.analysis.h_conc_from_signal(scan, scan_T1map, adata_label, bbox)
                 scan.store_adata(key=analysis_label, data = conc, force = forceVal)
-            
+                
+                print('{0}: Success. Saved {1}'.format(analysis_label, 
+                                  scan.shortdirname))                
+                
             else:
                 print('{0}: adata already exists {1} '.format(
                 analysis_label,scan.shortdirname))
@@ -234,34 +237,34 @@ def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
         
         try:
             src = sarpy.Scan(adata_dict['roi'][0])
-            dest = sarpy.Scan(adata_dict[dest_adata_label][0])      
-       
-            if (not dest_label in dest.adata.keys()) or forceVal is True:
-                
-                dest_pd = dest.pdata[0]
-                roi = src.adata['roi']
-                
-                resampled_roi = sarpy.ImageProcessing.resample_onto.\
-                    resample_onto_pdata(roi, dest_pd, replace_nan=0)
+            
+            for d in adata_dict[dest_adata_label]:
+                dest = sarpy.Scan(d)
+           
+                if (not dest_label in dest.adata.keys()) or forceVal is True:
                     
-#                resampled_roi = sarpy.fmoosvi.analysis.h_image_to_mask(
-#                                    resampled_roi)
-                places = numpy.where(resampled_roi < .5)
-                other_places = numpy.where(resampled_roi >= .5)
-                resampled_roi[places] = numpy.nan
-                resampled_roi[other_places] = 1
-
-                dest.store_adata(key = dest_label, data = resampled_roi, 
-                                 force = forceVal)   
-                                 
-                print('bulk_transfer_roi: Success. Saved {0} in {1}'.format(dest_label, 
-                              dest.shortdirname))                                 
-            else:
-                print('bulk_transfer_roi: {0} adata already exists {1}'.format(dest_label, 
-                      dest.shortdirname))
-                pass  
+                    dest_pd = dest.pdata[0]
+                    roi = src.adata['roi']
+                    
+                    resampled_roi = sarpy.ImageProcessing.resample_onto.\
+                        resample_onto_pdata(roi, dest_pd, replace_nan=0)
+                        
+                    places = numpy.where(resampled_roi < .5)
+                    other_places = numpy.where(resampled_roi >= .5)
+                    resampled_roi[places] = numpy.nan
+                    resampled_roi[other_places] = 1
+    
+                    dest.store_adata(key = dest_label, data = resampled_roi, 
+                                     force = forceVal)   
+                                     
+                    print('bulk_transfer_roi: Success. Saved {0} in {1}'.format(dest_label, 
+                                  dest.shortdirname))                                 
+                else:
+                    print('bulk_transfer_roi: {0} adata already exists {1}'.format(dest_label, 
+                          dest.shortdirname))
+                    pass  
         except(KeyError):
-            print('bulk_transfer_roi: AProblem with roi or dest scan for study {0}'.format(study.shortdirname))
+            print('bulk_transfer_roi: A Problem with roi or dest scan for study {0}'.format(study.shortdirname))
 
         except(IOError):
             print('bulk_transfer_roi: Problem with roi or dest scan for study {0}'.format(study.shortdirname))

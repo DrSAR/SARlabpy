@@ -47,9 +47,9 @@ def determine_figure_size(n_rows,n_cols):
     elif n_rows >=8 and n_cols <=10:
         #moderately tested        
         figure_size = (16,8*aspect)
-        font_modifier = 6
+        font_modifier = 6      
 
-    elif n_rows > 8 and n_cols > 10:
+    elif n_rows >= 6 and n_cols > 10:
 
         figure_size = (18,19*aspect)
         font_modifier = 6
@@ -144,7 +144,7 @@ for k,v in master_list.iteritems():
         #bbox = sarpy.fmoosvi.getters.get_bbox(v,lbl)
         fig.add_subplot(G[row_idx, 0])
         pylab.axis('off')
-        pylab.text(-0.5,0.5,'\n'.join([lbl,subtitle]), 
+        pylab.text(-0.65,0.5,'\n'.join([lbl,subtitle]), 
                  horizontalalignment='center', 
                  verticalalignment='center',
                  fontsize=5+mod, rotation='vertical')
