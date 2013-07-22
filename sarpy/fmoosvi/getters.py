@@ -222,10 +222,3 @@ def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
         bbox[2] = numpy.true_divide(bbox[2],shape[1])
         bbox[3] = numpy.true_divide(bbox[3],shape[1])
         return bbox
-    
-    
-    
-    
-    
-    
-    
