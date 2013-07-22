@@ -632,50 +632,50 @@ def h_generate_ROI(masterlist_name, data_label, adata_label = None,
     
     for k,v in master_list.iteritems():
               
-#        try:
-        scan = sarpy.Scan(v[data_label][0])
-        sdir = scan.shortdirname
-        sdir = sdir.replace('/','_')
-        
-        if ioType == 'export':
-            fname = os.path.join(path, sdir + '.nii')
-            scan.pdata[0].export2nii(fname)
-        
-        elif ioType == 'import':
-                
-            if adata_label is None:
-                adata_label = 'roi'
-                
-            if (not adata_label in scan.adata.keys()) or forceVal is True:
-                
-                fname = os.path.join(path, sdir + 'a.nii')
-                roi = nibabel.load(fname).get_data()[:,:,:,0]
-                
-                # the default foreground and background in h_image_to_mask
-                # will result in a roi_m that has NaN and 1 only (aka
-                # 'proper mask')
-                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)               
-                
-                scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
-                print("h_generate_roi: saved roi in adata with generic 'roi' label")
-            else:
-
-                print('{0}: adata already exists {1} '.format(
-                adata_label,scan.shortdirname))
-                pass 
-
-        else:
+        try:
+            scan = sarpy.Scan(v[data_label][0])
+            sdir = scan.shortdirname
+            sdir = sdir.replace('/','_')
             
-            print("Please specify either 'import' or 'export' \
-            for the ioType!")
+            if ioType == 'export':
+                fname = os.path.join(path, sdir + '.nii')
+                scan.pdata[0].export2nii(fname)
+            
+            elif ioType == 'import':
+                    
+                if adata_label is None:
+                    adata_label = 'roi'
+                    
+                if (not adata_label in scan.adata.keys()) or forceVal is True:
+                    
+                    fname = os.path.join(path, sdir + 'a.nii')
+                    roi = nibabel.load(fname).get_data()[:,:,:,0]
+                    
+                    # the default foreground and background in h_image_to_mask
+                    # will result in a roi_m that has NaN and 1 only (aka
+                    # 'proper mask')
+                    roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)               
+                    
+                    scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
+                    print('h_generate_roi: saved {0} roi label'.format(scan.shortdirname))
+                else:
+    
+                    print('{0}: adata already exists {1} '.format(
+                    adata_label,scan.shortdirname))
+                    pass 
+    
+            else:
+                
+                print("Please specify either 'import' or 'export' \
+                for the ioType!")
         
-#        except IOError:
-#            
-#            print('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,data_label) )
-#            pass
-#
-#        except:
-#            raise
+        except IOError:
+            
+            print('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,data_label) )
+            pass
+
+        except:
+            raise
             
     print('Nifti images were processed in {0}'.format(path))
 
