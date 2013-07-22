@@ -351,12 +351,11 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
     
     
     TR = scan_object.method.PVM_RepetitionTime
-    FA = math.radians(scan_object.acqp.ACQ_flip_angle)
+    FA = scan_object.acqp.ACQ_flip_angle
     
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object, pdata_num = 0)    
     
     # Deal with bounding boxes
-
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
        
@@ -400,9 +399,9 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
     T1baseline = numpy.squeeze(data_t1map)*bbox_mask
     T1baseline = numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),reps)
     conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
-#    print E2
-#    print T1[numpy.isfinite(T1)]
-#    print T1baseline[numpy.isfinite(T1baseline)]        
+    
+    conc[conc<0] = 0
+       
     return conc
     
     
