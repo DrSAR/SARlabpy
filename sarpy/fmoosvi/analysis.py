@@ -58,14 +58,10 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
         auc_reps = int(numpy.round(time / time_per_rep))
         
         if auc_reps == 0:
-            raise ZeroDivisionError
-
-            
-        
+            raise ZeroDivisionError      
     except ZeroDivisionError:
         print('h_calculate_auc: Insufficient data for AUC (0 reps) in scan {0}'.format(scan_object.shortdirname))
         raise ZeroDivisionError
-
         
     time_points = numpy.arange(time_per_rep,time_per_rep*auc_reps + time_per_rep,time_per_rep)
 
@@ -80,17 +76,14 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     # Size info
     x_size = norm_data.shape[0]
     y_size = norm_data.shape[1]
-    num_slices = norm_data.shape[2]
-    
+    num_slices = norm_data.shape[2]    
 
     # Now calculate the actual AUC
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
-
     for slice in range(num_slices):
         auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
-
-        
+       
     # Deal with bounding boxes
 
     if bbox is None:        
@@ -308,7 +301,7 @@ def h_calculate_AUGC(scan_object, adata_label, bbox = None, time = 60, pdata_num
     augc_data = numpy.empty([x_size,y_size,num_slices])
     
     for slice in range(num_slices):
-        augc_data[:,:,slice] = scipy.integrate.simps(numpy.isfinite(data[:,:,slice,inj_point:inj_point+augc_reps]),x=time_points)
+        augc_data[:,:,slice] = scipy.integrate.simps(data[:,:,slice,inj_point:inj_point+augc_reps],x=time_points)
     
     # Deal with bounding boxes
 
@@ -387,25 +380,29 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
             for slice in xrange(num_slices):
                                
                 baseline_s = numpy.mean(data[x,y,slice,0:inj_point])
+                E1 = numpy.exp(-TR/data_t1map[x,y,slice])
+                c = numpy.cos(numpy.radians(FA))
                 
-                E1 = numpy.exp(-TR/data_t1map_pre.data[x,y,slice])
-                c = numpy.cos(FA)
+                T1[x,y,slice,0:inj_point] = data_t1map[x,y,slice]
                 
-                T1[x,y,slice,0:inj_point] = data_t1map_pre.data[x,y,slice]
-                               
-                for rep in xrange(inj_point,reps):
-                    
+# Use the SPGR equation twice, once before agent admin. and once after. If you
+# divide the two, the M0s cancel out, and so do the sin thetas. what remains is:
+# (1-E1)*(1-E0*cos) / ((1-E0) * (1-E1*cos)). use wolfram alpha to solve this:
+# http://www.wolframalpha.com/input/?i=solve+%28%281-x%29*%281-b*c%29%29+%2F+%28%281-b%29*%281-x*c%29%29+%3D+r+for+x
+
+                for rep in xrange(inj_point,reps):                    
                     s = data[x,y,slice,rep] / baseline_s
                     E2 = (-E1*c + E1*s - s + 1) / (E1*s*c - E1*c - s*c +1)
-                    
-
+                    T1[x,y,slice,inj_point:] = -TR / numpy.log(E2)
 
     # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
 
-    T1baseline = numpy.squeeze(data_t1map_pre.data)*bbox_mask
-    T1baseline =  numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),reps)
+    T1baseline = numpy.squeeze(data_t1map)*bbox_mask
+    T1baseline = numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),reps)
     conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
-                
+#    print E2
+#    print T1[numpy.isfinite(T1)]
+#    print T1baseline[numpy.isfinite(T1baseline)]        
     return conc
     
     
