@@ -56,7 +56,7 @@ def list_param_by_type(type_=str, exp_names=['NecS3'], fname = None):
     if fname:
         with open(fname, 'w') as f:
             print('{frozenset([', file=f)
-            for a in sarpy.natural_sort(set_dict[str]): #natural_sort
+            for a in sarpy.natural_sort(set_dict[str]):
                 print("'%s', " % a, file=f, end='')
             print("]): regex_comp,", file=f)
             print('frozenset([', file=f)
