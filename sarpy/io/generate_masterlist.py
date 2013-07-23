@@ -63,7 +63,7 @@ except ConfigParser.NoOptionError:
     
 # get unique name of patients
 expt = sarpy.Experiment(defaults['experimentname'])
-patname_list=sorted(list(set(expt.get_SUBJECT_id())))
+patname_list=sarpy.natural_sort(list(set(expt.get_SUBJECT_id())))
 
 master_sheet = collections.OrderedDict()
 # first do the regular assignments

@@ -13,6 +13,7 @@ import argparse
 import os
 import json
 import re
+import collections
 
 #TODO: for some reason the required args still show up as optional
 
@@ -51,16 +52,18 @@ except AttributeError:
 
 ## Start changing the master lists, see whether an updated masterlis exists
 
-root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
-
+root = os.path.join(os.path.expanduser('~/mdata'),
+                    masterlist_name,
+                    masterlist_name)
 if os.path.exists(os.path.join(root+'_updated.json')):
-    
-    with open(os.path.join(root+'_updated.json'),'r') as master_file:
-        master_list = json.load(master_file).copy()   
-else:
-    with open(os.path.join(root+'.json'),'r') as master_file:
-        master_list = json.load(master_file).copy()
-    
+    fname_to_open = root+'_updated.json'
+else: 
+    fname_to_open = root+'.json'
+with open(os.path.join(fname_to_open),'r') as master_file:
+    json_str = master_file.read()
+    master_list = json.JSONDecoder(
+                       object_pairs_hook=collections.OrderedDict
+                       ).decode(json_str)    
     
 for k,v in master_list.iteritems():
     
@@ -79,7 +82,10 @@ for k,v in master_list.iteritems():
         
         print('update_bbox: Coud not find {0}, {1} \n'.format(k,adata_label))
 
-json.dump(master_list, open(os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name+'_updated.json'),'w'), indent=4)
+json.dump(master_list, open(os.path.join(os.path.expanduser('~/mdata'),
+                                         masterlist_name,
+                                         masterlist_name+'_updated.json'),'w'), 
+          indent=4)
 
 
 

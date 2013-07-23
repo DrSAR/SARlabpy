@@ -12,6 +12,7 @@ Copyright: SARlab members, UBC, Vancouver, 2013
 import argparse
 import ConfigParser
 import os
+import collections
 import json
 import matplotlib
 matplotlib.use('Agg')# where did I come from !?
@@ -95,7 +96,10 @@ if args.test:
 
 # load the master_list to have easy access to data
 with open(os.path.join(os.path.expanduser('~/mdata'),args.master_list),'r') as master_file:
-    master_list = json.load(master_file)
+    json_str = master_file.read()
+    master_list = json.JSONDecoder(
+                       object_pairs_hook=collections.OrderedDict
+                       ).decode(json_str)    
 
 # determine the layout
 rows = [row for row in config.sections() if not((row=='Defaults'))]
