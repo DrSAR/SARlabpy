@@ -72,7 +72,8 @@ conf_parser.add_argument("-c", "--conf_file",
 args, remaining_argv = conf_parser.parse_known_args()
 if args.conf_file:
     config = ConfigParser.SafeConfigParser()
-    config.read([args.conf_file])
+    conf_file_name = [args.conf_file]
+    config.read(conf_file_name)
     defaults = dict(config.items("Defaults"))
 else: 
     defaults = {}
@@ -111,9 +112,11 @@ ref_lbl = config.get(args.ref_row,'label')
 
 #TODO: figure out a way to capture the root of the experiment fast. This willwork
 # for XXXSY. But will fail for Y >9
- 
-rootName = sarpy.Experiment(master_list.keys()[0]).root[0:5]
-testPDF = PdfPages(os.path.join(os.path.expanduser('~/mdata'),rootName,rootName+'.pdf'))
+
+rootName = str(conf_file_name[0]).split('/')
+pdfName = rootName[-1].strip('.config')
+
+testPDF = PdfPages(os.path.join(os.path.expanduser('~/mdata'),rootName[-2],pdfName+'.pdf'))
 
 # for every patient we will create the same board
 for k,v in master_list.iteritems():
