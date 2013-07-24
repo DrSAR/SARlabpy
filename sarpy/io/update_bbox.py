@@ -39,11 +39,10 @@ args = parser.parse_args()
 masterlist_name = args.masterlist_name
 scan_label = args.roi_source
 
-try:
-    adata_label = args.adata_label
-except AttributeError:
+adata_label = args.adata_label
+if adata_label is None:
     adata_label = 'roi'
-    
+ 
 try:
     suffix = str(args.suffix)
 except AttributeError:
@@ -68,8 +67,10 @@ with open(os.path.join(fname_to_open),'r') as master_file:
 for k,v in master_list.iteritems():
     
     try:
-   
         scn = sarpy.Scan(v[scan_label][0])
+    except(IOError,KeyError):
+        print('update_bbox: Could not find {0}, {1} \n'.format(k,adata_label))
+    else:
         new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,adata_label,type='pct')
         
         for j in v:
@@ -78,10 +79,6 @@ for k,v in master_list.iteritems():
                 v[j][1] = new_bbox
                 # leave the empty ones as is...        
             
-    except(IOError,KeyError):
-        
-        print('update_bbox: Coud not find {0}, {1} \n'.format(k,adata_label))
-
 json.dump(master_list, open(os.path.join(os.path.expanduser('~/mdata'),
                                          masterlist_name,
                                          masterlist_name+'_updated.json'),'w'), 
