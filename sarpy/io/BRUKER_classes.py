@@ -95,7 +95,11 @@ class PDATA_file(object):
 
     @lazy_property
     def visu_pars(self):
-        return JCAMP_file(os.path.join(self.filename,'visu_pars'))
+        try:
+            return JCAMP_file(os.path.join(self.filename,'visu_pars')) 
+        except IOError: 
+            logger.warning('visu_pars file %s not found\n' % self.filename) 
+            return None
 
     @lazy_property
     def d3proc(self):
@@ -123,7 +127,10 @@ class PDATA_file(object):
 
 
     def uid(self):
-        return self.visu_pars.VisuUid
+        try:
+            return self.visu_pars.VisuUid
+        except AttributeError:
+            return ''
 
     def store_adata(self, *args, **kwargs):
         '''
