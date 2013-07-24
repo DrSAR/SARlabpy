@@ -42,14 +42,12 @@ adata_label = args.adata_label
 
 if adata_label is None:
     adata_label = 'roi'
- 
 try:
     prefix = str(args.suffix)
 except AttributeError:
     prefix = ''    
 
-
-## Start changing the master lists, see whether an updated masterlis exists
+## Start changing the master lists, see whether an updated masterlist exists
 
 root = os.path.join(os.path.expanduser('~/mdata'),
                     masterlist_name,
@@ -68,10 +66,18 @@ for k,v in master_list.iteritems():
     
     try:
         scn = sarpy.Scan(v[scan_label][0])
-    except(IOError,KeyError):
+    except(IOError):
         print('update_bbox: Could not find {0}, {1} \n'.format(k,adata_label))
+    
     else:
-        new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,adata_label,type='pct')
+        try:
+            new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,adata_label,
+                                                          type='pct')
+        except KeyError:
+            print('update_bbox: Could not key {0} in scan {1} \n'.format(adata_label,
+                  k))
+            pass
+    
         
         for j in v:
             
@@ -85,6 +91,7 @@ json.dump(master_list, open(os.path.join(os.path.expanduser('~/mdata'),
           indent=4)
 
 
-
+print('update_bbox: Success, updated file is: {0}'.format(
+                                            masterlist_name+'_updated.json'))
 
     
