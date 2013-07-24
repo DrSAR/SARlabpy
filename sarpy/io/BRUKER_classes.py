@@ -253,6 +253,10 @@ class Scan(object):
                 raise IOError(
                     'Data root (%s) is not unique ' % root +
                     '\nDataset present for several users!')
+            elif len(extended_search) == 0:
+                raise IOError(
+                    'Data root (%s) does not exist' % root +
+                    '\nwrong filename?')
             else:
                 filename = extended_search[0]
         if os.path.isdir(filename):
