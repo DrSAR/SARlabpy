@@ -114,7 +114,7 @@ ref_lbl = config.get(args.ref_row,'label')
 # for XXXSY. But will fail for Y >9
 
 rootName = str(conf_file_name[0]).split('/')
-pdfName = rootName[-1].strip('.config')
+pdfName = os.path.splitext(rootName[-1])[0]
 
 testPDF = PdfPages(os.path.join(os.path.expanduser('~/mdata'),rootName[-2],pdfName+'.pdf'))
 
