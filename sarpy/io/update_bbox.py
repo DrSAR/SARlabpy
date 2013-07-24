@@ -43,9 +43,10 @@ adata_label = args.adata_label
 if adata_label is None:
     adata_label = 'roi'
 try:
-    prefix = str(args.suffix)
+    prefix = str(args.prefix)
 except AttributeError:
-    prefix = ''    
+    prefix = ''
+    
 
 ## Start changing the master lists, see whether an updated masterlist exists
 
@@ -77,8 +78,7 @@ for k,v in master_list.iteritems():
             print('update_bbox: Could not key {0} in scan {1} \n'.format(adata_label,
                   k))
             pass
-    
-        
+
         for j in v:
             
             if len(v[j][1]) == 4 and re.match(prefix,str(j)): 
@@ -88,7 +88,7 @@ for k,v in master_list.iteritems():
 json.dump(master_list, open(os.path.join(os.path.expanduser('~/mdata'),
                                          masterlist_name,
                                          masterlist_name+'_updated.json'),'w'), 
-          indent=4)
+                                         indent=4)
 
 
 print('update_bbox: Success, updated file is: {0}'.format(
