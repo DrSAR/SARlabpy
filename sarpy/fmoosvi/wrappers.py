@@ -159,7 +159,7 @@ def calc_AUGC(masterlist_name,
                 analysis_label,scan.shortdirname))
                 pass 
             
-        except(IOError):
+        except(IOError, KeyError):
             print('{0}: Not found {1} and {2}'.format(
             analysis_label,k,data_label) )
             
