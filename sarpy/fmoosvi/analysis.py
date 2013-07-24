@@ -257,7 +257,7 @@ def h_calculate_AUGC(scan_object, adata_label, bbox = None, time = 60, pdata_num
         data = scan_object.adata[adata_label].data
     except KeyError:
         print('h_caculate_AUGC: Source data {0} does not exist yet.'.format(adata_label))
-    
+        raise KeyError
     
     ########### Getting and defining parameters
     

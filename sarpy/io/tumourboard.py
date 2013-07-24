@@ -22,6 +22,7 @@ import sarpy
 import sarpy.fmoosvi.getters
 import sarpy.ImageProcessing.resample_onto as sir
 import tempfile
+import scipy
 from matplotlib.backends.backend_pdf import PdfPages
 
 
@@ -192,6 +193,9 @@ for k,v in master_list.iteritems():
                 if (clim_min is None) and (clim_max is None):
                     (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(
                                                 data.data)
+                else:
+                    (clim_min, clim_max) = (numpy.int(clim_min),
+                                            numpy.int(clim_max))
             else:
                 data = scn.pdata[0]
                                 
@@ -217,7 +221,8 @@ for k,v in master_list.iteritems():
                                  bbox[2]:bbox[3],col_idx],
                                  **row_conf)
                            
-                t.set_clim([clim_min, clim_max])
+                t.set_clim(clim_min, clim_max)
+
                 pylab.axis('off')
                 
                 if row_idx == 0:
@@ -265,9 +270,15 @@ for k,v in master_list.iteritems():
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
             adata_key = row_conf.pop('adata', None)
             if adata_key is not None:
-                data = scn.adata[adata_key]
+                
+                try:
+                    data = scn.adata[adata_key]
+                except KeyError:
+                    print('Adata Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+                    continue                
             else:
                 data = scn.pdata[0]
+                
             xdata = data.data
 
             for col_idx in xrange(min(n_cols, xdata.shape[0])):
@@ -298,6 +309,67 @@ for k,v in master_list.iteritems():
                     label.set_fontsize(0+mod)
 
             row_idx += 1
+
+        if row_conf.get('type', None) == 'text':
+
+
+
+
+
+
+
+
+
+
+
+
+            scn = sarpy.Scan(fname)
+            print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+            adata_key = row_conf.pop('adata', None)
+            
+            if adata_key is not None:                
+                try:
+                    data = scn.adata[adata_key]
+                except KeyError:
+                    print('Adata Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+                    continue
+            else:
+                raise IOError('No text adata find')
+                                
+            xdata = data.data
+            
+            subtitle = numpy.round(scipy.stats.nanmean(xdata))
+
+            pylab.text(-0.15,0.5,'Avg: {0}'.format(subtitle), 
+                             horizontalalignment='center', 
+                             verticalalignment='center',
+                             fontsize=5+mod, rotation='vertical')            
+            
+
+            for col_idx in xrange(min(n_cols, xdata.shape[0])):
+                fig.add_subplot(G[row_idx, col_idx])
+                pylab.axis('off')
+                pylab.text(0.3,0.5,'{0}'.format(numpy.round(xdata[col_idx])), fontsize=8+mod)
+                    
+            row_idx += 1
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             
             
         elif row_conf.get('type', None) == 'histo':
