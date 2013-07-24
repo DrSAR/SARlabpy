@@ -620,12 +620,16 @@ def h_generate_VTC(scan, bbox = None, pdata_num = 0):
 def h_generate_ROI(masterlist_name, data_label, adata_label = None, 
                  ioType = None, path = None, forceVal = False):
 
-    mdata = os.path.expanduser(os.path.join(
-    '~','mdata',masterlist_name,masterlist_name+'.json'))
+    root = os.path.join(os.path.expanduser('~/mdata'),
+                        masterlist_name,
+                        masterlist_name)
   
-    with open(mdata,'r') as master_file:
-        master_list = json.load(master_file)
-
+    fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str) 
     if path is None:
         path = os.path.expanduser(os.path.join('~','mdata',masterlist_name))
     

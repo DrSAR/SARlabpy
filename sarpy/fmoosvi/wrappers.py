@@ -19,16 +19,20 @@ def bulk_analyze(masterlist_name,
                  data_label, 
                  analysis_label, 
                  forceVal = False):
-                     
-    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
-    
+
+    root = os.path.join(os.path.expanduser('~/mdata'),
+                        masterlist_name,
+                        masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
-        
-        with open(os.path.join(root+'_updated.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()   
-    else:
-        with open(os.path.join(root+'.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()                     
+        fname_to_open = root+'_updated.json'
+    else: 
+        fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str) 
+
 
     if re.match('auc60', analysis_label):
 
@@ -131,15 +135,18 @@ def calc_AUGC(masterlist_name,
               analysis_label='augc60',
               forceVal = False):
                   
-    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
-    
+    root = os.path.join(os.path.expanduser('~/mdata'),
+                        masterlist_name,
+                        masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
-        
-        with open(os.path.join(root+'_updated.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()   
-    else:
-        with open(os.path.join(root+'.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()                     
+        fname_to_open = root+'_updated.json'
+    else: 
+        fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str)                    
        
     for k,v in master_list.iteritems():
         
@@ -173,15 +180,18 @@ def conc_from_signal(masterlist_name,
                      analysis_label='gd_conc', 
                      forceVal = False):
 
-    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
-    
+    root = os.path.join(os.path.expanduser('~/mdata'),
+                        masterlist_name,
+                        masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
-        
-        with open(os.path.join(root+'_updated.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()   
-    else:
-        with open(os.path.join(root+'.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()                     
+        fname_to_open = root+'_updated.json'
+    else: 
+        fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str)                
         
     for k,v in master_list.iteritems():
         
@@ -277,16 +287,18 @@ def calc_enhancement_curve(masterlist_name,
                            forceVal = False):
 
 
-    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
-    
+    root = os.path.join(os.path.expanduser('~/mdata'),
+                        masterlist_name,
+                        masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
-        
-        with open(os.path.join(root+'_updated.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()   
-    else:
-        with open(os.path.join(root+'.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()                     
-       
+        fname_to_open = root+'_updated.json'
+    else: 
+        fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str) 
         
     for k,v in master_list.iteritems():
         
@@ -339,17 +351,18 @@ def roi_distribution(data, roi, bins,  display_histogram = True,
           
 def plotVTC(masterlist_name, key, data_label, adata_label = None):
 
-    root = os.path.join(os.path.expanduser('~/mdata'),masterlist_name,masterlist_name)
-    
+    root = os.path.join(os.path.expanduser('~/mdata'),
+                        masterlist_name,
+                        masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
-        
-        with open(os.path.join(root+'_updated.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()   
-    else:
-        with open(os.path.join(root+'.json'),'r') as master_file:
-            master_list = json.load(master_file).copy()                     
-       
-        
+        fname_to_open = root+'_updated.json'
+    else: 
+        fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str)
     value = master_list[key]
         
     data = sarpy.Scan(value[data_label][0])
