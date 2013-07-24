@@ -14,6 +14,7 @@ import os
 import json
 import re
 import sarpy.ImageProcessing.resample_onto
+import collections
 
 def bulk_analyze(masterlist_name, 
                  data_label, 
