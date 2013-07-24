@@ -10,6 +10,7 @@ Created on Thu May 30 17:49:35 2013
 import sarpy.fmoosvi.analysis
 import argparse
 import os
+import collections
 
 #TODO: for some reason the required args still show up as optional
 

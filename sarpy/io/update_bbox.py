@@ -25,32 +25,30 @@ parser.add_argument('-m', '--masterlist_name', type=str, required=True,
                    Usage: python update_bbox.py -m NecS3 -a roi -i export ')
 
 parser.add_argument('-s', '--roi_source', type=str, required=True,
-                   help='Optional: source of scan used to draw roi') 
+                   help='Required: source of scan used to draw roi') 
 
 parser.add_argument('-a', '--adata_label', type=str,
                    help='Optional: adata label, defaults to roi') 
                    
-parser.add_argument('-x', '--suffix', type=str,
+parser.add_argument('-x', '--prefix', type=str,
                    help='Optional: only modifies labels that start with the \
-                   suffix, defaults to all labels. Useful for scans done on different days, e.g., 0h- or 24h-')
+                   prefix, defaults to all labels. Useful for scans done on different days, e.g., 0h- or 24h-')
                    
                  
 args = parser.parse_args()
 masterlist_name = args.masterlist_name
 scan_label = args.roi_source
+adata_label = args.adata_label
 
-try:
-    adata_label = args.adata_label
-except AttributeError:
+if adata_label is None:
     adata_label = 'roi'
-    
 try:
-    suffix = str(args.suffix)
+    prefix = str(args.prefix)
 except AttributeError:
-    suffix = None    
+    prefix = ''
+    
 
-
-## Start changing the master lists, see whether an updated masterlis exists
+## Start changing the master lists, see whether an updated masterlist exists
 
 root = os.path.join(os.path.expanduser('~/mdata'),
                     masterlist_name,
@@ -68,26 +66,32 @@ with open(os.path.join(fname_to_open),'r') as master_file:
 for k,v in master_list.iteritems():
     
     try:
-   
         scn = sarpy.Scan(v[scan_label][0])
-        new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,adata_label,type='pct')
-        
+    except(IOError):
+        print('update_bbox: Could not find {0}, {1} \n'.format(k,adata_label))
+    
+    else:
+        try:
+            new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,adata_label,
+                                                          type='pct')
+        except KeyError:
+            print('update_bbox: Could not key {0} in scan {1} \n'.format(adata_label,
+                  k))
+            pass
+
         for j in v:
             
-            if len(v[j][1]) == 4 and re.match(suffix,str(j)): 
+            if len(v[j][1]) == 4 and re.match(prefix,str(j)): 
                 v[j][1] = new_bbox
                 # leave the empty ones as is...        
             
-    except(IOError,KeyError):
-        
-        print('update_bbox: Coud not find {0}, {1} \n'.format(k,adata_label))
-
 json.dump(master_list, open(os.path.join(os.path.expanduser('~/mdata'),
                                          masterlist_name,
                                          masterlist_name+'_updated.json'),'w'), 
-          indent=4)
+                                         indent=4)
 
 
-
+print('update_bbox: Success, updated file is: {0}'.format(
+                                            masterlist_name+'_updated.json'))
 
     
