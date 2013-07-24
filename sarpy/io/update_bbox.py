@@ -25,28 +25,28 @@ parser.add_argument('-m', '--masterlist_name', type=str, required=True,
                    Usage: python update_bbox.py -m NecS3 -a roi -i export ')
 
 parser.add_argument('-s', '--roi_source', type=str, required=True,
-                   help='Optional: source of scan used to draw roi') 
+                   help='Required: source of scan used to draw roi') 
 
 parser.add_argument('-a', '--adata_label', type=str,
                    help='Optional: adata label, defaults to roi') 
                    
-parser.add_argument('-x', '--suffix', type=str,
+parser.add_argument('-x', '--prefix', type=str,
                    help='Optional: only modifies labels that start with the \
-                   suffix, defaults to all labels. Useful for scans done on different days, e.g., 0h- or 24h-')
+                   prefix, defaults to all labels. Useful for scans done on different days, e.g., 0h- or 24h-')
                    
                  
 args = parser.parse_args()
 masterlist_name = args.masterlist_name
 scan_label = args.roi_source
-
 adata_label = args.adata_label
+
 if adata_label is None:
     adata_label = 'roi'
  
 try:
-    suffix = str(args.suffix)
+    prefix = str(args.suffix)
 except AttributeError:
-    suffix = None    
+    prefix = ''    
 
 
 ## Start changing the master lists, see whether an updated masterlis exists
@@ -75,7 +75,7 @@ for k,v in master_list.iteritems():
         
         for j in v:
             
-            if len(v[j][1]) == 4 and re.match(suffix,str(j)): 
+            if len(v[j][1]) == 4 and re.match(prefix,str(j)): 
                 v[j][1] = new_bbox
                 # leave the empty ones as is...        
             
