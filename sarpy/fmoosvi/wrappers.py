@@ -147,23 +147,24 @@ def calc_AUGC(masterlist_name,
             scan = sarpy.Scan(v[data_label][0])
             bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
             
-            if (not analysis_label in scan.adata.keys()) or forceVal is True:
-            
-                curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, adata_scan_label, bbox=bbox)
-                scan.store_adata(key=analysis_label, data = curr_augc, force = forceVal)
-                print('{0}: Success. Saved {1}'.format(analysis_label, 
-                                  scan.shortdirname))
-            
-            else:
-                print('{0}: adata already exists {1} '.format(
-                analysis_label,scan.shortdirname))
-                pass 
-            
-        except(IOError, KeyError):
+        except(IOError):
             print('{0}: Not found {1} and {2}'.format(
             analysis_label,k,data_label) )
+            pass     
+        
+        if (not analysis_label in scan.adata.keys()) or forceVal is True:
+        
+            curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, adata_scan_label, bbox=bbox)
+            scan.store_adata(key=analysis_label, data = curr_augc, force = forceVal)
+            print('{0}: Success. Saved {1}'.format(analysis_label, 
+                              scan.shortdirname))
+        
+        else:
+            print('{0}: adata already exists {1} '.format(
+            analysis_label,scan.shortdirname))
+            pass 
             
-            pass        
+   
 
 def conc_from_signal(masterlist_name, 
                      data_label, 
@@ -201,11 +202,9 @@ def conc_from_signal(masterlist_name,
                 analysis_label,scan.shortdirname))
                 pass 
             
-        except(IOError):
-            
+        except(IOError):          
             print('{0}: Not found {1} and {2}'.format(
             analysis_label,k,data_label) )
-            
             pass        
 ### ROI based code
 def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
