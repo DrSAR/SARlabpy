@@ -10,9 +10,10 @@ import sarpy.ImageProcessing.resample_onto
 import nibabel
 import scipy
 import scipy.stats
-
+import os
 import numpy
 import copy
+import pylab
 
 
 def get_num_slices(scan_object, pdata_num = 0):
@@ -109,8 +110,45 @@ def get_goodness_map(data, fit_dict):
                 goodness_map[x,y,z] = fit_dict['goodness']
     
     return goodness_map
+
+
+
+
+def get_fid_enhancement(scan_string):
+    
+    try:
+        scan = sarpy.Scan(scan_string)
+    except:
+        raise
+        
+    fiddir = os.path.join(scan.dirname,'fid')
+    
+    data = numpy.abs(sarpy.io.BRUKERIO.readfid(fiddir)['data'])
+    
+    x = data.shape[0]
+    y = data.shape[1]
+    
+    xmin = numpy.round(x*0.3)
+    xmax = numpy.round(x*0.8)
+    
+    ymin = numpy.round(y*0.3)
+    ymax = numpy.round(y*0.8)
+    
+
+    mean = numpy.mean(numpy.mean(data[xmin:xmax,ymin:ymax,3,:],0),0)
+    return pylab.plot(mean)
+
+
+
+
+
+
+
+
+
+
             
-def get_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
+def get_enhancement_curve(scan_object, adata_mask=None, pdata_num = 0):
 
     try:
         norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
@@ -127,12 +165,17 @@ def get_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
         
         roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
 
-        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image, 
-                                                         background=None, 
-                                                         foreground=None)
+        if adata_mask is not None:
+            
+            roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image, 
+                                                             background=None, 
+                                                             foreground=None)
         
-        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
+            masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
 roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
+
+        else:
+            masked_data = data_scan.data
 
 
         enhancement_curve = numpy.empty(shape = [num_slices, reps])
