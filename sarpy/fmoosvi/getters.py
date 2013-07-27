@@ -111,9 +111,6 @@ def get_goodness_map(data, fit_dict):
     
     return goodness_map
 
-
-
-
 def get_fid_enhancement(scan_string):
     
     try:
@@ -138,16 +135,6 @@ def get_fid_enhancement(scan_string):
     mean = numpy.mean(numpy.mean(data[xmin:xmax,ymin:ymax,3,:],0),0)
     return pylab.plot(mean)
 
-
-
-
-
-
-
-
-
-
-            
 def get_enhancement_curve(scan_object, adata_mask=None, pdata_num = 0):
 
     try:
