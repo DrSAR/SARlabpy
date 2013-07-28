@@ -97,7 +97,7 @@ if args.test:
     print(args)
 
 # load the master_list to have easy access to data
-with open(os.path.join(os.path.expanduser('~/mdata'),args.master_list),'r') as master_file:
+with open(os.path.join(os.path.expanduser('~/sdata'),args.master_list),'r') as master_file:
     json_str = master_file.read()
     master_list = json.JSONDecoder(
                        object_pairs_hook=collections.OrderedDict
@@ -116,7 +116,7 @@ ref_lbl = config.get(args.ref_row,'label')
 rootName = str(conf_file_name[0]).split('/')
 pdfName = os.path.splitext(rootName[-1])[0]
 
-testPDF = PdfPages(os.path.join(os.path.expanduser('~/mdata'),rootName[-2],pdfName+'.pdf'))
+testPDF = PdfPages(os.path.join(os.path.expanduser('~/sdata'),rootName[-2],pdfName+'.pdf'))
 
 # for every patient we will create the same board
 for k,v in master_list.iteritems():

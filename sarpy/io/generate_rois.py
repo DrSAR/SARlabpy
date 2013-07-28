@@ -20,7 +20,7 @@ import os
 def generate_rois(masterlist_name, data_label, 
                   adata_label, ioType, path, forceVal = False):
 
-    root = os.path.join(os.path.expanduser('~/mdata'),
+    root = os.path.join(os.path.expanduser('~/sdata'),
                     masterlist_name,
                     masterlist_name)
   
@@ -31,7 +31,7 @@ def generate_rois(masterlist_name, data_label,
                            object_pairs_hook=collections.OrderedDict
                            ).decode(json_str) 
     if path is None:
-        path = os.path.expanduser(os.path.join('~','mdata',masterlist_name))
+        path = os.path.expanduser(os.path.join('~','sdata',masterlist_name))
     
     for k,v in master_list.iteritems():
               
@@ -101,7 +101,7 @@ if __name__ == '__main__':
                        help='Optional: adata label, defaults to roi') 
                                          
     parser.add_argument('-p', '--path', type=str,
-                       help='Optional: Path to/from export/import data, default to mdata')
+                       help='Optional: Path to/from export/import data, default to sdata')
                        
     parser.add_argument('-f', '--force', type=str, choices = ['True','False'],
                         help='Optional: Replace data? True or False, defaults to False')   
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     try:
         path = os.path.expanduser(os.path.join(args.path))
     except AttributeError:
-        path = os.path.expanduser(os.path.join('~','mdata',masterlist_name))
+        path = os.path.expanduser(os.path.join('~','sdata',masterlist_name))
     
     try:
         force = args.force

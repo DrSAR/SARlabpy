@@ -50,7 +50,7 @@ except AttributeError:
 
 ## Start changing the master lists, see whether an updated masterlist exists
 
-root = os.path.join(os.path.expanduser('~/mdata'),
+root = os.path.join(os.path.expanduser('~/sdata'),
                     masterlist_name,
                     masterlist_name)
 if os.path.exists(os.path.join(root+'_updated.json')):
@@ -85,7 +85,7 @@ for k,v in master_list.iteritems():
                 v[j][1] = new_bbox
                 # leave the empty ones as is...        
             
-json.dump(master_list, open(os.path.join(os.path.expanduser('~/mdata'),
+json.dump(master_list, open(os.path.join(os.path.expanduser('~/sdata'),
                                          masterlist_name,
                                          masterlist_name+'_updated.json'),'w'), 
                                          indent=4)

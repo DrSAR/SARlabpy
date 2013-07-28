@@ -34,7 +34,7 @@ class PTmp(pyinotify.ProcessEvent):
 
 notifier = pyinotify.Notifier(wm, PTmp())
 
-wdd = wm.add_watch(os.path.expanduser('/srv/mdata'), mask, rec=True)
+wdd = wm.add_watch(os.path.expanduser('/srv/sdata'), mask, rec=True)
 
 while True:
     try:
