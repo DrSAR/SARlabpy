@@ -330,7 +330,7 @@ class AData(object):
         kwargs['meta'] = meta
         return cls(**kwargs)
 
-    def export2nii(self, filename):
+    def export2nii(self, filename, rescale=None):
         '''
         Export AData content to a named Nifti1 file using the visu_pars-defined
         geometry of the associated parent processed data (PData)
@@ -344,12 +344,29 @@ class AData(object):
             >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2, force=True)
             >>> scn.adata['times2'].export2nii('/tmp/PhantomOrientation-times2.nii.gz')
         '''
-        header = visu_pars_2_Nifti1Header(self.parent.visu_pars)
+        from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
+        import copy
+        import sarpy.fmoosvi.getters
+        import numpy
+        
+        header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()
-        img_nii = nibabel.nifti1.Nifti1Image(self.data,
-                                              aff,
-                                              header=header)
-        img_nii.to_filename(filename)
+
+        if rescale is None:
+            img_nii = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
+            img_nii.to_filename(filename)
+        else:
+            data = copy.deepcopy(self.data)
+            ndata = numpy.empty(data.shape)     
+            
+            for sl in xrange(data.shape[2]):
+                sdata = sarpy.fmoosvi.getters.get_rescaled_data(data[:,:,sl])
+                ndata[:,:,sl] = sdata
+
+            img_nii = nibabel.nifti1.Nifti1Image(ndata, aff, header=header)
+            img_nii.to_filename(filename)  
+
+
 
 
 if __name__ == '__main__':

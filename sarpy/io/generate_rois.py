@@ -11,7 +11,7 @@ Created on Thu May 30 17:49:35 2013
 
 
 def generate_rois(masterlist_name, data_label, 
-                  adata_label, ioType, path, forceVal = False):
+                  adata_label, ioType, path, rescale = None, forceVal = False):
 
     import json
     import nibabel
@@ -48,7 +48,7 @@ def generate_rois(masterlist_name, data_label,
         
         if ioType == 'export':
             fname = os.path.join(path, sdir + '.nii')
-            scan.pdata[0].export2nii(fname)
+            scan.pdata[0].export2nii(fname,rescale)
         
         elif ioType == 'import':
                 

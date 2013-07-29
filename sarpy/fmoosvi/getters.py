@@ -222,3 +222,16 @@ def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
         bbox[2] = numpy.true_divide(bbox[2],shape[1])
         bbox[3] = numpy.true_divide(bbox[3],shape[1])
         return bbox
+        
+def get_rescaled_data(data,minVal=None,maxVal=None):
+    
+#    Max/min formula came from:
+#    http://stackoverflow.com/questions/5294955/how-to-scale-down-a-range-of-numbers-with-a-known-min-and-max-value?rq=1
+
+    if minVal is None and maxVal is None:
+        [minVal,maxVal] = get_image_clims(data)
+    
+    rescaled_data =  numpy.true_divide((maxVal-minVal)*(data-minVal),
+                                       (maxVal-minVal)) + minVal
+    print minVal,maxVal
+    return rescaled_data
