@@ -18,7 +18,7 @@ import logging
 logger=logging.getLogger('sarpy.io.BRUKER_classes')
 
 
-dataroot = os.path.expanduser(os.path.join('~','data'))
+dataroot = os.path.expanduser(os.path.join('~','bdata'))
 
 import sarpy # make natural_sort in helpers.py available
 

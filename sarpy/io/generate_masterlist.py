@@ -117,7 +117,7 @@ if args.test:
     print('%s\n' % args)
     pprint.pprint(json.loads(json.dumps(master_sheet)))
 else:
-    outputfilename = os.path.join(os.path.expanduser('~/mdata'),args.output)
+    outputfilename = os.path.join(os.path.expanduser('~/sdata'),args.output)
     with open(outputfilename,'w') as outfile:
         json_str = json.dumps(master_sheet, outfile, indent=4)
         y = re.sub(r'\s\s+(\d+)', lambda match: r' {}'.format(
