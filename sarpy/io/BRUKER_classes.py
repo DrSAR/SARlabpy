@@ -39,11 +39,11 @@ def last_path_components(absdirname, depth=1):
     fairly immune to trailing '/' and other irregularities. Used to determine
     the shortdirname in Scan and Study.
 
-    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9')
+    >>> last_path_components('~/bdata/stefan/nmr/readfidTest.ix1/9')
     '9'
-    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9/')
+    >>> last_path_components('~/bdata/stefan/nmr/readfidTest.ix1/9/')
     '9'
-    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9/', depth=2)
+    >>> last_path_components('~/bdata/stefan/nmr/readfidTest.ix1/9/', depth=2)
     'readfidTest.ix1/9'
     '''
     head = absdirname.rstrip(os.sep)
