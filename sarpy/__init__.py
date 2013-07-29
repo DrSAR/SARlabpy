@@ -11,7 +11,11 @@ from io.BRUKERIO import (readJCAMP, readfid, readfidspectro, read2dseq,
 from io.BRUKER_classes import (Scan, Study, StudyCollection,
                                Patient, Experiment,
                                dataroot)
+
 from io.AData_classes import (adataroot, AData)
+
+from io import update_bbox
+from io import generate_rois
 
 from io.visu_pars_2_Nifti1Header import (visu_pars_2_Nifti1Header,
                                       visu_pars_2_matrix_size)
