@@ -25,9 +25,9 @@ def update_bbox(masterlist_name, scan_label, adata_label=None, prefix= None):
 
     ## Start changing the master lists, see whether an updated masterlist exists
     
-    root = os.path.join(os.path.expanduser('~/sdata'),
+    root = os.path.expanduser(os.path.join('~/sdata',
                         masterlist_name,
-                        masterlist_name)
+                        masterlist_name))
     if os.path.exists(os.path.join(root+'_updated.json')):
         fname_to_open = root+'_updated.json'
     else: 
