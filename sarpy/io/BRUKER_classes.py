@@ -175,14 +175,15 @@ class PDATA_file(object):
             img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
             img_pair.to_filename(filename)
         else:
-            data = copy.deepcopy(self.data)
-            ndata = numpy.empty(data.shape)     
-            
-            for sl in xrange(data.shape[2]):
-                sdata = sarpy.fmoosvi.getters.get_rescaled_data(data[:,:,sl])
-                ndata[:,:,sl] = sdata
-
+   
             img_pair = nibabel.nifti1.Nifti1Image(ndata, aff, header=header)
+            
+
+            h = img_pair.get_header()
+            h['cal_min'] = minVal
+            h['cal_min'] = maxVal
+            
+            img_pair = nibabel.nifti1.Nifti1Image(ndata, aff, header=h)
             img_pair.to_filename(filename)            
 
 

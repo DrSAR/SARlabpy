@@ -79,15 +79,20 @@ def get_unique_list_elements(list, idfun=None):
        result.append(item)
    return result         
 
-def get_image_clims(data):
+def get_image_clims(data,std_modifier=None):
     
     xd = data[numpy.isfinite(data)].flatten()
     
     mean = numpy.mean(xd)
     std = numpy.std(xd)
     
-    min_lim = mean - 2.5*std
-    max_lim = mean + 2.5*std
+    if std_modifier is None:
+        std_modifier = 2.5
+        
+    print std_modifier
+    
+    min_lim = mean - std_modifier*std
+    max_lim = mean + std_modifier*std
     
     if min_lim < 0:
         min_lim = 0
@@ -223,15 +228,14 @@ def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
         bbox[3] = numpy.true_divide(bbox[3],shape[1])
         return bbox
         
-def get_rescaled_data(data,minVal=None,maxVal=None):
+def get_rescaled_data(data,minVal=None,maxVal=None,std_modifier=None):
     
 #    Max/min formula came from:
 #    http://stackoverflow.com/questions/5294955/how-to-scale-down-a-range-of-numbers-with-a-known-min-and-max-value?rq=1
 
     if minVal is None and maxVal is None:
-        [minVal,maxVal] = get_image_clims(data)
+        [minVal,maxVal] = get_image_clims(data,std_modifier)
     
     rescaled_data =  numpy.true_divide((maxVal-minVal)*(data-minVal),
                                        (maxVal-minVal)) + minVal
-    print minVal,maxVal
     return rescaled_data

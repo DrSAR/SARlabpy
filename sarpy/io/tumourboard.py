@@ -116,7 +116,7 @@ ref_lbl = config.get(args.ref_row,'label')
 rootName = str(conf_file_name[0]).split('/')
 pdfName = os.path.splitext(rootName[-1])[0]
 
-testPDF = PdfPages(os.path.join(os.path.expanduser('~/sdata'),rootName[-2],pdfName+'.pdf'))
+testPDF = PdfPages(os.path.expanduser(os.path.join('~/sdata',rootName[-2],args.output,pdfName+'.pdf')))
 
 # for every patient we will create the same board
 for k,v in master_list.iteritems():
@@ -382,12 +382,12 @@ for k,v in master_list.iteritems():
     testPDF.savefig(fig)      
     
     # Saving Figure    
-    outputfilename = os.path.expanduser(args.output)
-    filename = os.path.join(outputfilename, k + '.png')                
+    filename = os.path.expanduser(os.path.join('~/sdata',rootName[-2],args.output,k + '.png'))
     pylab.savefig(filename, bbox_inches=0, dpi=300)
     pylab.close('all')
 
 #os.remove(ref_filename)
 
 testPDF.close()
+
 
