@@ -227,7 +227,7 @@ def store_deltaT1(masterlist_name,
                      analysis_label='deltaT1',
                      forceVal = False):
 
-    root = os.path.join(os.path.expanduser('~/mdata'),
+    root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):

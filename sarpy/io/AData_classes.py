@@ -330,7 +330,7 @@ class AData(object):
         kwargs['meta'] = meta
         return cls(**kwargs)
 
-    def export2nii(self, filename, rescale=None):
+    def export2nii(self, filename):
         '''
         Export AData content to a named Nifti1 file using the visu_pars-defined
         geometry of the associated parent processed data (PData)
@@ -351,22 +351,8 @@ class AData(object):
         
         header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()
-
-        if rescale is None:
-            img_nii = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
-            img_nii.to_filename(filename)
-        else:
-            data = copy.deepcopy(self.data)
-            ndata = numpy.empty(data.shape)     
-            
-            for sl in xrange(data.shape[2]):
-                sdata = sarpy.fmoosvi.getters.get_rescaled_data(data[:,:,sl])
-                ndata[:,:,sl] = sdata
-
-            img_nii = nibabel.nifti1.Nifti1Image(ndata, aff, header=header)
-            img_nii.to_filename(filename)  
-
-
+        img_nii = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
+        img_nii.to_filename(filename)
 
 
 if __name__ == '__main__':

@@ -82,7 +82,6 @@ def generate_rois(masterlist_name, data_label,
 
 if __name__ == '__main__':
 
-
     import argparse
     import os
 

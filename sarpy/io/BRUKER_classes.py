@@ -145,7 +145,7 @@ class PDATA_file(object):
                                   'Scan.store_adata()')
         return AData_classes.AData.fromdata(self, *args, **kwargs)
 
-    def export2nii(self,filename,rescale = None):
+    def export2nii(self,filename,rescale = None, std_mod=None):
         '''
         Export the data originating from a 2dseq (BRUKER) reconstruction to
         a Nifti file format.
@@ -165,7 +165,6 @@ class PDATA_file(object):
 
         '''
         from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
-        import copy
         import sarpy.fmoosvi.getters
         import numpy
         header = visu_pars_2_Nifti1Header(self.visu_pars)
@@ -176,14 +175,15 @@ class PDATA_file(object):
             img_pair.to_filename(filename)
         else:
    
-            img_pair = nibabel.nifti1.Nifti1Image(ndata, aff, header=header)
-            
+            img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)         
 
             h = img_pair.get_header()
+            
+            minVal, maxVal = sarpy.fmoosvi.getters.get_image_clims(self.data, std_mod)
             h['cal_min'] = minVal
             h['cal_min'] = maxVal
             
-            img_pair = nibabel.nifti1.Nifti1Image(ndata, aff, header=h)
+            img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=h)
             img_pair.to_filename(filename)            
 
 

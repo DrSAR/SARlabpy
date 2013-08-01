@@ -89,9 +89,7 @@ def get_image_clims(data,std_modifier=None):
     
     if std_modifier is None:
         std_modifier = 2.5
-        
-    print std_modifier
-    
+               
     min_lim = mean - std_modifier*std
     max_lim = mean + std_modifier*std
     
