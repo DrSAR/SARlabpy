@@ -7,6 +7,7 @@ import re
 import glob
 
 import nibabel
+import collections
 
 import BRUKERIO
 import AData_classes
@@ -181,7 +182,7 @@ class PDATA_file(object):
             
             minVal, maxVal = sarpy.fmoosvi.getters.get_image_clims(self.data, std_mod)
             h['cal_min'] = minVal
-            h['cal_min'] = maxVal
+            h['cal_max'] = maxVal
             
             img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=h)
             img_pair.to_filename(filename)            
@@ -572,7 +573,7 @@ class Study(object):
         '''
         
         klist = self.find_adata()
-        ad_dict ={}
+        ad_dict = collections.OrderedDict()
         
         for k in klist: # Populate the ad_dict with the existing keys
             ad_dict[k] = []
