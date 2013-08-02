@@ -1,5 +1,7 @@
 version = '0.1'
 release = version + 'alpha'
+from helpers import git_repo_state
+repo_state = git_repo_state()
 
 import logging
 logger=logging.getLogger(__name__)
