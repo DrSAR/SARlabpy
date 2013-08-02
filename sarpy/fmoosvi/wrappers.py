@@ -21,7 +21,7 @@ def bulk_analyze(masterlist_name,
                  analysis_label, 
                  forceVal = False):
 
-    root = os.path.join(os.path.expanduser('~/mdata'),
+    root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
@@ -136,7 +136,7 @@ def calc_AUGC(masterlist_name,
               analysis_label='augc60',
               forceVal = False):
                   
-    root = os.path.join(os.path.expanduser('~/mdata'),
+    root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
@@ -181,7 +181,7 @@ def conc_from_signal(masterlist_name,
                      analysis_label='gd_conc', 
                      forceVal = False):
 
-    root = os.path.join(os.path.expanduser('~/mdata'),
+    root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
@@ -217,6 +217,56 @@ def conc_from_signal(masterlist_name,
             print('{0}: Not found {1} and {2}'.format(
             analysis_label,k,data_label) )
             pass        
+
+
+def store_deltaT1(masterlist_name,
+                     T1map_1,
+                     T1map_2,
+		     adata_label1 = 'T1map_LL',
+		     adata_label2 = None,
+                     analysis_label='deltaT1',
+                     forceVal = False):
+
+    root = os.path.join(os.path.expanduser('~/sdata'),
+                        masterlist_name,
+                        masterlist_name)
+    if os.path.exists(os.path.join(root+'_updated.json')):
+        fname_to_open = root+'_updated.json'
+    else:
+        fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str)
+
+    if adata_label2 is None:
+        adata_label2 = adata_label1
+
+    for k,v in master_list.iteritems():
+
+        try:
+            scan1 = sarpy.Scan(v[T1map_1][0])
+            scan2 = sarpy.Scan(v[T1map_2][0])
+	    bbox = sarpy.fmoosvi.getters.get_bbox(v, T1map_2)
+
+	except IOError:
+	    print('{0}: Not found adata {1} or {2} in patient {3}'.format(
+	          analysis_label,adata_label1,adata_label2,k) )
+	    continue
+
+        if (not analysis_label in scan2.adata.keys()) or forceVal is True:
+                
+	    deltaT1 = scan1.adata[adata_label1].data - scan2.adata[adata_label2].data
+            scan2.store_adata(key=analysis_label, data = deltaT1, force = forceVal)
+
+            print('{0}: Success. Saved {1}'.format(analysis_label,
+                                  scan2.shortdirname))
+            print('{0}: adata already exists {1} '.format(
+            analysis_label,scan2.shortdirname))
+            pass
+
+
 ### ROI based code
 def bulk_transfer_roi(exp_name, dest_adata_label, forceVal = False):
     '''
@@ -288,7 +338,7 @@ def calc_enhancement_curve(masterlist_name,
                            forceVal = False):
 
 
-    root = os.path.join(os.path.expanduser('~/mdata'),
+    root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):
@@ -352,7 +402,7 @@ def roi_distribution(data, roi, bins,  display_histogram = True,
           
 def plotVTC(masterlist_name, key, data_label, adata_label = None):
 
-    root = os.path.join(os.path.expanduser('~/mdata'),
+    root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
     if os.path.exists(os.path.join(root+'_updated.json')):

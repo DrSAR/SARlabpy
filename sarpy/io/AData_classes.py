@@ -344,11 +344,14 @@ class AData(object):
             >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2, force=True)
             >>> scn.adata['times2'].export2nii('/tmp/PhantomOrientation-times2.nii.gz')
         '''
-        header = visu_pars_2_Nifti1Header(self.parent.visu_pars)
+        from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
+        import copy
+        import sarpy.fmoosvi.getters
+        import numpy
+        
+        header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()
-        img_nii = nibabel.nifti1.Nifti1Image(self.data,
-                                              aff,
-                                              header=header)
+        img_nii = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
         img_nii.to_filename(filename)
 
 

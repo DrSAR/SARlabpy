@@ -149,7 +149,7 @@ if __name__ == '__main__':
                                 
     pdata.write2nii('/tmp/sformqform.nii.gz')
     a=nibabel.Nifti1Image.from_filename('/tmp/sformqform.nii.gz')
-    a_orig=nibabel.Nifti1Image.from_filename('/home/stefan/data/nii/2.16.756.5.5.100.1384712661.16188.1363828008.19.nii.gz')
+    a_orig=nibabel.Nifti1Image.from_filename('~/bdata/nii/2.16.756.5.5.100.1384712661.16188.1363828008.19.nii.gz')
     for k in a.get_header().keys():
         print k, a.get_header()[k], '==?==', a_orig.get_header()[k]
 
