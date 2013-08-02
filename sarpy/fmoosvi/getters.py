@@ -10,9 +10,10 @@ import sarpy.ImageProcessing.resample_onto
 import nibabel
 import scipy
 import scipy.stats
-
+import os
 import numpy
 import copy
+import pylab
 
 
 def get_num_slices(scan_object, pdata_num = 0):
@@ -79,15 +80,18 @@ def get_unique_list_elements(list, idfun=None):
        result.append(item)
    return result         
 
-def get_image_clims(data):
+def get_image_clims(data,std_modifier=None):
     
     xd = data[numpy.isfinite(data)].flatten()
     
     mean = numpy.mean(xd)
     std = numpy.std(xd)
     
-    min_lim = mean - 2.5*std
-    max_lim = mean + 2.5*std
+    if std_modifier is None:
+        std_modifier = 2.5
+               
+    min_lim = mean - std_modifier*std
+    max_lim = mean + std_modifier*std
     
     if min_lim < 0:
         min_lim = 0
@@ -109,8 +113,32 @@ def get_goodness_map(data, fit_dict):
                 goodness_map[x,y,z] = fit_dict['goodness']
     
     return goodness_map
-            
-def get_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
+
+def get_fid_enhancement(scan_string):
+    
+    try:
+        scan = sarpy.Scan(scan_string)
+    except:
+        raise
+        
+    fiddir = os.path.join(scan.dirname,'fid')
+    
+    data = numpy.abs(sarpy.io.BRUKERIO.readfid(fiddir)['data'])
+    
+    x = data.shape[0]
+    y = data.shape[1]
+    
+    xmin = numpy.round(x*0.3)
+    xmax = numpy.round(x*0.8)
+    
+    ymin = numpy.round(y*0.3)
+    ymax = numpy.round(y*0.8)
+    
+
+    mean = numpy.mean(numpy.mean(data[xmin:xmax,ymin:ymax,3,:],0),0)
+    return pylab.plot(mean)
+
+def get_enhancement_curve(scan_object, adata_mask=None, pdata_num = 0):
 
     try:
         norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
@@ -127,12 +155,17 @@ def get_enhancement_curve(scan_object, adata_mask, pdata_num = 0):
         
         roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
 
-        roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image, 
-                                                         background=None, 
-                                                         foreground=None)
+        if adata_mask is not None:
+            
+            roi_mask= sarpy.fmoosvi.analysis.h_image_to_mask(roi_image, 
+                                                             background=None, 
+                                                             foreground=None)
         
-        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
+            masked_data = data_scan.data * numpy.tile(numpy.reshape(roi_mask,[
 roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
+
+        else:
+            masked_data = data_scan.data
 
 
         enhancement_curve = numpy.empty(shape = [num_slices, reps])
@@ -222,3 +255,15 @@ def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
         bbox[2] = numpy.true_divide(bbox[2],shape[1])
         bbox[3] = numpy.true_divide(bbox[3],shape[1])
         return bbox
+        
+def get_rescaled_data(data,minVal=None,maxVal=None,std_modifier=None):
+    
+#    Max/min formula came from:
+#    http://stackoverflow.com/questions/5294955/how-to-scale-down-a-range-of-numbers-with-a-known-min-and-max-value?rq=1
+
+    if minVal is None and maxVal is None:
+        [minVal,maxVal] = get_image_clims(data,std_modifier)
+    
+    rescaled_data =  numpy.true_divide((maxVal-minVal)*(data-minVal),
+                                       (maxVal-minVal)) + minVal
+    return rescaled_data

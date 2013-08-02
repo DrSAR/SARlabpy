@@ -64,7 +64,7 @@ def readJCAMP(filename):
     types of data (integers, floats, strings, arrays and nested
     structures) that can be present.
 
-    ~/data/readfidTest.ix1/subject:
+    ~/bdata/readfidTest.ix1/subject:
     ::
 
         ##$SUBJECT_name_string=( 64 )
@@ -72,13 +72,13 @@ def readJCAMP(filename):
         ##$SUBJECT_name=(<Moosvi>, <readfidTest>)
 
         >>> import os
-        >>> a=readJCAMP(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/subject'))
+        >>> a=readJCAMP(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/subject'))
         >>> a['SUBJECT_name']
         ['<Moosvi>', '<readfidTest>']
         >>> a['SUBJECT_name_string']
         'Moosvi, readfidTest'
 
-    ~/data/readfidTest.ix1/1/acqp:
+    ~/bdata/readfidTest.ix1/1/acqp:
     ::
 
         ##$ACQ_user_filter=No
@@ -100,7 +100,7 @@ def readJCAMP(filename):
         1 -0 1 0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0
 
         >>> import os
-        >>> a=readJCAMP(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/1/acqp'))
+        >>> a=readJCAMP(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/1/acqp'))
         >>> a['ACQ_user_filter']
         'No'
         >>> a['ACQ_dim_desc']
@@ -361,71 +361,71 @@ def readfid(fptr=None,
     Examples:
 
         >>> import os
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/1/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/1/fid'))
         >>> fid['data'].shape   # TriPilot multi
         (128, 128, 15, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/2/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/2/fid'))
         >>> fid['data'].shape   # FLASH 2D
         (133, 105, 5, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/3/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/3/fid'))
         >>> fid['data'].shape   # FLASH 3D --- THIS IS ACTUALLY WRONG!!
         (133, 105, 1, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/4/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/4/fid'))
         >>> fid['data'].shape   # MSME 2D
         (133, 105, 5, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/5/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/5/fid'))
         >>> fid['data'].shape   # MSME 3D
         (133, 105, 1, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/6/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/6/fid'))
         >>> fid['data'].shape   # MSME 2D-TURBO  --- THIS IS ACTUALLY WRONG!!
         (256, 256, 15, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/7/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/7/fid'))
         >>> fid['data'].shape  # FLASH 2D (NR=25)
         (133, 105, 5, 25)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/8/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/8/fid'))
         >>> fid['data'].shape  # FLASH 2D, partial acq. NR auto reset to 5
         (133, 105, 5, 5)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/9/fid')) # doctest:+ELLIPSIS
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/9/fid')) # doctest:+ELLIPSIS
         Traceback (most recent call last):
         ...
         IOError: ...
         >>> # fid fil 9 was missing due to incomplete scans
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/10/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/10/fid'))
         >>> fid['data'].shape # FLASH 2D (MATRIX 32 X 32)
         (32, 32, 5, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/11/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/11/fid'))
         >>> fid['data'].shape # FLASH 3D (MATRIX 32 X 32)
         (32, 32, 5, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/12/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/12/fid'))
         >>> fid['data'].shape # EPI "1 segment" -- OBVIOUSLY WRONG!
         (4096, 1, 5, 1)
 
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/13/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/13/fid'))
         ... # doctest: +ELLIPSIS
         ... # 16 segment EPI
         Traceback (most recent call last):
         ...
         IndexError: ...
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/14/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/14/fid'))
         >>> fid['data'].shape # DTI Standard
         (133, 105, 10, 1)
 
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/15/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/15/fid'))
         ... # doctest: +ELLIPSIS
         ... # DTI SPIRAL
         Traceback (most recent call last):
         ...
         KeyError: 'ACQ_phase_encoding_mode'
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/16/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/16/fid'))
         >>> fid['data'].shape # UTE 2D
         (64, 402, 5, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/17/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/17/fid'))
         >>> fid['data'].shape # UTE 3D
         (64, 51360, 1, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/18/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/18/fid'))
         >>> fid['data'].shape # ZTE 3D
         (512, 51896, 1, 1)
-        >>> fid = readfid(os.path.expanduser('~/data/stefan/nmr/readfidTest.ix1/99/fid'))
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/99/fid'))
         >>> fid['data'].shape # interrupted FLASH DCE
         (133, 105, 5, 7)
 

@@ -7,6 +7,7 @@ import re
 import glob
 
 import nibabel
+import collections
 
 import BRUKERIO
 import AData_classes
@@ -18,7 +19,7 @@ import logging
 logger=logging.getLogger('sarpy.io.BRUKER_classes')
 
 
-dataroot = os.path.expanduser(os.path.join('~','data'))
+dataroot = os.path.expanduser(os.path.join('~','bdata'))
 
 import sarpy # make natural_sort in helpers.py available
 
@@ -39,11 +40,11 @@ def last_path_components(absdirname, depth=1):
     fairly immune to trailing '/' and other irregularities. Used to determine
     the shortdirname in Scan and Study.
 
-    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9')
+    >>> last_path_components('~/bdata/stefan/nmr/readfidTest.ix1/9')
     '9'
-    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9/')
+    >>> last_path_components('~/bdata/stefan/nmr/readfidTest.ix1/9/')
     '9'
-    >>> last_path_components('~/data/stefan/nmr/readfidTest.ix1/9/', depth=2)
+    >>> last_path_components('~/bdata/stefan/nmr/readfidTest.ix1/9/', depth=2)
     'readfidTest.ix1/9'
     '''
     head = absdirname.rstrip(os.sep)
@@ -145,7 +146,7 @@ class PDATA_file(object):
                                   'Scan.store_adata()')
         return AData_classes.AData.fromdata(self, *args, **kwargs)
 
-    def export2nii(self,filename):
+    def export2nii(self,filename,rescale = None, std_mod=None):
         '''
         Export the data originating from a 2dseq (BRUKER) reconstruction to
         a Nifti file format.
@@ -165,10 +166,26 @@ class PDATA_file(object):
 
         '''
         from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
+        import sarpy.fmoosvi.getters
+        import numpy
         header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()
-        img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
-        img_pair.to_filename(filename)
+
+        if rescale is None:
+            img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)
+            img_pair.to_filename(filename)
+        else:
+   
+            img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=header)         
+
+            h = img_pair.get_header()
+            
+            minVal, maxVal = sarpy.fmoosvi.getters.get_image_clims(self.data, std_mod)
+            h['cal_min'] = minVal
+            h['cal_max'] = maxVal
+            
+            img_pair = nibabel.nifti1.Nifti1Image(self.data, aff, header=h)
+            img_pair.to_filename(filename)            
 
 
 class Scan(object):
@@ -556,7 +573,7 @@ class Study(object):
         '''
         
         klist = self.find_adata()
-        ad_dict ={}
+        ad_dict = collections.OrderedDict()
         
         for k in klist: # Populate the ad_dict with the existing keys
             ad_dict[k] = []

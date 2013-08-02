@@ -22,7 +22,7 @@ Assumptions:
 
 4) The pulse shapes are available in ~/wave (use symbolic links if they are somewhere else).
    
-5) Sample data used in test functions are available in ~/data/<anyusername>/nmr
+5) Sample data used in test functions are available in ~/bdata/<anyusername>/nmr
 
 =====================
 
@@ -95,7 +95,7 @@ def BS_B1_flipangle_wrt_BrukerPath(BS_path,BS_procno,POI_path,shapefile_path,abs
     :param str POI_path: expno path containing RF pulse of interest (POI)
     :param str shapefile_path: path of RF shape files
     :param bool abspath: 
-        if False: paths given as 'studydirname/expno' and root path is ~/data/<anyusername)/nmr
+        if False: paths given as 'studydirname/expno' and root path is ~/bdata/<anyusername)/nmr
         if True: paths given as absolute paths
     :return:
         image sets of peak B1 and flip angle for pulse of interest
