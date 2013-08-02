@@ -15,6 +15,7 @@ def write_csv(masterlist_name, data_label, adata_label):
     import sarpy
     import time
     import getpass # used to get the current username
+    import numpy
     
     root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
@@ -35,10 +36,10 @@ def write_csv(masterlist_name, data_label, adata_label):
             data = sarpy.Scan(v[data_label][0]).adata[adata_label].data
             avg = scipy.stats.nanmean(data)
 
-        except KeyError:
+        except(KeyError,IOError):
             print('write_csv: Not found {0} and {1},{2}'.format(
                                                     k,data_label,adata_label) )
-            data = numpy.empty([1])*nan                                     
+            data = numpy.empty([1])*numpy.nan                                     
             avg = 'AnalysisErr'
             
             pass
@@ -47,7 +48,7 @@ def write_csv(masterlist_name, data_label, adata_label):
 
     time = time.strftime("%Y-%m-%d %H:%M")       				       
     header =['Animal ID'] + ['Slice '+str(x+1) for x in xrange(
-                                        len(export_data[0])-2)] + ['Average']
+                                        len(max(export_data,key=len))-2)] + ['Average']
 
     footer =  ['# Data generated on {0} by {1}'.format(time,getpass.getuser())]
     
