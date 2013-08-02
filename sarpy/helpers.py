@@ -20,4 +20,29 @@ def natural_sort(l):
 
 def git_repo_state():
     import os
-    return os.system('git describe --tags --dirty')
+    import re
+    import subprocess
+    import sarpy
+    init_path = os.path.abspath(sarpy.__file__)
+    worktree = os.path.dirname(os.path.dirname(init_path))
+    gitdir = os.path.join(worktree, '.git')
+
+    # this would actually fail if there were not some tags up the tree
+    proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
+                                ' describe --dirty',
+                               stdout=subprocess.PIPE, shell=True)
+    (describe, err) = proc.communicate()
+    dirty = re.search('-dirty$', describe) is not None 
+    proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
+                            ' status --porcelain', 
+                            stdout=subprocess.PIPE, shell=True)
+    (status, err) = proc.communicate()
+    proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
+                            ' rev-parse HEAD',
+                            stdout=subprocess.PIPE, shell=True)
+    (hash, err) = proc.communicate()
+    return {'describe': describe,
+            'dirty':dirty,
+            'status':status,
+            'sha1':hash}
+    
