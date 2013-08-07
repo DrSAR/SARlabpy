@@ -547,33 +547,58 @@ def h_mag_from_fid(scan_object):
     
     return mag_data
     
-def h_image_to_mask(roi_data, background=None, foreground=None):
+def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
     
     if background is None:
         background = numpy.nan
     if foreground is None:
-        foreground = 1
+        foreground = 1        
+    if peaks is None:
+        peaks = 1
 
     roi_mask = copy.deepcopy(roi_data)
- 
-    for slice in xrange(roi_mask.shape[2]):
     
-        curr_slice = roi_mask[:,:,slice]
+    if peaks == 1:
+        for slice in xrange(roi_mask.shape[2]):
         
-        # the most common value will be the background; We assume the ROI 
-        # occupies only a small region in the image (less than 50%). 
-        # By choosin the median we could have a few pixel values higher or 
-        # lower than the very common background pixel intensity.
-        mask_val = scipy.median(curr_slice.flatten())
-        places = numpy.where(curr_slice == mask_val)
-        notplaces = numpy.where(curr_slice != mask_val)
-        curr_slice[places] = background
-        curr_slice[notplaces] = foreground
-
-        
-    return roi_mask    
+            curr_slice = roi_mask[:,:,slice]
             
+            # the most common value will be the background; We assume the ROI 
+            # occupies only a small region in the image (less than 50%). 
+            # By choosin the median we could have a few pixel values higher or 
+            # lower than the very common background pixel intensity.
+            mask_val = scipy.median(curr_slice.flatten())
+            places = numpy.where(curr_slice == mask_val)
+            notplaces = numpy.where(curr_slice != mask_val)
+            curr_slice[places] = background
+            curr_slice[notplaces] = foreground
 
+        return roi_mask    
+                
+    else:
+        
+        for x in xrange(peaks):
+            
+            for slice in xrange(roi_mask.shape[2]):
+            
+                curr_slice = roi_mask[:,:,slice]
+                
+                # the most common value will be the background; We assume the ROI 
+                # occupies only a small region in the image (less than 50%). 
+                # By choosin the median we could have a few pixel values higher or 
+                # lower than the very common background pixel intensity.
+                mask_val = scipy.median(curr_slice.flatten())
+                places = numpy.where(curr_slice == mask_val)
+                curr_slice[places] = numpy.nan
+
+        nanwhere = numpy.where(numpy.isnan(roi_mask))
+        notnanwhere = numpy.where(numpy.isfinite(roi_mask))
+        roi_mask[nanwhere] = background
+        roi_mask[notnanwhere] = foreground
+
+        return roi_mask    
+                
+        
 
 def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     
