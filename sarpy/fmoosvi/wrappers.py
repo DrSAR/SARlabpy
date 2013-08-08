@@ -111,7 +111,8 @@ def bulk_analyze(masterlist_name,
     elif re.match('roi_check',analysis_label):
         
         for k,v in master_list.iteritems():
-            
+
+#TODO: Change 'roi' to use roi_src_adata_label. Edit function            
             try:
                 scan = sarpy.Scan(v[data_label][0])
                 if (not analysis_label in scan.adata.keys()) or forceVal is True:
@@ -330,12 +331,15 @@ def roi_average(masterlist_name,
             analysis_label,scan.shortdirname))
             pass          
 
-def bulk_transfer_roi(masterlist_name, dest_adata_label, forceVal = False):
+def bulk_transfer_roi(masterlist_name, dest_adata_label, roi_src_adata_label = None, tag = None, forceVal = False):
     '''
     Move an ROI from one scan to another. E.g., Moving an roi from an anatomy 
     scan to a LL scan. 
     
-    dest_adata_label: Label specifying the destination of the roi transfer    
+    dest_adata_label: Label specifying the destination of the roi transfer
+    
+    tag: string to prepend before ROI. useful if auc60_roi exists and you want 
+            auc60_old_roi
     
     Note: this routine looks for the special 'roi' label. This is the canonical
     label used to specify ROIs and other scans will 'inherit' - by way of resample
@@ -346,9 +350,17 @@ def bulk_transfer_roi(masterlist_name, dest_adata_label, forceVal = False):
     sarpy.fmoosvi.wrappers.bulk_transfer_roi('NecS3',dest_adata_label,
                                              forceVal = False)
     '''
+    
+    # Get the name of the source roi
+    if roi_src_adata_label is None:
+        roi_src_adata_label = 'roi'
 
     # Set the name of the destination scan
-    dest_label = dest_adata_label + '_roi'
+
+    if tag is None:
+        dest_label = dest_adata_label + '_roi'
+    else:
+        dest_label = dest_adata_label + str(tag) + '_roi'
 
 #    # Get all the studies in the experiment
 
@@ -373,7 +385,7 @@ def bulk_transfer_roi(masterlist_name, dest_adata_label, forceVal = False):
             adata_dict = study.find_adata_scans()
         
             try:
-                src = sarpy.Scan(adata_dict['roi'][0])
+                src = sarpy.Scan(adata_dict[roi_src_adata_label][0])
     
             except(IOError):
                 print('bulk_transfer_roi: IO Problem with roi src scan for study {0}'.format(study.shortdirname))
@@ -395,7 +407,7 @@ def bulk_transfer_roi(masterlist_name, dest_adata_label, forceVal = False):
                 if (not dest_label in dest.adata.keys()) or forceVal is True:
                     
                     dest_pd = dest.pdata[0]
-                    roi = src.adata['roi']
+                    roi = src.adata[roi_src_adata_label]
                     
                     resampled_roi = sarpy.ImageProcessing.resample_onto.\
                         resample_onto_pdata(roi, dest_pd, replace_nan=0)
