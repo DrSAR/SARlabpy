@@ -555,6 +555,8 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
         foreground = 1        
     if peaks is None:
         peaks = 1
+    else: 
+        peaks =numpy.int(peaks)
 
     roi_mask = copy.deepcopy(roi_data)
     
@@ -576,21 +578,39 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
         return roi_mask    
                 
     else:
+                          
+        for slice in xrange(roi_mask.shape[2]):
+            
+            for x in xrange(peaks):
         
-        for x in xrange(peaks):
-            
-            for slice in xrange(roi_mask.shape[2]):
-            
                 curr_slice = roi_mask[:,:,slice]
+              
+                if x==0: # On the first slice, do the conventionl method
                 
-                # the most common value will be the background; We assume the ROI 
-                # occupies only a small region in the image (less than 50%). 
-                # By choosin the median we could have a few pixel values higher or 
-                # lower than the very common background pixel intensity.
-                mask_val = scipy.median(curr_slice.flatten())
-                places = numpy.where(curr_slice == mask_val)
-                curr_slice[places] = numpy.nan
+                    # the most common value will be the background; We assume the ROI 
+                    # occupies only a small region in the image (less than 50%). 
+                    # By choosin the median we could have a few pixel values higher or 
+                    # lower than the very common background pixel intensity.
+                    mask_val = scipy.median(curr_slice[numpy.isfinite(curr_slice)].flatten())
+                    places = numpy.where(curr_slice == mask_val)
+                    curr_slice[places] = numpy.nan
+                else:
+                    # the conventional method doesn't work for multiple peaks 
+                    # because the next highest peak is to close to the other
+                    # values. This is best, but is susceptible to throwing away
+                    # data if th peak are set too high
 
+                    # If/else block is needed to skip all the situations where
+                    # the array is completely empty
+
+                    if curr_slice[numpy.isfinite(curr_slice)].flatten() !=[]:
+                        mask_val = scipy.stats.mode(curr_slice[numpy.isfinite(curr_slice)].flatten())[0]
+                        places = numpy.where(curr_slice == mask_val)
+                        curr_slice[places] = numpy.nan
+
+                    else:
+                        pass
+                    
         nanwhere = numpy.where(numpy.isnan(roi_mask))
         notnanwhere = numpy.where(numpy.isfinite(roi_mask))
         roi_mask[nanwhere] = background

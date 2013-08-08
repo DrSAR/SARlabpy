@@ -12,13 +12,13 @@ Created on Thu May 30 17:49:35 2013
 
 def generate_rois(masterlist_name, data_label, 
                   adata_label, ioType, path, 
-                  rescale = None, std_modifier = None, forceVal = False):
+                  rescale = None, std_modifier = None, 
+                  peaks = None, forceVal = False):
 
     import json
     import nibabel
     import collections
     import sarpy.fmoosvi.analysis
-    import argparse
     import os
 
     root = os.path.join(os.path.expanduser('~/sdata'),
@@ -61,10 +61,10 @@ def generate_rois(masterlist_name, data_label,
                 fname = os.path.join(path, sdir + 'a.nii')
                 roi = nibabel.load(fname).get_data()[:,:,:,0]
                 
-                # the default foreground and background in h_image_to_mask
+                 # the default foreground and background in h_image_to_mask
                 # will result in a roi_m that has NaN and 1 only (aka
                 # 'proper mask')
-                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi)               
+                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi,peaks=peaks)               
                 
                 scan.store_adata(key=adata_label, data = roi_m, force = forceVal)
                 print('h_generate_roi: saved {0} roi label'.format(scan.shortdirname))
@@ -84,6 +84,7 @@ if __name__ == '__main__':
 
     import argparse
     import os
+    import numpy
 
     # we have been called as a script
     parser = argparse.ArgumentParser()
@@ -103,6 +104,10 @@ if __name__ == '__main__':
                                          
     parser.add_argument('-p', '--path', type=str,
                        help='Optional: Path to/from export/import data, default to sdata')
+
+    parser.add_argument('-k', '--peaks', type=str,
+                       help='Optional: Number of peaks in the roi')
+
                        
     parser.add_argument('-f', '--force', type=str, choices = ['True','False'],
                         help='Optional: Replace data? True or False, defaults to False')   
@@ -118,6 +123,11 @@ if __name__ == '__main__':
         adata_label = args.adata_label
     except AttributeError:
         adata_label = 'roi'
+
+    try:
+        peaks = numpy.int(args.peaks)
+    except AttributeError:
+        peaks = None
     
     try:
         path = os.path.expanduser(os.path.join(args.path))
@@ -131,4 +141,4 @@ if __name__ == '__main__':
         force = False
 
     generate_rois(masterlist_name, data_label, 
-                  adata_label, ioType, path, forceVal = force)
+                  adata_label, ioType, path, peaks = peaks, forceVal = force)
