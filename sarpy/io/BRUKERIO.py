@@ -594,7 +594,7 @@ def readfid(fptr=None,
         #                           len(ACQ_obj_order), NR),
         #                    dtype = 'complex')
         fid_reorder = numpy.empty((ACQ_size[0], ACQ_size[1],
-                                   acqp['NSLICES'],len(ACQ_obj_order)/acqp['NSLICES'], NR),
+                                   len(ACQ_obj_order)/acqp['NSLICES'], acqp['NSLICES'],NR),
                             dtype = 'complex')
 
         idx = numpy.arange(ACQ_size[1] * len(ACQ_obj_order) * NR)
@@ -627,7 +627,7 @@ def readfid(fptr=None,
 
         REPnr = idx // (ACQ_size[1] *  acqp['NSLICES'])
 
-        fid_reorder[:, PEnr, slicenr, REPnr,0] = tempfid[idx, :].T
+        fid_reorder[:, PEnr, REPnr,slicenr, 0] = tempfid[idx, :].T
 
         return {'data':fid_reorder,
                 'isImage':False,
