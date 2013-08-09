@@ -510,7 +510,11 @@ def readfid(fptr=None,
         # this is 2D
         if len(ACQ_obj_order) != acqp['NSLICES']:
             logger.warning('NSLICES not equal to number of ACQ_obj_order')
-
+            #logger.warning('experimental fix used')
+            #ACQ_size.append(acqp['NSLICES'])
+            #ACQ_size.append(len(ACQ_obj_order)/acqp['NSLICES'])
+            #else:
+            #ACQ_size.append(len(ACQ_obj_order))
         ACQ_size.append(len(ACQ_obj_order))
         encoding = [1, 1, 0, 0] # dimensions that require FFT
     else:
@@ -585,9 +589,12 @@ def readfid(fptr=None,
         # If this is set, blocks of 1k bytes make up the read lines (and might
         # be zerofilled if not long enouhh...)
         ACQ_size[0] = acqp['ACQ_size'][0] / 2 # to account for real/imag
-        tempfid = tempfid[:,0:ACQ_size[0]]
+        tempfid = tempfid[:,0:ACQ_size[0]] # TODO: needs motivating or changing!
+        #fid_reorder = numpy.empty((ACQ_size[0], ACQ_size[1],
+        #                           len(ACQ_obj_order), NR),
+        #                    dtype = 'complex')
         fid_reorder = numpy.empty((ACQ_size[0], ACQ_size[1],
-                                   len(ACQ_obj_order), NR),
+                                   acqp['NSLICES'],len(ACQ_obj_order)/acqp['NSLICES'], NR),
                             dtype = 'complex')
 
         idx = numpy.arange(ACQ_size[1] * len(ACQ_obj_order) * NR)
@@ -615,11 +622,12 @@ def readfid(fptr=None,
                  + (idx % ACQ_rare_factor)
         PEnr = EncSteps[index_array]
         slicenr = numpy.array(ACQ_obj_order)[(idx//ACQ_rare_factor) % \
-                                        len(ACQ_obj_order)]
+                                        #len(ACQ_obj_order)]
+                                        acqp['NSLICES']]
 
-        REPnr = idx // (ACQ_size[1] * len(ACQ_obj_order))
+        REPnr = idx // (ACQ_size[1] *  acqp['NSLICES'])
 
-        fid_reorder[:, PEnr, slicenr, REPnr] = tempfid[idx, :].T
+        fid_reorder[:, PEnr, slicenr, REPnr,0] = tempfid[idx, :].T
 
         return {'data':fid_reorder,
                 'isImage':False,
