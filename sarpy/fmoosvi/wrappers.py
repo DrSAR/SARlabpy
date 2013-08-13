@@ -74,7 +74,7 @@ def bulk_analyze(masterlist_name,
                 bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
             
                 if (not analysis_label in scan.adata.keys()) or forceVal is True:
-                    T1map_LL, T1map_fitdict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,bbox)
+                    T1map_LL, T1map_fitdict = sarpy.fmoosvi.analysis.h_fit_T1_LL(scan,bbox)                  
                     scan.store_adata(key=analysis_label, data = T1map_LL,force = forceVal)
                     scan.store_adata(key=analysis_label+'_fitdict', data = T1map_fitdict, force = forceVal)
                 else:

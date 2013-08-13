@@ -16,7 +16,7 @@ logger=logging.getLogger('sarpy.io.BRUKERIO')
 import numpy
 import os.path
 import re
-from types import StringType, FileType
+from types import StringType, FileType, UnicodeType
 from itertools import tee, izip
 
 def pairwise(iterable):
@@ -433,7 +433,7 @@ def readfid(fptr=None,
     """
     if isinstance(fptr, FileType):
         fidname = fptr.name
-    if isinstance(fptr, StringType):
+    if isinstance(fptr, (StringType,UnicodeType)):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
 
