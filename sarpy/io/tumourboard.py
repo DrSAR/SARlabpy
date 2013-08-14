@@ -20,9 +20,10 @@ import pylab
 import numpy
 import sarpy
 import sarpy.fmoosvi.getters
-import sarpy.ImageProcessing.resample_onto as sir
 import tempfile
 import scipy
+import copy
+import re
 from matplotlib.backends.backend_pdf import PdfPages
 
 
@@ -35,7 +36,7 @@ def determine_figure_size(n_rows,n_cols):
         figure_size = (6,5*aspect)
         font_modifier = 0
         
-    elif (n_rows >= 4 and n_rows <=8) and (n_cols>6 and n_cols <= 10) :
+    elif (n_rows >= 4 and n_rows <=8) and (n_cols>=6 and n_cols <= 10) :
         #moderately tested               
 
         figure_size = (8,8*aspect)
@@ -175,8 +176,11 @@ for k,v in master_list.iteritems():
         # img, plot, vtc, histo
 
         if row_conf.get('type', None) == 'img':
+
+            # Needed to flip colormaps for rois...default is False
+            colormapFlip = False
             
-            #TODO: this statement is here because of **row_conf in imhow
+            #TODO: this statement is here because of **row_conf in imshow
             row_conf.pop('type', None)
             clim_min = row_conf.pop('clim_min',None)
             clim_max = row_conf.pop('clim_max',None)
@@ -185,7 +189,9 @@ for k,v in master_list.iteritems():
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
             adata_key = row_conf.pop('adata', None)
             if adata_key is not None:
-                
+
+                if re.search('roi',adata_key):
+                    colormapFlip = True                
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
@@ -204,14 +210,19 @@ for k,v in master_list.iteritems():
                                 
             xdata = data.data
 
+
+            # Used masked arrays to show nan values as black
+
+            xdata_mask = numpy.ma.array(xdata,mask=numpy.isnan(xdata))
+
             resample_flag = row_conf.pop('resample', False) 
             if resample_flag and config.getboolean(row,'resample'):
                 raise NotImplementedError('please fix resampling')
-            #print('resampling {0}\n{1}\n onto {2}'.format(scn,data,ref_data))
+                print('resampling {0}\n{1}\n onto {2}'.format(scn,data,ref_data))
             #src_filename = tempfile.mktemp(suffix='.nii')
             #data.export2nii(src_filename)            
-            #xdata, xdata_sitk_image = sir.resample_onto(src_filename, ref_filename)
-            #xdata = sir.resample_onto_pdata(data, ref_data)
+            #xdata, xdata_sitk_image = sarpy.ImageProcessing.resample_onto.resample_onto(src_filename, ref_filename)
+            #xdata = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(data, ref_data)
             #os.remove(src_filename)
             #find out where the 0 1 etc end up.
 #            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
@@ -220,10 +231,19 @@ for k,v in master_list.iteritems():
                 fig.add_subplot(G[row_idx, col_idx])
                 bbox = (bbox_pct.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
                 
-                t=pylab.imshow(xdata[bbox[0]:bbox[1],
+                t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                  bbox[2]:bbox[3],col_idx],
                                  **row_conf)
-                           
+
+                # Use black to show nan values
+                # Source: http://stackoverflow.com/questions/2578752/how-can-i-plot-nan-values-as-a-special-color-with-imshow-in-matplotlib
+                newcmap = copy.copy(t.get_cmap())
+
+                if colormapFlip:
+                    newcmap.set_bad('w',1.)
+                else:
+                    newcmap.set_bad('k',1.)
+                t.set_cmap(newcmap)         
                 t.set_clim(clim_min, clim_max)
 
                 pylab.axis('off')
