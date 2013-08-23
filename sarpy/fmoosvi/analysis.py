@@ -664,23 +664,40 @@ def h_fit_T1_LL_FAind(scan_object, bbox = None, pdata_num = 0,
                                                         full_output = True,
                                                         maxfev = 200)
                 
-                if ier not in (0,1,2,3,4):
+                if ier not in (0,1,2,3,4): # Try fit with new guess for 'a'
                     
-                    params1 = [0,0,0,0]
-                    params1[0] = numpy.real(y_data[0])
-                    params1[1] = numpy.real(numpy.divide(-y_data[0],params1[0]))
-                    params1[2] = 1200
-                    params1[3] = numpy.angle(numpy.mean(y_data[-5:]))
+                    params = [0,0,0,0]
+                    params[0] = numpy.real(y_data[0])
+                    params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
+                    params[2] = 1200
+                    params[3] = numpy.angle(numpy.mean(y_data[-5:]))
 
                     fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
                                                             h_residual_T1_FAind,
-                                                            params1,
+                                                            params,
                                                             args=(y_data,tao,n_data), 
                                                             full_output = True,
                                                             maxfev = 200)    
                                                             
-                    [a1,b1,T1_eff,phi1] = fit_params
-                        
+                    [a1,b1,T1_eff,phi] = fit_params
+                    
+                    if ier not in (0,1,2,3,4): # Last attempt to get 10*a
+                
+                        params = [0,0,0,0]
+                        params[0] = 10*numpy.real(y_data[0])
+                        params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
+                        params[2] = 1200
+                        params[3] = numpy.angle(numpy.mean(y_data[-5:]))
+    
+                        fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                                h_residual_T1_FAind,
+                                                                params,
+                                                                args=(y_data,tao,n_data), 
+                                                                full_output = True,
+                                                                maxfev = 200)    
+                                                        
+                        [a1,b1,T1_eff,phi] = fit_params
+                    
                 goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
                 [a,b,T1_eff,phi] = fit_params
                 param_names = ['a','b','T1_eff','phi','T1']        
