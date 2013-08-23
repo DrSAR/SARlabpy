@@ -230,7 +230,6 @@ for k,v in master_list.iteritems():
             for col_idx in xrange(min(n_cols, xdata.shape[2])):
                 fig.add_subplot(G[row_idx, col_idx])
                 bbox = (bbox_pct.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
-                
                 t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                  bbox[2]:bbox[3],col_idx],
                                  **row_conf)
