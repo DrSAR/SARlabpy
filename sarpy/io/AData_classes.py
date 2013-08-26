@@ -19,6 +19,8 @@ from datetime import datetime
 import logging
 logger=logging.getLogger('sarpy.io.Adata_classes')
 
+import sarpy.helpers
+
 #this is where datagoes that is secondary to acquired data.
 # for this to make any sense, there needs to be som mechanism by which the
 # source data can be found
@@ -97,6 +99,10 @@ class ADataDict(collections.MutableMapping):
         # hence, we should store it in the meta-data
         value.meta['key'] = key
         value.meta['username'] = getpass.getuser()
+        # freeze the repository state for future use
+        repo_state = sarpy.helpers.git_repo_state()
+        value.meta['commit_sha1'] = repo_state['sha1']
+        value.meta['commit_date'] = repo_state['date']
 
         # store data on disk
 

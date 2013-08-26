@@ -40,9 +40,16 @@ def git_repo_state():
     proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
                             ' rev-parse HEAD',
                             stdout=subprocess.PIPE, shell=True)
-    (hash, err) = proc.communicate()
-    return {'describe': describe,
+    (sha1, err) = proc.communicate()
+    proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
+                            ' log -1 --format="%ci" '+sha1,
+                            stdout=subprocess.PIPE, shell=True)
+    (date, err) = proc.communicate()
+    if dirty:
+        date = date.strip() + ' +++'
+    return {'describe': describe.strip(),
             'dirty':dirty,
-            'status':status,
-            'sha1':hash}
+            'date':date.strip(),
+            'status':status.strip(),
+            'sha1':sha1.strip()}
     
