@@ -16,6 +16,7 @@ import scipy.fftpack
 import scipy.stats
 import sarpy.fmoosvi.getters as getters
 import sarpy.ImageProcessing.resample_onto
+import sarpy.io
 import math
 import copy
 import os
@@ -23,6 +24,8 @@ import json
 import nibabel
 import datetime
 import collections
+import random
+import copy
 
 def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     
@@ -421,9 +424,9 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
 ##############    
 
 def h_func_T1(params,t):
-    M,B,T1_eff = params
-    return numpy.abs(M*(1-B*numpy.exp(-t/T1_eff)))
-    
+    M,B,T1_eff,phi = params
+    return numpy.real(M*(1-B*numpy.exp(-t/T1_eff))*numpy.exp(1j*phi))
+      
 def h_within_bounds(params,bounds):
     try:        
         for p in xrange(len(params)):
@@ -436,13 +439,15 @@ def h_within_bounds(params,bounds):
             
 def h_residual_T1(params, y_data, t):
     
-    bounds = numpy.zeros(shape=[3,2])
+    bounds = numpy.zeros(shape=[4,2])
     bounds[0,0] = 1e2
     bounds[0,1] = 1e8
     bounds[1,0] = 0
     bounds[1,1] = 5
     bounds[2,0] = 50
     bounds[2,1] = 10000
+    bounds[3,0] = -100
+    bounds[3,1] = +100
 
     if h_within_bounds(params,bounds):
         return y_data - h_func_T1(params, t)
@@ -453,13 +458,24 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
                 params = []):
     
     if len(params) == 0:      
-        params = [3E5, 2, 350]
+        params = [3E5, 2, 350, 2]
   
     if type(flip_angle_map) != numpy.ndarray:
         flip_angle_map = math.radians(scan_object.acqp.ACQ_flip_angle)
-        
-    data = scan_object.pdata[pdata_num].data[:]
 
+    x = sarpy.io.BRUKERIO.fftbruker(scan_object.fid)
+    num_slices = getters.get_num_slices(scan_object,pdata_num)                                        
+    t1points = numpy.divide(x.shape[-2],num_slices)     
+    
+    data=numpy.real(
+         numpy.fliplr(
+         numpy.flipud(numpy.transpose(x.reshape(x.shape[0],
+                                                x.shape[1],
+                                                t1points,
+                                                num_slices),
+                                                [1,0,3,2]))))
+
+    
     data_after_fitting = numpy.zeros( [data.shape[0],\
                                        data.shape[1],\
                                        data.shape[2]] )
@@ -468,7 +484,6 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
     inversion_time = scan_object.method.PVM_InversionTime   
     x_size = data.shape[0]
     y_size = data.shape[1]
-    num_slices = getters.get_num_slices(scan_object,pdata_num)                                        
                                        
                                        
     fit_results = numpy.array(data_after_fitting[:], dtype=dict)                       
@@ -501,9 +516,27 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
                 
                 fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(h_residual_T1,params,args=(y_data,t_data), full_output = True,maxfev = 200)
 
-                goodness_of_fit = h_goodness_of_fit(y_data,infodict)
+                goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
+                [M,B,T1_eff,phi] = fit_params
                 
-                [M,B,T1_eff] = fit_params
+                count = 0
+                
+                # Create an arrayof ints and shuffle them
+                rndms = numpy.linspace(0,8,9).astype(int)
+                random.shuffle(rndms)
+                
+                # Keep fitting while chaning phi or once you failed 8 times
+                while (T1_eff is numpy.nan):
+                    
+                    newparams = numpy.array(params).copy()
+                    newparams[3] = rndms.pop()
+                    fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(h_residual_T1,newparams,args=(y_data,t_data), full_output = True,maxfev = 200)
+                    [M,B,T1_eff,phi] = fit_params
+                    if count==8:
+                        T1_eff = 1E10
+                    count = count +1
+                    
+                goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
                 fit_dict = {
                             'fit_params': fit_params,
                             'cov' : cov,
@@ -529,6 +562,203 @@ def h_fit_T1_LL(scan_object, bbox = None, flip_angle_map = 0, pdata_num = 0,
         # e.g., IR, VFA
         # NecS3Exp= sarpy.Experiment('NecS3')
         # scan_object = NecS3Exp.studies[0].find_scan_by_protocol('04_ubcLL2')
+
+
+
+
+
+
+
+
+def h_func_T1_FAind(params,tao,n):
+    a,b,T1_eff,phi = params
+    #print type(a), type(b), type(n), type(phi), type(T1_eff)
+    return a*(1-(1-b)*numpy.exp(-n*tao/T1_eff))*numpy.exp(1j*phi)
+
+def T1eff_to_T1(T1,Td, Tp, tao, T1_eff, b, c):    
+    return (1-2*numpy.exp(-Td/T1) + numpy.exp(-(Tp+Td)/T1))*((1-numpy.exp(-tao/T1_eff))/(1-numpy.exp(-tao/T1))) -c*(numpy.exp(-tao/T1_eff)/(numpy.exp(-tao/T1)))*numpy.exp(-(Tp+Td)/T1) - b 
+             
+def h_residual_T1_FAind(params, y_data, tao, n):
+    
+    bounds = numpy.zeros(shape=[4,2])
+    bounds[0,0] = 1e2
+    bounds[0,1] = 1e8
+    bounds[1,0] = -1e5
+    bounds[1,1] = 1e10
+    bounds[2,0] = 50
+    bounds[2,1] = 10000
+    bounds[3,0] = -100
+    bounds[3,1] = +100
+
+    if h_within_bounds(params,bounds):
+        return numpy.abs(y_data - h_func_T1_FAind(params, tao, n))
+    else:
+        return 1e9
+
+def h_fit_T1_LL_FAind(scan_object, bbox = None, pdata_num = 0, 
+                params = []):
+    
+    if len(params) == 0:      
+        params = [0, 0, 0, 0]
+    ## Setting parameters
+    x = sarpy.io.BRUKERIO.fftbruker(scan_object.fid)
+    num_slices = getters.get_num_slices(scan_object,pdata_num)                                        
+    t1points = numpy.divide(x.shape[-2],num_slices)     
+    
+    data=numpy.fliplr(
+         numpy.flipud(numpy.transpose(x.reshape(x.shape[0],
+                                                x.shape[1],
+                                                t1points,
+                                                num_slices),
+                                                [1,0,3,2])))
+    tao = scan_object.method.PVM_RepetitionTime
+    total_TR = scan_object.method.Inv_Rep_time
+    Nframes = scan_object.method.Nframes
+    delay = scan_object.method.InterSliceDelay
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    n_data = numpy.linspace(0,Nframes-1,Nframes)
+                                       
+    # Initializations                                    
+    data_after_fitting = numpy.zeros( [data.shape[0],\
+                                       data.shape[1],\
+                                       data.shape[2]] )
+
+    fit_results = numpy.array(data_after_fitting[:], dtype=dict)
+    data_after_fitting = numpy.empty([x_size,y_size,num_slices])
+    data_after_fitting[:] = numpy.nan
+    
+    ## Check for bbox traits and create bbox_mask to output only partial data
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
+    if bbox.shape != (4,):    
+        raise ValueError('Please supply a bbox for h_fit_T1_LL_FAind')      
+        
+    # Start the fitting process        
+
+    for slice in xrange(num_slices):  
+
+        # The following are slice dependent parameters
+
+        Td = delay*(slice+1)
+        Tp = total_TR - (Nframes -1)*tao - Td
+        
+        for x in xrange(bbox[0],bbox[1]):
+            for y in xrange(bbox[2],bbox[3]):
+
+                
+                y_data = data[x,y,slice,:]
+                fit_dict = {}
+
+                params[0] = numpy.real(numpy.mean(y_data[-5:]))
+                params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
+                params[2] = 1200
+                params[3] = numpy.angle(numpy.mean(y_data[-5:]))
+                # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
+                # phi (phase factor to fit real data)
+                
+                fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                        h_residual_T1_FAind,
+                                                        params,
+                                                        args=(y_data,tao,n_data), 
+                                                        full_output = True,
+                                                        maxfev = 200)
+                
+                if ier not in (0,1,2,3,4): # Try fit with new guess for 'a'
+                    
+                    params = [0,0,0,0]
+                    params[0] = numpy.real(y_data[0])
+                    params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
+                    params[2] = 1200
+                    params[3] = numpy.angle(numpy.mean(y_data[-5:]))
+
+                    fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                            h_residual_T1_FAind,
+                                                            params,
+                                                            args=(y_data,tao,n_data), 
+                                                            full_output = True,
+                                                            maxfev = 200)    
+                                                            
+                    [a1,b1,T1_eff,phi] = fit_params
+                    
+                    if ier not in (0,1,2,3,4): # Last attempt to get 10*a
+                
+                        params = [0,0,0,0]
+                        params[0] = 10*numpy.real(y_data[0])
+                        params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
+                        params[2] = 1200
+                        params[3] = numpy.angle(numpy.mean(y_data[-5:]))
+    
+                        fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                                h_residual_T1_FAind,
+                                                                params,
+                                                                args=(y_data,tao,n_data), 
+                                                                full_output = True,
+                                                                maxfev = 200)    
+                                                        
+                        [a1,b1,T1_eff,phi] = fit_params
+                    
+                goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
+                [a,b,T1_eff,phi] = fit_params
+                param_names = ['a','b','T1_eff','phi','T1']        
+
+
+                # Step 2: Calculate M(N-1)/M(inf) from Eq.1 from Koretsky paper
+                # Divide both sides by M(inf) and then use M(0)/M(inf) -> step1
+
+                c = 1- (1-b)*numpy.exp(-(Nframes-1)*tao/T1_eff)
+
+                # Step 3: Solve Equation 6 to get T1 from it. Try using Newton-
+                # Rhapsod method
+               
+                calc_params = (Td, Tp, tao, T1_eff,b,c)
+                
+                try:                    
+                    T1 = scipy.optimize.newton(T1eff_to_T1, 1500, maxiter=100, 
+                                               args= (calc_params))
+                except RuntimeError:
+                    T1=numpy.nan
+                    pass
+                
+                # Make absurd values nans to make my life easer:
+                if (T1<0 or T1>=1e4):
+                    T1 = numpy.nan
+
+                # Add the T1 to the fitted parameters                      
+                numpy.append(fit_params,T1)
+                fit_dict = {
+                            'param_names': param_names,
+                            'fit_params': fit_params,
+                            'cov' : cov,
+                            'infodict' : infodict,
+                            'mesg' : mesg,
+                            'ier' : ier,
+                            'goodness': goodness_of_fit
+                            }
+
+                data_after_fitting[x,y,slice] = T1
+                fit_results[x,y,slice] = fit_dict
+                
+#    data_after_fitting[data_after_fitting<0] = numpy.nan
+#    data_after_fitting[data_after_fitting>1e4] = numpy.nan
+
+    return numpy.squeeze(data_after_fitting), fit_results
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -705,3 +935,8 @@ def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_P
     return alpha_BS
     
     
+
+
+
+#######
+
