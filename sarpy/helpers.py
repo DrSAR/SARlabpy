@@ -17,3 +17,39 @@ def natural_sort(l):
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
     return sorted(l, key = alphanum_key)
+
+def git_repo_state():
+    import os
+    import re
+    import subprocess
+    import sarpy
+    init_path = os.path.abspath(sarpy.__file__)
+    worktree = os.path.dirname(os.path.dirname(init_path))
+    gitdir = os.path.join(worktree, '.git')
+
+    # this would actually fail if there were not some tags up the tree
+    proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
+                                ' describe --dirty',
+                               stdout=subprocess.PIPE, shell=True)
+    (describe, err) = proc.communicate()
+    dirty = re.search('-dirty$', describe) is not None 
+    proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
+                            ' status --porcelain', 
+                            stdout=subprocess.PIPE, shell=True)
+    (status, err) = proc.communicate()
+    proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
+                            ' rev-parse HEAD',
+                            stdout=subprocess.PIPE, shell=True)
+    (sha1, err) = proc.communicate()
+    proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
+                            ' log -1 --format="%ci" '+sha1,
+                            stdout=subprocess.PIPE, shell=True)
+    (date, err) = proc.communicate()
+    if dirty:
+        date = date.strip() + ' +++'
+    return {'describe': describe.strip(),
+            'dirty':dirty,
+            'date':date.strip(),
+            'status':status.strip(),
+            'sha1':sha1.strip()}
+    
