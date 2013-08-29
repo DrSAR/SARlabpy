@@ -361,6 +361,9 @@ def readfid(fptr=None,
              is determined by ACQ_size[1] / ACQ_rare_factor.
              ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.
            * NR - Number of repeated experiments within the dataset.
+           
+    These salient parameters are printed using the following code:
+    ['%s: %s' % (k,acqp[k]) for k in ['ACQ_dim','ACQ_size','GO_block_size','NI','ACQ_obj_order','ACQ_phase_factor','ACQ_phase_encoding_mode','ACQ_phase_enc_start','ACQ_rare_factor','NR','NSLICES','ACQ_spatial_phase_1','ACQ_spatial_size_1']]
 
     Examples:
 
@@ -384,7 +387,7 @@ def readfid(fptr=None,
         >>> fid['data'].shape   # MSME 2D-TURBO  --- THIS IS ACTUALLY WRONG!!
         (256, 256, 15, 1)
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/7/fid'))
-        >>> fid['data'].shape  # FLASH 2D (NR=25)
+        >>> fid['data'].shape  # FLASH 2D (NR=25, NI=5, NSLICES=5)
         (133, 105, 5, 25)
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/8/fid'))
         >>> fid['data'].shape  # FLASH 2D, partial acq. NR auto reset to 5
@@ -508,17 +511,19 @@ def readfid(fptr=None,
     # Number of repeated experiments within the dataset.
     NR = acqp['NR']
 
+    if (NI!=acqp['NSLICES']):
+        raise ValueError('NI=%i != NSLICES=%i' % (NI, acqp['NSLICES']))
 
     # 2D vs 3D issues about slices etc.
     if ACQ_dim == 2:
         # this is 2D
         if len(ACQ_obj_order) != acqp['NSLICES']:
             logger.warning('NSLICES not equal to number of ACQ_obj_order')
-            #logger.warning('experimental fix used')
-            #ACQ_size.append(acqp['NSLICES'])
-            #ACQ_size.append(len(ACQ_obj_order)/acqp['NSLICES'])
-            #else:
-            #ACQ_size.append(len(ACQ_obj_order))
+            logger.warning('experimental fix used')
+            ACQ_size.append(acqp['NSLICES'])
+            ACQ_size.append(len(ACQ_obj_order)/acqp['NSLICES'])
+        else:
+            ACQ_size.append(len(ACQ_obj_order))
         ACQ_size.append(len(ACQ_obj_order))
         encoding = [1, 1, 0, 0] # dimensions that require FFT
     else:
