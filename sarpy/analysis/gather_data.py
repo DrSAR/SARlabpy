@@ -7,7 +7,8 @@ Created on Thu Aug 29 15:43:31 2013
 
 import sarpy
 import pandas
-import parsing
+from pyparsing import (Word, alphas, nums, Group, SkipTo, StringEnd)
+
 
 def df_from_masterlist(masterlist):
     '''
@@ -18,7 +19,28 @@ def df_from_masterlist(masterlist):
         - tumour location
         - patient number
     '''
-    raise NotImplemented
+
+    studyname = Word(alphas)+Word(nums)
+    tumourtype = Word(alphas, exact=1)
+    location = Word(alphas, exact=1)
+    patientnumber = Word(nums)
+    patientname = (studyname('studyname') + tumourtype('tumourtype') + 
+                   location('location') + patientnumber('patientnumber'))
+   
+   
+    patient_df = pandas.DataFrame(columns=('studyname', 'patientnumber'))
+    for patname in masterlist.keys():
+        print patname
+#        print line
+        parsed_data = patientname.parseString(patname)
+        row = pandas.DataFrame([{'studyname':''.join(parsed_data['studyname']),
+                                 'tumourtype':parsed_data['tumourtype'],
+                                 'location':parsed_data['location'],
+                                 'patientnumber':parsed_data['patientnumber']}],
+                                 index=(patname,))
+        patient_df = patient_df.append(row)
+
+    return patient_df
 
 def calculate_dfSeries_from_adata(
         masterlist,
