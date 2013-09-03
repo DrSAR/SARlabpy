@@ -272,65 +272,6 @@ def store_deltaT1(masterlist_name,
 
 ### ROI based code
 
-def roi_average(masterlist_name,
-                data_label,
-                adata_label,
-                roi_label,
-                analysis_label=None,
-                forceVal = False):
-                   
-    if analysis_label is None:
-        analysis_label = adata_label + '_avg'                   
-
-    root = os.path.join(os.path.expanduser('~/sdata'),
-                        masterlist_name,
-                        masterlist_name)
-
-    fname_to_open = root+'.json'
-    with open(os.path.join(fname_to_open),'r') as master_file:
-        json_str = master_file.read()
-        master_list = json.JSONDecoder(
-                           object_pairs_hook=collections.OrderedDict
-                           ).decode(json_str)
-
-    for k,v in master_list.iteritems():
-        
-        try:
-            scan = sarpy.Scan(v[data_label][0])           
-            data = scan.adata[adata_label].data
-            roi = sarpy.Scan(v[data_label][0]).adata[roi_label].data
-        except(KeyError, IOError):
-            print('{0}: Not found adata {1} or {2} in patient {3}'.format(
-                                    analysis_label,adata_label,roi_label,k) )
-            continue
-       
-        roi_data = data * roi
-        
-        # I think this might be necessary to ensure that values don't get carrier
-        # over from previous iterations?
-        try:
-            del avg_T1
-        except NameError:
-            pass
-        avg_T1 = []     
-       
-        for slice in xrange(roi_data.shape[-1]):
-            avg_T1.append(scipy.stats.nanmean(roi_data[:,:,slice].flatten()))
-            
-        if (not analysis_label in scan.adata.keys()) or forceVal is True:
-                
-            scan.store_adata(key=analysis_label, 
-                             data = numpy.array(avg_T1), 
-                             force = forceVal)
-
-            print('{0}: Success. Saved {1}'.format(analysis_label,
-                                  scan.shortdirname))
-                                  
-        else:
-            print('{0}: adata already exists {1} '.format(
-            analysis_label,scan.shortdirname))
-            pass          
-
 def bulk_transfer_roi(masterlist_name, dest_adata_label, roi_src_adata_label = None, tag = None, forceVal = False):
     '''
     Move an ROI from one scan to another. E.g., Moving an roi from an anatomy 
