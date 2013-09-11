@@ -17,7 +17,7 @@ import scipy.stats
 import numpy
 
 
-def df_from_masterlist(masterlist_name):
+def df_from_masterlist(masterlist_name, treatment_dict=None):
     '''
     Take in a masterlist (which is a dict after reading from json file)
     and parse patient names into 
@@ -25,6 +25,14 @@ def df_from_masterlist(masterlist_name):
         - tumour type
         - tumour location
         - patient number
+
+        Optional dictionary can be input that contains treatment groups
+        and the patients corresponding to the groups. For e.g.:
+
+        tx_condition =  {
+         'Ctrl' : ['NecS3Hs10', 'NecS3Hs14'],
+         'Avast': ['NecS3Hs11','NecS3Hs05'],
+         'Comb':  ['NecS3Hs09','NecS3Hs06']}
     '''
     root = os.path.expanduser(os.path.join('~/sdata',
                         masterlist_name,
@@ -51,7 +59,6 @@ def df_from_masterlist(masterlist_name):
     patient_df = pandas.DataFrame(columns=('studyname', 'patientnumber'))
     for patname in master_list.keys():
         print patname
-#        print line
         parsed_data = patientname.parseString(patname)
         row = pandas.DataFrame([{'studyname':''.join(parsed_data['studyname']),
                                  'tumourtype':parsed_data['tumourtype'],
@@ -59,6 +66,34 @@ def df_from_masterlist(masterlist_name):
                                  'patientnumber':parsed_data['patientnumber']}],
                                  index=(patname,))
         patient_df = patient_df.append(row)
+
+    ## Set up the treatment conditions
+
+    tx_condition = {}
+
+    if treatment_dict is None:
+
+        # Fill with unknowns
+
+        idx = list(patient_df.index)
+
+        for p in idx:
+            tx_condition[p]='unknown'
+
+    else:
+
+        # Invert the dictionary, to get the patient as the key for
+        #easy inclusion into the dataframe
+
+        tx_condition = {}
+        for condition, pat_list in treatment_dict.iteritems():
+            for pat in pat_list:
+                tx_condition[pat]=condition
+
+    patient_df['treatment'] = pandas.Series(tx_condition, index = patient_df.index)
+
+    # In case all patients aren't considered, fill nans with unknowns                
+    patient_df['treatment'].fillna('unknown')
 
     return patient_df
 
@@ -90,13 +125,14 @@ def calculate_dfSeries_from_adata(
 # This initializes the list of data frames that will be generated                           
     df = []                            
 
-## Here there will be a confusing loop over all scan_labels, if scan_label is
+## Here there will be a loop over all scan_labels, if scan_label is
 # just a string, make it into a list just to make things easier for us later
 # the loop doesn't work for strings
 
     if isinstance(scan_label_list,str):
+        tmp = scan_label_list
         scan_label_list = []
-        scan_label_list.append(scan_label)
+        scan_label_list.append(tmp)
 
     for scan_label in scan_label_list:
 
@@ -109,6 +145,7 @@ def calculate_dfSeries_from_adata(
     
         # Initialize the dictionaries in which summary data is stored
         avg_data = collections.OrderedDict()
+        std_data = collections.OrderedDict()
         slice_position = collections.OrderedDict()
         roi_px_count = collections.OrderedDict()
         slices = collections.OrderedDict()
@@ -116,6 +153,7 @@ def calculate_dfSeries_from_adata(
         animal = []
         slc = []
         avg = []
+        std = []
         px = []
         pos = []
     
@@ -142,11 +180,13 @@ def calculate_dfSeries_from_adata(
                 animal.append(k)
                 slc.append(slice+1)
                 avg.append(scipy.stats.nanmean(roi_data[:,:,slice].flatten()))
+                std.append(scipy.stats.nanstd(roi_data[:,:,slice].flatten()))
                 px.append(numpy.nansum(roi[:,:,slice].flatten()))
                 pos.append(scan.acqp.ACQ_slice_offset[slice])          
     
         series_of_dicts = {dfSeries_label  + '_slice' : pandas.Series(slc, index = numpy.array(animal)),
-                           dfSeries_label + '_avg': pandas.Series(avg, index = numpy.array(animal)),                       
+                           dfSeries_label + '_avg': pandas.Series(avg, index = numpy.array(animal)),  
+                           dfSeries_label + '_std': pandas.Series(std, index = numpy.array(animal)),                     
                            dfSeries_label + '_pos': pandas.Series(pos, index = numpy.array(animal)),
                            dfSeries_label + '_px': pandas.Series(px, index = numpy.array(animal))}
                   
