@@ -403,8 +403,8 @@ for k,v in master_list.iteritems():
     testPDF.savefig(fig)      
     
     # Saving Figure    
-    filename = os.path.expanduser(os.path.join('~/sdata',rootName[-2],args.output,k + '.png'))
-    pylab.savefig(filename, bbox_inches=0, dpi=300)
+#    filename = os.path.expanduser(os.path.join('~/sdata',rootName[-2],args.output,k + '.png'))
+#    pylab.savefig(filename, bbox_inches=0, dpi=300)
     pylab.close('all')
 
 #os.remove(ref_filename)
