@@ -34,7 +34,11 @@ def write_csv(masterlist_name, data_label, adata_label):
         
         try:        
             data = sarpy.Scan(v[data_label][0]).adata[adata_label].data
-            avg = scipy.stats.nanmean(data)
+            weights = sarpy.Scan(v[data_label][0]).adata[adata_label+'_weights'].data
+
+            data[numpy.isnan(data)] = 0
+            weights[numpy.isnan(weights)] = 0
+            avg = numpy.average(data, weights=weights)
 
         except(KeyError,IOError):
             print('write_csv: Not found {0} and {1},{2}'.format(

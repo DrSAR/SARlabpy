@@ -306,22 +306,28 @@ def roi_average(masterlist_name,
        
         roi_data = data * roi
         
-        # I think this might be necessary to ensure that values don't get carrier
+        # I think this might be necessary to ensure that values don't get carried
         # over from previous iterations?
         try:
-            del avg_T1
+            del avg_T1,weights
         except NameError:
             pass
-        avg_T1 = []     
+        avg_T1 = []
+        weights = []
        
         for slice in xrange(roi_data.shape[-1]):
             avg_T1.append(scipy.stats.nanmean(roi_data[:,:,slice].flatten()))
+            weights.append(numpy.nansum(roi[:,:,slice]))
             
         if (not analysis_label in scan.adata.keys()) or forceVal is True:
                 
             scan.store_adata(key=analysis_label, 
                              data = numpy.array(avg_T1), 
                              force = forceVal)
+
+            scan.store_adata(key=analysis_label+'_weights', 
+                             data = numpy.array(weights), 
+                             force = forceVal)                             
 
             print('{0}: Success. Saved {1}'.format(analysis_label,
                                   scan.shortdirname))
