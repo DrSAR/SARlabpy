@@ -132,7 +132,7 @@ def bulk_analyze(masterlist_name,
     else:
         print('This type of analysis has not yet been implemented. \
                 Do so in the wrappers file.')
-                
+                              
 def calc_AUGC(masterlist_name,
               data_label,
               adata_scan_label,
@@ -175,8 +175,6 @@ def calc_AUGC(masterlist_name,
             analysis_label,scan.shortdirname))
             pass 
             
-   
-
 def conc_from_signal(masterlist_name, 
                      data_label, 
                      data_label_T1map, 
@@ -221,8 +219,6 @@ def conc_from_signal(masterlist_name,
             analysis_label,scan.shortdirname))
             pass 
         
-
-
 def store_deltaT1(masterlist_name,
                   T1map_1,
                   T1map_2,
@@ -269,6 +265,52 @@ def store_deltaT1(masterlist_name,
             print('{0}: adata already exists {1} '.format(
             analysis_label,scan2.shortdirname))
             pass
+
+
+def fit_PKM(masterlist_name,
+            data_label,
+            adata_scan_label,
+            analysis_label=None,
+            forceVal = False):
+                
+    root = os.path.join(os.path.expanduser('~/sdata'),
+                        masterlist_name,
+                        masterlist_name)
+    if os.path.exists(os.path.join(root+'_updated.json')):
+        fname_to_open = root+'_updated.json'
+    else: 
+        fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str)                    
+       
+    for k,v in master_list.iteritems():
+        
+        try:
+            scan = sarpy.Scan(v[data_label][0])
+            bbox = sarpy.fmoosvi.getters.get_bbox(v, data_label)
+            
+        except(IOError):
+            print('{0}: Not found {1} and {2}'.format(
+                                                analysis_label,k,data_label) )
+            pass     
+        
+        if (not analysis_label in scan.adata.keys()) or forceVal is True:
+        
+#            curr_augc = sarpy.fmoosvi.analysis.h_calculate_AUGC(scan, adata_scan_label, bbox=bbox)
+#            scan.store_adata(key=analysis_label, data = curr_augc, force = forceVal)
+            print('{0}: Success. Saved {1}'.format(analysis_label, 
+                              scan.shortdirname))
+        
+        else:
+            print('{0}: adata already exists {1} '.format(
+            analysis_label,scan.shortdirname))
+            pass 
+
+
+
 
 ### ROI based code
 
