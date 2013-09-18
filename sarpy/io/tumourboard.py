@@ -262,8 +262,10 @@ for k,v in master_list.iteritems():
             data = scn.adata[adata_key]
             reps = scn.pdata[0].data.shape[-1]
 
-            for col_idx in xrange(min(n_cols, data.data.shape[0])):
-                imgdata = numpy.mean(scn.pdata[0].data[:,:,col_idx,:],axis=2)
+            for col_idx in xrange(min(n_cols, data.data.shape[2])):
+                
+                dat=scn.pdata[0].data[:,:,col_idx,:]
+                imgdata = numpy.mean(dat,axis=2)
                 vtcdata = data.data[:,:,col_idx]
                 bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,'auc60_roi')
                 axs=fig.add_subplot(G[row_idx, col_idx])
