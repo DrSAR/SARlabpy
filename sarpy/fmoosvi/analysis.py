@@ -396,7 +396,7 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
                 for rep in xrange(inj_point,reps):                    
                     s = data[x,y,slice,rep] / baseline_s
                     E2 = (-E1*c + E1*s - s + 1) / (E1*s*c - E1*c - s*c +1)
-                    T1[x,y,slice,inj_point:] = -TR / numpy.log(E2)
+                    T1[x,y,slice,rep] = -TR / numpy.log(E2)
 
     # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
 
