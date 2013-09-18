@@ -20,7 +20,7 @@ import scipy.special as spsp
 
 
 
-def create_model_AIF(parms, time_axis, 
+def create_model_AIF(params, time_axis, 
                      modify_rate = False,
                      shift_h = False, 
                      shift_v = False,
@@ -30,7 +30,7 @@ def create_model_AIF(parms, time_axis,
     ''' Create AIF for different rates (alphas), and fixed parameters
         from fit of data with AIF_model function. '''
                          
-    def AIF_model(parms, time):
+    def AIF_model(params, time):
         ''' Create AIF with linear upslope and single exponential decay.'''
         
         def heaviside(time, tau):
@@ -44,7 +44,7 @@ def create_model_AIF(parms, time_axis,
         
             return out
     #    tau = vol/rate
-        alpha, beta, vol, c_f = parms[0], parms[1], parms[2], parms[3]
+        alpha, beta, vol, c_f = params[0], params[1], params[2], params[3]
     
         tau = np.sqrt(2*vol/alpha)
         up = ( 1 - heaviside(time,tau) ) * alpha * time
@@ -56,7 +56,7 @@ def create_model_AIF(parms, time_axis,
         return up+down     
 
         
-    alpha, V1, V2, tf, cf = parms[0], parms[1], parms[2], parms[3], parms[4]    
+    alpha, V1, V2, tf, cf = params[0], params[1], params[2], params[3], params[4]    
     
     tau = np.sqrt( (2*V1)/alpha )
 
@@ -68,22 +68,22 @@ def create_model_AIF(parms, time_axis,
     return AIF
 
 
-def PKfit(aif, targetfunc, time, model='tofts', initial_parms=[1,1],\
+def PKfit(aif, targetfunc, time, model='tofts', initial_params=[1,1],\
             method = 'leastsq', bounds = None, brute_ranges = None):
     """ Fits concentration curves derived by one of three different
         models (i.e. TM, ETM 2CXM) and an AIF to concentration data."""
 
     if method == 'leastsq':
-        def errorfunc(parms, time, aif):
-            #print(parms)
-            if within_bounds(parms, bounds) or bounds == None:
-#                print(targetfunc - PKmodel(parms, time, aif, model))
-                return targetfunc - PKmodel(parms, time, aif, model)
+        def errorfunc(params, time, aif):
+            #print(params)
+            if within_bounds(params, bounds) or bounds == None:
+#                print(targetfunc - PKmodel(params, time, aif, model))
+                return targetfunc - PKmodel(params, time, aif, model)
             else:
                 return 1e9
                 
-        fit_parms, cov, infodict, mesg, sucess = optimize.leastsq(errorfunc, \
-                                                initial_parms, \
+        fit_params, cov, infodict, mesg, sucess = optimize.leastsq(errorfunc, \
+                                                initial_params, \
                                                 args=(time,aif),
                                                 full_output=True,
                                                 maxfev=200000)
@@ -91,23 +91,25 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_parms=[1,1],\
 #        print('\n\n\t',sucess)
 #        print('\n\n\t',mesg)
 #        print('\n\n\t',infodict['nfev'])
-#        average_residual = sum((targetfunc - PKmodel(fit_parms, time, aif, model))**2)
+#        average_residual = sum((targetfunc - PKmodel(fit_params, time, aif, model))**2)
 #        average_residual /= len(time)
                                                 
     if method == 'anneal':
-        def errorfunc(parms, time, aif):
-            if within_bounds(parms, bounds) or bounds == None:
-                #print(sum(abs(targetfunc - PKmodel(parms, time, aif, model))**2))
+        def errorfunc(params, time, aif):
+            print(params)
+            print('in optimize function')
+            if within_bounds(params, bounds):
+                #print(sum(abs(targetfunc - PKmodel(params, time, aif, model))**2))
 #                print('in')
-                return sum(abs(targetfunc - PKmodel(parms, time, aif, model))**2)
+                return sum(abs(targetfunc - PKmodel(params, time, aif, model))**2)
             else:
 #                print('out')
                 return 1e9
                 
             #fast or cauchy are available
-        fit_parms, Jmin, T, feval, iters, accept, retval = optimize.anneal(\
+        fit_params, Jmin, T, feval, iters, accept, retval = optimize.anneal(\
                                             func = errorfunc,\
-                                            x0 = initial_parms, \
+                                            x0 = initial_params, \
                                             args =(time,aif),\
                                             schedule='fast',\
                                             full_output=True,\
@@ -129,11 +131,11 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_parms=[1,1],\
         
     elif method == 'brute':
         
-        def errorfunc(parms, time, aif):
-            out = sum(abs(targetfunc - PKmodel(parms, time, aif, model))**2)
+        def errorfunc(params, time, aif):
+            out = sum(abs(targetfunc - PKmodel(params, time, aif, model))**2)
             return out            
             
-        fit_parms = optimize.brute(errorfunc,\
+        fit_params = optimize.brute(errorfunc,\
                             ranges = brute_ranges,\
                             args=(time,aif))
     
@@ -141,11 +143,11 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_parms=[1,1],\
         if bounds == None:
             raise TypeError('Method fmin_tnc needs parameter bounds.')
 
-        errorfunc = lambda parms, time, aif:\
-        sum(abs(targetfunc - PKmodel(parms, time, aif, model)))
+        errorfunc = lambda params, time, aif:\
+        sum(abs(targetfunc - PKmodel(params, time, aif, model)))
         
-        fit_parms, nfeval, infodict = optimize.fmin_tnc(func = errorfunc, \
-                                                x0 = initial_parms, \
+        fit_params, nfeval, infodict = optimize.fmin_tnc(func = errorfunc, \
+                                                x0 = initial_params, \
                                                 fprime = None,\
                                                 args=(time,aif),\
                                                 approx_grad=True,\
@@ -154,11 +156,11 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_parms=[1,1],\
                                                 accuracy = 1e-12,\
                                                 maxfun = 20000)
                                                 
-        average_residual = sum((targetfunc - PKmodel(fit_parms, time, aif, model))**2)
+        average_residual = sum((targetfunc - PKmodel(fit_params, time, aif, model))**2)
         average_residual /= len(time)
 
         
-    best_fit = PKmodel(fit_parms, time, aif, model)        
+    best_fit = PKmodel(fit_params, time, aif, model)        
     
     # Calculate Coefficient of Determination
     ss_err=((best_fit - targetfunc)**2).sum()
@@ -166,53 +168,55 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_parms=[1,1],\
     rsquared= 1 - (ss_err/ss_tot)
     
     N = len(best_fit)
-    K = len(fit_parms)
+    K = len(fit_params)
     AIC = N*np.log(ss_err/N) + 2 * K + ( (2*K*(K+1)) / (N-K-1) )
     BIC = N*np.log(ss_err/N) + K * np.log(N)
     
-#    fit_parms = initial_parms
+#    fit_params = initial_params
         
-    return fit_parms, rsquared, AIC, BIC, best_fit, ss_err
+    return fit_params, rsquared, AIC, BIC, best_fit, ss_err
     
 
-def within_bounds(parms, bounds):
-    if bounds == None:
+def within_bounds(params, bounds):
+    if params is None:
+        return False
+    if bounds is None:
         return True
     else:
-        for i in range(len(parms)):
-            if parms[i] < bounds[i][0] or parms[i] > bounds[i][1]:
+        for i in xrange(len(params)):
+            if params[i] < bounds[i][0] or params[i] > bounds[i][1]:
                 #print('PARAMETER OUT OF BOUDNS')
                 return False
         return True
         
 
 
-def PKmodel(parms, time, aif, model='tofts', vasc=2):    
+def PKmodel(params, time, aif, model='tofts', vasc=2):    
     out = 1
     if model == 'tofts':
         """ Calculate irf and convolve with aif according to TM. """
         
         # convert K_trans to 1/s
-        K_trans, v_e = parms[0]/60, parms[1]
+        K_trans, v_e = params[0]/60, params[1]
             
         irf = K_trans * np.exp( ( - time * K_trans) / v_e )
         out = convolve_aif ( aif, irf, time )
 
     elif model == 'etofts':
-        K_trans, v_e, v_p = parms[0]/60, parms[1], parms[2]
+        K_trans, v_e, v_p = params[0]/60, params[1], params[2]
         irf = K_trans * np.exp( ( - time * K_trans) / v_e )    
         out = ((v_p * aif) + convolve_aif (aif, irf, time))
         
     elif model == 'aath':
-#        E, F_p, v_e, t_c = parms[0], parms[1]/60, parms[2], parms[3]
+#        E, F_p, v_e, t_c = params[0], params[1]/60, params[2], params[3]
         # parameterize with v_p for easier comparsion with 2cxm
-        E, F_p, v_e, v_p = parms[0], parms[1]/60, parms[2], parms[3]
+        E, F_p, v_e, v_p = params[0], params[1]/60, params[2], params[3]
         
         t_c = v_p/F_p        
         
         irf = np.zeros(len(time))
         
-        for i in range(len(time)):
+        for i in xrange(len(time)):
             if time[i] > t_c:
                 irf[i] = E*F_p * np.exp( ( - (time[i] - t_c) * E*F_p) / v_e )
             elif time[i] <= t_c and time[i] > 0:
@@ -229,8 +233,8 @@ def PKmodel(parms, time, aif, model='tofts', vasc=2):
         
 #        raise TypeError('2cxm not working yet. FIX LATER!')
         #===== Unpack Paramtes ====
-        E, F_P, V_E, V_P = parms[0], parms[1]/60, parms[2], parms[3]
-        #print(parms)
+        E, F_P, V_E, V_P = params[0], params[1]/60, params[2], params[3]
+        #print(params)
         #==== Define variables ====
         e = V_E / ( V_P + V_E )
         
@@ -279,7 +283,7 @@ def PKmodel(parms, time, aif, model='tofts', vasc=2):
         
     elif model == '2cum':
         
-        E, F_P, V_P = parms[0], parms[1]/60, parms[2]
+        E, F_P, V_P = params[0], params[1]/60, params[2]
         
         K = E * F_P        
         
@@ -292,7 +296,7 @@ def PKmodel(parms, time, aif, model='tofts', vasc=2):
         out = convolve_aif ( aif, irf, time )
         
     elif model == 'pat':
-        K, v_p = parms[0]/60, parms[1]
+        K, v_p = params[0]/60, params[1]
         
         irf = [K]*len(time)
         
@@ -300,7 +304,7 @@ def PKmodel(parms, time, aif, model='tofts', vasc=2):
         
     elif model == 'distr':
         
-        E, F_p, v_e, v_p = parms[0], parms[1]/60, parms[2], parms[3]
+        E, F_p, v_e, v_p = params[0], params[1]/60, params[2], params[3]
         
         t_c = v_p/F_p
         
@@ -310,7 +314,7 @@ def PKmodel(parms, time, aif, model='tofts', vasc=2):
         irf = np.zeros(len(time))
         
                 
-        for i in range(len(time)):
+        for i in xrange(len(time)):
             
             if time[i] > t_c:
                 
@@ -346,11 +350,11 @@ def PKmodel(parms, time, aif, model='tofts', vasc=2):
         out = convolve_aif ( aif, irf, time )
 
     elif model == 'PFM':
-        V, F_p = parms[0], parms[1]/60, 
+        V, F_p = params[0], params[1]/60, 
         
         irf = np.zeros(len(time))
         
-        for i in range(len(time)):
+        for i in xrange(len(time)):
           
           if V/F_p > time[i]:
                 irf[i] = F_p

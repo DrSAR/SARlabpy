@@ -90,19 +90,7 @@ def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     for slice in range(num_slices):
         auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
        
-    # Deal with bounding boxes
-
-    if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])    
-       
-    if bbox.shape == (4,):            
-    
-        bbox_mask = numpy.empty([x_size,y_size])
-        bbox_mask[:] = numpy.nan        
-        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
-    
-        # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+ 
 
     else:      
         raise ValueError('Please supply a bbox for h_calculate_AUC')   
@@ -289,7 +277,7 @@ def h_calculate_AUGC(scan_object, adata_label, bbox = None, time = 60, pdata_num
 
     time_per_rep = numpy.divide(total_time,reps)
 
-    # Calculated parms
+    # Calculated params
     augc_reps = int(numpy.round(time / time_per_rep))
     time_points = numpy.arange(time_per_rep,time_per_rep*augc_reps + time_per_rep,time_per_rep)
 
@@ -436,6 +424,23 @@ def h_fit_PK(scan_object,
     # Determine the injection point 
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
 
+    # Deal with bounding boxes
+
+    if bbox is None:        
+        bbox = numpy.array([0.25*img_size[0],0.75*img_size[0],0.25*img_size[1],0.75*img_size[1]])
+        bbox = bbox.astype(int)
+       
+    if bbox.shape == (4,):            
+    
+        bbox_mask = numpy.empty([img_size[0],img_size[1]])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+    
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(img_size[0],img_size[1],1),num_slices)
+
+
+
    
     reps =  scan_object.method.PVM_NRepetitions
 #    
@@ -451,17 +456,17 @@ def h_fit_PK(scan_object,
     total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
 
     time_per_rep = numpy.divide(total_time,reps)
-    # Calculated parms
+    # Calculated params
     tmp_time_points = numpy.arange(time_per_rep,time_per_rep*reps + time_per_rep,time_per_rep)
     time_points = tmp_time_points[inj_point:] - tmp_time_points[inj_point]
     
     #  load parameters to simulate aif
-    aif_parms = [5.18134715e-02, 9.72041215e+00, 
+    aif_params = [5.18134715e-02, 9.72041215e+00, 
                  4.59268952e+01, 3.59900000e+02, 
                  1.20795007e-01] 
     
     # create aif
-    aif = PKlib.create_model_AIF(aif_parms, time_points)
+    aif = PKlib.create_model_AIF(aif_params, time_points)
     
     # set bounds for the fit parameters
     if model == 'etofts':
@@ -490,52 +495,52 @@ def h_fit_PK(scan_object,
                                        
     fit_results = numpy.empty([img_size[0],img_size[1],img_size[2]], dtype=dict)
         
-#    for x in xrange(bbox[0],bbox[1]):
-#        for y in range(bbox[2],bbox[3]):
-#            for slice in range(num_slices):
+    for x in xrange(bbox[0],bbox[1]):
+        for y in range(bbox[2],bbox[3]):
+            for slice in range(num_slices):
     
-    (x,y,slice) = test
+#    (x,y,slice) = test
             
-    y_data = data[x,y,slice,inj_point:]
-    fit_dict = {}
-    
-    # do the iftting. methods are: anneal, leastsq, fmin_tnc,
-    # see function PKfit in the library for more details and adjustable
-    # parameters.
-    # especiall for anneal adwjusmtent of the method and parameters
-    # can be very beneficial.
-    fit_params, rsquared, AIC, BIC, fitted_ctr, ss_err = PKlib.PKfit(\
-                                                 aif,\
-                                                 y_data,\
-                                                 time_points,\
-                                                 model = model,\
-                                                 method = 'anneal',\
-                                                 initial_parms = initial_guess,
-                                                 bounds = bounds, 
-                                                 brute_ranges = None)
-    
-    #TODO: IMPLEMENT GOODNESS OF FIT FOR PKM fits                                             
-    #goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
-    fit_dict = {
-                'fit_params': fit_params,
-                'rsquared' : rsquared,
-                'aic' : AIC,
-                'bic' : BIC,
-                'fitted_ctr' : fitted_ctr,
-                'ss_err' : ss_err
-                }
+                y_data = data[x,y,slice,inj_point:]
+                fit_dict = {}
                 
-#    data_after_fitting[x,y,slice] = fit_params
-    fit_results[x,y,slice] = fit_dict                                                             
+                # do the iftting. methods are: anneal, leastsq, fmin_tnc,
+                # see function PKfit in the library for more details and adjustable
+                # parameters.
+                # especiall for anneal adwjusmtent of the method and parameters
+                # can be very beneficial.
+                fit_params, rsquared, AIC, BIC, fitted_ctr, ss_err = PKlib.PKfit(\
+                                                             aif,\
+                                                             y_data,\
+                                                             time_points,\
+                                                             model = model,\
+                                                             method = 'anneal',\
+                                                             initial_params = initial_guess,
+                                                             bounds = bounds, 
+                                                             brute_ranges = None)
+                
+                #TODO: IMPLEMENT GOODNESS OF FIT FOR PKM fits                                             
+                #goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
+                fit_dict = {
+                            'fit_params': fit_params,
+                            'rsquared' : rsquared,
+                            'aic' : AIC,
+                            'bic' : BIC,
+                            'fitted_ctr' : fitted_ctr,
+                            'ss_err' : ss_err
+                            }
+                
+            #   data_after_fitting[x,y,slice] = fit_params
+                fit_results[x,y,slice] = fit_dict                                                             
     
 #    # uncomment if plotting is required
-    print(fit_params, ss_err)
-    pylab.plot(time_points, aif)
-    pylab.plot(time_points, y_data,'x')
-    pylab.plot(time_points, fitted_ctr)
-    pylab.show()
+#    print(fit_params, ss_err)
+    #pylab.plot(time_points, aif)
+    #pylab.plot(time_points, y_data,'x')
+    #pylab.plot(time_points, fitted_ctr)
+    #pylab.show()
     
-    return fit_params, fit_dict
+    return fit_results
 
 
 
