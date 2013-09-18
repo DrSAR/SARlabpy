@@ -27,6 +27,7 @@ import collections
 import random
 import copy
 import sarpy.fmoosvi.PKlib as PKlib
+import pylab
 
 def h_calculate_AUC(scan_object, bbox = None, time = 60, pdata_num = 0):
     
@@ -410,11 +411,11 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
     return conc
 
 def h_fit_PK(scan_object, 
-             adata_label,
+             adata_label='gd_conc',
              bbox=None,
              test=None,
              model = None, 
-             initial=None, 
+             initial_guess=None, 
              pdata_num=0):
 
     # Set the default model type    
@@ -426,12 +427,16 @@ def h_fit_PK(scan_object,
     try:
         data = scan_object.adata[adata_label].data
     except KeyError:
-        print('h_caculate_AUGC: Source data {0} does not exist yet.'.format(adata_label))
+        print('h_fit_PK: Source data {0} does not exist yet.'.format(adata_label))
         raise KeyError
     
     img_size = scan_object.pdata[pdata_num].data.shape    
     num_slices = getters.get_num_slices(scan_object,pdata_num)
-    
+
+    # Determine the injection point 
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
+
+   
     reps =  scan_object.method.PVM_NRepetitions
 #    
 #    if reps != img_size[-1]:
@@ -447,8 +452,9 @@ def h_fit_PK(scan_object,
 
     time_per_rep = numpy.divide(total_time,reps)
     # Calculated parms
-    time_points = numpy.arange(time_per_rep,time_per_rep*reps + time_per_rep,time_per_rep)
-
+    tmp_time_points = numpy.arange(time_per_rep,time_per_rep*reps + time_per_rep,time_per_rep)
+    time_points = tmp_time_points[inj_point:] - tmp_time_points[inj_point]
+    
     #  load parameters to simulate aif
     aif_parms = [5.18134715e-02, 9.72041215e+00, 
                  4.59268952e+01, 3.59900000e+02, 
@@ -482,7 +488,7 @@ def h_fit_PK(scan_object,
                                        img_size[1],\
                                        img_size[2]] )
                                        
-    fit_results = numpy.empty([img_size[0],img_size[1],img_size[2]])
+    fit_results = numpy.empty([img_size[0],img_size[1],img_size[2]], dtype=dict)
         
 #    for x in xrange(bbox[0],bbox[1]):
 #        for y in range(bbox[2],bbox[3]):
@@ -490,7 +496,7 @@ def h_fit_PK(scan_object,
     
     (x,y,slice) = test
             
-    y_data = data[x,y,slice,:]
+    y_data = data[x,y,slice,inj_point:]
     fit_dict = {}
     
     # do the iftting. methods are: anneal, leastsq, fmin_tnc,
@@ -514,22 +520,22 @@ def h_fit_PK(scan_object,
                 'fit_params': fit_params,
                 'rsquared' : rsquared,
                 'aic' : AIC,
-                'bic' : bic,
+                'bic' : BIC,
                 'fitted_ctr' : fitted_ctr,
                 'ss_err' : ss_err
                 }
                 
-    data_after_fitting[x,y,slice] = fit_params
+#    data_after_fitting[x,y,slice] = fit_params
     fit_results[x,y,slice] = fit_dict                                                             
     
 #    # uncomment if plotting is required
-#    print(fit_parms, ss_err)
-#    plt.plot(time_axis, aif,'x')
-#    plt.plot(time_axis, ctr,'x')
-#    plt.plot(time_axis, fitted_ctr,'o')
-#    plt.show()
+    print(fit_params, ss_err)
+    pylab.plot(time_points, aif)
+    pylab.plot(time_points, y_data,'x')
+    pylab.plot(time_points, fitted_ctr)
+    pylab.show()
     
-    return fit_parms, fit_dict
+    return fit_params, fit_dict
 
 
 
@@ -1061,8 +1067,5 @@ def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_P
     return alpha_BS
     
     
-
-
-
 #######
 

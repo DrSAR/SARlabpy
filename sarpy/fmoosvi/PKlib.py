@@ -75,7 +75,7 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_parms=[1,1],\
 
     if method == 'leastsq':
         def errorfunc(parms, time, aif):
-            print(parms)
+            #print(parms)
             if within_bounds(parms, bounds) or bounds == None:
 #                print(targetfunc - PKmodel(parms, time, aif, model))
                 return targetfunc - PKmodel(parms, time, aif, model)
@@ -97,7 +97,7 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_parms=[1,1],\
     if method == 'anneal':
         def errorfunc(parms, time, aif):
             if within_bounds(parms, bounds) or bounds == None:
-                print(sum(abs(targetfunc - PKmodel(parms, time, aif, model))**2))
+                #print(sum(abs(targetfunc - PKmodel(parms, time, aif, model))**2))
 #                print('in')
                 return sum(abs(targetfunc - PKmodel(parms, time, aif, model))**2)
             else:
