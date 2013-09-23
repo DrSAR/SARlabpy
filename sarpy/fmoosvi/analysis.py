@@ -400,7 +400,7 @@ def h_conc_from_signal(scan_object, scan_object_T1map,
        
     return conc
 
-def h_fit_PK(scan_object, 
+def h_fit_PK(scan_object,
              adata_label='gd_conc',
              bbox=None,
              parallel=False,
@@ -494,14 +494,15 @@ def h_fit_PK(scan_object,
     if parallel is True:
 
         # Define the variables that need to be pushed:
-        args = dict(data=data,inj_point=inj_point,img_size=img_size,
+        args = dict(data=data,inj_point=inj_point,
                     bbox=bbox,aif=aif, time_points=time_points,
                     model=model,initial_guess=initial_guess,bounds=bounds)
-
+                    
         # Connect the clusters
         
         from IPython.parallel import Client
         c = Client(profile='sarlab')
+        
         dview = c[:]
         
         # Create the list over which to map
@@ -512,15 +513,18 @@ def h_fit_PK(scan_object,
                 for z in xrange(img_size[2]):
                     map_list.append((x,y,z))        
 
-##        func = lambda xyz:sarpy.fmoosvi.analysis.h_fit_PKhelper(xyz,
-#                                                                data,
+#        func = lambda xyz:sarpy.fmoosvi.analysis.h_fit_PKhelper(xyz)
+        
+        #
+#                                                                data=data,
 #                                                                inj_point = inj_point,
-#                                                                bbox=bbox,
 #                                                                aif=aif, 
 #                                                                time_points=time_points,
 #                                                                model=model,
 #                                                                initial_guess=initial_guess,
-#                                                                bounds=bounds)
+#                                                                bounds=bounds
+
+        
         with dview.sync_imports():
             import sarpy
             import sarpy.fmoosvi.parallel
@@ -534,7 +538,7 @@ def h_fit_PK(scan_object,
         lv = c.load_balanced_view()   # this object represents the engines (workers)
         lv.block = True
         
-        coord = lv.map(h_fit_PKhelper, map_list)
+        coord = lv.map(func, map_list)
 
         fit_results = numpy.empty([img_size[0],img_size[1],img_size[2]],dtype=dict)
         fit_results[:] = numpy.nan
@@ -560,8 +564,8 @@ def h_fit_PK(scan_object,
     #pylab.show()
     
 
-def h_fit_PKhelper(xyz,data,inj_point, aif, time_points, model,initial_guess,bounds):
-    
+def h_fit_PKhelper(xyz,data,inj_point, aif,time_points, 
+                   model, initial_guess,bounds):
     
     (x,y,slice) = xyz
     

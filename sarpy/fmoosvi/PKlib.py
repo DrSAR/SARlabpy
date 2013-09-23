@@ -96,10 +96,10 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_params=[1,1],\
                                                 
     if method == 'anneal':
         def errorfunc(params, time, aif):
-            print(params)
-            print('in optimize function')
+            #print(params)
             if within_bounds(params, bounds):
-                #print(sum(abs(targetfunc - PKmodel(params, time, aif, model))**2))
+#                print(targetfunc)
+#                print(sum(abs(targetfunc - PKmodel(params, time, aif, model))**2))
 #                print('in')
                 return sum(abs(targetfunc - PKmodel(params, time, aif, model))**2)
             else:
@@ -126,7 +126,7 @@ def PKfit(aif, targetfunc, time, model='tofts', initial_params=[1,1],\
                                             lower=[i[0] for i in bounds],\
                                             upper=[i[1] for i in bounds],\
                                             dwell=1000)
-        print(feval, iters, retval, T)
+#        print(feval, iters, retval, T)
         
         
     elif method == 'brute':
