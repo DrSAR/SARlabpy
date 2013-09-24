@@ -443,11 +443,11 @@ def h_fit_PK(scan_object,
         bbox_mask = numpy.tile(bbox_mask.reshape(img_size[0],img_size[1],1),num_slices)
 
     reps =  scan_object.method.PVM_NRepetitions
-#    
-#    if reps != img_size[-1]:
-#        reps = img_size[-1]
-#        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n '.format(scan_object.shortdirname) )
-#    
+    
+    if reps != img_size[-1]:
+        reps = img_size[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n '.format(scan_object.shortdirname) )
+    
     # there are problems with using phase encodes for certain cases (maybe 3D)
     # so now I have to use the tuid time
     total_time = scan_object.method.PVM_ScanTimeStr
