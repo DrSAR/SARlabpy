@@ -23,4 +23,4 @@ from io.visu_pars_2_Nifti1Header import (visu_pars_2_Nifti1Header,
                                       
 from io.SARlogger import initiate_logging
 
-from helpers import natural_sort
+from helpers import natural_sort, generate_summary
