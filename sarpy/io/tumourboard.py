@@ -33,8 +33,8 @@ def determine_figure_size(n_rows,n_cols):
        
     if n_rows <= 4 and n_cols <= 6:
         #moderately tested
-        figure_size = (6,5*aspect)
-        font_modifier = 0
+        figure_size = (6,7*aspect)
+        font_modifier = 2
         
     elif (n_rows >= 4 and n_rows <=8) and (n_cols>=6 and n_cols <= 10) :
         #moderately tested               
@@ -90,7 +90,7 @@ parser = argparse.ArgumentParser(
     )
 parser.set_defaults(**defaults)
 parser.add_argument("--test","-t",default=False, action="store_true", 
-                    help='dry run of tumour-board creation')
+                    help='dry run of tumour-board creation. Example: ./tumourboard.py -c ~/sdata/NecS3/NecS3-TB.config')
 args = parser.parse_args(remaining_argv)
 
 if args.test:
