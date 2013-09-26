@@ -1,6 +1,10 @@
-# bulk analysis assuming a certain set of function.
-# typical call:
-# bulk_analyze(master_list,     # filename
+'''
+Definition of classes for bulk analysis.
+
+The general idea is to instantiate a class that most suits your needs
+for a given type of analysis and overload the methods that need tweaking.
+'''
+# bulk_analyze(masterlist,     # filename
 #              scan_criterion,  # function handle, returns T for analysable scan
 #              scan_params,     # the function returns a dictionary for: 
 #                                    - parameters that might change from scan to scan
@@ -13,23 +17,29 @@ import os
 import collections
 import json
 
-# This is the most basic analyzer class that will be used to create
-# more elaborate classes. 
 class BulkAnalyzer(object):
+    '''Most basic analyzer class that will be used to create 
+    more elaborate classes. '''
     def __init__(self,
-                 master_list_fname):
-
+                 masterlist_fname):
     # open masterlist and iterate over all patients and scans
-        with open(os.path.join(os.path.expanduser('~/sdata'),
-                               master_list_fname, master_list_fname+'.json'),'r') as master_file:
-            json_str = master_file.read()
-            self.master_list = json.JSONDecoder(
-                            object_pairs_hook=collections.OrderedDict).decode(json_str)
+        fname = os.path.join(os.path.expanduser('~/sdata'),
+                             masterlist_fname, masterlist_fname+'.json')
+        try:
+            master_file = open(fname,'r')
+        except IOError:
+            print('Could not open masterlist file %s' % fname)
+            raise
+        else:
+            with master_file:
+                json_str = master_file.read()
+                self.masterlist = json.JSONDecoder(
+                                object_pairs_hook=collections.OrderedDict).decode(json_str)
     # this is where we keep a record of the results
         self.results={}
 
     def scan_criterion(self, pat_lbl, scn_lbl):
-        scn_fname = self.master_list[pat_lbl][scn_lbl][0]
+        scn_fname = self.masterlist[pat_lbl][scn_lbl][0]
         if scn_fname:
             return scn_fname
         else:
@@ -44,15 +54,21 @@ class BulkAnalyzer(object):
         ''' Placeholder method to perform analysis on a scan '''
         return 0
 
+    def store_result(self, result, 
+                     scn=None):
+        #scn.adata[self.adata_lbl]=result
+        print(result)
+
     def process(self):
-        for pat_lbl, pat in self.master_list.iteritems():
+        for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
                     # this is a scan we should analyze!
                     kwargs = self.process_params(scn_2_analyse)
-                    self.results[scn_lbl] = self.analysis_func(scn_2_analyse, **kwargs)
-        return self.results
+                    self.store_result(self.analysis_func(scn_2_analyse,
+                                                          **kwargs),
+                                      scn_2_analyse)
 
 import re
 import sarpy
@@ -63,8 +79,8 @@ class AnalyzerByScanLabel(BulkAnalyzer):
     To make use of this class, one should inherit from it and should only
     require to change method analysis_func. Then, simply instantiate and
     process()'''
-    def __init__(self, master_list_fname, scan_label=None):
-        super(AnalyzerByScanLabel, self).__init__(master_list_fname)
+    def __init__(self, masterlist_fname, scan_label=None):
+        super(AnalyzerByScanLabel, self).__init__(masterlist_fname)
         if scan_label is None:
             raise ValueError('scan_label requires a string value')
         self.scan_label = scan_label
@@ -81,7 +97,7 @@ class DCE_NR_counter(BulkAnalyzer): # we inherit from the generic analyzer
                                      # object
     def scan_criterion(self, pat_lbl, scn_lbl): 
         print('testing: %s (%s) ' % (pat_lbl, scn_lbl))
-        scan_fname = self.master_list[pat_lbl][scn_lbl][0]
+        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
         if scan_fname:
             scn = sarpy.Scan(scan_fname)
             if re.search('.*DCE',scn.acqp.ACQ_protocol_name):
@@ -92,5 +108,5 @@ class DCE_NR_counter(BulkAnalyzer): # we inherit from the generic analyzer
         print('analyzing: %s' % scn)
         return scn.acqp.NR
 
-res = DCE_NR_counter('NecS3').process()
+#res = DCE_NR_counter('NecS3').process()
 
