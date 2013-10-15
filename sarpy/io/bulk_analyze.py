@@ -19,9 +19,12 @@ import json
 
 class BulkAnalyzer(object):
     '''Most basic analyzer class that will be used to create 
-    more elaborate classes. '''
+    more elaborate classes - unlikely to be instantiated directly '''
     def __init__(self,
                  masterlist_fname):
+        ''' init of the bare minimum:
+            - find masterlist
+            - think about where to store reslults ?!'''
     # open masterlist and iterate over all patients and scans
         fname = os.path.join(os.path.expanduser('~/sdata'),
                              masterlist_fname, masterlist_fname+'.json')
@@ -39,6 +42,9 @@ class BulkAnalyzer(object):
         self.results={}
 
     def scan_criterion(self, pat_lbl, scn_lbl):
+        ''' method to return either
+        (i) a scan_fname if pat_lbl and scn_lbl exist
+        (ii) None otherwise'''
         scn_fname = self.masterlist[pat_lbl][scn_lbl][0]
         if scn_fname:
             return scn_fname
@@ -57,9 +63,11 @@ class BulkAnalyzer(object):
     def store_result(self, result, 
                      scn=None):
         #scn.adata[self.adata_lbl]=result
-        print(result)
+        return 0
 
     def process(self):
+        ''' This method will get called to run the processing.
+        Currently there is no parallelization involved'''
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
@@ -93,10 +101,12 @@ class AnalyzerByScanLabel(BulkAnalyzer):
         return None
 
 # below are example function that achieve the minimum for a run of analysis
-class DCE_NR_counter(BulkAnalyzer): # we inherit from the generic analyzer
-                                     # object
+class DCE_NR_counter(BulkAnalyzer):
+    '''example of a class that finds all protocols with DCE in them 
+    and prints the NR value from the acqp file. Simple run like so:
+    >>>> DCE_NR_counter('NecS3').process()
+    '''
     def scan_criterion(self, pat_lbl, scn_lbl): 
-        print('testing: %s (%s) ' % (pat_lbl, scn_lbl))
         scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
         if scan_fname:
             scn = sarpy.Scan(scan_fname)
@@ -105,7 +115,7 @@ class DCE_NR_counter(BulkAnalyzer): # we inherit from the generic analyzer
         return None
 
     def analysis_func(self, scn, **kwargs):
-        print('analyzing: %s' % scn)
+        print('NR (%s) = %s' % (scn.shortdirname,scn.acqp.NR))
         return scn.acqp.NR
 
 #res = DCE_NR_counter('NecS3').process()
