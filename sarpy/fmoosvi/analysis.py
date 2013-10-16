@@ -744,7 +744,7 @@ def h_fit_T1_LL_FAind(scan_object_name, bbox = None, pdata_num = 0,
 #    data_after_fitting[data_after_fitting>1e4] = numpy.nan
 
 #    return numpy.squeeze(data_after_fitting), fit_results
-    return numpy.array(42)
+    return numpy.array(42),numpy.array(45)
 
 
 
