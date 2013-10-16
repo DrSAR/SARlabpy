@@ -27,17 +27,26 @@ class BulkAnalyzer(object):
             - think about where to store reslults ?!'''
     # open masterlist and iterate over all patients and scans
         fname = os.path.join(os.path.expanduser('~/sdata'),
-                             masterlist_fname, masterlist_fname+'.json')
+                             masterlist_fname, masterlist_fname+'_updated.json')
         try:
             master_file = open(fname,'r')
         except IOError:
-            print('Could not open masterlist file %s' % fname)
-            raise
-        else:
-            with master_file:
-                json_str = master_file.read()
-                self.masterlist = json.JSONDecoder(
-                                object_pairs_hook=collections.OrderedDict).decode(json_str)
+            fname = os.path.join(os.path.expanduser('~/sdata'),
+                        masterlist_fname, masterlist_fname+'.json')
+            try:
+                master_file = open(fname,'r')
+            except IOError:
+                print('Could not open masterlist file %s' % fname)
+                raise
+            else:
+                print('Warning: could not find updated masterlist')
+                print('but I loaded the default instead')
+      
+        with master_file:
+            json_str = master_file.read()
+            self.masterlist = json.JSONDecoder(
+                            object_pairs_hook=collections.OrderedDict).decode(json_str)
+
     # this is where we keep a record of the results
         self.results={}
 
