@@ -116,6 +116,47 @@ class AnalyzerByScanLabel(BulkAnalyzer):
             return scn_fname
         return None
 
+import IPython.parallel
+
+class ParallelBulkAnalyzer(BulkAnalyzer):
+    def __init__(self, 
+                 masterlist_fname,
+                 adata_lbl='testing',
+                 force_overwrite=False):
+        super(ParallelBulkAnalyzer, self).__init__(masterlist_fname,
+                                                   adata_lbl='testing',
+                                                   force_overwrite=False)
+        self.clients = IPython.parallel.Client(profile='sarlab')
+        self.dview = self.clients[:]
+        print(self.clients.ids)
+        
+        # ensuring all engines have the same version of the imports
+        with self.dview.sync_imports():
+            import os
+            import sys
+            import sarpy
+            import sarpy.fmoosvi.parallel
+            import sarpy.fmoosvi.analysis
+
+    def process(self):
+        ''' This method will get called to run the processing.
+        Currently there is no parallelization involved'''
+        for pat_lbl, pat in self.masterlist.iteritems():
+            for scn_lbl, scn_details in pat.iteritems():
+                scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
+                if scn_2_analyse is not None:
+                    # this is a scan we should analyze!
+                    kwargs = self.process_params(scn_2_analyse)
+                    result = self.analysis_func(scn_2_analyse,
+                                                          **kwargs)
+                    try:
+                        self.store_result(result, scn_2_analyse)
+                    except AttributeError as e:
+                        print(scn_2_analyse)
+                        print(e)                        
+
+
+
 # below are example function that achieve the minimum for a run of analysis
 class DCE_NR_counter(BulkAnalyzer):
     '''example of a class that finds all protocols with DCE in them 
@@ -136,3 +177,25 @@ class DCE_NR_counter(BulkAnalyzer):
 
 #res = DCE_NR_counter('NecS3').process()
 
+
+class T1map_from_LL(BulkAnalyzer):
+    '''example of a class that finds all protocols with DCE in them 
+    and prints the NR value from the acqp file. Simple run like so:
+    >>>> DCE_NR_counter('NecS3').process()
+    '''
+    def scan_criterion(self, pat_lbl, scn_lbl): 
+        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
+        if scan_fname:
+            scn = sarpy.Scan(scan_fname)
+            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
+                return scn
+        return None
+
+    def analysis_func(self, scn, **kwargs):
+        print('analysing (%s): %s' % (scn.shortdirname,
+                                      scn.acqp.ACQ_protocol_name))
+        return numpy.array(scn.acqp.NR)
+
+    def store_result(self, result, 
+                     scn=None):
+        print('not saving anything')
