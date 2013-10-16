@@ -74,7 +74,8 @@ class BulkAnalyzer(object):
    
     def analysis_func(self, scn, **kwargs):
         ''' Placeholder method to perform analysis on a scan '''
-        return 0
+        sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn)
+        return 42
 
     def store_result(self, result, 
                      scn=None):
@@ -85,6 +86,8 @@ class BulkAnalyzer(object):
     def process(self):
         ''' This method will get called to run the processing.
         Currently there is no parallelization involved'''
+
+        start1 = time.time()
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
@@ -93,11 +96,13 @@ class BulkAnalyzer(object):
                     kwargs = self.process_params(scn_2_analyse)
                     result = self.analysis_func(scn_2_analyse,
                                                           **kwargs)
-                    try:
-                        self.store_result(result, scn_2_analyse)
-                    except AttributeError as e:
-                        print(scn_2_analyse)
-                        print(e)                        
+                    # try:
+                    #     self.store_result(result, scn_2_analyse)
+                    # except AttributeError as e:
+                    #     print(scn_2_analyse)
+                    #     print(e)                        
+        end1 = time.time()
+        print 'Without parallelization : {0} s'.format(end1 - start1)   
 
 
 class AnalyzerByScanLabel(BulkAnalyzer):
@@ -149,25 +154,23 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 
     def process(self):
         ''' This method will get called to run the processing.
-        Currently there is no parallelization involved'''
+        '''
+        start1 = time.time()
+
         list_of_scans = []
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
-                    print scn_2_analyse
                     list_of_scans.append(scn_2_analyse.shortdirname)
 
         func = IPython.parallel.interactive(lambda sname:
                         sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
 
-        start1 = time.time()
-        results, more_crap = self.lv.map(func, list_of_scans)
+        results = self.lv.map(func, list_of_scans)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
-        print type(results)
-        print type(more_crap)
-
+        print results
 # below are example function that achieve the minimum for a run of analysis
 class DCE_NR_counter(BulkAnalyzer):
     '''example of a class that finds all protocols with DCE in them 
@@ -188,8 +191,30 @@ class DCE_NR_counter(BulkAnalyzer):
 
 #res = DCE_NR_counter('NecS3').process()
 
+class T1map_from_LL(BulkAnalyzer):
+    '''example of a class that finds all protocols with DCE in them 
+    and prints the NR value from the acqp file. Simple run like so:
+    >>>> DCE_NR_counter('NecS3').process()
+    '''
+    def scan_criterion(self, pat_lbl, scn_lbl): 
+        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
+        if scan_fname:
+            scn = sarpy.Scan(scan_fname)
+            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
+                return scn
+        return None
 
-class T1map_from_LL(ParallelBulkAnalyzer):
+    def analysis_func(self, scn, **kwargs):
+        print('analysing (%s): %s' % (scn.shortdirname,
+                                      scn.acqp.ACQ_protocol_name))
+        return numpy.array(scn.acqp.NR)
+
+    def store_result(self, result, 
+                     scn=None):
+        print('not saving anything')
+
+
+class T1map_from_LLP(ParallelBulkAnalyzer):
     '''example of a class that finds all protocols with DCE in them 
     and prints the NR value from the acqp file. Simple run like so:
     >>>> DCE_NR_counter('NecS3').process()
