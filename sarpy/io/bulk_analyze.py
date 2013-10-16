@@ -74,7 +74,7 @@ class BulkAnalyzer(object):
    
     def analysis_func(self, scn, **kwargs):
         ''' Placeholder method to perform analysis on a scan '''
-        sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn)
+        sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn.shortdirname)
         return 42
 
     def store_result(self, result, 
@@ -204,10 +204,10 @@ class T1map_from_LL(BulkAnalyzer):
                 return scn
         return None
 
-    def analysis_func(self, scn, **kwargs):
-        print('analysing (%s): %s' % (scn.shortdirname,
-                                      scn.acqp.ACQ_protocol_name))
-        return numpy.array(scn.acqp.NR)
+    # def analysis_func(self, scn, **kwargs):
+    #     print('analysing (%s): %s' % (scn.shortdirname,
+    #                                   scn.acqp.ACQ_protocol_name))
+    #     return numpy.array(scn.acqp.NR)
 
     def store_result(self, result, 
                      scn=None):
@@ -227,10 +227,10 @@ class T1map_from_LLP(ParallelBulkAnalyzer):
                 return scn
         return None
 
-    def analysis_func(self, scn, **kwargs):
-        print('analysing (%s): %s' % (scn.shortdirname,
-                                      scn.acqp.ACQ_protocol_name))
-        return numpy.array(scn.acqp.NR)
+    # def analysis_func(self, scn, **kwargs):
+    #     print('analysing (%s): %s' % (scn.shortdirname,
+    #                                   scn.acqp.ACQ_protocol_name))
+    #     return numpy.array(scn.acqp.NR)
 
     def store_result(self, result, 
                      scn=None):
