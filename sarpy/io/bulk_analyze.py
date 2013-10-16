@@ -131,10 +131,10 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         self.dview = self.clients[:]
         print(self.clients.ids)
 
-        self.dview.execute('import sys,os')
-        
-        self.dview.execute("sys.path.append(os.path.join(["+
-                        "os.path.expanduser('~'),'sarpy']))")        
+#        self.dview.execute('import sys,os')
+#        
+#        self.dview.execute("sys.path.append(os.path.join(["+
+#                        "os.path.expanduser('~'),'sarpy']))")        
                 
         # ensuring all engines have the same version of the imports
         with self.dview.sync_imports():
