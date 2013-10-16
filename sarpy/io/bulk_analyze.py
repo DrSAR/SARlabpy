@@ -156,7 +156,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
                     print scn_2_analyse
-                    list_of_scans.append(scn_2_analyse)
+                    list_of_scans.append(scn_2_analyse.shortdirname)
 
         func = IPython.parallel.interactive(lambda sname:
                         sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
