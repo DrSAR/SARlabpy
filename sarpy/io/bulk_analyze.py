@@ -155,7 +155,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
-                    print scn_2_analyse 
+                    print scn_2_analyse
                     list_of_scans.append(scn_2_analyse)
 
         func = IPython.parallel.interactive(lambda sname:
@@ -189,7 +189,7 @@ class DCE_NR_counter(BulkAnalyzer):
 #res = DCE_NR_counter('NecS3').process()
 
 
-class T1map_from_LL(BulkAnalyzer):
+class T1map_from_LL(ParallelBulkAnalyzer):
     '''example of a class that finds all protocols with DCE in them 
     and prints the NR value from the acqp file. Simple run like so:
     >>>> DCE_NR_counter('NecS3').process()
