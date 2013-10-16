@@ -155,6 +155,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
+                    print scn_2_analyse 
                     list_of_scans.append(scn_2_analyse)
 
         func = IPython.parallel.interactive(lambda sname:
