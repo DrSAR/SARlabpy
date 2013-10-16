@@ -138,6 +138,9 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
             import sarpy
             import sarpy.fmoosvi.parallel
             import sarpy.fmoosvi.analysis
+            
+        self.lv = self.clients.load_balanced_view()   # this object represents the engines (workers)
+        self.lv.block = True
 
     def process(self):
         ''' This method will get called to run the processing.
@@ -153,7 +156,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
                         sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
 
         start1 = time.time()
-        results, more_crap = lv.map(func, list_of_scans)
+        results, more_crap = self.lv.map(func, list_of_scans)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
         print type(results)
