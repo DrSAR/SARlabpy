@@ -131,9 +131,9 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         self.dview = self.clients[:]
         print(self.clients.ids)
 
-        dview.execute('import sys,os')
+        self.dview.execute('import sys,os')
         
-        dview.execute("sys.path.append(os.path.join(["+
+        self.dview.execute("sys.path.append(os.path.join(["+
                         "os.path.expanduser('~'),'sarpy']))")        
         
         reload(sarpy.fmoosvi.analysis)
