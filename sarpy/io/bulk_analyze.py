@@ -135,9 +135,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         
         self.dview.execute("sys.path.append(os.path.join(["+
                         "os.path.expanduser('~'),'sarpy']))")        
-        
-        reload(sarpy.fmoosvi.analysis)
-        
+                
         # ensuring all engines have the same version of the imports
         with self.dview.sync_imports():
             import os
