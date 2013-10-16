@@ -21,7 +21,9 @@ class BulkAnalyzer(object):
     '''Most basic analyzer class that will be used to create 
     more elaborate classes - unlikely to be instantiated directly '''
     def __init__(self,
-                 masterlist_fname):
+                 masterlist_fname,
+                 adata_lbl='testing',
+                 force_overwrite=False):
         ''' init of the bare minimum:
             - find masterlist
             - think about where to store reslults ?!'''
@@ -46,9 +48,8 @@ class BulkAnalyzer(object):
             json_str = master_file.read()
             self.masterlist = json.JSONDecoder(
                             object_pairs_hook=collections.OrderedDict).decode(json_str)
-
-    # this is where we keep a record of the results
-        self.results={}
+        self.adata_lbl = adata_lbl
+        self.force_overwrite = force_overwrite
 
     def scan_criterion(self, pat_lbl, scn_lbl):
         ''' method to return either
@@ -71,8 +72,9 @@ class BulkAnalyzer(object):
 
     def store_result(self, result, 
                      scn=None):
-        #scn.adata[self.adata_lbl]=result
-        return 0
+        scn.store_adata(key=self.adata_lbl, 
+                        data=result,
+                        force=self.force_overwrite)
 
     def process(self):
         ''' This method will get called to run the processing.
@@ -83,11 +85,16 @@ class BulkAnalyzer(object):
                 if scn_2_analyse is not None:
                     # this is a scan we should analyze!
                     kwargs = self.process_params(scn_2_analyse)
-                    self.store_result(self.analysis_func(scn_2_analyse,
-                                                          **kwargs),
-                                      scn_2_analyse)
+                    result = self.analysis_func(scn_2_analyse,
+                                                          **kwargs)
+                    try:
+                        self.store_result(result, scn_2_analyse)
+                    except AttributeError as e:
+                        print(scn_2_analyse)
+                        print(e)                        
 
 import re
+import numpy
 import sarpy
 
 class AnalyzerByScanLabel(BulkAnalyzer):
@@ -125,7 +132,7 @@ class DCE_NR_counter(BulkAnalyzer):
 
     def analysis_func(self, scn, **kwargs):
         print('NR (%s) = %s' % (scn.shortdirname,scn.acqp.NR))
-        return scn.acqp.NR
+        return numpy.array(scn.acqp.NR)
 
 #res = DCE_NR_counter('NecS3').process()
 
