@@ -14,8 +14,14 @@ for a given type of analysis and overload the methods that need tweaking.
 #                               #      - a dictionary of parameters
 
 import os
+import time
 import collections
 import json
+import re
+import numpy
+import IPython.parallel
+import sarpy
+
 
 class BulkAnalyzer(object):
     '''Most basic analyzer class that will be used to create 
@@ -93,9 +99,6 @@ class BulkAnalyzer(object):
                         print(scn_2_analyse)
                         print(e)                        
 
-import re
-import numpy
-import sarpy
 
 class AnalyzerByScanLabel(BulkAnalyzer):
     '''Analyzer class that will only analyze scans whose masterlist
@@ -115,8 +118,6 @@ class AnalyzerByScanLabel(BulkAnalyzer):
         if re.search(self.scan_label, scn_lbl):
             return scn_fname
         return None
-
-import IPython.parallel
 
 class ParallelBulkAnalyzer(BulkAnalyzer):
     def __init__(self, 
@@ -141,21 +142,22 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
     def process(self):
         ''' This method will get called to run the processing.
         Currently there is no parallelization involved'''
+        list_of_scans = []
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
-                    # this is a scan we should analyze!
-                    kwargs = self.process_params(scn_2_analyse)
-                    result = self.analysis_func(scn_2_analyse,
-                                                          **kwargs)
-                    try:
-                        self.store_result(result, scn_2_analyse)
-                    except AttributeError as e:
-                        print(scn_2_analyse)
-                        print(e)                        
+                    list_of_scans.append(scn_2_analyse)
 
+        func = IPython.parallel.interactive(lambda sname:
+                        sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
 
+        start1 = time.time()
+        results, more_crap = lv.map(func, list_of_scans)
+        end1 = time.time()
+        print 'With parallelization : {0} s'.format(end1 - start1)    
+        print type(results)
+        print type(more_crap)
 
 # below are example function that achieve the minimum for a run of analysis
 class DCE_NR_counter(BulkAnalyzer):
