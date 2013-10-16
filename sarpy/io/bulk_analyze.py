@@ -130,6 +130,13 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         self.clients = IPython.parallel.Client(profile='sarlab')
         self.dview = self.clients[:]
         print(self.clients.ids)
+
+        dview.execute('import sys,os')
+        
+        dview.execute('sys.path.append(os.path.join(['+
+                        'os.path.expanduser("~"),"sarpy"]))')        
+        
+        reload(sarpy.fmoosvi.analysis)')        
         
         # ensuring all engines have the same version of the imports
         with self.dview.sync_imports():
