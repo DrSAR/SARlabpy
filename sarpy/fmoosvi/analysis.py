@@ -595,12 +595,13 @@ def h_residual_T1_FAind(params, y_data, tao, n):
     else:
         return 1e9
 
-def h_fit_T1_LL_FAind(scan_object, bbox = None, pdata_num = 0, 
+def h_fit_T1_LL_FAind(scan_object_name, bbox = None, pdata_num = 0, 
                 params = []):
     
     if len(params) == 0:      
         params = [0, 0, 0, 0]
     ## Setting parameters
+    scan_object = sarpy.Scan(scan_object_name)
     x = sarpy.io.BRUKERIO.fftbruker(scan_object.fid)
     num_slices = getters.get_num_slices(scan_object,pdata_num)                                        
     t1points = numpy.divide(x.shape[-2],num_slices)     
