@@ -171,7 +171,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
                 if scn_2_analyse is not None:
                     list_of_scans.append(scn_2_analyse.shortdirname)
 
-        func = self.parallel_analysis_func(self)
+        func = self.parallel_analysis_func()
 
         results = self.lv.map(func, list_of_scans)
         end1 = time.time()
@@ -235,11 +235,11 @@ class T1map_from_LLP(ParallelBulkAnalyzer):
                 return scn
         return None
 
-    def parallel_analysis_func(self, sname, **kwargs):
+    def parallel_analysis_func(self):
         ''' Takes an iterable list and returns a lambda function for parallelization '''
 
         func = IPython.parallel.interactive(lambda sname:
-                    sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname, **kwargs))
+                    sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
         return func
 
 
