@@ -127,11 +127,12 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
     def __init__(self, 
                  masterlist_fname,
                  adata_lbl='testing',
-                 force_overwrite=False):
+                 force_overwrite=False,
+                 ipython_profile='sarlab'):
         super(ParallelBulkAnalyzer, self).__init__(masterlist_fname,
                                                    adata_lbl='testing',
                                                    force_overwrite=force_overwrite)
-        self.clients = IPython.parallel.Client(profile='sarlab')
+        self.clients = IPython.parallel.Client(profile=ipython_profile)
         self.dview = self.clients[:]
         print(self.clients.ids)
 
@@ -189,25 +190,6 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
                 print(e)                        
 
 # below are example function that achieve the minimum for a run of analysis
-class DCE_NR_counter(BulkAnalyzer):
-    '''example of a class that finds all protocols with DCE in them 
-    and prints the NR value from the acqp file. Simple run like so:
-    >>>> DCE_NR_counter('NecS3').process()
-    '''
-    def scan_criterion(self, pat_lbl, scn_lbl): 
-        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
-        if scan_fname:
-            scn = sarpy.Scan(scan_fname)
-            if re.search('.*DCE',scn.acqp.ACQ_protocol_name):
-                return scn
-        return None
-
-    def analysis_func(self, scn, **kwargs):
-        print('NR (%s) = %s' % (scn.shortdirname,scn.acqp.NR))
-        return numpy.array(scn.acqp.NR)
-
-#res = DCE_NR_counter('NecS3').process()
-
 class T1map_from_LL(BulkAnalyzer):
     '''example of a class that finds all protocols with DCE in them 
     and prints the NR value from the acqp file. Simple run like so:
@@ -232,7 +214,7 @@ class T1map_from_LL(BulkAnalyzer):
 
 
 class T1map_from_LLP(ParallelBulkAnalyzer):
-    '''example of a class that finds all protocols with DCE in them 
+    '''a class that finds all protocols with DCE in them 
     and prints the NR value from the acqp file. Simple run like so:
     >>>> DCE_NR_counter('NecS3').process()
     '''
