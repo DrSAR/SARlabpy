@@ -130,7 +130,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
                  force_overwrite=False):
         super(ParallelBulkAnalyzer, self).__init__(masterlist_fname,
                                                    adata_lbl='testing',
-                                                   force_overwrite=False)
+                                                   force_overwrite=force_overwrite)
         self.clients = IPython.parallel.Client(profile='sarlab')
         self.dview = self.clients[:]
         print(self.clients.ids)
@@ -165,19 +165,28 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         start1 = time.time()
 
         list_of_scans = []
+        list_of_scan_names = []
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
-                    list_of_scans.append(scn_2_analyse.shortdirname)
+                    list_of_scans.append(scn_2_analyse)
+                    list_of_scan_names.append(scn_2_analyse.shortdirname)
 
         func = self.parallel_analysis_func()
 
-        results = self.lv.map(func, list_of_scans)
+        results = self.lv.map(func, list_of_scan_names)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
         print results
 
+	for res, scn in zip(results, list_of_scans):
+            try:
+                scn.store_adata(key=self.adata_lbl, data=res,
+                                force=self.force_overwrite)
+            except AttributeError as e:
+                print(scn)
+                print(e)                        
 
 # below are example function that achieve the minimum for a run of analysis
 class DCE_NR_counter(BulkAnalyzer):
@@ -242,12 +251,3 @@ class T1map_from_LLP(ParallelBulkAnalyzer):
                     sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
         return func
 
-
-    # def analysis_func(self, scn, **kwargs):
-    #     print('analysing (%s): %s' % (scn.shortdirname,
-    #                                   scn.acqp.ACQ_protocol_name))
-    #     return numpy.array(scn.acqp.NR)
-
-    def store_result(self, result, 
-                     scn=None):
-        print('not saving anything')
