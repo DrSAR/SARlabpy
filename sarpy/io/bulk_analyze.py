@@ -74,8 +74,7 @@ class BulkAnalyzer(object):
    
     def analysis_func(self, scn, **kwargs):
         ''' Placeholder method to perform analysis on a scan '''
-        sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn.shortdirname)
-        return 42
+        return 0
 
     def store_result(self, result, 
                      scn=None):
@@ -152,6 +151,14 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         self.lv = self.clients.load_balanced_view()   # this object represents the engines (workers)
         self.lv.block = True
 
+
+    def parallel_analysis_func(self, **kwargs):
+        ''' Takes an iterable list and returns a lambda function for parallelization '''
+
+        print('Shame on you for not implementing this. RTFM!')
+        return None
+
+
     def process(self):
         ''' This method will get called to run the processing.
         '''
@@ -164,13 +171,14 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
                 if scn_2_analyse is not None:
                     list_of_scans.append(scn_2_analyse.shortdirname)
 
-        func = IPython.parallel.interactive(lambda sname:
-                        sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
+        func = self.parallel_analysis_func(self)
 
         results = self.lv.map(func, list_of_scans)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
         print results
+
+
 # below are example function that achieve the minimum for a run of analysis
 class DCE_NR_counter(BulkAnalyzer):
     '''example of a class that finds all protocols with DCE in them 
@@ -204,14 +212,14 @@ class T1map_from_LL(BulkAnalyzer):
                 return scn
         return None
 
-    # def analysis_func(self, scn, **kwargs):
-    #     print('analysing (%s): %s' % (scn.shortdirname,
-    #                                   scn.acqp.ACQ_protocol_name))
-    #     return numpy.array(scn.acqp.NR)
+    def analysis_func(self, scn, **kwargs):
+        ''' Placeholder method to perform analysis on a scan '''
 
-    def store_result(self, result, 
-                     scn=None):
-        print('not saving anything')
+        print('analysing (%s): %s' % (scn.shortdirname,
+                                       scn.acqp.ACQ_protocol_name))
+        
+        T1map, fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn.shortdirname)
+        return T1map, fit_dict
 
 
 class T1map_from_LLP(ParallelBulkAnalyzer):
@@ -226,6 +234,14 @@ class T1map_from_LLP(ParallelBulkAnalyzer):
             if re.search('.*LL',scn.acqp.ACQ_protocol_name):
                 return scn
         return None
+
+    def parallel_analysis_func(self, sname, **kwargs):
+        ''' Takes an iterable list and returns a lambda function for parallelization '''
+
+        func = IPython.parallel.interactive(lambda sname:
+                    sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname, **kwargs))
+        return func
+
 
     # def analysis_func(self, scn, **kwargs):
     #     print('analysing (%s): %s' % (scn.shortdirname,
