@@ -658,93 +658,92 @@ def h_fit_T1_LL_FAind(scan_object_name, bbox = None, pdata_num = 0,
                 # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
                 # phi (phase factor to fit real data)
                 
-#                fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
-#                                                        h_residual_T1_FAind,
-#                                                        params,
-#                                                        args=(y_data,tao,n_data), 
-#                                                        full_output = True,
-#                                                        maxfev = 200)
+                fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                        h_residual_T1_FAind,
+                                                        params,
+                                                        args=(y_data,tao,n_data), 
+                                                        full_output = True,
+                                                        maxfev = 200)
                 
-#                if ier not in (0,1,2,3,4): # Try fit with new guess for 'a'
-#                    
-#                    params = [0,0,0,0]
-#                    params[0] = numpy.real(y_data[0])
-#                    params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
-#                    params[2] = 1200
-#                    params[3] = numpy.angle(numpy.mean(y_data[-5:]))
-#
-#                    fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
-#                                                            h_residual_T1_FAind,
-#                                                            params,
-#                                                            args=(y_data,tao,n_data), 
-#                                                            full_output = True,
-#                                                            maxfev = 200)    
-#                                                            
-#                    [a1,b1,T1_eff,phi] = fit_params
-#                    
-#                    if ier not in (0,1,2,3,4): # Last attempt to get 10*a
-#                
-#                        params = [0,0,0,0]
-#                        params[0] = 10*numpy.real(y_data[0])
-#                        params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
-#                        params[2] = 1200
-#                        params[3] = numpy.angle(numpy.mean(y_data[-5:]))
-#    
-#                        fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
-#                                                                h_residual_T1_FAind,
-#                                                                params,
-#                                                                args=(y_data,tao,n_data), 
-#                                                                full_output = True,
-#                                                                maxfev = 200)    
-#                                                        
-#                        [a1,b1,T1_eff,phi] = fit_params
+                if ier not in (0,1,2,3,4): # Try fit with new guess for 'a'
                     
-#                goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
-#                [a,b,T1_eff,phi] = fit_params
-#                param_names = ['a','b','T1_eff','phi','T1']        
+                    params = [0,0,0,0]
+                    params[0] = numpy.real(y_data[0])
+                    params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
+                    params[2] = 1200
+                    params[3] = numpy.angle(numpy.mean(y_data[-5:]))
+
+                    fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                            h_residual_T1_FAind,
+                                                            params,
+                                                            args=(y_data,tao,n_data), 
+                                                            full_output = True,
+                                                            maxfev = 200)    
+                                                            
+                    [a1,b1,T1_eff,phi] = fit_params
+                    
+                    if ier not in (0,1,2,3,4): # Last attempt to get 10*a
+                
+                        params = [0,0,0,0]
+                        params[0] = 10*numpy.real(y_data[0])
+                        params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
+                        params[2] = 1200
+                        params[3] = numpy.angle(numpy.mean(y_data[-5:]))
+    
+                        fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                                h_residual_T1_FAind,
+                                                                params,
+                                                                args=(y_data,tao,n_data), 
+                                                                full_output = True,
+                                                                maxfev = 200)    
+                                                        
+                        [a1,b1,T1_eff,phi] = fit_params
+                    
+                goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
+                [a,b,T1_eff,phi] = fit_params
+                param_names = ['a','b','T1_eff','phi','T1']        
 
 
                 # Step 2: Calculate M(N-1)/M(inf) from Eq.1 from Koretsky paper
                 # Divide both sides by M(inf) and then use M(0)/M(inf) -> step1
 
-#                c = 1- (1-b)*numpy.exp(-(Nframes-1)*tao/T1_eff)
+                c = 1- (1-b)*numpy.exp(-(Nframes-1)*tao/T1_eff)
 
                 # Step 3: Solve Equation 6 to get T1 from it. Try using Newton-
                 # Rhapsod method
                
-#                calc_params = (Td, Tp, tao, T1_eff,b,c)
+                calc_params = (Td, Tp, tao, T1_eff,b,c)
                 
-#                try:                    
-#                    T1 = scipy.optimize.newton(T1eff_to_T1, 1500, maxiter=100, 
-#                                               args= (calc_params))
-#                except RuntimeError:
-#                    T1=numpy.nan
-#                    pass
+                try:                    
+                    T1 = scipy.optimize.newton(T1eff_to_T1, 1500, maxiter=100, 
+                                               args= (calc_params))
+                except RuntimeError:
+                    T1=numpy.nan
+                    pass
                 
                 # Make absurd values nans to make my life easer:
-#                if (T1<0 or T1>=1e4):
-#                    T1 = numpy.nan
-#
-#                # Add the T1 to the fitted parameters                      
-#                numpy.append(fit_params,T1)
-#                fit_dict = {
-#                            'param_names': param_names,
-#                            'fit_params': fit_params,
-#                            'cov' : cov,
-#                            'infodict' : infodict,
-#                            'mesg' : mesg,
-#                            'ier' : ier,
-#                            'goodness': goodness_of_fit
-#                            }
-#
-#                data_after_fitting[x,y,slice] = T1
-#                fit_results[x,y,slice] = fit_dict
+                if (T1<0 or T1>=1e4):
+                    T1 = numpy.nan
+
+                # Add the T1 to the fitted parameters                      
+                numpy.append(fit_params,T1)
+                fit_dict = {
+                            'param_names': param_names,
+                            'fit_params': fit_params,
+                            'cov' : cov,
+                            'infodict' : infodict,
+                            'mesg' : mesg,
+                            'ier' : ier,
+                            'goodness': goodness_of_fit
+                            }
+
+                data_after_fitting[x,y,slice] = T1
+                fit_results[x,y,slice] = fit_dict
                 
 #    data_after_fitting[data_after_fitting<0] = numpy.nan
 #    data_after_fitting[data_after_fitting>1e4] = numpy.nan
 
-#    return numpy.squeeze(data_after_fitting), fit_results
-    return numpy.array(42),numpy.array(45)
+    return numpy.squeeze(data_after_fitting), fit_results
 
 
 
