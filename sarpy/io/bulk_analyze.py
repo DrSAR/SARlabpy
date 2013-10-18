@@ -32,7 +32,7 @@ class BulkAnalyzer(object):
     will be analysed.  
     '''
     def __init__(self,
-                 masterlist_fname,
+                 masterlist_fname=None,
                  adata_lbl='testing',
                  force_overwrite=False,
                  scan_label=None):
@@ -121,11 +121,11 @@ class BulkAnalyzer(object):
 
 class ParallelBulkAnalyzer(BulkAnalyzer):
     def __init__(self, 
-                 masterlist_fname,
+                 masterlist_fname=None,
                  adata_lbl='testing',
                  force_overwrite=False,
                  ipython_profile='sarlab'):
-        super(ParallelBulkAnalyzer, self).__init__(masterlist_fname,
+        super(ParallelBulkAnalyzer, self).__init__(masterlist_fname=masterlist_fname,
                                                    adata_lbl='testing',
                                                    force_overwrite=force_overwrite)
         self.clients = IPython.parallel.Client(profile=ipython_profile)
@@ -189,11 +189,9 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 #%%
 class ParallelBulkAnalyzerFactory(BulkAnalyzer):
     def __init__(self, 
-                 masterlist_fname,
                  ipython_profile='sarlab',
                  **kwargs):
-        super(ParallelBulkAnalyzerFactory, self).__init__(masterlist_fname,
-                                                   **kwargs)
+        super(ParallelBulkAnalyzerFactory, self).__init__(**kwargs)
         self.clients = IPython.parallel.Client(profile=ipython_profile)
         self.dview = self.clients[:]
         print(self.clients.ids)
