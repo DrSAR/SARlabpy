@@ -288,17 +288,16 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                     list_of_scan_names.append(scn_2_analyse)
 
 
-        if idx is None:  
-            limited_list = list_of_scan_names[idx]
-        else:
-            limited_list = list_of_scan_names
+        if idx is not None:  
+            list_of_scans = list(numpy.array(list_of_scans)[[idx]])
+            list_of_scan_names = list(numpy.array(list_of_scan_names)[[idx]])
 
-        results = self.lv.map(self.parallel_analysis_func, limited_list)
+        results = self.lv.map(self.parallel_analysis_func, list_of_scan_names)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
         print results
-
-	for res, scn in zip(results, limited_list):
+        
+        for res, scn in zip(results, list_of_scans):
             try:
                 scn.store_adata(key=self.adata_lbl, data=res,
                                 force=self.force_overwrite)
