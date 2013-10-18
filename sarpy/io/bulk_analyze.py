@@ -25,14 +25,23 @@ import sarpy
 
 class BulkAnalyzer(object):
     '''Most basic analyzer class that will be used to create 
-    more elaborate classes - unlikely to be instantiated directly '''
+    more elaborate classes - unlikely to be instantiated directly 
+    
+    only scans that fit the scan_label regexp criterion, i.e. whose masterlist
+    scan label matches (re.search) the scan_label given upon initialization
+    will be analysed.  
+    '''
     def __init__(self,
                  masterlist_fname,
                  adata_lbl='testing',
-                 force_overwrite=False):
+                 force_overwrite=False,
+                 scan_label=None):
         ''' init of the bare minimum:
-            - find masterlist
-            - think about where to store reslults ?!'''
+            - masterlist (*_updated.json is preferrred over *.json)
+            - adata_lbl ... label under which to store the analysed result
+            - force_overwrite ... handed to keyword force in call to store_adate
+            - scan_label (default ".*"
+        '''
     # open masterlist and iterate over all patients and scans
         fname = os.path.join(os.path.expanduser('~/sdata'),
                              masterlist_fname, masterlist_fname+'_updated.json')
@@ -56,13 +65,19 @@ class BulkAnalyzer(object):
                             object_pairs_hook=collections.OrderedDict).decode(json_str)
         self.adata_lbl = adata_lbl
         self.force_overwrite = force_overwrite
+        
+        if scan_label is None:
+            self.scan_label = '.*'
+        else:
+            self.scan_label = scan_label
+
 
     def scan_criterion(self, pat_lbl, scn_lbl):
         ''' method to return either
         (i) a scan_fname if pat_lbl and scn_lbl exist
         (ii) None otherwise'''
         scn_fname = self.masterlist[pat_lbl][scn_lbl][0]
-        if scn_fname:
+        if scn_fname and re.search(self.scan_label, scn_lbl):
             return scn_fname
         else:
             return None
@@ -103,25 +118,6 @@ class BulkAnalyzer(object):
         end1 = time.time()
         print 'Without parallelization : {0} s'.format(end1 - start1)   
 
-
-class AnalyzerByScanLabel(BulkAnalyzer):
-    '''Analyzer class that will only analyze scans whose masterlist
-    scan label matches (re.search) the scan_label given upon initialization.
-    To make use of this class, one should inherit from it and should only
-    require to change method analysis_func. Then, simply instantiate and
-    process()'''
-    def __init__(self, masterlist_fname, scan_label=None):
-        super(AnalyzerByScanLabel, self).__init__(masterlist_fname)
-        if scan_label is None:
-            raise ValueError('scan_label requires a string value')
-        self.scan_label = scan_label
-
-    def scan_criterion(self, pat_lbl, scn_lbl):
-        print('testing: %s (%s) ' % (pat_lbl, scn_lbl))
-        scan_fname = super(AnalyzerByScanLabel, self).scan_criterion(pat_lbl, scn_lbl)
-        if re.search(self.scan_label, scn_lbl):
-            return scan_fname
-        return None
 
 class ParallelBulkAnalyzer(BulkAnalyzer):
     def __init__(self, 
