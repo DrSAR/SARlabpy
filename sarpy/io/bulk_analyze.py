@@ -118,9 +118,9 @@ class AnalyzerByScanLabel(BulkAnalyzer):
 
     def scan_criterion(self, pat_lbl, scn_lbl):
         print('testing: %s (%s) ' % (pat_lbl, scn_lbl))
-        scn_fname = super(AnalyzerByScanLabel, self).scan_criterion(pat_lbl, scn_lbl)
+        scan_fname = super(AnalyzerByScanLabel, self).scan_criterion(pat_lbl, scn_lbl)
         if re.search(self.scan_label, scn_lbl):
-            return scn_fname
+            return scan_fname
         return None
 
 class ParallelBulkAnalyzer(BulkAnalyzer):
@@ -146,7 +146,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
             import os
             import sys
             import sarpy
-            import sarpy.fmoosvi.parallel
+#            import sarpy.fmoosvi.parallel
             import sarpy.fmoosvi.analysis
             
         self.lv = self.clients.load_balanced_view()   # this object represents the engines (workers)
@@ -171,8 +171,8 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
-                    list_of_scans.append(scn_2_analyse)
-                    list_of_scan_names.append(scn_2_analyse.shortdirname)
+                    list_of_scans.append(sarpy.Scan(scn_2_analyse))
+                    list_of_scan_names.append(scn_2_analyse)
 
         func = self.parallel_analysis_func()
 
@@ -200,7 +200,7 @@ class T1map_from_LL(BulkAnalyzer):
         if scan_fname:
             scn = sarpy.Scan(scan_fname)
             if re.search('.*LL',scn.acqp.ACQ_protocol_name):
-                return scn
+                return scan_fname
         return None
 
     def analysis_func(self, scn, **kwargs):
@@ -223,7 +223,7 @@ class T1map_from_LLP(ParallelBulkAnalyzer):
         if scan_fname:
             scn = sarpy.Scan(scan_fname)
             if re.search('.*LL',scn.acqp.ACQ_protocol_name):
-                return scn
+                return scan_fname
         return None
 
     def parallel_analysis_func(self):
@@ -233,3 +233,75 @@ class T1map_from_LLP(ParallelBulkAnalyzer):
                     sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
         return func
 
+##################################################33333
+#%%
+class ParallelBulkAnalyzerFactory(BulkAnalyzer):
+    def __init__(self, 
+                 masterlist_fname,
+                 adata_lbl='testing',
+                 force_overwrite=False,
+                 ipython_profile='sarlab'):
+        super(ParallelBulkAnalyzerFactory, self).__init__(masterlist_fname,
+                                                   adata_lbl='testing',
+                                                   force_overwrite=force_overwrite)
+        self.clients = IPython.parallel.Client(profile=ipython_profile)
+        self.dview = self.clients[:]
+        print(self.clients.ids)
+
+        self.dview.execute('import sys,os')
+        
+        self.dview.execute("sys.path.append(os.path.join("+
+                           "os.path.expanduser('~'),'sarpy'))")        
+                
+        # ensuring all engines have the same version of the imports
+        with self.dview.sync_imports():
+            import os
+            import sys
+            import sarpy
+#            import sarpy.fmoosvi.parallel
+            import sarpy.fmoosvi.analysis
+            
+        self.lv = self.clients.load_balanced_view()   # this object represents the engines (workers)
+        self.lv.block = True
+
+    @classmethod
+    def from_function(cls, func, *args, **kwargs):
+        print func
+        print args
+        print kwargs
+        instance = cls(*args, **kwargs) 
+        instance.parallel_analysis_func = func
+        return instance
+
+    def process(self, idx=None):
+        ''' This method will get called to run the processing.
+        '''
+        start1 = time.time()
+
+        list_of_scans = []
+        list_of_scan_names = []
+        for pat_lbl, pat in self.masterlist.iteritems():
+            for scn_lbl, scn_details in pat.iteritems():
+                scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
+                if scn_2_analyse is not None:
+                    list_of_scans.append(sarpy.Scan(scn_2_analyse))
+                    list_of_scan_names.append(scn_2_analyse)
+
+
+        if idx is None:  
+            limited_list = list_of_scan_names[idx]
+        else:
+            limited_list = list_of_scan_names
+
+        results = self.lv.map(self.parallel_analysis_func, limited_list)
+        end1 = time.time()
+        print 'With parallelization : {0} s'.format(end1 - start1)    
+        print results
+
+	for res, scn in zip(results, limited_list):
+            try:
+                scn.store_adata(key=self.adata_lbl, data=res,
+                                force=self.force_overwrite)
+            except AttributeError as e:
+                print(scn)
+                print(e)                        
