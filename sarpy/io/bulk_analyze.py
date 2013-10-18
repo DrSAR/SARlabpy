@@ -177,7 +177,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         print 'With parallelization : {0} s'.format(end1 - start1)    
         print results
 
-	for res, scn in zip(results, list_of_scans):
+	  for res, scn in zip(results, list_of_scans):
             try:
                 scn.store_adata(key=self.adata_lbl, data=res,
                                 force=self.force_overwrite)
