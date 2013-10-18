@@ -16,7 +16,7 @@ import copy
 import pylab
 
 
-def get_num_slices(scan_object, pdata_num = 0):
+def get_num_slices(scan_object_name, pdata_num = 0):
     
     """
     Returns the number of slices
@@ -26,6 +26,9 @@ def get_num_slices(scan_object, pdata_num = 0):
             default reconstruction is pdata_num = 0.
     :return: integer num_slices: number of slices, detrmined from visu_pars
     """     
+
+    scan_object = sarpy.Scan(scan_object_name)
+
     
        ## Ridiculouly long (but definitely complete and correct) method of 
        #  obtaining the third dimension from visu_pars
@@ -138,7 +141,10 @@ def get_fid_enhancement(scan_string):
     mean = numpy.mean(numpy.mean(data[xmin:xmax,ymin:ymax,3,:],0),0)
     return pylab.plot(mean)
 
-def get_enhancement_curve(scan_object, adata_mask=None, pdata_num = 0):
+def get_enhancement_curve(scan_object_name, adata_mask=None, pdata_num = 0):
+
+    scan_object = sarpy.Scan(scan_object_name)
+
 
     try:
         norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
@@ -196,9 +202,11 @@ def get_bbox(masterlist_value,data_label,type=None):
     elif type == 'pct':
         return numpy.array(bbox)
     
-def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
+def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',type=None):
     
-    roi = scan.adata[roi_adata_label].data   
+    scan_object = sarpy.Scan(scan_object_name)
+
+    roi = scan_object.adata[roi_adata_label].data   
     
     # First prepare the roi array to have it contain only 0s and 1s
     mask = numpy.where(numpy.isnan(roi),0,1) # where ever roi is nan, give it a value of 0, else 1

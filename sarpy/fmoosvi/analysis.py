@@ -43,7 +43,7 @@ def h_calculate_AUC(scan_object_name, bbox = None, time = 60, pdata_num = 0):
     ########### Getting and defining parameters
     
     # Visu_pars params
-    num_slices = getters.get_num_slices(scan_object,pdata_num)
+    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
     
     reps =  scan_object.method.PVM_NRepetitions
     
@@ -74,10 +74,10 @@ def h_calculate_AUC(scan_object_name, bbox = None, time = 60, pdata_num = 0):
     ########### Start AUC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object_name)
     
     # Now calculate the Normalized Intesity voxel by voxel
-    norm_data = h_normalize_dce(scan_object)
+    norm_data = h_normalize_dce(scan_object_name)
 
     # Size info
     x_size = norm_data.shape[0]
@@ -122,7 +122,7 @@ def h_normalize_dce(scan_object_name, bbox = None, pdata_num = 0):
 
     x_size = data.shape[0]
     y_size = data.shape[1]
-    num_slices = getters.get_num_slices(scan_object,pdata_num)
+    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
     
     # Method params
     #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
@@ -153,7 +153,7 @@ def h_normalize_dce(scan_object_name, bbox = None, pdata_num = 0):
         raise ValueError('Please supply a bbox for h_normalize_dce')
 
     # Calculated params      
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object_name)
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
@@ -170,7 +170,7 @@ def h_enhancement_curve(scan_object_name, adata_roi_label, pdata_num = 0):
 
 
     try:
-        norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
+        norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object_name)
         num_slices = norm_data.shape[-2]
         reps = norm_data.shape[-1]
         
@@ -220,7 +220,7 @@ def h_inj_point(scan_object_name, pdata_num = 0):
     from collections import Counter   
 
     # Method params    
-    num_slices = getters.get_num_slices(scan_object,pdata_num)
+    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
           
      # Data
     data = scan_object.pdata[pdata_num].data  
@@ -277,7 +277,7 @@ def h_calculate_AUGC(scan_object_name, adata_label, bbox = None, time = 60, pdat
     ########### Getting and defining parameters
     
     # Visu_pars params
-    num_slices = getters.get_num_slices(scan_object,pdata_num)
+    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
     phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
   
     # Method params
@@ -305,7 +305,7 @@ def h_calculate_AUGC(scan_object_name, adata_label, bbox = None, time = 60, pdat
     ########### Start AUGC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object_name)
     
     # Size info
     x_size = data.shape[0]
@@ -356,7 +356,7 @@ def h_conc_from_signal(scan_object_name, scan_object_T1map,
 
     x_size = data.shape[0]
     y_size = data.shape[1]
-    num_slices = getters.get_num_slices(scan_object,pdata_num)
+    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
     
     # Method params
     #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
@@ -370,7 +370,7 @@ def h_conc_from_signal(scan_object_name, scan_object_T1map,
     TR = scan_object.method.PVM_RepetitionTime
     FA = scan_object.acqp.ACQ_flip_angle
     
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object, pdata_num = 0)    
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object_name, pdata_num = 0)    
     
     # Deal with bounding boxes
     if bbox is None:        
