@@ -185,50 +185,6 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
                 print(scn)
                 print(e)                        
 
-# below are example function that achieve the minimum for a run of analysis
-class T1map_from_LL(BulkAnalyzer):
-    '''example of a class that finds all protocols with DCE in them 
-    and prints the NR value from the acqp file. Simple run like so:
-    >>>> DCE_NR_counter('NecS3').process()
-    '''
-    def scan_criterion(self, pat_lbl, scn_lbl): 
-        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
-        if scan_fname:
-            scn = sarpy.Scan(scan_fname)
-            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
-                return scan_fname
-        return None
-
-    def analysis_func(self, scn, **kwargs):
-        ''' Placeholder method to perform analysis on a scan '''
-
-        print('analysing (%s): %s' % (scn.shortdirname,
-                                       scn.acqp.ACQ_protocol_name))
-        
-        T1map, fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn.shortdirname)
-        return T1map, fit_dict
-
-
-class T1map_from_LLP(ParallelBulkAnalyzer):
-    '''a class that finds all protocols with DCE in them 
-    and prints the NR value from the acqp file. Simple run like so:
-    >>>> DCE_NR_counter('NecS3').process()
-    '''
-    def scan_criterion(self, pat_lbl, scn_lbl): 
-        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
-        if scan_fname:
-            scn = sarpy.Scan(scan_fname)
-            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
-                return scan_fname
-        return None
-
-    def parallel_analysis_func(self):
-        ''' Takes an iterable list and returns a lambda function for parallelization '''
-
-        func = IPython.parallel.interactive(lambda sname:
-                    sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
-        return func
-
 ##################################################33333
 #%%
 class ParallelBulkAnalyzerFactory(BulkAnalyzer):
@@ -298,3 +254,69 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
             except AttributeError as e:
                 print(scn)
                 print(e)                        
+
+# below are example function that achieve the minimum for a run of analysis
+class T1map_from_LL(BulkAnalyzer):
+    '''example of a class that finds all protocols with DCE in them 
+    and prints the NR value from the acqp file. Simple run like so:
+    >>>> DCE_NR_counter('NecS3').process()
+    '''
+    def scan_criterion(self, pat_lbl, scn_lbl): 
+        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
+        if scan_fname:
+            scn = sarpy.Scan(scan_fname)
+            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
+                return scan_fname
+        return None
+
+    def analysis_func(self, scn, **kwargs):
+        ''' Placeholder method to perform analysis on a scan '''
+
+        print('analysing (%s): %s' % (scn.shortdirname,
+                                       scn.acqp.ACQ_protocol_name))
+        
+        T1map, fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn.shortdirname)
+        return T1map, fit_dict
+
+
+class T1map_from_LLP(ParallelBulkAnalyzer):
+    '''a class that finds all protocols with DCE in them 
+    and prints the NR value from the acqp file. Simple run like so:
+    >>>> DCE_NR_counter('NecS3').process()
+    '''
+    def scan_criterion(self, pat_lbl, scn_lbl): 
+        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
+        if scan_fname:
+            scn = sarpy.Scan(scan_fname)
+            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
+                return scan_fname
+        return None
+
+    def parallel_analysis_func(self):
+        ''' Takes an iterable list and returns a lambda function for parallelization '''
+
+        func = IPython.parallel.interactive(lambda sname:
+                    sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
+        return func
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
