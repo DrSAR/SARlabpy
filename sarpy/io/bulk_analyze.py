@@ -234,12 +234,10 @@ class T1map_from_LLP(ParallelBulkAnalyzer):
 class ParallelBulkAnalyzerFactory(BulkAnalyzer):
     def __init__(self, 
                  masterlist_fname,
-                 adata_lbl='testing',
-                 force_overwrite=False,
-                 ipython_profile='sarlab'):
+                 ipython_profile='sarlab',
+                 **kwargs):
         super(ParallelBulkAnalyzerFactory, self).__init__(masterlist_fname,
-                                                   adata_lbl='testing',
-                                                   force_overwrite=force_overwrite)
+                                                   **kwargs)
         self.clients = IPython.parallel.Client(profile=ipython_profile)
         self.dview = self.clients[:]
         print(self.clients.ids)
