@@ -234,9 +234,20 @@ class Scan(object):
 
     @lazy_property
     def fid(self):
-        kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
-                                  acqp=self.acqp.__dict__,
-                                  method=self.method.__dict__)['data']
+        try:
+            kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
+                                      acqp=self.acqp.__dict__,
+                                      method=self.method.__dict__)['data']
+        except TypeError:
+            try:
+                kspace = BRUKERIO.readfidspectro(os.path.join(self.dirname,'fid'),
+                                      acqp=self.acqp.__dict__,
+                                      method=self.method.__dict__)['data']
+            except IOError:
+                # is there a ser instead o fid file?
+                kspace = BRUKERIO.readfidspectro(os.path.join(self.dirname,'ser'),
+                                          acqp=self.acqp.__dict__,
+                                          method=self.method.__dict__)['data']
         return kspace
 
     @lazy_property
@@ -303,9 +314,10 @@ class Scan(object):
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
         # is also present - this was true for ca 9000 scans we tested thi in
-        if not(os.path.isfile(os.path.join(self.dirname,'fid'))):
+        if not(os.path.isfile(os.path.join(self.dirname,'fid')) or
+               os.path.isfile(os.path.join(self.dirname,'ser'))):
             raise IOError(
-                ('Directory "{0}" did not contain a BRUKER fid '+
+                ('Directory "{0}" did not contain a BRUKER fid or ser '+
                 'file').format(self.dirname))
 
         # if there are no 2dseq files (processed data) this is potentially
@@ -459,6 +471,7 @@ class Study(object):
                 try:
                     scans.append(Scan(filename))
                 except IOError:
+                    logger.warning('could not open scan: %s (ignoring)' % filename)
                     pass
         return scans
 
