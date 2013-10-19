@@ -441,6 +441,10 @@ def readfid(fptr=None,
     acqp = acqp or readJCAMP(os.path.join(dirname,'acqp'))
     method = method or readJCAMP(os.path.join(dirname,'method'))
 
+    if "Spectroscopic" in acqp['ACQ_dim_desc']:
+        raise TypeError(
+            "Problem: Could this be a spectro scan instead of an image?")
+
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
         datatype = 'i4'
@@ -625,7 +629,10 @@ def readfid(fptr=None,
                           }
                 }
 
-def readfidspectro(fptr=None, untouched=False):
+def readfidspectro(fptr=None, 
+                   acqp=None,
+                   method=None,
+                   untouched=False):
     """
     Returns BRUKER's fid file as a properly dimensioned & rearranged array
 
@@ -645,7 +652,8 @@ def readfidspectro(fptr=None, untouched=False):
     if isinstance(fptr, StringType):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
-    acqp = readJCAMP(dirname+"/acqp")
+    acqp = acqp or readJCAMP(os.path.join(dirname,'acqp'))
+    method = method or readJCAMP(os.path.join(dirname,'method'))
 
     assert "Spectroscopic" in acqp['ACQ_dim_desc'] ,(
             "Problem: Could this be an imaging instead of a spectro scan?")
@@ -681,12 +689,6 @@ def readfidspectro(fptr=None, untouched=False):
 
     dtype = numpy.dtype(datatype)
 
-    #load the method file
-    method = readJCAMP(dirname+'/method')
-    PVM_EncSteps1 = method['PVM_EncSteps1'].split()
-    #ensure that it runs from 0 to max
-    PVM_EncSteps1 = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
-
     # load data
     data = numpy.fromfile(fptr, dtype=dtype)
     if BYTORDA =='big':
@@ -698,8 +700,8 @@ def readfidspectro(fptr=None, untouched=False):
     # the following is faster by a factor of 6 to 7!!!
     fid = data.astype(numpy.float32).view(numpy.complex64)
 
-    logger.debug('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, EncSteps={3}'.
-                  format(ACQ_size, NR, ACQ_obj_order, PVM_EncSteps1))
+    logger.debug('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}'.
+                  format(ACQ_size, NR, ACQ_obj_order))
 
     if untouched:
         return {'data':fid,

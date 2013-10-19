@@ -223,6 +223,14 @@ class Scan(object):
         Traceback (most recent call last):
             ...
         IOError:...
+        
+    Scan should be able to read spectro scans:
+    
+        >>> Scan('VFAT1phant1.mo1/8').fid.shape
+        (2048, 30)
+        
+        >>> Scan('VFAT1phant1.mo1/9').fid.shape
+        (2048, 30)
     '''
     @lazy_property
     def acqp(self):
@@ -234,9 +242,20 @@ class Scan(object):
 
     @lazy_property
     def fid(self):
-        kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
-                                  acqp=self.acqp.__dict__,
-                                  method=self.method.__dict__)['data']
+        try:
+            kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
+                                      acqp=self.acqp.__dict__,
+                                      method=self.method.__dict__)['data']
+        except TypeError:
+            try:
+                kspace = BRUKERIO.readfidspectro(os.path.join(self.dirname,'fid'),
+                                      acqp=self.acqp.__dict__,
+                                      method=self.method.__dict__)['data']
+            except IOError:
+                # is there a ser instead o fid file?
+                kspace = BRUKERIO.readfidspectro(os.path.join(self.dirname,'ser'),
+                                          acqp=self.acqp.__dict__,
+                                          method=self.method.__dict__)['data']
         return kspace
 
     @lazy_property
@@ -303,9 +322,10 @@ class Scan(object):
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
         # is also present - this was true for ca 9000 scans we tested thi in
-        if not(os.path.isfile(os.path.join(self.dirname,'fid'))):
+        if not(os.path.isfile(os.path.join(self.dirname,'fid')) or
+               os.path.isfile(os.path.join(self.dirname,'ser'))):
             raise IOError(
-                ('Directory "{0}" did not contain a BRUKER fid '+
+                ('Directory "{0}" did not contain a BRUKER fid or ser '+
                 'file').format(self.dirname))
 
         # if there are no 2dseq files (processed data) this is potentially
@@ -459,6 +479,7 @@ class Study(object):
                 try:
                     scans.append(Scan(filename))
                 except IOError:
+                    logger.warning('could not open scan: %s (ignoring)' % filename)
                     pass
         return scans
 
@@ -873,43 +894,43 @@ class Experiment(StudyCollection):
             self.add_study(study)
 
 if __name__ == '__main__':
-#    import doctest
-#    doctest.testmod()
-    import numpy
-    stdy = Study('PhantomOrientation.iY1')
-    print stdy.__repr__()
-    gm=numpy.array([[1,0,0],[0,1,0],[0,0,1]])
-    sr = stdy.xscan_finder(ACQ_grad_matrix = gm)
-    for x in sr:
-        print x
-    sr = stdy.xscan_finder(ACQ_size = [512, 256])
-    for x in sr:
-        print x
-    print '-'*40+'\n initializing ...'
-    NecS3 =Experiment('NecS3')
-    print 'initialized the experiment.done.'
-    import time
-
-    # doing this the firt timeround is slow because all the loading is being
-    # triggered with the JCAMP_file lookups
-    start = time.time()
-    srA = NecS3.find_scan_by_protocol('05')
-    print time.time()-start
-
-    # this run is still slow but that s due to addition loading of the method
-    # files.
-    start = time.time()
-    srB = list(NecS3.xscan_finder(ACQ_protocol_name='05'))
-    print time.time()-start
-    print 'same result from both methods? '+{True:'Yes!',
-                                             False:'No!'}[srA == srB]
-
-    # these ones are positively blazing through once the data is in memory
-    start = time.time()
-    sr = NecS3.find_scan_by_protocol('05')
-    print time.time()-start
-
-    # these ones are positively blazing through once the data is in memory
-    start = time.time()
-    sr = list(NecS3.xscan_finder(ACQ_protocol_name='05'))
-    print time.time()-start
+    import doctest
+    doctest.testmod()
+#    import numpy
+#    stdy = Study('PhantomOrientation.iY1')
+#    print stdy.__repr__()
+#    gm=numpy.array([[1,0,0],[0,1,0],[0,0,1]])
+#    sr = stdy.xscan_finder(ACQ_grad_matrix = gm)
+#    for x in sr:
+#        print x
+#    sr = stdy.xscan_finder(ACQ_size = [512, 256])
+#    for x in sr:
+#        print x
+#    print '-'*40+'\n initializing ...'
+#    NecS3 =Experiment('NecS3')
+#    print 'initialized the experiment.done.'
+#    import time
+#
+#    # doing this the firt timeround is slow because all the loading is being
+#    # triggered with the JCAMP_file lookups
+#    start = time.time()
+#    srA = NecS3.find_scan_by_protocol('05')
+#    print time.time()-start
+#
+#    # this run is still slow but that s due to addition loading of the method
+#    # files.
+#    start = time.time()
+#    srB = list(NecS3.xscan_finder(ACQ_protocol_name='05'))
+#    print time.time()-start
+#    print 'same result from both methods? '+{True:'Yes!',
+#                                             False:'No!'}[srA == srB]
+#
+#    # these ones are positively blazing through once the data is in memory
+#    start = time.time()
+#    sr = NecS3.find_scan_by_protocol('05')
+#    print time.time()-start
+#
+#    # these ones are positively blazing through once the data is in memory
+#    start = time.time()
+#    sr = list(NecS3.xscan_finder(ACQ_protocol_name='05'))
+#    print time.time()-start
