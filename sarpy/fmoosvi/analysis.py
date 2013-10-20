@@ -164,7 +164,7 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
 
     return norm_data*bbox_mask
  
-def h_enhancement_curve(scn_to_analyse=None, adata_roi_label, pdata_num = 0):
+def h_enhancement_curve(scn_to_analyse=None, adata_roi_label=None, pdata_num = 0):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -253,7 +253,7 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
 
     return injection_point[0][0]+1
 
-def h_calculate_AUGC(scn_to_analyse=None, adata_label, bbox = None, time = 60, pdata_num = 0):
+def h_calculate_AUGC(scn_to_analyse=None, adata_label=None, bbox = None, time = 60, pdata_num = 0):
     
     """
     Returns an area under the gadolinium concentration curve adata for the scan object
@@ -338,7 +338,7 @@ def h_calculate_AUGC(scn_to_analyse=None, adata_label, bbox = None, time = 60, p
         # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
     return augc_data*bbox_mask     
     
-def h_conc_from_signal(scn_to_analyse=None, scan_object_T1map, 
+def h_conc_from_signal(scn_to_analyse=None, scan_object_T1map=None, 
                        adata_label = 'T1map_LL', bbox = None,
                        relaxivity=4.3e-3, pdata_num = 0):
 
