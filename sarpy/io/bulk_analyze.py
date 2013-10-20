@@ -238,7 +238,7 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                     list_of_scans.append(sarpy.Scan(scn_2_analyse))
                     list_of_dict_of_params.append(dict(
                         {'scn_2_analyse':scn_2_analyse}.items() + 
-                         self.process_params(scn_2_analyse)).items())
+                         self.process_params(scn_2_analyse).items()))
 
         results = self.lv.map(self.parallel_analysis_func, list_of_dict_of_params)
         end1 = time.time()
