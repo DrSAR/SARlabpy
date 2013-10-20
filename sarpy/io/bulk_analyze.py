@@ -85,8 +85,8 @@ class BulkAnalyzer(object):
     def process_params(self, scn_name):
         ''' Placeholder method to calculate all the parameters required
         for processing'''
-        for pat,scans in self.masterlist:
-            for lbl,dbl_list in scans:
+        for pat,scans in self.masterlist.iteritems():
+            for lbl,dbl_list in scans.iteritems():
                 if dbl_list[0] == scn_name:
                     bbox = dbl_list[1]
         return {'bbox':bbox}
