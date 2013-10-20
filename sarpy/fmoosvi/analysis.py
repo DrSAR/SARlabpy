@@ -481,7 +481,7 @@ def h_fit_T1_LL_FAind(scan_object_name, bbox = None, pdata_num = 0,
         params = [0, 0, 0, 0]
     ## Setting parameters
     x = sarpy.io.BRUKERIO.fftbruker(scan_object.fid)
-    num_slices = getters.get_num_slices(scan_object,pdata_num)                                        
+    num_slices = getters.get_num_slices(scan_object_name,pdata_num)                                        
     t1points = numpy.divide(x.shape[-2],num_slices)     
     
     data=numpy.fliplr(

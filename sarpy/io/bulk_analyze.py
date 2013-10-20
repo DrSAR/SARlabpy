@@ -175,7 +175,6 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         results = self.lv.map(func, list_of_scan_names)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
-        print results
 
         for res, scn in zip(results, list_of_scans):
             try:
@@ -243,7 +242,6 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         results = self.lv.map(self.parallel_analysis_func, list_of_scan_names)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
-        print results
         
         for res, scn in zip(results, list_of_scans):
             try:
