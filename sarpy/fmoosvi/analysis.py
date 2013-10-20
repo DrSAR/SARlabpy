@@ -27,7 +27,7 @@ import collections
 import random
 import copy
 
-def h_calculate_AUC(scan_object_name, bbox = None, time = 60, pdata_num = 0):
+def h_calculate_AUC(scn_to_analyse=None, bbox = None, time = 60, pdata_num = 0):
     
     """
     Returns an area under the curve data for the scan object
@@ -38,12 +38,12 @@ def h_calculate_AUC(scan_object_name, bbox = None, time = 60, pdata_num = 0):
     :return: array with auc data
     """ 
     
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
 
     ########### Getting and defining parameters
     
     # Visu_pars params
-    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
     
     reps =  scan_object.method.PVM_NRepetitions
     
@@ -74,10 +74,10 @@ def h_calculate_AUC(scan_object_name, bbox = None, time = 60, pdata_num = 0):
     ########### Start AUC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object_name)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
     
     # Now calculate the Normalized Intesity voxel by voxel
-    norm_data = h_normalize_dce(scan_object_name)
+    norm_data = h_normalize_dce(scn_to_analyse)
 
     # Size info
     x_size = norm_data.shape[0]
@@ -110,10 +110,10 @@ def h_calculate_AUC(scan_object_name, bbox = None, time = 60, pdata_num = 0):
     return auc_data*bbox_mask
 
 
-def h_normalize_dce(scan_object_name, bbox = None, pdata_num = 0):
+def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
 
 
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
 
     ########### Getting and defining parameters
     
@@ -122,7 +122,7 @@ def h_normalize_dce(scan_object_name, bbox = None, pdata_num = 0):
 
     x_size = data.shape[0]
     y_size = data.shape[1]
-    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
     
     # Method params
     #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
@@ -153,7 +153,7 @@ def h_normalize_dce(scan_object_name, bbox = None, pdata_num = 0):
         raise ValueError('Please supply a bbox for h_normalize_dce')
 
     # Calculated params      
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object_name)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
@@ -164,13 +164,13 @@ def h_normalize_dce(scan_object_name, bbox = None, pdata_num = 0):
 
     return norm_data*bbox_mask
  
-def h_enhancement_curve(scan_object_name, adata_roi_label, pdata_num = 0):
+def h_enhancement_curve(scn_to_analyse=None, adata_roi_label, pdata_num = 0):
 
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
 
 
     try:
-        norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object_name)
+        norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
         num_slices = norm_data.shape[-2]
         reps = norm_data.shape[-1]
         
@@ -213,14 +213,14 @@ roi.shape[0], roi.shape[1], roi.shape[2],1]),reps)
         raise
 
 
-def h_inj_point(scan_object_name, pdata_num = 0):
+def h_inj_point(scn_to_analyse=None, pdata_num = 0):
 
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
 
     from collections import Counter   
 
     # Method params    
-    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
           
      # Data
     data = scan_object.pdata[pdata_num].data  
@@ -253,7 +253,7 @@ def h_inj_point(scan_object_name, pdata_num = 0):
 
     return injection_point[0][0]+1
 
-def h_calculate_AUGC(scan_object_name, adata_label, bbox = None, time = 60, pdata_num = 0):
+def h_calculate_AUGC(scn_to_analyse=None, adata_label, bbox = None, time = 60, pdata_num = 0):
     
     """
     Returns an area under the gadolinium concentration curve adata for the scan object
@@ -264,7 +264,7 @@ def h_calculate_AUGC(scan_object_name, adata_label, bbox = None, time = 60, pdat
             default reconstruction is pdata_num = 0.
     :return: array with augc data
     """
-    scan_object = sarpy.Scan(scan_object_name)   
+    scan_object = sarpy.Scan(scn_to_analyse)   
 
     # Get the concentration data stored as an adata
 
@@ -277,7 +277,7 @@ def h_calculate_AUGC(scan_object_name, adata_label, bbox = None, time = 60, pdat
     ########### Getting and defining parameters
     
     # Visu_pars params
-    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
     phase_encodes = scan_object.pdata[pdata_num].visu_pars.VisuAcqPhaseEncSteps
   
     # Method params
@@ -305,7 +305,7 @@ def h_calculate_AUGC(scan_object_name, adata_label, bbox = None, time = 60, pdat
     ########### Start AUGC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object_name)
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
     
     # Size info
     x_size = data.shape[0]
@@ -338,11 +338,11 @@ def h_calculate_AUGC(scan_object_name, adata_label, bbox = None, time = 60, pdat
         # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
     return augc_data*bbox_mask     
     
-def h_conc_from_signal(scan_object_name, scan_object_T1map, 
+def h_conc_from_signal(scn_to_analyse=None, scan_object_T1map, 
                        adata_label = 'T1map_LL', bbox = None,
                        relaxivity=4.3e-3, pdata_num = 0):
 
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
 
     ########### Getting and defining parameters
     
@@ -356,7 +356,7 @@ def h_conc_from_signal(scan_object_name, scan_object_T1map,
 
     x_size = data.shape[0]
     y_size = data.shape[1]
-    num_slices = getters.get_num_slices(scan_object_name,pdata_num)
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
     
     # Method params
     #TODO: change this so it doesn't require method file WIHOUT BREAKING IT!
@@ -370,7 +370,7 @@ def h_conc_from_signal(scan_object_name, scan_object_T1map,
     TR = scan_object.method.PVM_RepetitionTime
     FA = scan_object.acqp.ACQ_flip_angle
     
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scan_object_name, pdata_num = 0)    
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse, pdata_num = 0)    
     
     # Deal with bounding boxes
     if bbox is None:        
@@ -472,16 +472,16 @@ def h_residual_T1_FAind(params, y_data, tao, n):
     else:
         return 1e9
 
-def h_fit_T1_LL_FAind(scan_object_name, bbox = None, pdata_num = 0, 
+def h_fit_T1_LL_FAind(scn_to_analyse=None, bbox = None, pdata_num = 0, 
                 params = []):
 
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
    
     if len(params) == 0:      
         params = [0, 0, 0, 0]
     ## Setting parameters
     x = sarpy.io.BRUKERIO.fftbruker(scan_object.fid)
-    num_slices = getters.get_num_slices(scan_object_name,pdata_num)                                        
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
     t1points = numpy.divide(x.shape[-2],num_slices)     
     
     data=numpy.fliplr(
@@ -625,17 +625,17 @@ def h_fit_T1_LL_FAind(scan_object_name, bbox = None, pdata_num = 0,
 
 ### Other Helpers
 
-def h_phase_from_fid(scan_object_name):
+def h_phase_from_fid(scn_to_analyse=None):
 
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
 
     phase_data = numpy.angle(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
     
     return phase_data
     
-def h_mag_from_fid(scan_object_name):
+def h_mag_from_fid(scn_to_analyse=None):
 
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
 
     mag_data = numpy.abs(scipy.fftpack.fftshift(scipy.fftpack.fftn(scipy.fftpack.fftshift(scan_object.fid))))
     
@@ -727,9 +727,9 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         print ('There is no code to produce that indicator. Do it first.')
         raise Exception
 
-def h_generate_VTC(scan_object_name, bbox = None, pdata_num = 0):
+def h_generate_VTC(scn_to_analyse=None, bbox = None, pdata_num = 0):
 
-    scan_object = sarpy.Scan(scan_object_name)
+    scan_object = sarpy.Scan(scn_to_analyse)
 
     # Normalize data
     #ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scan)
