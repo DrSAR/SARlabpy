@@ -88,7 +88,7 @@ class BulkAnalyzer(object):
         for pat,scans in self.masterlist.iteritems():
             for lbl,dbl_list in scans.iteritems():
                 if dbl_list[0] == scn_name:
-                    bbox = dbl_list[1]
+                    bbox = numpy.array(dbl_list[1])
         return {'bbox':bbox}
    
     def analysis_func(self, scn, **kwargs):
