@@ -82,10 +82,14 @@ class BulkAnalyzer(object):
         else:
             return None
 
-    def process_params(self, scn):
+    def process_params(self, scn_name):
         ''' Placeholder method to calculate all the parameters required
         for processing'''
-        return {}
+        for pat,scans in self.masterlist:
+            for lbl,dbl_list in scans:
+                if dbl_list[0] == scn_name:
+                    bbox = dbl_list[1]
+        return {'bbox':bbox}
    
     def analysis_func(self, scn, **kwargs):
         ''' Placeholder method to perform analysis on a scan '''
@@ -220,26 +224,23 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         instance.parallel_analysis_func = func
         return instance
 
-    def process(self, idx=None):
+    def process(self):
         ''' This method will get called to run the processing.
         '''
         start1 = time.time()
 
         list_of_scans = []
-        list_of_scan_names = []
+        list_of_dict_of_params = []
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
                 scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_2_analyse is not None:
                     list_of_scans.append(sarpy.Scan(scn_2_analyse))
-                    list_of_scan_names.append(scn_2_analyse)
+                    list_of_dict_of_params.append(dict(
+                        {'scn_2_analyse':scn_2_analyse}.items() + 
+                         self.process_params(scn_2_analyse)).items())
 
-
-        if idx is not None:  
-            list_of_scans = list(numpy.array(list_of_scans)[[idx]])
-            list_of_scan_names = list(numpy.array(list_of_scan_names)[[idx]])
-
-        results = self.lv.map(self.parallel_analysis_func, list_of_scan_names)
+        results = self.lv.map(self.parallel_analysis_func, list_of_dict_of_params)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
         
