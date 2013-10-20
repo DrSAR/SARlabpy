@@ -16,7 +16,7 @@ from io.BRUKER_classes import (Scan, Study, StudyCollection,
 
 from io.AData_classes import (adataroot, AData)
 
-from io import (update_bbox, generate_rois, write_csv)
+from io import (update_bbox, generate_rois, write_csv, bulk_analyze)
 
 from io.visu_pars_2_Nifti1Header import (visu_pars_2_Nifti1Header,
                                       visu_pars_2_matrix_size)
