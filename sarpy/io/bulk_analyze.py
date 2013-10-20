@@ -108,16 +108,16 @@ class BulkAnalyzer(object):
         start1 = time.time()
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
-                scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
-                if scn_2_analyse is not None:
+                scn_to_analyse = self.scan_criterion(pat_lbl, scn_lbl)
+                if scn_to_analyse is not None:
                     # this is a scan we should analyze!
-                    kwargs = self.process_params(scn_2_analyse)
-                    result = self.analysis_func(scn_2_analyse,
+                    kwargs = self.process_params(scn_to_analyse)
+                    result = self.analysis_func(scn_to_analyse,
                                                           **kwargs)
                     # try:
-                    #     self.store_result(result, scn_2_analyse)
+                    #     self.store_result(result, scn_to_analyse)
                     # except AttributeError as e:
-                    #     print(scn_2_analyse)
+                    #     print(scn_to_analyse)
                     #     print(e)                        
         end1 = time.time()
         print 'Without parallelization : {0} s'.format(end1 - start1)   
@@ -169,10 +169,10 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         list_of_scan_names = []
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
-                scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
-                if scn_2_analyse is not None:
-                    list_of_scans.append(sarpy.Scan(scn_2_analyse))
-                    list_of_scan_names.append(scn_2_analyse)
+                scn_to_analyse = self.scan_criterion(pat_lbl, scn_lbl)
+                if scn_to_analyse is not None:
+                    list_of_scans.append(sarpy.Scan(scn_to_analyse))
+                    list_of_scan_names.append(scn_to_analyse)
 
         func = self.parallel_analysis_func()
 
@@ -233,12 +233,12 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         list_of_dict_of_params = []
         for pat_lbl, pat in self.masterlist.iteritems():
             for scn_lbl, scn_details in pat.iteritems():
-                scn_2_analyse = self.scan_criterion(pat_lbl, scn_lbl)
-                if scn_2_analyse is not None:
-                    list_of_scans.append(sarpy.Scan(scn_2_analyse))
+                scn_to_analyse = self.scan_criterion(pat_lbl, scn_lbl)
+                if scn_to_analyse is not None:
+                    list_of_scans.append(sarpy.Scan(scn_to_analyse))
                     list_of_dict_of_params.append(dict(
-                        {'scn_2_analyse':scn_2_analyse}.items() + 
-                         self.process_params(scn_2_analyse).items()))
+                        {'scn_to_analyse':scn_to_analyse}.items() + 
+                         self.process_params(scn_to_analyse).items()))
 
         results = self.lv.map(self.parallel_analysis_func, list_of_dict_of_params)
         end1 = time.time()
