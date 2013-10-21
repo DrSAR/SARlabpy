@@ -35,7 +35,8 @@ class BulkAnalyzer(object):
                  masterlist_fname=None,
                  adata_save_label='testing',
                  force_overwrite=False,
-                 scan_label=None):
+                 scan_label=None,
+                 **kwargs):
         ''' init of the bare minimum:
             - masterlist (*_updated.json is preferrred over *.json)
             - adata_save_label ... label under which to store the analysed result
