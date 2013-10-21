@@ -338,12 +338,12 @@ def h_calculate_AUGC(scn_to_analyse=None, adata_label=None, bbox = None, time = 
         # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
     return augc_data*bbox_mask     
     
-def h_conc_from_signal(scn_to_analyse=None, scan_object_T1map=None, 
+def h_conc_from_signal(scn_to_analyse=None, other_scn_name=None, 
                        adata_label = 'T1map_LL', bbox = None,
                        relaxivity=4.3e-3, pdata_num = 0):
 
     scan_object = sarpy.Scan(scn_to_analyse)
-
+    scan_object_T1map = sarpy.Scan(other_scn_name)
     ########### Getting and defining parameters
     
     # Data
