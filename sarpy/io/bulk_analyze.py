@@ -235,10 +235,12 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
             for scn_lbl, scn_details in pat.iteritems():
                 scn_to_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_to_analyse is not None:
-                    list_of_scans.append(sarpy.Scan(scn_to_analyse))
-                    list_of_dict_of_params.append(dict(
-                        {'scn_to_analyse':scn_to_analyse}.items() + 
-                         self.process_params(scn_to_analyse).items()))
+                    process_params = self.process_params(scn_to_analyse)
+                    if process_params is not None:
+                        list_of_scans.append(sarpy.Scan(scn_to_analyse))
+                        list_of_dict_of_params.append(dict(
+                            {'scn_to_analyse':scn_to_analyse}.items() + 
+                             process_params.items()))
 
         results = self.lv.map(self.parallel_analysis_func, list_of_dict_of_params)
         end1 = time.time()
@@ -251,6 +253,33 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
             except AttributeError as e:
                 print(scn)
                 print(e)                        
+
+class DoubleScanAnalyzer(ParallelBulkAnalyzerFactory):
+    def __init__(self, 
+                 other_scan_label=None,
+                 **kwargs):
+        super(DoubleScanAnalyzer, self).__init__(**kwargs)
+        if other_scan_label is None:
+            raise KeyError('other_scan_label needs to be specified as keyword')
+        else:
+            self.other_scan_label = other_scan_label
+
+    def process_params(self, scn_name):
+        other_params = super(DoubleScanAnalyzer, self).process_params(scn_name)
+        #now calculate add'l params
+        for pat,scans in self.masterlist.iteritems():
+            for lbl,dbl_list in scans.iteritems():
+                if dbl_list[0] == scn_name:
+                    # bingo we have found the scn_name
+                    # check whether the other_scan_label exists
+                    try:
+                        other_scan_name = self.masterlist[pat][self.other_scan_label]
+                    except KeyError:
+                        other_scan_name = ''
+        if other_scan_name:
+            return dict(other_params.items() + {'other_scan_name':other_scan_name}.items())
+        else:
+            return None
 
 # below are example function that achieve the minimum for a run of analysis
 class T1map_from_LL(BulkAnalyzer):
