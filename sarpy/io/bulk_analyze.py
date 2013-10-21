@@ -246,7 +246,12 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                              process_params.items()+
                              self.scan_independent_pparams.items()))
 
-        results = self.lv.map(self.parallel_analysis_func, list_of_dict_of_params)
+        if list_of_dict_of_params:
+            results = self.lv.map(self.parallel_analysis_func, 
+                                  list_of_dict_of_params)
+        else:
+            print('no scans fit criterion and, hence, nothing to process')
+            results = []
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
         
