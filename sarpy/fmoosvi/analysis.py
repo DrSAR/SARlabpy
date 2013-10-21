@@ -340,10 +340,10 @@ def h_calculate_AUGC(scn_to_analyse=None, adata_label=None, bbox = None, time = 
     
 def h_conc_from_signal(scn_to_analyse=None, other_scan_name=None, 
                        adata_label = 'T1map_LL', bbox = None,
-                       relaxivity=4.3e-3, pdata_num = 0):
+                       relaxivity=4.3e-3, pdata_num = 0,**kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
-    scan_object_T1map = sarpy.Scan(other_scn_name)
+    scan_object_T1map = sarpy.Scan(other_scan_name)
     ########### Getting and defining parameters
     
     # Data

@@ -243,9 +243,11 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                         list_of_scans.append(sarpy.Scan(scn_to_analyse))
                         list_of_dict_of_params.append(dict(
                             {'scn_to_analyse':scn_to_analyse}.items() + 
-                             process_params.items())+
-                             self.scan_independent_pparams.items())
+                             process_params.items()+
+                             self.scan_independent_pparams.items()))
 
+
+        print 4,list_of_dict_of_params
         results = self.lv.map(self.parallel_analysis_func, list_of_dict_of_params)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
@@ -277,7 +279,7 @@ class DoubleScanAnalyzer(ParallelBulkAnalyzerFactory):
                     # bingo we have found the scn_name
                     # check whether the other_scan_label exists
                     try:
-                        other_scan_name = self.masterlist[pat][self.other_scan_label]
+                        other_scan_name = self.masterlist[pat][self.other_scan_label][0]
                     except KeyError:
                         other_scan_name = ''
         if other_scan_name:
