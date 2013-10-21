@@ -214,6 +214,8 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
             
         self.lv = self.clients.load_balanced_view()   # this object represents the engines (workers)
         self.lv.block = True
+        
+        self.scan_independent_pparams = kwargs
 
     @classmethod
     def from_function(cls, func, *args, **kwargs):
@@ -240,7 +242,8 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                         list_of_scans.append(sarpy.Scan(scn_to_analyse))
                         list_of_dict_of_params.append(dict(
                             {'scn_to_analyse':scn_to_analyse}.items() + 
-                             process_params.items()))
+                             process_params.items())+
+                             self.scan_independent_pparams.items())
 
         results = self.lv.map(self.parallel_analysis_func, list_of_dict_of_params)
         end1 = time.time()
