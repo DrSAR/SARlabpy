@@ -246,8 +246,6 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                              process_params.items()+
                              self.scan_independent_pparams.items()))
 
-
-        print 4,list_of_dict_of_params
         results = self.lv.map(self.parallel_analysis_func, list_of_dict_of_params)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
