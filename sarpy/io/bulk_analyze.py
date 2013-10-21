@@ -33,12 +33,12 @@ class BulkAnalyzer(object):
     '''
     def __init__(self,
                  masterlist_fname=None,
-                 adata_lbl='testing',
+                 adata_save_label='testing',
                  force_overwrite=False,
                  scan_label=None):
         ''' init of the bare minimum:
             - masterlist (*_updated.json is preferrred over *.json)
-            - adata_lbl ... label under which to store the analysed result
+            - adata_save_label ... label under which to store the analysed result
             - force_overwrite ... handed to keyword force in call to store_adate
             - scan_label (default ".*"
         '''
@@ -63,7 +63,7 @@ class BulkAnalyzer(object):
             json_str = master_file.read()
             self.masterlist = json.JSONDecoder(
                             object_pairs_hook=collections.OrderedDict).decode(json_str)
-        self.adata_lbl = adata_lbl
+        self.adata_save_label = adata_save_label
         self.force_overwrite = force_overwrite
         
         if scan_label is None:
@@ -97,7 +97,7 @@ class BulkAnalyzer(object):
 
     def store_result(self, result, 
                      scn=None):
-        scn.store_adata(key=self.adata_lbl, 
+        scn.store_adata(key=self.adata_save_label, 
                         data=result,
                         force=self.force_overwrite)
 
@@ -126,11 +126,11 @@ class BulkAnalyzer(object):
 class ParallelBulkAnalyzer(BulkAnalyzer):
     def __init__(self, 
                  masterlist_fname=None,
-                 adata_lbl='testing',
+                 adata_save_label='testing',
                  force_overwrite=False,
                  ipython_profile='sarlab'):
         super(ParallelBulkAnalyzer, self).__init__(masterlist_fname=masterlist_fname,
-                                                   adata_lbl='testing',
+                                                   adata_save_label='testing',
                                                    force_overwrite=force_overwrite)
         self.clients = IPython.parallel.Client(profile=ipython_profile)
         self.dview = self.clients[:]
@@ -182,7 +182,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 
         for res, scn in zip(results, list_of_scans):
             try:
-                scn.store_adata(key=self.adata_lbl, data=res,
+                scn.store_adata(key=self.adata_save_label, data=res,
                                 force=self.force_overwrite)
             except AttributeError as e:
                 print(scn)
@@ -248,7 +248,7 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         
         for res, scn in zip(results, list_of_scans):
             try:
-                scn.store_adata(key=self.adata_lbl, data=res,
+                scn.store_adata(key=self.adata_save_label, data=res,
                                 force=self.force_overwrite)
             except AttributeError as e:
                 print(scn)
