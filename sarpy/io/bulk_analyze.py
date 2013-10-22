@@ -194,6 +194,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 class ParallelBulkAnalyzerFactory(BulkAnalyzer):
     def __init__(self, 
                  ipython_profile='sarlab',
+                 other_scan_label=None,
                  **kwargs):
         super(ParallelBulkAnalyzerFactory, self).__init__(**kwargs)
         self.clients = IPython.parallel.Client(profile=ipython_profile)
@@ -218,6 +219,10 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         
         self.scan_independent_pparams = kwargs
 
+        # if this is empty process_params will know what to do.
+        self.other_scan_label = other_scan_label
+
+
     @classmethod
     def from_function(cls, func, *args, **kwargs):
         print func
@@ -226,6 +231,26 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         instance = cls(*args, **kwargs) 
         instance.parallel_analysis_func = func
         return instance
+
+    def process_params(self, scn_name):
+        other_params = super(ParallelBulkAnalyzerFactory, self).process_params(scn_name)
+        #now calculate add'l params
+        if self.other_scan_label is None:
+             return other_params   
+        else:
+            for pat,scans in self.masterlist.iteritems():
+                for lbl,dbl_list in scans.iteritems():
+                    if dbl_list[0] == scn_name:
+                        # bingo we have found the scn_name
+                        # check whether the other_scan_label exists
+                        try:
+                            other_scan_name = self.masterlist[pat][self.other_scan_label][0]
+                        except KeyError:
+                            other_scan_name = ''
+            if other_scan_name:
+                return dict(other_params.items() + {'other_scan_name':other_scan_name}.items())
+            else:
+                return None
 
     def process(self):
         ''' This method will get called to run the processing.
@@ -262,33 +287,6 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
             except AttributeError as e:
                 print(scn)
                 print(e)                        
-
-class DoubleScanAnalyzer(ParallelBulkAnalyzerFactory):
-    def __init__(self, 
-                 other_scan_label=None,
-                 **kwargs):
-        super(DoubleScanAnalyzer, self).__init__(**kwargs)
-        if other_scan_label is None:
-            raise KeyError('other_scan_label needs to be specified as keyword')
-        else:
-            self.other_scan_label = other_scan_label
-
-    def process_params(self, scn_name):
-        other_params = super(DoubleScanAnalyzer, self).process_params(scn_name)
-        #now calculate add'l params
-        for pat,scans in self.masterlist.iteritems():
-            for lbl,dbl_list in scans.iteritems():
-                if dbl_list[0] == scn_name:
-                    # bingo we have found the scn_name
-                    # check whether the other_scan_label exists
-                    try:
-                        other_scan_name = self.masterlist[pat][self.other_scan_label][0]
-                    except KeyError:
-                        other_scan_name = ''
-        if other_scan_name:
-            return dict(other_params.items() + {'other_scan_name':other_scan_name}.items())
-        else:
-            return None
 
 # below are example function that achieve the minimum for a run of analysis
 class T1map_from_LL(BulkAnalyzer):
