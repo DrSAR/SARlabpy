@@ -271,22 +271,61 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                              process_params.items()+
                              self.scan_independent_pparams.items()))
 
+        # the approch for asynchronous processing taking below is discussed
+        # on http://stackoverflow.com/questions/19509059/processing-results-from-asyncmap-as-they-come-in
+        # got a nod of approval from Min Ragan-Kelley (of ipython fame)
         if list_of_dict_of_params:
-            results = self.lv.map(self.parallel_analysis_func, 
-                                  list_of_dict_of_params)
+            asyncmap = self.lv.map(self.parallel_analysis_func, 
+                                   list_of_dict_of_params,
+                                   ordered=False)
+
+            #create original mapping of msg_ids to parameters
+            msg_ids_to_parameters = dict(zip(asyncmap.msg_ids, 
+                                             list_of_dict_of_params))
+            msg_ids_to_scans = dict(zip(asyncmap.msg_ids, 
+                                             list_of_scans))
+
+            
+            pending = set(asyncmap.msg_ids) # all queued jobs are pending
+            while pending:
+                try:
+                    self.clients.wait(pending, 1e-3)
+                except IPython.parallel.TimeoutError:
+                    pass # ignore timeouterrors,  it means at least one isn't done
+
+                # finished is the set of msg_ids that are complete
+                finished = pending.difference(self.clients.outstanding)
+                # update pending to exclude those that just finished
+                pending = pending.difference(finished)
+                for msg_id in finished:
+                    # we know these are done, so don't worry about blocking
+                    ar = self.clients.get_result(msg_id)
+                    try:
+                        ar.get()
+                    except Exception as e:
+                        print('%s for %i ' % (e, 
+                                              msg_ids_to_parameters[msg_id]))                                  
+                    else:
+                        print("job id %s finished on engine %i " % 
+                                (msg_id, ar.engine_id))
+                        print("and results for parameter %i :" %
+                                msg_ids_to_parameters[msg_id])
+                        # note that each job in a map always returns a list of 
+                        # length chunksize even if chunksize == 1
+                        # since we need the one-to-one map of scan to result,
+                        # we don't want chunks bigger than 1
+                        for resdict in ar.result:
+                            for k,v in resdict.iteritems():                               
+                                lbl = self.adata_save_label+k
+                                msg_ids_to_scans[msg_id].store_adata(
+                                    key=lbl, 
+                                    data=v,
+                                    force=self.force_overwrite)                            
+                                              
         else:
             print('no scans fit criterion and, hence, nothing to process')
-            results = []
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
-        
-        for res, scn in zip(results, list_of_scans):
-            try:
-                scn.store_adata(key=self.adata_save_label, data=res,
-                                force=self.force_overwrite)
-            except AttributeError as e:
-                print(scn)
-                print(e)                        
 
 # below are example function that achieve the minimum for a run of analysis
 class T1map_from_LL(BulkAnalyzer):
