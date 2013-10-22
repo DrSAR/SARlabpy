@@ -150,8 +150,8 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 #            import sarpy.fmoosvi.parallel
             import sarpy.fmoosvi.analysis
             
-        self.lv = self.clients.load_balanced_view()   # this object represents the engines (workers)
-        self.lv.block = True
+        self.balanced = self.clients.load_balanced_view()   # this object represents the engines (workers)
+        self.balanced.block = False
 
 
     def parallel_analysis_func(self, **kwargs):
@@ -177,7 +177,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 
         func = self.parallel_analysis_func()
 
-        results = self.lv.map(func, list_of_scan_names)
+        results = self.balanced.map_async(func, list_of_scan_names, ordered=False)
         end1 = time.time()
         print 'With parallelization : {0} s'.format(end1 - start1)    
 
@@ -214,8 +214,8 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
 #            import sarpy.fmoosvi.parallel
             import sarpy.fmoosvi.analysis
             
-        self.lv = self.clients.load_balanced_view()   # this object represents the engines (workers)
-        self.lv.block = True
+        self.balanced = self.clients.load_balanced_view()   # this object represents the engines (workers)
+        self.balanced.block = False
         
         self.scan_independent_pparams = kwargs
 
@@ -275,7 +275,7 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         # on http://stackoverflow.com/questions/19509059/processing-results-from-asyncmap-as-they-come-in
         # got a nod of approval from Min Ragan-Kelley (of ipython fame)
         if list_of_dict_of_params:
-            asyncmap = self.lv.map(self.parallel_analysis_func, 
+            asyncmap = self.balanced.map_async(self.parallel_analysis_func, 
                                    list_of_dict_of_params,
                                    ordered=False)
 
@@ -308,7 +308,7 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                     else:
                         print("job id %s finished on engine %i " % 
                                 (msg_id, ar.engine_id))
-                        print("and results for parameter %i :" %
+                        print("and results for parameter %s :" %
                                 msg_ids_to_parameters[msg_id])
                         # note that each job in a map always returns a list of 
                         # length chunksize even if chunksize == 1
