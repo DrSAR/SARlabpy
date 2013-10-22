@@ -107,7 +107,7 @@ def h_calculate_AUC(scn_to_analyse=None, bbox = None, time = 60, pdata_num = 0):
     else:      
         raise ValueError('Please supply a bbox for h_calculate_AUC')   
      
-    return auc_data*bbox_mask
+    return {'':auc_data*bbox_mask}
 
 
 def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
@@ -207,7 +207,7 @@ roi.shape[0], roi.shape[1], roi.shape[2],1]),reps)
             
             enhancement_curve[slice,0,:] = time
             enhancement_curve[slice,1,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)            
-        return enhancement_curve
+        return {'':enhancement_curve}
     except:    
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
@@ -336,7 +336,7 @@ def h_calculate_AUGC(scn_to_analyse=None, adata_label=None, bbox = None, time = 
         raise ValueError('Please supply a bbox for h_calculate_AUGC')   
 
         # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
-    return augc_data*bbox_mask     
+    return {'':augc_data*bbox_mask}
     
 def h_conc_from_signal(scn_to_analyse=None, other_scan_name=None, 
                        adata_label = 'T1map_LL', bbox = None,
@@ -419,7 +419,7 @@ def h_conc_from_signal(scn_to_analyse=None, other_scan_name=None,
     
     conc[conc<0] = 0
        
-    return conc
+    return {'':conc}
     
     
 ### T1 fitting section
@@ -621,7 +621,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None, bbox = None, pdata_num = 0,
 #    data_after_fitting[data_after_fitting<0] = numpy.nan
 #    data_after_fitting[data_after_fitting>1e4] = numpy.nan
 
-    return numpy.squeeze(data_after_fitting), fit_results
+    
+
+    return {'':numpy.squeeze(data_after_fitting), '_fit_dict':fit_results}
 
 ### Other Helpers
 
@@ -805,4 +807,3 @@ def h_generate_VTC(scn_to_analyse=None, bbox = None, pdata_num = 0):
 
 
 #######
-
