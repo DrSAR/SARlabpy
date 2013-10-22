@@ -27,7 +27,11 @@ import collections
 import random
 import copy
 
-def h_calculate_AUC(scn_to_analyse=None, bbox = None, time = 60, pdata_num = 0):
+def h_calculate_AUC(scn_to_analyse=None, 
+                    bbox = None, 
+                    time = 60, 
+                    pdata_num = 0,
+                    **kwargs):
     
     """
     Returns an area under the curve data for the scan object
