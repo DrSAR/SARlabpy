@@ -98,7 +98,10 @@ def h_calculate_AUC(scn_to_analyse=None,
 
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
-       
+
+    else:      
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+
     if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
@@ -106,10 +109,7 @@ def h_calculate_AUC(scn_to_analyse=None,
         bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
     
         # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
-
-    else:      
-        raise ValueError('Please supply a bbox for h_calculate_AUC')   
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices) 
      
     return {'':auc_data*bbox_mask}
 
@@ -140,6 +140,9 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
 
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])
+    else:      
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+
 
     if bbox.shape == (4,):            
     
@@ -153,8 +156,6 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
         # Next tile for reps
         bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)
 
-    else:      
-        raise ValueError('Please supply a bbox for h_normalize_dce')
 
     # Calculated params      
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
@@ -257,7 +258,12 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
 
     return injection_point[0][0]+1
 
-def h_calculate_AUGC(scn_to_analyse=None, adata_label=None, bbox = None, time = 60, pdata_num = 0):
+def h_calculate_AUGC(scn_to_analyse=None, 
+                     adata_label=None, 
+                     bbox = None, 
+                     time = 60, 
+                     pdata_num = 0,
+                     **kwargs):
     
     """
     Returns an area under the gadolinium concentration curve adata for the scan object
@@ -325,7 +331,10 @@ def h_calculate_AUGC(scn_to_analyse=None, adata_label=None, bbox = None, time = 
     # Deal with bounding boxes
 
     if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
+
+    else:      
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)           
        
     if bbox.shape == (4,):            
     
@@ -336,15 +345,16 @@ def h_calculate_AUGC(scn_to_analyse=None, adata_label=None, bbox = None, time = 
         # First tile for slice
         bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
 
-    else:      
-        raise ValueError('Please supply a bbox for h_calculate_AUGC')   
-
         # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
     return {'':augc_data*bbox_mask}
     
-def h_conc_from_signal(scn_to_analyse=None, other_scan_name=None, 
-                       adata_label = 'T1map_LL', bbox = None,
-                       relaxivity=4.3e-3, pdata_num = 0,**kwargs):
+def h_conc_from_signal(scn_to_analyse=None, 
+                       other_scan_name=None, 
+                       adata_label = 'T1map_LL', 
+                       bbox = None,
+                       relaxivity=4.3e-3, 
+                       pdata_num = 0,
+                       **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
     scan_object_T1map = sarpy.Scan(other_scan_name)
@@ -379,7 +389,9 @@ def h_conc_from_signal(scn_to_analyse=None, other_scan_name=None,
     # Deal with bounding boxes
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
-       
+    else:      
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+
     if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
@@ -388,9 +400,6 @@ def h_conc_from_signal(scn_to_analyse=None, other_scan_name=None,
     
         # First tile for slice
         bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
-
-    else:      
-        raise ValueError('Please supply a bbox for h_conc_from_signal')   
 
     T1 = numpy.empty([x_size,y_size,num_slices,reps])
     T1[:] = numpy.nan
