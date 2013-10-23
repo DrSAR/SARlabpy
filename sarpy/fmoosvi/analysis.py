@@ -476,8 +476,11 @@ def h_residual_T1_FAind(params, y_data, tao, n):
     else:
         return 1e9
 
-def h_fit_T1_LL_FAind(scn_to_analyse=None, bbox = None, pdata_num = 0, 
-                params = []):
+def h_fit_T1_LL_FAind(scn_to_analyse=None, 
+                      bbox = None, 
+                      pdata_num = 0, 
+                      params = [],
+                      **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
    
@@ -515,7 +518,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None, bbox = None, pdata_num = 0,
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])
     if bbox.shape != (4,):    
-        raise ValueError('Please supply a bbox for h_fit_T1_LL_FAind')      
+        raise ValueError('Please supply a bbox for h_fit_T1_LL_FAind')
+    else:
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)  
         
     # Start the fitting process        
 
