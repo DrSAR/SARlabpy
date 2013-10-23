@@ -82,7 +82,7 @@ class BulkAnalyzer(object):
             # now check whether adata has alredy previously been saved
             if not self.force_overwrite:
                 adata_lbls = sarpy.Scan(scn_fname).adata.keys()
-                if any([re.match(self.adata_save_label for i in adata_lbls)]):
+                if any([re.match(self.adata_save_label, i) for i in adata_lbls]):
                     # we found the root already exists!
                     return None
                 self.adata_save_label
