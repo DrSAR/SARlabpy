@@ -16,7 +16,7 @@ import copy
 import pylab
 
 
-def get_num_slices(scan_object, pdata_num = 0):
+def get_num_slices(scan_object_name, pdata_num = 0):
     
     """
     Returns the number of slices
@@ -26,6 +26,9 @@ def get_num_slices(scan_object, pdata_num = 0):
             default reconstruction is pdata_num = 0.
     :return: integer num_slices: number of slices, detrmined from visu_pars
     """     
+
+    scan_object = sarpy.Scan(scan_object_name)
+
     
        ## Ridiculouly long (but definitely complete and correct) method of 
        #  obtaining the third dimension from visu_pars
@@ -138,7 +141,10 @@ def get_fid_enhancement(scan_string):
     mean = numpy.mean(numpy.mean(data[xmin:xmax,ymin:ymax,3,:],0),0)
     return pylab.plot(mean)
 
-def get_enhancement_curve(scan_object, adata_mask=None, pdata_num = 0):
+def get_enhancement_curve(scan_object_name, adata_mask=None, pdata_num = 0):
+
+    scan_object = sarpy.Scan(scan_object_name)
+
 
     try:
         norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)
@@ -179,12 +185,12 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
         
-def get_bbox(masterlist_value,data_label,type=None):
+def convert_bbox(scan_object_name, bbox, type=None):
     
-    data = sarpy.Scan(masterlist_value[data_label][0])
+    data = sarpy.Scan(scan_object_name)
     shape = data.pdata[0].data.shape
     
-    bbox = numpy.array([float(x) for x in masterlist_value[data_label][1]])    
+    #bbox = numpy.array([float(x) for x in masterlist_value[data_label][1]])    
     bbox_px = (bbox.reshape(2,2).T*shape[0:2]).T.flatten()
     
     #TODO: this will need to be updated for python 3.x+
@@ -196,9 +202,11 @@ def get_bbox(masterlist_value,data_label,type=None):
     elif type == 'pct':
         return numpy.array(bbox)
     
-def get_roi_bbox(scan, roi_adata_label = 'roi',type=None):
+def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',type=None):
     
-    roi = scan.adata[roi_adata_label].data   
+    scan_object = sarpy.Scan(scan_object_name)
+
+    roi = scan_object.adata[roi_adata_label].data   
     
     # First prepare the roi array to have it contain only 0s and 1s
     mask = numpy.where(numpy.isnan(roi),0,1) # where ever roi is nan, give it a value of 0, else 1
