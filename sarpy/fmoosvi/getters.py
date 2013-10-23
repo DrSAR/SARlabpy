@@ -185,12 +185,12 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
         
-def get_bbox(masterlist_value,data_label,type=None):
+def convert_bbox(scan_object_name, bbox, type=None):
     
-    data = sarpy.Scan(masterlist_value[data_label][0])
+    data = sarpy.Scan(scan_object_name)
     shape = data.pdata[0].data.shape
     
-    bbox = numpy.array([float(x) for x in masterlist_value[data_label][1]])    
+    #bbox = numpy.array([float(x) for x in masterlist_value[data_label][1]])    
     bbox_px = (bbox.reshape(2,2).T*shape[0:2]).T.flatten()
     
     #TODO: this will need to be updated for python 3.x+
