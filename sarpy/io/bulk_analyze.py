@@ -303,13 +303,16 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                     try:
                         ar.get()
                     except Exception as e:
-                        print('%s for %i ' % (e, 
-                                              msg_ids_to_parameters[msg_id]))                                  
+                        print ar
+                        print('%s for %s ' % (e, 
+                                              msg_ids_to_parameters[msg_id]))        
+
+                        raise                          
                     else:
                         print("job id %s finished on engine %i " % 
                                 (msg_id, ar.engine_id))
-                        print("and results for parameter %s :" %
-                                msg_ids_to_parameters[msg_id])
+                        #print("and results for parameter %s :" %
+                        #        msg_ids_to_parameters[msg_id])
                         # note that each job in a map always returns a list of 
                         # length chunksize even if chunksize == 1
                         # since we need the one-to-one map of scan to result,
