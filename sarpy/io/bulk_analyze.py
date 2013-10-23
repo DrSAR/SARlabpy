@@ -79,6 +79,13 @@ class BulkAnalyzer(object):
         (ii) None otherwise'''
         scn_fname = self.masterlist[pat_lbl][scn_lbl][0]
         if scn_fname and re.search(self.scan_label, scn_lbl):
+            # now check whether adata has alredy previously been saved
+            if not self.force_overwrite:
+                adata_lbls = sarpy.Scan(scn_fname).adata.keys()
+                if any([re.match(self.adata_save_label for i in adata_lbls)]):
+                    # we found the root already exists!
+                    return None
+                self.adata_save_label
             return scn_fname
         else:
             return None
@@ -307,7 +314,6 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                         print('%s for %s ' % (e, 
                                               msg_ids_to_parameters[msg_id]))        
 
-                        raise                          
                     else:
                         print("job id %s finished on engine %i " % 
                                 (msg_id, ar.engine_id))
