@@ -169,7 +169,10 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
 
     return norm_data*bbox_mask
  
-def h_enhancement_curve(scn_to_analyse=None, adata_roi_label=None, pdata_num = 0):
+def h_enhancement_curve(scn_to_analyse=None, 
+                        adata_roi_label=None, 
+                        pdata_num = 0,
+                        **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
