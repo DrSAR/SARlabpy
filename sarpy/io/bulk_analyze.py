@@ -21,6 +21,8 @@ import re
 import numpy
 import IPython.parallel
 import sarpy
+import sys
+import traceback
 
 
 class BulkAnalyzer(object):
@@ -313,6 +315,8 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                         print ar
                         print('%s for %s ' % (e, 
                                               msg_ids_to_parameters[msg_id]))        
+                        print traceback.print_exc(sys.exc_info()[2])
+
 
                     else:
                         print("job id %s finished on engine %i " % 
