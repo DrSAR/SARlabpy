@@ -1,11 +1,88 @@
 #!/usr/bin/env python
-''' Function around the 2-Comparment eXchange Model (2CXM). Mostly inspired by 
+''' Functions around modelling of contrast agent uptiake in tissue
+mostly inspired by the 2-Comparment eXchange Model (2CXM) paper by 
 Sourbron and Buckley paper.
 '''
 
 from numpy import exp, sqrt, log, pi
 import numpy
 import scipy.optimize as optimize
+
+def heaviside(time, tau):
+    """Heaviside function for use in AIF model."""
+    out = numpy.zeros_like(time)
+    out[time>tau]=1
+    return out
+
+def AIF_model(parms, time):
+    ''' Create AIF with linear upslope and single exponential decay.'''
+#    tau = vol/rate
+    alpha, beta, vol, c_f = parms[0], parms[1], parms[2], parms[3]
+    tau = numpy.sqrt(2*vol/alpha)
+    up = ( 1 - heaviside(time,tau) ) * alpha * time
+    down = heaviside(time,tau) *\
+        ( (alpha*(tau)-c_f) *\
+        numpy.exp(-beta*(time-tau) ) + c_f  )
+    return up+down
+    
+def create_model_AIF(parms, time_axis, 
+                     modify_rate = False,
+                     shift_h = False, 
+                     shift_v = False,
+                     shift_arriv = False,
+                     scale = False,
+                     epsilon = None):
+    '''Create AIF for different rates (alphas), and fixed parameters
+    from fit of data with AIF_model function. 
+    
+    coopyright Tammo Rukat, 2013'''
+        
+    if modify_rate == True:
+        parms = numpy.hstack([parms[0]*(1+epsilon),parms[1:5]])
+        
+    alpha, V1, V2, tf, cf = parms[0], parms[1], parms[2], parms[3], parms[4]    
+    Vtotal = V1+V2
+    
+    tau = sqrt( (2*V1)/alpha )
+
+    if shift_h == True:
+        alpha_old = alpha
+        tau_old = sqrt( (2*V1)/alpha )
+        
+        const = alpha_old * tau_old
+        tau_new = tau_old * (1 + epsilon)
+        alpha_new = const/tau_new        
+        V1_new = (const*tau_new)/2
+        V2_new = Vtotal - V1_new
+        
+        V1 = V1_new
+        V2 = V2_new
+        alpha = alpha_new
+        tau = tau_new
+    
+    if shift_v == True:
+        alpha_old = alpha
+        const = (2*V1)/alpha
+        tau_old = sqrt(const) 
+        
+#        epsilon *= alpha_old * tau_old - cf
+        alpha_new = alpha_old*(1 + epsilon) - (epsilon*cf/tau_old)
+        V1_new = (const*alpha_new)/2
+        V2_new = Vtotal - V1_new
+        
+        V1 = V1_new
+        V2 = V2_new
+        alpha = alpha_new
+        tau = tau_old
+        
+    beta = (alpha*tau - cf) / (V2 - cf*(tf-tau))
+    AIF = AIF_model([alpha, beta, V1, cf], time_axis)
+    if shift_arriv == True:
+        AIF = AIF_model([alpha, beta, V1, cf], time_axis-epsilon)
+        AIF[AIF<0] = 0
+    if scale == True:
+        AIF *= 1 + epsilon
+    return AIF
 
 def aif(t, t0=0, aifchoice=None, zeropad=False):
     '''arterial input function by Lyng
@@ -38,6 +115,13 @@ def aif(t, t0=0, aifchoice=None, zeropad=False):
     AIF = numpy.zeros(len(t))
     if aifchoice == 'Lyng':
         AIF[t>=t0] = 5.8*exp((-4.4)*(t[t>=t0]-t0)) + 0.7*exp((-0.05)*(t[t>=t0]-t0))
+    elif aifchoice == 'Moroz':
+        # load parameters to simulate aif
+        aif_parms = [5.18134715e-02, 9.72041215e+00, 
+                     4.59268952e+01, 3.59900000e+02, 
+                     1.20795007e-01]
+        # create aif
+        AIF[t>=t0] = create_model_AIF(aif_parms, t[t>=t0]-t0)
     elif aifchoice == 'Checkley':
         AIF[t>=t0] = (.3*11.95*exp((-.0195)*(t[t>=t0]-t0)) +
                       .3*4.67*exp((-0.0009)*(t[t>=t0]-t0)))
@@ -357,7 +441,12 @@ def fit_generic(t, data, model, p0,  *pargs):
     
     success:         as handed back from optimize.leastsq()
     
-    fit:             best fit'''
+    fit:             best fit
+    
+    Tip: 
+    ----
+    Always consult docs: http://wiki.scipy.org/Cookbook/FittingData
+    '''
 
     # distance to the target function    
     errfunc = lambda p, x, pargs, y: model(x, p, *pargs) - y
@@ -368,7 +457,24 @@ def fit_generic(t, data, model, p0,  *pargs):
         
     return (p1, success, fit)
 
-    
+def fit_generic_array(t, data, model, p0, mask=None,  *pargs):
+    '''wrapper for fit_generic but data is a 4D array instead of a 
+    one-dimensional vector
+    :mask: describes a 3D mask
+    :data: is a 4D array with the first three dimensions matched by
+           the data
+    '''
+    result = numpy.empty_like(model, dtype=numpy.ndarray)
+    fit = numpy.empty_like(model, dtype=numpy.ndarray)
+    for idx, val in numpy.ndenumerate(numpy.isnan(mask)):
+        if not val:
+            (result[idx], success, fit[idx]) = fit_generic(t, 
+                                             data[idx],
+                                             model, p0, *pargs)
+                                             
+    return {'result':result, 'fit':fit}     
+            
+            
 def fit_2CXM(t, ca, data, p0):
     '''fit the 2CXM with its four parameters to some data
     
@@ -440,13 +546,13 @@ def hierarchical_fit_2CXM(t, ca, data, p0):
     aic = {}
     fitres = {}
     SSE_arr = numpy.empty(0, dtype=float)
-    k_arr = numpy.empty(0, dtype=int)
+    #k_arr = numpy.empty(0, dtype=int)
     
     for modellabel, model in models.iteritems():
         fitres = fit_generic(t, data, model[0], model[1], ca)
         # find Akaike's Information Criterion
         SSE_arr = [SSE_arr, 1]
-        k_arr = len(model[1])+1
+        #k_arr = len(model[1])+1
         
         aic[modellabel] = AIC_from_SSE(fitres) 
 
