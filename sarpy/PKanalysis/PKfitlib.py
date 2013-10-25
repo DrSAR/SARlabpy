@@ -457,20 +457,23 @@ def fit_generic(t, data, model, p0,  *pargs):
         
     return (p1, success, fit)
 
-def fit_generic_array(t, data, model, p0, mask=None,  *pargs):
+def fit_generic_array(t, data, model, p0, *pargs, **kwargs):
     '''wrapper for fit_generic but data is a 4D array instead of a 
     one-dimensional vector
     :mask: describes a 3D mask
     :data: is a 4D array with the first three dimensions matched by
            the data
     '''
-    result = numpy.empty_like(model, dtype=numpy.ndarray)
-    fit = numpy.empty_like(model, dtype=numpy.ndarray)
+    mask = kwargs.pop('mask', None)
+    result = numpy.empty_like(mask, dtype=numpy.ndarray)
+    fit = numpy.empty_like(mask, dtype=numpy.ndarray)
     for idx, val in numpy.ndenumerate(numpy.isnan(mask)):
         if not val:
-            (result[idx], success, fit[idx]) = fit_generic(t, 
+            (res, success, ft) = fit_generic(t, 
                                              data[idx],
                                              model, p0, *pargs)
+            result[idx] = res
+            fit[idx] = ft
                                              
     return {'result':result, 'fit':fit}     
             
