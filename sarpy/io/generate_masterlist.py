@@ -15,17 +15,19 @@ import re
 import json
 import pprint
 import sarpy
+import sarpy.fmoosvi.getters
 
 conf_parser = argparse.ArgumentParser(
     # Turn off help, so we print all options in response to -h
         add_help=False
         )
 conf_parser.add_argument("-c", "--conf_file",
-                         help="Specify config file", metavar="FILE")
+                         help="Specify full path to config file", metavar="FILE")
 #parse_known_args does not produce an error for unknown args
 args, remaining_argv = conf_parser.parse_known_args()
 if args.conf_file:
     config = ConfigParser.SafeConfigParser()
+    base_fname = args.conf_file
     config.read([args.conf_file])
     defaults = dict(config.items("MasterList"))
 else: 
@@ -66,6 +68,7 @@ expt = sarpy.Experiment(defaults['experimentname'])
 patname_list=sarpy.natural_sort(list(set(expt.get_SUBJECT_id())))
 
 master_sheet = collections.OrderedDict()
+
 # first do the regular assignments
 # as an example, this is what the config file states:
 #    [anatomy]
@@ -83,11 +86,12 @@ for patname in (x for x in patname_list if x not in patient_exclude):
         master_sheet[patname][lbl] = ["",[]]          
 
 # now, see whether there are exceptions defined or this label
-# as an example, this is what the cponfig file looks like
+# as an example, this is what the config file looks like
 #    [EXCEPTION.24h-LL.HerP2Bs03]
 #    protocol_name=04_ubcLL2
 #    study=3 # instead of 1
 #    scan=0
+
         if patname in exc_labels[lbl]:
             configuration = dict(config.items(
                             '.'.join(['EXCEPTION',lbl,patname])))
@@ -112,6 +116,7 @@ for patname in (x for x in patname_list if x not in patient_exclude):
                 master_sheet[patname][lbl] = [scn.shortdirname, bbox]
 
 print('ignoring {0}'.format(' '.join(patient_exclude)))
+
 if args.test:
     print('test mode:\n')
     print('%s\n' % args)
@@ -124,3 +129,60 @@ else:
                     match.group(1), json_str), json_str)
         outfile.write(y)
         print('wrote to %s' % outputfilename)
+
+
+###### Reload masterlist file as a json file after checking if roi exists 
+###### if not, skip this part
+
+masterlist_name = os.path.basename(base_fname).split('.config')[0]
+
+check_list = sarpy.Experiment(masterlist_name).find_adata()
+
+if 'roi' in check_list:
+
+    root = os.path.expanduser(os.path.join('~/sdata',
+                              masterlist_name,
+                              masterlist_name))
+    fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                               ).decode(json_str)           
+
+    ###### Updating bboxes #####
+
+    for patname,v in master_list.iteritems():
+
+        # First get all the labels and put it in a list
+        lbl_list = master_list[patname].keys()
+
+        # Search for all the labels that have roi and create an roi list 
+        roi_labels = [r for r in lbl_list if 'roi' in r]
+
+        # Iterate over the roi list, get the updated bbox, check for same day-ness
+        for r_lbl in roi_labels:
+
+            scn_name = master_list[patname][r_lbl][0]
+            new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,'roi',type='pct')
+            search_string = r_lbl.split('-',1)[-1]
+
+            # Iterate over the label list, transfer the new bbox into the master list
+            for lbl in lbl_list:
+
+                if search_string in lbl and len(master_list[patname][lbl][1])==4: 
+                    # If 0h/24h/48h/ exists and if scan + bbox exists, update bbox
+                        master_list[patname][lbl][1] = new_bbox        
+
+    #Save updated file to disk                
+
+    outputfilename = os.path.join(os.path.expanduser('~/sdata'),args.output)
+
+    json.dump(master_list, open(outputfilename,'w'),indent=4)
+
+    print('wrote updated bbox file to to %s' % outputfilename)
+
+else:
+
+    print("No rois were found, bboxes are likely incorrect. Proceed with caution!")
+
