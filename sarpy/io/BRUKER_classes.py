@@ -765,7 +765,7 @@ class StudyCollection(object):
         '''
         for stdy in self.studies:
             stdy.rm_adata(key)
-            print('adata {0} deleted in {1}'.format(key, scn.shortdirname))
+            print('adata {0} deleted in {1}'.format(key, stdy.shortdirname))
 
 
 
