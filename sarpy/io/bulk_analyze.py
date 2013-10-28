@@ -40,27 +40,19 @@ class BulkAnalyzer(object):
                  scan_label=None,
                  **kwargs):
         ''' init of the bare minimum:
-            - masterlist (*_updated.json is preferrred over *.json)
+            - masterlist
             - adata_save_label ... label under which to store the analysed result
             - force_overwrite ... handed to keyword force in call to store_adate
             - scan_label (default ".*"
         '''
     # open masterlist and iterate over all patients and scans
         fname = os.path.join(os.path.expanduser('~/sdata'),
-                             masterlist_fname, masterlist_fname+'_updated.json')
+                             masterlist_fname, masterlist_fname+'.json')
         try:
             master_file = open(fname,'r')
         except IOError:
-            fname = os.path.join(os.path.expanduser('~/sdata'),
-                        masterlist_fname, masterlist_fname+'.json')
-            try:
-                master_file = open(fname,'r')
-            except IOError:
-                print('Could not open masterlist file %s' % fname)
-                raise
-            else:
-                print('Warning: could not find updated masterlist')
-                print('but I loaded the default instead')
+            print('Could not open masterlist file %s' % fname)
+            raise
       
         with master_file:
             json_str = master_file.read()
