@@ -124,14 +124,44 @@ class BulkAnalyzer(object):
                     kwargs = self.process_params(scn_to_analyse)
                     result = self.analysis_func(scn_to_analyse,
                                                           **kwargs)
-                    # try:
-                    #     self.store_result(result, scn_to_analyse)
-                    # except AttributeError as e:
-                    #     print(scn_to_analyse)
-                    #     print(e)                        
+                    try:
+                        self.store_result(result, scn_to_analyse)
+                        if self.force_overwrite:
+                            print('{0} overwritten in {1}'.format(self.adata_save_label,scn_to_analyse))
+                        else:
+                            print('{0} saved in {1}'.format(self.adata_save_label,scn_to_analyse))
+                    except AttributeError as e:
+                        print(scn_to_analyse)
+                        print(e)                        
         end1 = time.time()
-        print 'Without parallelization : {0} s'.format(end1 - start1)   
+        print 'Serial code : {0} s \n'.format(end1 - start1)   
 
+
+# below are example function that achieve the minimum for a run of analysis
+class T1map_from_LL(BulkAnalyzer):
+    '''example of a class that finds all protocols with DCE in them 
+    and prints the NR value from the acqp file. Simple run like so:
+    >>>> DCE_NR_counter('NecS3').process()
+    '''
+    def scan_criterion(self, pat_lbl, scn_lbl): 
+        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
+        if scan_fname:
+            scn = sarpy.Scan(scan_fname)
+            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
+                return scan_fname
+        return None
+
+    def analysis_func(self, scn, **kwargs):
+        ''' Placeholder method to perform analysis on a scan '''
+
+        print('analysing (%s): %s' % (scn.shortdirname,
+                                       scn.acqp.ACQ_protocol_name))
+        
+        T1map, fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn.shortdirname)
+        return T1map, fit_dict
+
+
+################## BEGIN PARALLEL STUFF #############
 
 class ParallelBulkAnalyzer(BulkAnalyzer):
     def __init__(self, 
@@ -144,31 +174,20 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
                                                    force_overwrite=force_overwrite)
         self.clients = IPython.parallel.Client(profile=ipython_profile)
         self.dview = self.clients[:]
-        print(self.clients.ids)
-
-        self.dview.execute('import sys,os')
-        
+        print('Currently, there are {0} clients running'.format(len(self.clients.ids)))
+      
         self.dview.execute("sys.path.append(os.path.join("+
                            "os.path.expanduser('~'),'sarpy'))")        
                 
         # ensuring all engines have the same version of the imports
         with self.dview.sync_imports():
-            import os
-            import sys
-            import sarpy
-#            import sarpy.fmoosvi.parallel
-            import sarpy.fmoosvi.analysis
+            import os, sys, sarpy, sarpy.fmoosvi.analysis
+
+        print('###########') # Just to pretty-fy the output
+
             
         self.balanced = self.clients.load_balanced_view()   # this object represents the engines (workers)
         self.balanced.block = False
-
-
-    def parallel_analysis_func(self, **kwargs):
-        ''' Takes an iterable list and returns a lambda function for parallelization '''
-
-        print('Shame on you for not implementing this. RTFM!')
-        return None
-
 
     def process(self):
         ''' This method will get called to run the processing.
@@ -188,7 +207,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 
         results = self.balanced.map_async(func, list_of_scan_names, ordered=False)
         end1 = time.time()
-        print 'With parallelization : {0} s'.format(end1 - start1)    
+        print 'Serial code: {0} s'.format(end1 - start1)    
 
         for res, scn in zip(results, list_of_scans):
             try:
@@ -208,7 +227,9 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         super(ParallelBulkAnalyzerFactory, self).__init__(**kwargs)
         self.clients = IPython.parallel.Client(profile=ipython_profile)
         self.dview = self.clients[:]
-        print(self.clients.ids)
+
+        print('###########')
+        print('Currently, there are {0} clients running'.format(len(self.clients.ids)))
 
         self.dview.execute('import sys,os')
         
@@ -217,11 +238,11 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                 
         # ensuring all engines have the same version of the imports
         with self.dview.sync_imports():
-            import os
-            import sys
-            import sarpy
-#            import sarpy.fmoosvi.parallel
-            import sarpy.fmoosvi.analysis
+            import os, sys, sarpy, sarpy.fmoosvi.analysis
+
+        print('###########') # Just to pretty-fy the output
+
+
             
         self.balanced = self.clients.load_balanced_view()   # this object represents the engines (workers)
         self.balanced.block = False
@@ -234,9 +255,6 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
 
     @classmethod
     def from_function(cls, func, *args, **kwargs):
-        print func
-        print args
-        print kwargs
         instance = cls(*args, **kwargs) 
         instance.parallel_analysis_func = func
         return instance
@@ -312,15 +330,13 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                     try:
                         ar.get()
                     except Exception as e:
-                        print ar
                         print('%s for %s ' % (e, 
-                                              msg_ids_to_parameters[msg_id]))        
-                        print traceback.print_exc(sys.exc_info()[2])
+                                              msg_ids_to_parameters[msg_id]['scn_to_analyse']))        
+                        
+                        print('\t {0}'.format(traceback.print_exc(sys.exc_info()[2])))
 
 
                     else:
-                        print("job id %s finished on engine %i " % 
-                                (msg_id, ar.engine_id))
                         #print("and results for parameter %s :" %
                         #        msg_ids_to_parameters[msg_id])
                         # note that each job in a map always returns a list of 
@@ -333,75 +349,12 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                                 msg_ids_to_scans[msg_id].store_adata(
                                     key=lbl, 
                                     data=v,
-                                    force=self.force_overwrite)                            
-                                              
+                                            force=self.force_overwrite)    
+                                if self.force_overwrite:
+                                    print('{0} overwritten in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname))
+                                else:
+                                    print('{0} saved in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname))                                              
         else:
-            print('no scans fit criterion and, hence, nothing to process')
+            print('no scans fit the criterion so nothing was processed')
         end1 = time.time()
-        print 'With parallelization : {0} s'.format(end1 - start1)    
-
-# below are example function that achieve the minimum for a run of analysis
-class T1map_from_LL(BulkAnalyzer):
-    '''example of a class that finds all protocols with DCE in them 
-    and prints the NR value from the acqp file. Simple run like so:
-    >>>> DCE_NR_counter('NecS3').process()
-    '''
-    def scan_criterion(self, pat_lbl, scn_lbl): 
-        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
-        if scan_fname:
-            scn = sarpy.Scan(scan_fname)
-            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
-                return scan_fname
-        return None
-
-    def analysis_func(self, scn, **kwargs):
-        ''' Placeholder method to perform analysis on a scan '''
-
-        print('analysing (%s): %s' % (scn.shortdirname,
-                                       scn.acqp.ACQ_protocol_name))
-        
-        T1map, fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn.shortdirname)
-        return T1map, fit_dict
-
-
-class T1map_from_LLP(ParallelBulkAnalyzer):
-    '''a class that finds all protocols with DCE in them 
-    and prints the NR value from the acqp file. Simple run like so:
-    >>>> DCE_NR_counter('NecS3').process()
-    '''
-    def scan_criterion(self, pat_lbl, scn_lbl): 
-        scan_fname = self.masterlist[pat_lbl][scn_lbl][0]
-        if scan_fname:
-            scn = sarpy.Scan(scan_fname)
-            if re.search('.*LL',scn.acqp.ACQ_protocol_name):
-                return scan_fname
-        return None
-
-    def parallel_analysis_func(self):
-        ''' Takes an iterable list and returns a lambda function for parallelization '''
-
-        func = IPython.parallel.interactive(lambda sname:
-                    sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(sname))
-        return func
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print '###### Parallelized Code: {0} s \n'.format(end1 - start1)
