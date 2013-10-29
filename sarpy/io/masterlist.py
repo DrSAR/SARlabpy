@@ -34,6 +34,8 @@ def generate(**kwargs):
                                   'sdata',
                                   args.conf_file)
         config.read([base_fname])
+        argsvars.update(dict(config.items("MasterList")))
+
     
     labels = [lbl for lbl in config.sections() if not((lbl=='MasterList') or
                                                 re.match('EXCEPTION.',lbl))]
@@ -49,7 +51,7 @@ def generate(**kwargs):
         patient_exclude = []
         
     # get unique name of patients
-    expt = sarpy.Experiment(dict(config.items('MasterList'))['experimentname'])
+    expt = sarpy.Experiment(args.experimentname)
     patname_list=sarpy.natural_sort(list(set(expt.get_SUBJECT_id())))
     
     master_sheet = collections.OrderedDict()
