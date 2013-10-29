@@ -21,12 +21,19 @@ def generate(**kwargs):
     '''Generate a masterlist from a config file.
 
     config_file=None: name of config file as kw parameter
-    test=None: '''
+    test=False: Only  perform dry-run '''
     
     args = argparse.Namespace()
     argsvars = vars(args)
     argsvars.update(kwargs)
     args.test = kwargs.get('test', False) # default for dry run
+    
+    if args.conf_file:
+        config = ConfigParser.SafeConfigParser()
+        base_fname = os.path.join(os.path.expanduser('~'),  
+                                  'sdata',
+                                  args.conf_file)
+        config.read([base_fname])
     
     labels = [lbl for lbl in config.sections() if not((lbl=='MasterList') or
                                                 re.match('EXCEPTION.',lbl))]
@@ -42,7 +49,7 @@ def generate(**kwargs):
         patient_exclude = []
         
     # get unique name of patients
-    expt = sarpy.Experiment(defaults['experimentname'])
+    expt = sarpy.Experiment(dict(config.items('MasterList'))['experimentname'])
     patname_list=sarpy.natural_sort(list(set(expt.get_SUBJECT_id())))
     
     master_sheet = collections.OrderedDict()
