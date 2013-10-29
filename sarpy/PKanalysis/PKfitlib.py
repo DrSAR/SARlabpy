@@ -413,8 +413,24 @@ def paramconv_solntomodel(params):
     PS = Fpl * E / (1-E)
 
     return (ve, vp, PS, Fpl)
+    
+def bounds_penalty(parms, bounds):
+    '''implementation of a check to see whether a list of parameters is within the 
+    given bounds. A bound is a 2D array
+    
+    Interesting observation that the awkward loop is faster (by a lot!) than
+    if numpy.any(parms<bounds[0]) or numpy.any(parms>bounds[1]):
+        return 1e9
+    else:
+        return 0.0
+    The performance is even worse if you start messing with numpy.sign
+    '''
+    for idx, p in enumerate(parms):
+        if p > bounds[idx][1] or p < bounds[idx][0]:
+            return 1e30
+    return 0.0
 
-def fit_generic(t, data, model, p0,  *pargs):
+def fit_generic(t, data, model, p0, *pargs, **kwargs):
     '''fit a generic function
     
     Parameters
@@ -448,8 +464,12 @@ def fit_generic(t, data, model, p0,  *pargs):
     Always consult docs: http://wiki.scipy.org/Cookbook/FittingData
     '''
 
-    # distance to the target function    
-    errfunc = lambda p, x, pargs, y: model(x, p, *pargs) - y
+    bounds = kwargs.get('bounds', None)
+    if bounds is None:
+        errfunc = lambda p, x, pargs, y: model(x, p, *pargs) - y
+    else:
+        errfunc = lambda p, x, pargs, y: (model(x, p, *pargs) - y + 
+                                          bounds_penalty(p, bounds))
     
     p1, success = optimize.leastsq(errfunc, p0[:], args=(t, pargs, data))
 
@@ -471,7 +491,7 @@ def fit_generic_array(t, data, model, p0, *pargs, **kwargs):
         if not val:
             (res, success, ft) = fit_generic(t, 
                                              data[idx],
-                                             model, p0, *pargs)
+                                             model, p0, *pargs, **kwargs)
             result[idx] = res
             fit[idx] = ft
                                              
