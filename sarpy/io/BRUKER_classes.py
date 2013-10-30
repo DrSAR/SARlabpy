@@ -15,9 +15,10 @@ from lazy_property import lazy_property
 
 import JCAMP_comparison
 
+## From http://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 import logging
 logger=logging.getLogger('sarpy.io.BRUKER_classes')
-
+logger.setLevel(level=40)
 
 dataroot = os.path.expanduser(os.path.join('~','bdata'))
 
@@ -602,9 +603,8 @@ class Study(object):
         for scn in self.scans:
             for ke in scn.adata.keys():
                 ad_dict[ke].append(scn.shortdirname)
-                
+
         return ad_dict
-        
         
     def rm_adata(self, key):
         '''
@@ -740,7 +740,7 @@ class StudyCollection(object):
             adatas = adatas.union(ret)
         return adatas
         
-    def find_adata_scans(self):
+    def find_adata_scans(self, flatten = False):
         
         klist = self.find_adata()
         
@@ -752,8 +752,13 @@ class StudyCollection(object):
             c_dict = stdy.find_adata_scans()
             for k in stdy.find_adata():
                 ad_dict[k].append(c_dict[k])
-                
-        return ad_dict
+
+        if flatten is False:
+            return ad_dict
+
+        else:
+            ad_dict_flatten = [item for sublist in ad_dict for item in sublist]
+            return ad_dict_flatten
        
     def rm_adata(self, key):
         '''
@@ -761,6 +766,8 @@ class StudyCollection(object):
         '''
         for stdy in self.studies:
             stdy.rm_adata(key)
+            print('adata {0} deleted in {1}'.format(key, stdy.shortdirname))
+
 
 
 class Patient(StudyCollection):

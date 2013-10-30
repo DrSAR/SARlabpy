@@ -64,7 +64,7 @@ def initiate_logging(module, formatter=None,
                 datefmt='%H:%M')
 
     handler_level = handler_level or WARNING
-    logger_level = handler_level or DEBUG
+    logger_level = handler_level or ERROR
             
     # remove all NullHandlers:
     handlers_to_be_removed = []

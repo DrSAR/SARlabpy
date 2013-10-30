@@ -63,10 +63,7 @@ def generate_summary(masterlist_name):
     root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
-    if os.path.exists(os.path.join(root+'_updated.json')):
-        fname_to_open = root+'_updated.json'
-    else: 
-        fname_to_open = root+'.json'
+    fname_to_open = root+'.json'
     with open(os.path.join(fname_to_open),'r') as master_file:
         json_str = master_file.read()
         master_list = json.JSONDecoder(

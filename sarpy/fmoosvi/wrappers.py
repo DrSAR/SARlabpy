@@ -18,7 +18,6 @@ import collections
 import scipy
 import scipy.stats
 
- 
 
 
 def store_deltaT1(masterlist_name,
@@ -135,14 +134,18 @@ def roi_average(masterlist_name,
             analysis_label,scan.shortdirname))
             pass          
 
-def bulk_transfer_roi(masterlist_name, dest_adata_label, roi_src_adata_label = None, tag = None, forceVal = False):
+def bulk_transfer_roi(masterlist_name,
+                      dest_adata_label, 
+                      roi_src_adata_label = None, 
+                      tag = None, 
+                      forceVal = False):
     '''
     Move an ROI from one scan to another. E.g., Moving an roi from an anatomy 
     scan to a LL scan. 
     
     dest_adata_label: Label specifying the destination of the roi transfer
     
-    tag: string to prepend before ROI. useful if auc60_roi exists and you want 
+    tag: string to prepend before _roi. useful if auc60_roi exists and you want 
             auc60_old_roi
     
     Note: this routine looks for the special 'roi' label. This is the canonical
@@ -155,23 +158,13 @@ def bulk_transfer_roi(masterlist_name, dest_adata_label, roi_src_adata_label = N
                                              forceVal = False)
     '''
     
-    # Get the name of the source roi
-    if roi_src_adata_label is None:
-        roi_src_adata_label = 'roi'
-
     # Set the name of the destination scan
 
     if tag is None:
         dest_label = dest_adata_label + '_roi'
     else:
         dest_label = dest_adata_label + str(tag) + '_roi'
-
-#    # Get all the studies in the experiment
-
-#    exp = sarpy.Experiment(exp_name)
-    
-    
-    
+   
     root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
@@ -183,66 +176,60 @@ def bulk_transfer_roi(masterlist_name, dest_adata_label, roi_src_adata_label = N
                            object_pairs_hook=collections.OrderedDict
                            ).decode(json_str)
 
-    for k in master_list.iteritems():
-        
-        for study in sarpy.Patient(k[0]).studies:
-            adata_dict = study.find_adata_scans()
-        
-            try:
-                src = sarpy.Scan(adata_dict[roi_src_adata_label][0])
-    
-            except(IOError):
-                print('bulk_transfer_roi: IO Problem with roi src scan for study {0}'.format(study.shortdirname))
-                raise
-            except KeyError:
-                print('bulk_transfer_roi: Key roblem with roi src scan for study {0}, maybe this study is extra'.format(study.shortdirname))
+    # Open up the tumourboard and do it tumourboard style
+    for patname,v in master_list.iteritems():
 
+        # First get all the labels and put it in a list
+        lbl_list = master_list[patname].keys()
 
-    
-            if dest_adata_label not in adata_dict:
-                # Skip this Patient
-                print('bulk_transfer_roi: {0} not found in study {1}'.format(dest_adata_label,study.shortdirname))                
-                continue
-                
-                
-            for d in adata_dict[dest_adata_label]:
-                dest = sarpy.Scan(d)
-           
-                if (not dest_label in dest.adata.keys()) or forceVal is True:
-                    
-                    dest_pd = dest.pdata[0]
-                    roi = src.adata[roi_src_adata_label]
-                    
-                    resampled_roi = sarpy.ImageProcessing.resample_onto.\
-                        resample_onto_pdata(roi, dest_pd, replace_nan=0)
+        # Search for all the labels that have roi and create an roi list 
+        roi_labels = [r for r in lbl_list if 'roi' in r]
+
+        # Iterate over the roi list, get the updated bbox, check for same day-ness
+        for r_lbl in roi_labels:
+
+            src_roi = sarpy.Scan(master_list[patname][r_lbl][0]).adata['roi']
+            search_string = r_lbl.split('-',1)[-1]
+
+            # Iterate over the label list, transfer the roi into the other adata
+            # Unfortunately this might be a bit slow as you iterate through all 
+            # the scans
+            #TODO: Figure out if this is a bottleneck and fix it!
+            for lbl in lbl_list:
+
+                # Check if the 0h/24h is in the label, and if a scan exists
+                # In other words ignore labels with no scans present
+
+                if search_string in lbl and master_list[patname][lbl][0] != '':
+                    scn = sarpy.Scan(master_list[patname][lbl][0])
+                    ad = sarpy.Scan(master_list[patname][lbl][0]).adata.keys()
+
+                    if dest_adata_label in ad:
+                        dest_pd = scn.pdata[0]
+
+                        resampled_roi = sarpy.ImageProcessing.resample_onto.\
+                        resample_onto_pdata(src_roi, dest_pd, replace_nan=0)
+
+                        ## WHY DO I HAVE THIS? WHAT IS THIS FOR ?
+                        #TODO: FIRAS, PLEASE FIGURE THIS OUT ASAP
                         
-                    places = numpy.where(resampled_roi < .5)
-                    other_places = numpy.where(resampled_roi >= .5)
-                    resampled_roi[places] = numpy.nan
-                    resampled_roi[other_places] = 1
+                        places = numpy.where(resampled_roi < .5)
+                        other_places = numpy.where(resampled_roi >= .5)
+                        resampled_roi[places] = numpy.nan
+                        resampled_roi[other_places] = 1
     
-                    dest.store_adata(key = dest_label, data = resampled_roi, 
-                                     force = forceVal)   
-                                     
-                    print('bulk_transfer_roi: Success. Saved {0} in {1}'.format(dest_label, 
-                                  dest.shortdirname))                                 
-                else:
-                    print('bulk_transfer_roi: {0} adata already exists {1}'.format(dest_label, 
-                          dest.shortdirname))
-                    pass      
-
-    #TODO: Fix this function so it uses the masterlist    
-    print('Firas: you really need to fix this function so it uses the masterlist')
+                        scn.store_adata(key = dest_label, data = resampled_roi, 
+                                         force = forceVal)   
+                                         
+                        print('Saved {0} in {1}'.format(dest_label, 
+                                      scn.shortdirname))    
 
 def plotVTC(masterlist_name, key, data_label, adata_label = None):
 
     root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
                         masterlist_name)
-    if os.path.exists(os.path.join(root+'_updated.json')):
-        fname_to_open = root+'_updated.json'
-    else: 
-        fname_to_open = root+'.json'
+    fname_to_open = root+'.json'
     with open(os.path.join(fname_to_open),'r') as master_file:
         json_str = master_file.read()
         master_list = json.JSONDecoder(
