@@ -453,14 +453,11 @@ def h_conc_from_signal(scn_to_analyse=None,
 ##############    
 
 def h_within_bounds(params,bounds):
-    try:        
-        for p in xrange(len(params)):
-            if params[p] >= bounds[p,0] or params[p] <= bounds[p,1] :
-                return True
-        return False
-    except:
-        print('You have some funky inputs for the bounds, you fail.')
-        return False
+
+    for p in xrange(len(params)):
+        if params[p] >= bounds[p,0] or params[p] <= bounds[p,1] :
+            return True
+    return False
 
 
 def h_func_T1_FAind(params,tao,n):

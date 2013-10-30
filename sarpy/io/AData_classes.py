@@ -18,6 +18,7 @@ from datetime import datetime
 
 import logging
 logger=logging.getLogger('sarpy.io.Adata_classes')
+logger.setLevel(level=40)
 
 import sarpy.helpers
 
@@ -149,7 +150,7 @@ class ADataDict(collections.MutableMapping):
 
 
     def __delitem__(self, key):
-        print('deleting item %s' % key)
+        #print('deleting item %s' % key)
         shutil.rmtree(os.path.join(adataroot, 
                                    self.store[key].meta['dirname']))
         del self.store[key]
