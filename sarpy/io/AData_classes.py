@@ -18,6 +18,7 @@ from datetime import datetime
 
 import logging
 logger=logging.getLogger('sarpy.io.Adata_classes')
+logger.setLevel(level=40)
 
 import sarpy.helpers
 

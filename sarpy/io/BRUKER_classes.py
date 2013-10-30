@@ -15,9 +15,10 @@ from lazy_property import lazy_property
 
 import JCAMP_comparison
 
+## From http://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 import logging
 logger=logging.getLogger('sarpy.io.BRUKER_classes')
-
+logger.setLevel(level=40)
 
 dataroot = os.path.expanduser(os.path.join('~','bdata'))
 
