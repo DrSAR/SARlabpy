@@ -75,6 +75,8 @@ def generate_summary(masterlist_name):
         
     # Generate the filename of the output file based on the masterlist
     filename = root + '_summary.pdf'
+
+    ## Construct the data for the checks table
     
     setvals = set()
     pats = []
@@ -140,6 +142,81 @@ def generate_summary(masterlist_name):
     
     t.setStyle(TableStyle(styled))
     elements.append(t)
+
+
+    ## Construct the table for the scan information
+
+    scanType = set()
+    fov = set()
+    px_size = set()
+    scanParams = set()
+
+    # Define a function to check if elements in the list are unique
+    def allUnique(x):
+        seen = set()
+        return not any(i in seen or seen.add(i) for i in x)
+
+
+    #for stype in setvals:
+    stype='LL-24h-'
+    for k,v in master_list.iteritems():
+
+        if master_list[k][stype][0] != "":
+            scn = sarpy.Scan(master_list[k][stype][0])
+
+            scanType.add(scn.method.Method)
+            fov.add(str(scn.method.PVM_FovCm))
+            px_size.add(str(scn.method.PVM_SpatResol+[scn.method.PVM_SliceThick]))
+            scanParams.add(str([scn.method.PVM_RepetitionTime,scn.method.PVM_EchoTime1]))
+            
+            print fov,px_size,scanParams
+
+
+    # # The order of this setvals is a bit weird, so reverse the set, and turn it into a list:
+    # headings = natural_sort(list(setvals))
+    # headings.insert(0,'')
+    
+    # checks =[]
+    # checks.append(headings)
+    # for p in pats:
+    #     curr=[]
+    #     curr.append(p)
+    
+    #     #Recall the first one is blank to match up with the patients column
+    #     for k in headings[1:]:
+            
+    #         if master_list[p][k][0] == '':
+    #             curr.append('No')
+    #         else:
+    #             curr.append('Yes')
+    #     checks.append(curr)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # write the document to disk
     doc.build(elements)             
     
