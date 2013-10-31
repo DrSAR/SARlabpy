@@ -11,6 +11,16 @@ import collections
 import json
 import numpy
 
+def flatten_list(l):
+
+    if type(len(l)) is int:
+        print('List is already flat')
+        return l
+
+    else:
+        # From: http://stackoverflow.com/questions/952914/making-a-flat-list-out-of-list-of-lists-in-python
+        return [item for sublist in l for item in sublist]
+
 def natural_sort(l):
     '''
     Sort a list by a natural sort order (number ascending) and even if
@@ -115,7 +125,7 @@ def generate_summary(masterlist_name):
      
     checks_size = numpy.array(checks).shape
 
-
+    #return checks
     colwidths = checks_size[1]*[0.7*inch]
     colwidths.insert(0,0.95*inch)
     
@@ -146,30 +156,70 @@ def generate_summary(masterlist_name):
 
     ## Construct the table for the scan information
 
-    scanType = set()
-    fov = set()
-    px_size = set()
-    scanParams = set()
+    combinedParams = []
 
-    # Define a function to check if elements in the list are unique
-    def allUnique(x):
-        seen = set()
-        return not any(i in seen or seen.add(i) for i in x)
+    for stype in natural_sort(list(setvals)):
+
+        scanType = set()
+        fov = set()
+        px_size = set()
+        scanParams = set()
+
+        for k,v in master_list.iteritems():
+
+            if master_list[k][stype][0] != "":
+                scn = sarpy.Scan(master_list[k][stype][0])
+
+                pack_extent = [scn.method.PVM_SPackArrSliceDistance[0]*scn.method.PVM_SPackArrNSlices[0] - scn.method.PVM_SPackArrSliceGap[0]]
+
+                scanType.add(scn.method.Method)
+                fov.add(str(scn.method.PVM_FovCm+pack_extent).strip('[,]'))
+                px_size.add(str(scn.method.PVM_SpatResol+[scn.method.PVM_SliceThick]).strip('[,]'))
+                scanParams.add(str([scn.method.PVM_RepetitionTime,scn.method.PVM_EchoTime1]).strip('[,]'))
+
+        if len(fov) != 1:
+            fov = [str(len(fov)) + ' diff']
+
+        if len(px_size) != 1:
+            px_size = [str(len(px_size)) + ' diff']
+
+        if len(scanParams) != 1:
+            scanParams = [str(len(scanParams)) + ' diff']
+             
+        combinedParams.append([stype, list(fov)[0],list(px_size)[0],list(scanParams)[0]])
+    
+    combinedParams.insert(0,['','FoV (x,y,z) [mm]','SpatRes (x,y,z) [mm]','TR, TE [ms]'])  
+
+    ##This transposes the list
+    #combinedParams = map(None,*combinedParams) 
+
+    #Ignore the list-->array-->list conversion for now... it's so that I can transpose things safely
+    # Yes, there's probably a better way, go figure it out if you're so clever
+         
+    checks_size = numpy.array(combinedParams).shape
+
+    #return combinedParams
+
+    colwidths = checks_size[1]*[1.3*inch]
+    colwidths.insert(0,1*inch)
+    
+    rowHeights = checks_size[0]*[0.4*inch]
+
+    t=Table(combinedParams,colwidths, rowHeights)
+    styled = []
+    styled = [ ('TEXTCOLOR',(0,0),(0,-1),colors.blue),
+               ('TEXTCOLOR',(0,0),(-1,0),colors.blue),
+               ('ALIGN',(0,0),(-1,-1),'CENTER'),
+               ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+               ('INNERGRID', (1,1), (-1,-1), 0.25, colors.black),
+               ('BOX', (1,1), (-1,-1), 0.25, colors.black),
+               ('BACKGROUND',(1,1),(-1,-1),colors.lightgreen)
+            ]    
+
+    t.setStyle(TableStyle(styled))
+    elements.append(t)
 
 
-    #for stype in setvals:
-    stype='LL-24h-'
-    for k,v in master_list.iteritems():
-
-        if master_list[k][stype][0] != "":
-            scn = sarpy.Scan(master_list[k][stype][0])
-
-            scanType.add(scn.method.Method)
-            fov.add(str(scn.method.PVM_FovCm))
-            px_size.add(str(scn.method.PVM_SpatResol+[scn.method.PVM_SliceThick]))
-            scanParams.add(str([scn.method.PVM_RepetitionTime,scn.method.PVM_EchoTime1]))
-            
-            print fov,px_size,scanParams
 
 
     # # The order of this setvals is a bit weird, so reverse the set, and turn it into a list:
