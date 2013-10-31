@@ -494,7 +494,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     scan_object = sarpy.Scan(scn_to_analyse)
    
     if len(params) == 0:      
-        params = [0, 0, 0, 0]
+        params = [0, 0, 1200, 0]
     ## Setting parameters
     x = sarpy.io.BRUKERIO.fftbruker(scan_object.fid)
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
@@ -549,7 +549,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 params[0] = numpy.real(numpy.mean(y_data[-5:]))
                 params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
-                params[2] = 1200
+                params[2] = params[2]
                 params[3] = numpy.angle(numpy.mean(y_data[-5:]))
                 # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
                 # phi (phase factor to fit real data)
@@ -563,10 +563,10 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                 
                 if ier not in (0,1,2,3,4): # Try fit with new guess for 'a'
                     
-                    params = [0,0,0,0]
+                    params = [0,0,params[2],0]
                     params[0] = numpy.real(y_data[0])
                     params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
-                    params[2] = 1200
+                    params[2] = params[2]
                     params[3] = numpy.angle(numpy.mean(y_data[-5:]))
 
                     fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
@@ -580,10 +580,10 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                     
                     if ier not in (0,1,2,3,4): # Last attempt to get 10*a
                 
-                        params = [0,0,0,0]
+                        params = [0,0,params[2],0]
                         params[0] = 10*numpy.real(y_data[0])
                         params[1] = numpy.real(numpy.divide(-y_data[0],params[0]))
-                        params[2] = 1200
+                        params[2] = params[2]
                         params[3] = numpy.angle(numpy.mean(y_data[-5:]))
     
                         fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
