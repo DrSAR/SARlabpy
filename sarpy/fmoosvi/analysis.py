@@ -519,9 +519,21 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                                        data.shape[1],\
                                        data.shape[2]] )
 
-    fit_results = numpy.array(data_after_fitting[:], dtype=dict)
+    fit_params1 = numpy.empty_like(data_after_fitting,dtype=dict)
+
+    a_arr = numpy.empty_like(data_after_fitting)
+    b_arr = numpy.empty_like(data_after_fitting)
+    T1_eff_arr = numpy.empty_like(data_after_fitting)
+    phi_arr = numpy.empty_like(data_after_fitting)
+    T1_arr = numpy.empty_like(data_after_fitting)
+
+    infodict1 = numpy.empty_like(data_after_fitting,dtype=dict)
+    mesg1 = numpy.empty_like(data_after_fitting,dtype=str)
+    ier1 = numpy.empty_like(data_after_fitting)
+    goodness_of_fit1 = numpy.empty_like(data_after_fitting)
+
+    fit_results = numpy.empty([x_size,y_size,num_slices], dtype=dict)
     data_after_fitting = numpy.empty([x_size,y_size,num_slices])
-    data_after_fitting[:] = numpy.nan
     
     ## Check for bbox traits and create bbox_mask to output only partial data
     if bbox is None:        
@@ -623,25 +635,33 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 # Add the T1 to the fitted parameters                      
                 numpy.append(fit_params,T1)
-                fit_dict = {
-                            'param_names': param_names,
-                            'fit_params': fit_params,
-                            'cov' : cov,
-                            'infodict' : infodict,
-                            'mesg' : mesg,
-                            'ier' : ier,
-                            'goodness': goodness_of_fit
-                            }
+
+                a_arr[x,y,slice] = fit_params[0]
+                b_arr[x,y,slice] = fit_params[1]
+                T1_eff_arr[x,y,slice] = fit_params[2]
+                phi_arr[x,y,slice] = fit_params[3]
+                T1_arr[x,y,slice] = T1
+
+                infodict1[x,y,slice] = infodict
+                mesg1[x,y,slice] = mesg
+                ier1[x,y,slice] = ier
+                goodness_of_fit1[x,y,slice] = goodness_of_fit
 
                 data_after_fitting[x,y,slice] = T1
                 fit_results[x,y,slice] = fit_dict
-                
-#    data_after_fitting[data_after_fitting<0] = numpy.nan
-#    data_after_fitting[data_after_fitting>1e4] = numpy.nan
 
-    
+    fit_params1 = {'a': a_arr,
+                   'b': b_arr,
+                   'T1_eff': T1_eff_arr,
+                   'phi': phi_arr,
+                   'T1': T1_arr}
 
-    return {'':numpy.squeeze(data_after_fitting), '_fit_dict':fit_results}
+    return {'':numpy.squeeze(data_after_fitting),
+            '_fit_params':fit_params1,
+            '_fit_infodict':infodict1,
+            '_fit_ier':ier1,
+            '_fit_goodness':goodness_of_fit1,
+            '_fit_mesg':mesg1}
 
 ### Other Helpers
 
@@ -741,7 +761,7 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         ss_tot=((data-data.mean())**2).sum()
         rsquared=1-(ss_err/ss_tot)
                
-        return rsquared
+        return numpy.abs(rsquared)
         
     else:
         print ('There is no code to produce that indicator. Do it first.')
