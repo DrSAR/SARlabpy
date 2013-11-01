@@ -489,6 +489,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                       bbox = None, 
                       pdata_num = 0, 
                       params = [],
+                      fit_algorithm = None,
                       **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
@@ -514,7 +515,11 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     y_size = data.shape[1]
     n_data = numpy.linspace(0,Nframes-1,Nframes)
                                        
-    # Initializations                                    
+    # Initializations
+
+    if fit_algorithm is None:
+        fit_algorithm = 'leastsq'
+
     data_after_fitting = numpy.zeros( [data.shape[0],\
                                        data.shape[1],\
                                        data.shape[2]] )
@@ -565,15 +570,74 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                 params[3] = numpy.angle(numpy.mean(y_data[-5:]))
                 # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
                 # phi (phase factor to fit real data)
+
+                if fit_algorithm == 'leastsq':
                 
-                fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
-                                                        h_residual_T1_FAind,
-                                                        params,
-                                                        args=(y_data,tao,n_data), 
-                                                        full_output = True,
-                                                        maxfev = 200)
-                
-                if ier not in (0,1,2,3,4): # Try fit with new guess for 'a'
+                    fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                            h_residual_T1_FAind,
+                                                            params,
+                                                            args=(y_data,tao,n_data), 
+                                                            full_output = True,
+                                                            maxfev = 200)
+                elif fit_algorithm == 'anneal':
+
+                    def errorfunc(params,y_data,tao,n_data):
+                        result = h_residual_T1_FAind(params, y_data, tao, n_data)
+
+                        return numpy.sum(numpy.abs(result)**2)
+
+                    bounds = numpy.zeros(shape=[4,2])
+                    bounds[0,0] = 1e2
+                    bounds[0,1] = 1e8
+                    bounds[1,0] = -1e5
+                    bounds[1,1] = 1e10
+                    bounds[2,0] = 50
+                    bounds[2,1] = 10000
+                    bounds[3,0] = -100
+                    bounds[3,1] = +100                        
+
+
+                    fit_params,Jmin,T,feval,iters,accept,ier = scipy.optimize.anneal(
+                                                                    func = errorfunc,
+                                                                    x0 = numpy.array(params),
+                                                                    args=(y_data,tao,n_data), 
+                                                                    schedule='fast',
+                                                                    full_output=True,
+                                                                    T0=None,
+                                                                    Tf=1e-10,
+                                                                    maxeval=None,
+                                                                    maxaccept=None,
+                                                                    maxiter=500,
+                                                                    boltzmann=.5,
+                                                                    learn_rate=0.6,
+                                                                    feps=1e-6,
+                                                                    quench=1.0,
+                                                                    m=1.0, n=1.0,
+                                                                    lower=[i[0] for i in bounds],
+                                                                    upper=[i[1] for i in bounds],
+                                                                    dwell=1000)                                                                    
+# fit_parms, Jmin, T, feval, iters, accept, retval = optimize.anneal(\
+#                                     func = errorfunc,\
+#                                     x0 = initial_parms, \
+#                                     args =(time,aif),\
+#                                     schedule='fast',\
+#                                     full_output=True,\
+#                                     T0=None,\
+#                                     Tf=1e-10,\
+#                                     maxeval=None,\
+#                                     maxaccept=None,\
+#                                     maxiter=500,\
+#                                     boltzmann=.5,\
+#                                     learn_rate=0.1,\
+#                                     feps=1e-6,\
+#                                     quench=1.0,\
+#                                     m=1.0, n=1.0,\
+#                                     lower=[i[0] for i in bounds],\
+#                                     upper=[i[1] for i in bounds],\
+#                                     dwell=1000)
+
+                # Try fit with new guess for 'a'
+                if ier not in (0,1,2,3,4) and fit_algorithm =='leastsq': 
                     
                     params = [0,0,params[2],0]
                     params[0] = numpy.real(y_data[0])
@@ -588,6 +652,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                                                             full_output = True,
                                                             maxfev = 200)    
                                                             
+                    
                     [a1,b1,T1_eff,phi] = fit_params
                     
                     if ier not in (0,1,2,3,4): # Last attempt to get 10*a
@@ -605,12 +670,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                                                                 full_output = True,
                                                                 maxfev = 200)    
                                                         
-                        [a1,b1,T1_eff,phi] = fit_params
-                    
-                goodness_of_fit = h_goodness_of_fit(y_data,infodict)             
+                        [a1,b1,T1_eff,phi] = fit_params                           
+                #print fit_params
                 [a,b,T1_eff,phi] = fit_params
-                param_names = ['a','b','T1_eff','phi','T1']        
-
 
                 # Step 2: Calculate M(N-1)/M(inf) from Eq.1 from Koretsky paper
                 # Divide both sides by M(inf) and then use M(0)/M(inf) -> step1
@@ -642,26 +704,34 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                 phi_arr[x,y,slice] = fit_params[3]
                 T1_arr[x,y,slice] = T1
 
-                infodict1[x,y,slice] = infodict
-                mesg1[x,y,slice] = mesg
-                ier1[x,y,slice] = ier
-                goodness_of_fit1[x,y,slice] = goodness_of_fit
-
                 data_after_fitting[x,y,slice] = T1
-                fit_results[x,y,slice] = fit_dict
+
+                if fit_algorithm == 'leastsq':   
+                    infodict1[x,y,slice] = infodict
+                    mesg1[x,y,slice] = mesg
+                    goodness_of_fit1[x,y,slice] = h_goodness_of_fit(y_data,infodict)  
+
+                ier1[x,y,slice] = ier
 
     fit_params1 = {'a': a_arr,
                    'b': b_arr,
                    'T1_eff': T1_eff_arr,
                    'phi': phi_arr,
                    'T1': T1_arr}
+    if fit_algorithm == 'leastsq': 
+        return {'':numpy.squeeze(data_after_fitting),
+                '_fit_rawdata':data,
+                '_fit_params':fit_params1,
+                '_fit_infodict':infodict1,
+                '_fit_ier':ier1,
+                '_fit_goodness':goodness_of_fit1,
+                '_fit_mesg':mesg1}
 
-    return {'':numpy.squeeze(data_after_fitting),
-            '_fit_params':fit_params1,
-            '_fit_infodict':infodict1,
-            '_fit_ier':ier1,
-            '_fit_goodness':goodness_of_fit1,
-            '_fit_mesg':mesg1}
+    elif fit_algorithm == 'anneal':
+        return {'':numpy.squeeze(data_after_fitting),
+                '_fit_rawdata':data,
+                '_fit_params':fit_params1,
+                '_fit_ier':ier1}
 
 ### Other Helpers
 
