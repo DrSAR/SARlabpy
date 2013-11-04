@@ -90,7 +90,7 @@ class BulkAnalyzer(object):
         for pat,scans in self.masterlist.iteritems():
             for lbl,dbl_list in scans.iteritems():
                 if dbl_list[0] == scn_name:
-                    bbox = numpy.array(dbl_list[1])
+                    bbox = numpy.array(dbl_list[1]).astype(float)
         return {'bbox':bbox}
    
     def analysis_func(self, scn, **kwargs):
@@ -319,12 +319,16 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                 for msg_id in finished:
                     # we know these are done, so don't worry about blocking
                     ar = self.clients.get_result(msg_id)
+
+                    ## Uncomment this to get a more useful error trace
+                    #ar.get()
                     try:
                         ar.get()
                     except Exception as e:
+
                         print('%s for %s ' % (e, 
-                                              msg_ids_to_parameters[msg_id]['scn_to_analyse']))        
-                        
+                                              msg_ids_to_parameters[msg_id]['scn_to_analyse']))   
+
                         print('\t {0}'.format(traceback.print_exc(sys.exc_info()[2])))
 
 
