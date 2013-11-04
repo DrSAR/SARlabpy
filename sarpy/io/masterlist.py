@@ -121,7 +121,7 @@ def generate(**kwargs):
             # Iterate over the roi list, get the updated bbox, check for same day-ness
             for r_lbl in roi_labels:        
                 scn_name = master_list[patname][r_lbl][0]
-                new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,'roi',type='pct')
+                new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,'roi',exporttype='pct')
                 search_string = r_lbl.split('-',1)[-1]        
                 # Iterate over the label list, transfer the new bbox into the master list
                 for lbl in lbl_list:        
