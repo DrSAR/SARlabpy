@@ -185,7 +185,7 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
         
-def convert_bbox(scan_object_name, bbox, exporexporttype=None):
+def convert_bbox(scan_object_name, bbox, exporttype=None):
     
     data = sarpy.Scan(scan_object_name)
     shape = data.pdata[0].data.shape

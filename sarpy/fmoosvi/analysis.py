@@ -674,7 +674,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                    'T1': T1_arr}
 
     # Because currently dictionaries cannot be stored
-    fit_params_temp = numpy.array([0])
+    fit_params_temp = numpy.array([0],dtype=dict)
 
     fit_params_temp[0] = fit_params1
 
@@ -797,7 +797,7 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         print ('There is no code to produce that indicator. Do it first.')
         raise Exception
 
-def h_generate_VTC(scn_to_analyse=None, bbox = None, pdata_num = 0):
+def h_generate_VTC(scn_to_analyse=None, bbox = None, pdata_num = 0, **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -827,7 +827,7 @@ def h_generate_VTC(scn_to_analyse=None, bbox = None, pdata_num = 0):
     for s in xrange(num_slices):
         nrdata[:,:,s] = ndata[:,:,s,:].reshape([x_size,y_size*reps])
         
-    return nrdata
+    return {'':nrdata}
 
 ## Not working, or of unknown reliability
 
