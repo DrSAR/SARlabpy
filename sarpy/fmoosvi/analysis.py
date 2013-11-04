@@ -177,49 +177,44 @@ def h_enhancement_curve(scn_to_analyse=None,
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
-
-    try:
-        norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
-        num_slices = norm_data.shape[-2]
-        reps = norm_data.shape[-1]
-        
-        if reps != scan_object.pdata[pdata_num].data.shape[-1]:
-            reps = scan_object.pdata[pdata_num].data.shape[-1]
-            print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
-
-        # there are problems with using phase encodes for certain cases (maybe 3D)
-        # so now I have to use the tuid time
-        total_time = scan_object.method.PVM_ScanTimeStr
-        format = "%Hh%Mm%Ss%fms"
-        t=datetime.datetime.strptime(total_time,format)
-        total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+    norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
+    num_slices = norm_data.shape[-2]
+    reps = norm_data.shape[-1]
     
-        time_per_rep = numpy.divide(total_time,reps)
-            
-        #Calculating the time per rep.
-        time = numpy.linspace(0,reps-1,num=reps)*time_per_rep
-                       
-        ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
-        new_scan_object = copy.deepcopy(scan_object)
-        new_scan_object.pdata[pdata_num].data = norm_data
-        data_scan = new_scan_object.pdata[pdata_num]
-        ## END SKETCHY BIT
-        
-        roi = scan_object.adata[adata_roi_label].data
-         
-        masked_data = data_scan.data * numpy.tile(numpy.reshape(roi,[
-roi.shape[0], roi.shape[1], roi.shape[2],1]),reps)
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
 
-        enhancement_curve = numpy.empty(shape = [num_slices, 2, reps])
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+
+    time_per_rep = numpy.divide(total_time,reps)
         
-        for slice in range(num_slices):
-            
-            enhancement_curve[slice,0,:] = time
-            enhancement_curve[slice,1,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)            
-        return {'':enhancement_curve}
-    except:    
-        print("Perhaps you didn't pass in a valid mask or passed bad data")
-        raise
+    #Calculating the time per rep.
+    time = numpy.linspace(0,reps-1,num=reps)*time_per_rep
+                   
+    ## THIS IS INCREDIBLY SKETCHY, AND I'M NOT SURE WHAT THE RAMIFICATIONS ARE        
+    new_scan_object = copy.deepcopy(scan_object)
+    new_scan_object.pdata[pdata_num].data = norm_data
+    data_scan = new_scan_object.pdata[pdata_num]
+    ## END SKETCHY BIT
+    
+    roi = scan_object.adata[adata_roi_label].data
+     
+    masked_data = data_scan.data * numpy.tile(numpy.reshape(roi,[roi.shape[0], roi.shape[1], roi.shape[2],1]),reps)
+
+    enhancement_curve = numpy.empty(shape = [num_slices, 2, reps])
+    
+    for slice in range(num_slices):
+        
+        enhancement_curve[slice,0,:] = time
+        enhancement_curve[slice,1,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slice,:], axis=0), axis =0)   
+
+    return {'':enhancement_curve}
 
 
 def h_inj_point(scn_to_analyse=None, pdata_num = 0):
@@ -354,7 +349,7 @@ def h_calculate_AUGC(scn_to_analyse=None,
     
 def h_conc_from_signal(scn_to_analyse=None, 
                        other_scan_name=None, 
-                       adata_label = 'T1map_LL', 
+                       adata_label = None, 
                        bbox = None,
                        relaxivity=4.3e-3, 
                        pdata_num = 0,
@@ -368,10 +363,11 @@ def h_conc_from_signal(scn_to_analyse=None,
     data = scan_object.pdata[pdata_num].data
     
     # resample the t1map onto the dce
-    data_t1map_pre = scan_object_T1map.adata[adata_label]
-    
-    data_t1map = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(data_t1map_pre,scan_object.pdata[pdata_num],use_source_dims=True)
-
+   
+    data_t1map = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(scan_object_T1map.adata[adata_label],
+                                                                         scan_object.pdata[pdata_num],
+                                                                         use_source_dims=True,
+                                                                         replace_nan=0)
     x_size = data.shape[0]
     y_size = data.shape[1]
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
@@ -411,13 +407,12 @@ def h_conc_from_signal(scn_to_analyse=None,
     for x in xrange(bbox[0],bbox[1]):
         for y in xrange(bbox[2],bbox[3]):
             for slice in xrange(num_slices):
-                               
+
+
                 baseline_s = numpy.mean(data[x,y,slice,0:inj_point])
                 E1 = numpy.exp(-TR/data_t1map[x,y,slice])
                 c = numpy.cos(numpy.radians(FA))
-                
                 T1[x,y,slice,0:inj_point] = data_t1map[x,y,slice]
-                
 # Use the SPGR equation twice, once before agent admin. and once after. If you
 # divide the two, the M0s cancel out, and so do the sin thetas. what remains is:
 # (1-E1)*(1-E0*cos) / ((1-E0) * (1-E1*cos)). use wolfram alpha to solve this:
@@ -427,6 +422,7 @@ def h_conc_from_signal(scn_to_analyse=None,
                     s = data[x,y,slice,rep] / baseline_s
                     E2 = (-E1*c + E1*s - s + 1) / (E1*s*c - E1*c - s*c +1)
                     T1[x,y,slice,rep] = -TR / numpy.log(E2)
+
 
     # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
 
