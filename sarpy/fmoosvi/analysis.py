@@ -529,11 +529,11 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
     fit_params1 = numpy.empty_like(data_after_fitting,dtype=dict)
 
-    a_arr = numpy.empty_like(data_after_fitting)
-    b_arr = numpy.empty_like(data_after_fitting)
-    T1_eff_arr = numpy.empty_like(data_after_fitting)
-    phi_arr = numpy.empty_like(data_after_fitting)
-    T1_arr = numpy.empty_like(data_after_fitting)
+    a_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    b_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    T1_eff_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    phi_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    T1_arr = numpy.empty_like(data_after_fitting)+numpy.nan
 
     infodict1 = numpy.empty_like(data_after_fitting,dtype=dict)
     mesg1 = numpy.empty_like(data_after_fitting,dtype=str)
