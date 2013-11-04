@@ -100,7 +100,7 @@ def h_calculate_AUC(scn_to_analyse=None,
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
 
-    else:      
+    else:
         bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
 
     if bbox.shape == (4,):            
@@ -464,7 +464,13 @@ def h_within_bounds(params,bounds):
 def h_func_T1_FAind(params,t_data):
     a,b,T1_eff,phi = params
     #print type(a), type(b), type(n), type(phi), type(T1_eff)
-    return a*(1-(1-b)*numpy.exp(-t_data/T1_eff))*numpy.exp(1j*phi)
+
+    res = a*(1-(1-b)*numpy.exp(-t_data/T1_eff))*numpy.exp(1j*phi)
+
+    if numpy.isfinite(res).all():
+        return res
+    else:
+        return 1e30
 
 def T1eff_to_T1(T1,Td, Tp, tau, T1_eff, b, c):    
     return (1-2*numpy.exp(-Td/T1) + numpy.exp(-(Tp+Td)/T1))*((1-numpy.exp(-tau/T1_eff))/(1-numpy.exp(-tau/T1))) -c*(numpy.exp(-tau/T1_eff)/(numpy.exp(-tau/T1)))*numpy.exp(-(Tp+Td)/T1) - b 
@@ -474,17 +480,17 @@ def h_residual_T1_FAind(params, y_data, t_data):
     bounds = numpy.zeros(shape=[4,2])
     bounds[0,0] = 1e2
     bounds[0,1] = 1e8
-    bounds[1,0] = -1e5
-    bounds[1,1] = 1e10
-    bounds[2,0] = 50
-    bounds[2,1] = 10000
-    bounds[3,0] = -100
-    bounds[3,1] = +100
+    bounds[1,0] = -1e3
+    bounds[1,1] = 1e3
+    bounds[2,0] = 20
+    bounds[2,1] = 3000
+    bounds[3,0] = -5
+    bounds[3,1] = +5
 
     if h_within_bounds(params,bounds):
         return numpy.abs(y_data - h_func_T1_FAind(params, t_data))
     else:
-        return 1e9
+        return 1e30
 
 def h_fit_T1_LL_FAind(scn_to_analyse=None, 
                       bbox = None, 
@@ -519,7 +525,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     # Initializations
 
     if fit_algorithm is None:
-        fit_algorithm = 'fmin'
+        fit_algorithm = 'leastsq'
 
     data_after_fitting = numpy.zeros( [data.shape[0],\
                                        data.shape[1],\
@@ -568,7 +574,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 ## Guesses at parameters 
                 params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
-                params[0] = numpy.real(numpy.mean(y_data[-5:])) #a
+                params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
 
                 # this is to catch divide by 0 errors
                 if params[3] == 0: 
@@ -584,21 +590,25 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 A = numpy.array([xp, numpy.ones(xp.shape[0])])
                 w=numpy.linalg.lstsq(A.T,yp)[0]
-                params[2] = numpy.divide(-w[1],w[0])
+                params[2] = numpy.real(numpy.divide(-w[1],w[0]))   
 
                 # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
                 # phi (phase factor to fit real data)
 
                 if fit_algorithm == 'leastsq':
-                
-                    fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
-                                                            h_residual_T1_FAind,
-                                                            params,
-                                                            args=(y_data,t_data), 
-                                                            full_output = True,
-                                                            maxfev = 200)
-                                                             
+                    try:
+                        fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                                h_residual_T1_FAind,
+                                                                params,
+                                                                args=(y_data,t_data), 
+                                                                full_output = True,
+                                                                maxfev = 200)
+                    except ValueError:
+                        print x,y,slice, params, y_data
+                                                                 
                 elif fit_algorithm == 'fmin':
+
+                    # fmin actually takes 7.6x longer to run compared to leastsq 
 
                     def errorfunc(params,y_data,t_data):
                         result = h_residual_T1_FAind(params, y_data, t_data)
@@ -610,7 +620,8 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                                                                     x0=params,
                                                                     xtol=0.0001, 
                                                                     ftol=0.0001,
-                                                                    maxfun = 1500,
+                                                                    maxfun = 1000,
+                                                                    maxiter = 1000,
                                                                     disp=False,
                                                                     args=(y_data,t_data),
                                                                     full_output = True)
@@ -662,10 +673,15 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                    'phi': phi_arr,
                    'T1': T1_arr}
 
+    # Because currently dictionaries cannot be stored
+    fit_params_temp = numpy.array([0])
+
+    fit_params_temp[0] = fit_params1
+
     if fit_algorithm == 'leastsq': 
         return {'':numpy.squeeze(data_after_fitting),
                 '_fit_rawdata':data,
-                '_fit_params':fit_params1,
+                '_fit_params':fit_params_temp,
                 '_fit_infodict':infodict1,
                 '_fit_ier':ier1,
                 '_fit_goodness':goodness_of_fit1,
@@ -674,7 +690,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     elif fit_algorithm == 'fmin':
 
         return {'':numpy.squeeze(data_after_fitting),
-                '_fit_params': fit_params1,
+                '_fit_params': fit_params_temp,
                 '_fit_iter':ier1}             
 
 ### Other Helpers
