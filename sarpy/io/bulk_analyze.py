@@ -320,6 +320,7 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                     # we know these are done, so don't worry about blocking
                     ar = self.clients.get_result(msg_id)
 
+                    ## Uncomment this to get a more useful error trace
                     #ar.get()
                     try:
                         ar.get()
