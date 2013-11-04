@@ -212,7 +212,10 @@ def AIF_factory(model='Lyng'):
     return (func, vfunc)
 
 def residual_Tofts(t, params):
-    '''tissue response function - see equation [37] and [38]'''
+    '''simple Tofts tissue response function - see equation [37] and [38]i
+ 
+    params = (Ktrans, ve)         
+    '''
     
     (Ktrans, ve) = params
     
@@ -252,7 +255,7 @@ def conc_XTofts(t, modelparams, ca, dt):
     ----------
     t: time (vector)
     
-    modelparams: (vp, Ktrans, ve) (3-tupel)
+    modelparams: (Ktrans, ve, vp) (3-tupel)
 
     ca: arterial input function (vector), should have length of 2*len(t)-1 
     to allow 'valid' convolution with impulse response function
@@ -261,14 +264,15 @@ def conc_XTofts(t, modelparams, ca, dt):
     -------
     concentration time curve for time points t
     '''    
-    (vp, Ktrans, ve) = modelparams
+    (Ktrans, ve, vp) = modelparams
         
     c = vp * ca[-len(t):] + conc_Tofts(t, (Ktrans, ve), ca, dt)
     return c
 
 
 def residual_2CXM(t, params):
-    '''tissue response function'''
+    '''tissue response function
+    params = (Fp, Fm, Kp, Km)'''
     
     (Fp, Fm, Kp, Km) = params
     
@@ -282,7 +286,7 @@ def conc_2CXM(t, modelparams, ca, dt):
     ----------
     t: time (vector)
     
-    modelparams: (ve, vp, PS, Fpl) (4-tupel)
+    modelparams: (PS, Fpl, ve, vp) (4-tupel)
 
     ca: arterial input function (vector), should have length of 2*len(t)-1 
     to allow 'valid' convolution with impulse response function
@@ -364,12 +368,12 @@ def TwoCXM_factory(time_axis, t0, AIFmodel=None):
     return TwoCXM
     
 def paramconv_modeltosoln(params):
-    ''' convert models used to set up the model (ve, vp, PS, Fpl) into 
+    ''' convert models used to set up the model (PS, Fpl, ve, vp) into 
     parameters more useful in the solution (Fp, Fm, Kp, Km)
     
     function paramconv_solntomodel() is the inversion'''
-    
-    (ve, vp, PS, Fpl) = params
+   
+    (PS, Fpl, ve, vp) = params
     
     e = ve / (vp + ve)  # extravascular fraction of the extracellular volume
     
@@ -390,7 +394,7 @@ def paramconv_modeltosoln(params):
     
     
 def paramconv_solntomodel(params):
-    ''' convert models used to set up the model (ve, vp, PS, Fpl) into 
+    ''' convert models used to set up the model (PS, Fpl, ve, vp) into 
     parameters more useful in the solution (Fp, Fm, Kp, Km)
     
     this is the inverse of paramconf_modeltosoln()'''
@@ -412,7 +416,7 @@ def paramconv_solntomodel(params):
     
     PS = Fpl * E / (1-E)
 
-    return (ve, vp, PS, Fpl)
+    return (PS, Fpl, ve, vp)
     
 def bounds_penalty(parms, bounds):
     '''implementation of a check to see whether a list of parameters is within the 

@@ -22,7 +22,7 @@ def parameter_stability(N=100):
 
     # create and fit intermediate case
     print('Gd fit with intermediate vascularization')
-    p0 = [5./100, 5./100, 25./100, 50./100]
+    p0 = [25./100, 50./100, 5./100, 5./100]
     print(p0)
     param1_i=[]
     param2_i=[]
@@ -35,7 +35,7 @@ def parameter_stability(N=100):
     
     # create and fit high vasc case
     print('Gd fit with high vascularization')
-    p0 = [1./100, 9./100, 25./100, 50./100]
+    p0 = [25./100, 50./100, 0.01, 0.09]
     print(p0)
     param1_h=[]
     param2_h=[]
@@ -54,7 +54,7 @@ def parameter_stability(N=100):
     param2_d=[]
     for i in numpy.arange(N):
         c_hvasc = PKfitlib.conc_2CXM(t, p0[0:4], ca_Gd) + numpy.random.randn(len(t))/4
-        cHPG_hvasc = PKfitlib.conc_2CXM(t, numpy.r_[p0[0:2],p0[4],p0[3]], ca_HPG
+        cHPG_hvasc = PKfitlib.conc_2CXM(t, numpy.r_[p0[4],p0[1:4]], ca_HPG
                           ) + numpy.random.randn(len(t))/4
         p1, success = PKfitlib.fit_double_2CXM(t, ca_Gd, ca_HPG, 
                             c_hvasc, cHPG_hvasc, p0)
@@ -98,7 +98,7 @@ def test_fit():
 
     #create some data
     t=numpy.arange(400.)/60
-    p0 = [5./100, 5./100, 25./100, 50./100]
+    p0 = [25./100, 50./100, .05, 0.05]
     
     # set up AIFs
     aif_Gd = PKfitlib.aif(t,aifchoice='Lyng')
@@ -119,6 +119,7 @@ def test_fit():
 
     # create and fit highly vascular case    
     p0 = [1./100, 9./100, 25./100, 50./100, 0.01/100]
+    p0 = [25./100, 50./100, .01, .09, 0.01/100]
     c_hvasc = PKfitlib.conc_2CXM(t, p0[0:4], ca_Gd) + numpy.random.randn(len(t))/4
     print('Gd fit with high vascularization')
     print(p0)
@@ -128,11 +129,11 @@ def test_fit():
     fit_hvasc = PKfitlib.conc_2CXM(t, p1[0:4], ca_Gd)
     
     # create HPG case (PS=0)
-    cHPG_hvasc = PKfitlib.conc_2CXM(t, numpy.r_[p0[0:2],p0[4],p0[3]], ca_HPG
+    cHPG_hvasc = PKfitlib.conc_2CXM(t, numpy.r_[p0[4], p0[1:4]], ca_HPG
                      ) + numpy.random.randn(len(t))/4
     print('Gd fit with high vascularization and PS=0')
     print(p0)
-    p1, success = PKfitlib.fit_2CXM(t, ca_HPG, cHPG_hvasc, numpy.r_[p0[0:2],p0[4],p0[3]])
+    p1, success = PKfitlib.fit_2CXM(t, ca_HPG, cHPG_hvasc, numpy.r_[p0[4],p0[1:4]])
     print(p1)
     print((p1-p0[0:4])/p0[0:4]*100)
     fitHPG_hvasc = PKfitlib.conc_2CXM(t, p1, ca_HPG)
@@ -271,8 +272,8 @@ def Reproduce_OnTheScopeOfTofts():
     Ktrans = PS*Fpl / (PS+Fpl) # ml/min/ml - eqn [32]
   
 
-    c_2CXM = PKfitlib.conc_2CXM( t, (ve, vp, PS, Fpl), ca, dt) 
-    c_XTofts =  PKfitlib.conc_XTofts(t,(vp, Ktrans, ve), ca, dt)
+    c_2CXM = PKfitlib.conc_2CXM( t, (PS, Fpl, ve, vp), ca, dt)
+    c_XTofts =  PKfitlib.conc_XTofts(t,(Ktrans, ve, vp), ca, dt)
     c_Tofts =  PKfitlib.conc_Tofts(t,(Ktrans, ve), ca, dt)
     plt.subplot(331)
     plt.plot(t,c_2CXM,'r-')
@@ -282,8 +283,9 @@ def Reproduce_OnTheScopeOfTofts():
 
     '''now fit the data fit_generic(t, ca, data, p0, model):'''
     resTofts  = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_Tofts, (.17, 0.2), ca, dt)
-    resXTofts = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_XTofts, (.1, .17, 0.2), ca, dt)
-    res2CXM   = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_2CXM, (.2, .1, .25, .5), ca, dt)
+    resXTofts = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_XTofts, (.17, 0.2, .1), ca, dt)
+    res2CXM   = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_2CXM, (.25, .5,
+                                                                     .2, .1), ca, dt)
 
     print resTofts[0]
     print resXTofts[0]
@@ -302,9 +304,9 @@ def Reproduce_OnTheScopeOfTofts():
     PS = 25./100 # ml/min/ml
     Fpl = 50./100 # ml/min/ml
     Ktrans = PS*Fpl / (PS+Fpl) # ml/min/ml - eqn [32]
-   
-    c_2CXM = PKfitlib.conc_2CXM(t,(ve, vp, PS, Fpl), ca, dt)
-    c_XTofts =  PKfitlib.conc_XTofts(t,(vp, Ktrans, ve), ca, dt)
+     
+    c_2CXM = PKfitlib.conc_2CXM( t, (PS, Fpl, ve, vp), ca, dt)
+    c_XTofts =  PKfitlib.conc_XTofts(t,(Ktrans, ve, vp), ca, dt)
     c_Tofts =  PKfitlib.conc_Tofts(t,(Ktrans, ve), ca, dt)
     plt.subplot(334)
     plt.plot(t,c_2CXM,'r-')
@@ -314,8 +316,10 @@ def Reproduce_OnTheScopeOfTofts():
 
     '''now fit the data fit_generic(t, ca, data, p0, model):'''
     resTofts  = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_Tofts, (.17, 0.2), ca, dt)
-    resXTofts = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_XTofts, (.1, .17, 0.2), ca, dt)
-    res2CXM   = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_2CXM, (.2, .1, .25, .5), ca, dt)
+    resXTofts = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_XTofts, (.17, 0.2,
+                                                                      .1), ca, dt)
+    res2CXM   = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_2CXM, (.25, .5,
+                                                                     .2, .1), ca, dt)
 
     print resTofts[0]
     print resXTofts[0]
@@ -333,8 +337,8 @@ def Reproduce_OnTheScopeOfTofts():
     Fpl = 50./100 # ml/min/ml
     Ktrans = PS*Fpl / (PS+Fpl) # ml/min/ml - eqn [32]
 
-    c_2CXM = PKfitlib.conc_2CXM(t,(ve, vp, PS, Fpl), ca, dt)
-    c_XTofts =  PKfitlib.conc_XTofts(t,(vp, Ktrans, ve), ca, dt)
+    c_2CXM = PKfitlib.conc_2CXM(t,(PS, Fpl, ve, vp), ca, dt)
+    c_XTofts =  PKfitlib.conc_XTofts(t,(Ktrans, ve, vp), ca, dt)
     c_Tofts =  PKfitlib.conc_Tofts(t,(Ktrans, ve), ca, dt)
     plt.subplot(337)
     plt.plot(t,c_2CXM,'r-')
@@ -344,8 +348,10 @@ def Reproduce_OnTheScopeOfTofts():
 
     '''now fit the data fit_generic(t, ca, data, p0, model):'''
     resTofts  = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_Tofts, (.17, 0.2), ca, dt)
-    resXTofts = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_XTofts, (.1, .17, 0.2), ca, dt)
-    res2CXM   = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_2CXM, (.2, .1, .25, .5), ca, dt)
+    resXTofts = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_XTofts, (.17, 0.2,
+                                                                      .1), ca, dt)
+    res2CXM   = PKfitlib.fit_generic(t, c_2CXM, PKfitlib.conc_2CXM, (.25, .5,
+                                                                     .2, .1), ca, dt)
 
     print resTofts[0]
     print resXTofts[0]
