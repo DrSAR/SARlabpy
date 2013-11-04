@@ -6,6 +6,7 @@ import numpy
 import SimpleITK as sitk
 from sarpy import (visu_pars_2_Nifti1Header,
                     visu_pars_2_matrix_size)
+import copy
 
 def atleast_4d(arr):
     '''
@@ -169,7 +170,7 @@ def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False,
 
     # loop over all non-3D dimensions:
     # We have to flatten all higher dimensions and then go through them.
-    flat_input_img = atleast_4d(atleast_4d(source_pdata.data)[:,:,:,...])
+    flat_input_img = atleast_4d(atleast_4d(source_pdata.data.copy())[:,:,:,...])
     dims = source_pdata.data.shape
     extra_dims = int(numpy.prod(dims[3:]))
     # output dimensions depend in a weird way on input and output dimensions:
