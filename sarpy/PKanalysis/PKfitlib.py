@@ -472,8 +472,8 @@ def fit_generic(t, data, model, p0, *pargs, **kwargs):
     if bounds is None:
         errfunc = lambda p, x, pargs, y: model(x, p, *pargs) - y
     else:
-        errfunc = lambda p, x, pargs, y: (model(x, p, *pargs) - y + 
-                                          bounds_penalty(p, bounds))
+        errfunc = lambda p, x, pargs, y: numpy.r_[model(x, p, *pargs) - y,
+                                                  bounds_penalty(p, bounds)]
     
     p1, success = optimize.leastsq(errfunc, p0[:], args=(t, pargs, data))
 
@@ -489,8 +489,8 @@ def fit_generic_array(t, data, model, p0, *pargs, **kwargs):
            the data
     '''
     mask = kwargs.pop('mask', None)
-    result = numpy.empty_like(mask, dtype=numpy.ndarray)
-    fit = numpy.empty_like(mask, dtype=numpy.ndarray)
+    result = numpy.ndarray(mask.shape+p0.shape, dtype=float) + numpy.NaN
+    fit = numpy.ndarray(mask.shape+t.shape, dtype=float) + numpy.NaN
     for idx, val in numpy.ndenumerate(numpy.isnan(mask)):
         if not val:
             (res, success, ft) = fit_generic(t, 
