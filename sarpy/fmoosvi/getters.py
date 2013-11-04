@@ -185,24 +185,23 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         print("Perhaps you didn't pass in a valid mask or passed bad data")
         raise
         
-def convert_bbox(scan_object_name, bbox, type=None):
+def convert_bbox(scan_object_name, bbox, exporexporttype=None):
     
     data = sarpy.Scan(scan_object_name)
     shape = data.pdata[0].data.shape
-    
-    #bbox = numpy.array([float(x) for x in masterlist_value[data_label][1]])    
+
     bbox_px = (bbox.reshape(2,2).T*shape[0:2]).T.flatten()
     
     #TODO: this will need to be updated for python 3.x+
     bbox_px = map(int,bbox_px) # Casts all elements to ints
     
-    if type is None:
+    if exporttype is None:
         return numpy.array(bbox_px)
     
-    elif type == 'pct':
+    elif exporttype == 'pct':
         return numpy.array(bbox)
     
-def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',type=None):
+def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',exporttype=None):
     
     scan_object = sarpy.Scan(scan_object_name)
 
@@ -254,9 +253,9 @@ def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',type=None):
         
     bbox_arr =numpy.array(bbox)
 
-    if type is None:
+    if exporttype is None:
         return bbox_arr.astype(int)
-    elif type == 'pct':
+    elif exporttype == 'pct':
         shape = roi.shape
         bbox[0] = numpy.true_divide(bbox[0],shape[0])
         bbox[1] = numpy.true_divide(bbox[1],shape[0])
