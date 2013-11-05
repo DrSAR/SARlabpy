@@ -491,6 +491,8 @@ def fit_generic_array(t, data, model, p0, *pargs, **kwargs):
     mask = kwargs.pop('mask', None)
     result = numpy.ndarray(mask.shape+p0.shape, dtype=float) + numpy.NaN
     fit = numpy.ndarray(mask.shape+t.shape, dtype=float) + numpy.NaN
+    ss = numpy.ndarray(mask.shape, dtype=float) + numpy.NaN
+
     for idx, val in numpy.ndenumerate(numpy.isnan(mask)):
         if not val:
             (res, success, ft) = fit_generic(t, 
@@ -498,8 +500,9 @@ def fit_generic_array(t, data, model, p0, *pargs, **kwargs):
                                              model, p0, *pargs, **kwargs)
             result[idx] = res
             fit[idx] = ft
+            ss[idx] = sum((data[idx]-ft)**2)
                                              
-    return {'result':result, 'fit':fit}     
+    return {'result':result, 'fit':fit, 'ss':ss}     
             
             
 def fit_2CXM(t, ca, data, p0):
