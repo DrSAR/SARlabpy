@@ -195,7 +195,7 @@ class AData(object):
 #                                 'an identifying key is required')
         if 'data' in kwargs:
             self.data = kwargs['data']
-            logger.info('stored adata in memory: {0}'.format(self.data.shape))
+            logger.info('stored adata in memory: {0}'.format(type(self.data)))
 
         if 'meta' in kwargs:
             self.meta = kwargs['meta']
