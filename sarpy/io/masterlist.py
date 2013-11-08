@@ -96,14 +96,14 @@ def generate(**kwargs):
             try:
                 scns = pat.studies[study_nr].find_scan_by_protocol(prot_name)
             except IndexError:
-                print('warning (STUDY #%i not found) "%s" for %s' 
+                print('\t warning (STUDY #%i not found) "%s" for %s' 
                     % (study_nr, lbl, patname))                
             else:
                 scn_nr = int(config.get(lbl,'scan'))
                 try:
                     scn = scns[scn_nr]
                 except IndexError:
-                    print('warning (SCAN #%i not found amongst the %s) "%s" for %s' 
+                    print('\t warning (SCAN #%i not found amongst the %s) "%s" for %s' 
                         % (scn_nr, prot_name, lbl, patname))                
                 else:
                     master_list[patname][lbl] = [scn.shortdirname, bbox]
