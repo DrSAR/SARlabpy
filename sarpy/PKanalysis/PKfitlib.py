@@ -183,7 +183,7 @@ def AIF_factory(model='Lyng'):
         
     Examples
     --------
-    >>> a=PKfit.AIF_factory(model='Lyng')
+    >>> a=AIF_factory(model='Lyng')
     choosing Lyng AIF    
     >>> a[0](0)
     6.5
@@ -440,29 +440,21 @@ def fit_generic(t, data, model, p0, *pargs, **kwargs):
     Parameters
     ----------
     t: time (vector)
-
     data: concentration time curve (vector)
-    
     model: function handle
-    
     p0: starting guess
     
     *pargs
     ca: AIF (vector) note that len(ca)=2*len(t)-1 for 'valid' convolution
-    e.g.     
-            ca = aif(t,aifchoice='Lyng')
-            
+    e.g.    ca = aif(t,aifchoice='Lyng')
             ca = numpy.concatenate((numpy.zeros(len(t)-1), ca))
  
     
     Results
     -------
     modelparameters: tupel depending on model
-    
     success:         as handed back from optimize.leastsq()
-    
     fit:             best fit
-    
     Tip: 
     ----
     Always consult docs: http://wiki.scipy.org/Cookbook/FittingData
@@ -546,16 +538,14 @@ def AIC_from_SSE(SSE=None, k=None, N=None):
     Hence, AIC becomes:
         AIC = N ln (SSE/N) + 2k
         N ... number of data points
-        
         SSE ... sum square of errors
-        
         k ... number of fit parameters + 1 (since you're also estimating SSE)
     
     Note: this seems to imply that L = (SSE/N)^(-N/2) for Gaussian error        
         
     The 2nd-order corrected AIC (for finite sample sizes)
         AICc= AIC + 2K(K+1) / (N-K-1)
-    Note: You need at least 3 more data points that parameters.'''
+    Note: You need at least 3 more data points than parameters.'''
 
     AIC = N * log(SSE/N) + 2*k
     AICc = AIC + 2*k*(k+1)/(N-k-1)  # AICc = AIC for large N
@@ -564,7 +554,6 @@ def AIC_from_SSE(SSE=None, k=None, N=None):
 def hierarchical_fit_2CXM(t, ca, data, p0):
     ''' Follow the suggestion by Sourbron & Buckley wrt fitting 
     models of increasing complexity'''
-    
     
     # our choice of nested models up to the full 2CXM
     models = {
