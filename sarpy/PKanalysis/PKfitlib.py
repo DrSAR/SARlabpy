@@ -473,8 +473,11 @@ def fit_generic(t, data, model, p0, *pargs, **kwargs):
     p1, success = optimize.leastsq(errfunc, p0[:], args=(t, pargs, data))
 
     fit = model(t, p1, *pargs)     
-        
-    return (p1, success, fit)
+    ss_err = sum(errfunc(p1, t, pargs, data)**2)
+    ss_tot=((data-data.mean())**2).sum()
+    rsquared=1-(ss_err/ss_tot)
+
+    return (p1, success, fit, ss_err, rsquared)
 
 def fit_generic_array(t, data, model, p0, *pargs, **kwargs):
     '''wrapper for fit_generic but data is a 4D array instead of a 
@@ -487,17 +490,22 @@ def fit_generic_array(t, data, model, p0, *pargs, **kwargs):
     result = numpy.ndarray(mask.shape+p0.shape, dtype=float) + numpy.NaN
     fit = numpy.ndarray(mask.shape+t.shape, dtype=float) + numpy.NaN
     ss = numpy.ndarray(mask.shape, dtype=float) + numpy.NaN
+    rsq= numpy.ndarray(mask.shape, dtype=float) + numpy.NaN
+    success = numpy.ndarray(mask.shape, dtype=int) + numpy.NaN
 
     for idx, val in numpy.ndenumerate(numpy.isnan(mask)):
         if not val:
-            (res, success, ft) = fit_generic(t, 
+            (res, scs, ft, sos, rs) = fit_generic(t, 
                                              data[idx],
                                              model, p0, *pargs, **kwargs)
             result[idx] = res
             fit[idx] = ft
-            ss[idx] = sum((data[idx]-ft)**2)
+            success[idx] = scs
+            ss[idx] = sos
+            rsq[idx] = rs
                                              
-    return {'result':result, 'fit':fit, 'ss':ss}     
+    return {'result':result, 'fit':fit, 'ss':ss, 'rsq': rsq,
+            'success':success}     
             
             
 def fit_2CXM(t, ca, data, p0):
@@ -553,6 +561,26 @@ def AIC_from_SSE(SSE=None, k=None, N=None):
     AIC = N * log(SSE/N) + 2*k
     AICc = AIC + 2*k*(k+1)/(N-k-1)  # AICc = AIC for large N
     return AICc
+
+def rel_prob_from_AIC(AICs, axis=-1):
+    '''
+    Relative probabilities for models whose AIC values are given
+
+    :param ndarray AICs: 
+        array that contains the calculated AIC for every model under
+        consideration
+    :param int axis: 
+        axis along which the model AIC are organized in the AICs array 
+        default: -1 (last value)
+
+    The model with a minimum AIC will have a rel likelihood of 1. The other
+    models will have a likelihood indicating the probability (relative to the
+    minimum one) to minimize the information loss due to using a candidate model
+    to represent the "true" model.
+    '''
+    AICmin = numpy.min(AICs, axis=axis, keepdims=True)
+    rel_prob = numpy.exp((AICmin-AICs)/2)
+    return rel_prob
 
 def hierarchical_fit_2CXM(t, ca, data, p0):
     ''' Follow the suggestion by Sourbron & Buckley wrt fitting 
