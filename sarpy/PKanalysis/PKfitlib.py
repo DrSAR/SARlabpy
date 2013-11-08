@@ -448,8 +448,9 @@ def fit_generic(t, data, model, p0, *pargs, **kwargs):
     ca: AIF (vector) note that len(ca)=2*len(t)-1 for 'valid' convolution
     e.g.    ca = aif(t,aifchoice='Lyng')
             ca = numpy.concatenate((numpy.zeros(len(t)-1), ca))
- 
-    
+    **kwargs
+    fit_subset: vector (or slice) to define the subset of model results to
+                be evaluated (default: slice(None))
     Results
     -------
     modelparameters: tupel depending on model
@@ -461,12 +462,14 @@ def fit_generic(t, data, model, p0, *pargs, **kwargs):
     '''
 
     bounds = kwargs.get('bounds', None)
+    fit_subset = kwargs.get('fit_subset', slice(None)) 
     if bounds is None:
-        errfunc = lambda p, x, pargs, y: model(x, p, *pargs) - y
+        errfunc = lambda p, x, pargs, y: model(x, p, *pargs)[fit_subset] - y
     else:
-        errfunc = lambda p, x, pargs, y: numpy.r_[model(x, p, *pargs) - y,
-                                                  bounds_penalty(p, bounds)]
-    
+        errfunc = lambda p, x, pargs, y: numpy.r_[
+                                            model(x, p, *pargs)[fit_subset] - y,
+                                            bounds_penalty(p, bounds)]
+                                                 
     p1, success = optimize.leastsq(errfunc, p0[:], args=(t, pargs, data))
 
     fit = model(t, p1, *pargs)     
