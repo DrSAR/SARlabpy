@@ -195,7 +195,7 @@ for k,v in master_list.iteritems():
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
-                    print('Adata Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+                    print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
                     continue
                     
                 # Set the image limits for adata
@@ -298,7 +298,7 @@ for k,v in master_list.iteritems():
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
-                    print('Adata Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+                    print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
                     continue                
             else:
                 data = scn.pdata[0]
@@ -336,17 +336,6 @@ for k,v in master_list.iteritems():
 
         if row_conf.get('type', None) == 'text':
 
-
-
-
-
-
-
-
-
-
-
-
             scn = sarpy.Scan(fname)
             print(lbl, fname,scn.acqp.ACQ_protocol_name)            
             adata_key = row_conf.pop('adata', None)
@@ -355,7 +344,7 @@ for k,v in master_list.iteritems():
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
-                    print('Adata Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+                    print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
                     continue
             else:
                 raise IOError('No text adata find')
