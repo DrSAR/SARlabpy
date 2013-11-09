@@ -26,7 +26,6 @@ import datetime
 import collections
 import random
 import copy
-import cmath
 
 def h_calculate_AUC(scn_to_analyse=None, 
                     bbox = None, 
@@ -42,6 +41,8 @@ def h_calculate_AUC(scn_to_analyse=None,
             default reconstruction is pdata_num = 0.
     :return: array with auc data
     """ 
+    import sarpy.fmoosvi.analysis            
+
     
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -349,10 +350,12 @@ def h_calculate_AUGC(scn_to_analyse=None,
     
 def h_conc_from_signal(scn_to_analyse=None, 
                        other_scan_name=None, 
-                       adata_label = None, 
+                       adata_label = None,
                        bbox = None,
                        relaxivity=4.3e-3, 
                        pdata_num = 0,
+                       masterlist_name=None,
+                       other_dce_label = None,
                        **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
@@ -380,7 +383,9 @@ def h_conc_from_signal(scn_to_analyse=None,
         reps = scan_object.pdata[pdata_num].data.shape[-1]
         print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) )
     
-    
+    total_time = scan_object.pdata[pdata_num].visu_pars.VisuAcqScanTime / 1000.
+    time_per_rep = numpy.round(numpy.divide(total_time,reps))
+
     TR = scan_object.method.PVM_RepetitionTime
     FA = scan_object.acqp.ACQ_flip_angle
     
@@ -401,25 +406,43 @@ def h_conc_from_signal(scn_to_analyse=None,
         # First tile for slice
         bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
 
-    T1 = numpy.empty([x_size,y_size,num_slices,reps])
-    T1[:] = numpy.nan
+    if other_dce_label:
+
+        dic = h_stitch_dce_scans(masterlist_name=masterlist_name,
+                               bbox=bbox,
+                               scn_to_analyse=scn_to_analyse, 
+                               other_dce_label=other_dce_label,
+                               pdata_num = 0)
+
+        source_data = dic['']
+        time = dic['_time']
+        fulltime = dic['_fulltime']
+        idx = dic['_idx']
+
+    else:
+        source_data = data
+        time = numpy.linspace(0,reps-1,num=reps)*time_per_rep
+        fulltime = time
+        idx = numpy.arange(0,time.shape[-1])
+
+    T1 = numpy.empty_like(source_data) + numpy.nan
     
     for x in xrange(bbox[0],bbox[1]):
         for y in xrange(bbox[2],bbox[3]):
             for slice in xrange(num_slices):
 
-
-                baseline_s = numpy.mean(data[x,y,slice,0:inj_point])
+                baseline_s = numpy.mean(source_data[x,y,slice,0:inj_point])
                 E1 = numpy.exp(-TR/data_t1map[x,y,slice])
                 c = numpy.cos(numpy.radians(FA))
                 T1[x,y,slice,0:inj_point] = data_t1map[x,y,slice]
-# Use the SPGR equation twice, once before agent admin. and once after. If you
-# divide the two, the M0s cancel out, and so do the sin thetas. what remains is:
-# (1-E1)*(1-E0*cos) / ((1-E0) * (1-E1*cos)). use wolfram alpha to solve this:
-# http://www.wolframalpha.com/input/?i=solve+%28%281-x%29*%281-b*c%29%29+%2F+%28%281-b%29*%281-x*c%29%29+%3D+r+for+x
 
-                for rep in xrange(inj_point,reps):                    
-                    s = data[x,y,slice,rep] / baseline_s
+                # Use the SPGR equation twice, once before agent admin. and once after. If you
+                # divide the two, the M0s cancel out, and so do the sin thetas. what remains is:
+                # (1-E1)*(1-E0*cos) / ((1-E0) * (1-E1*cos)). use wolfram alpha to solve this:
+                # http://www.wolframalpha.com/input/?i=solve+%28%281-x%29*%281-b*c%29%29+%2F+%28%281-b%29*%281-x*c%29%29+%3D+r+for+x
+
+                for rep in xrange(inj_point,source_data.shape[-1]):                    
+                    s = source_data[x,y,slice,rep] / baseline_s
                     E2 = (-E1*c + E1*s - s + 1) / (E1*s*c - E1*c - s*c +1)
                     T1[x,y,slice,rep] = -TR / numpy.log(E2)
 
@@ -427,13 +450,87 @@ def h_conc_from_signal(scn_to_analyse=None,
     # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
 
     T1baseline = numpy.squeeze(data_t1map)*bbox_mask
-    T1baseline = numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),reps)
+    T1baseline = numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),source_data.shape[-1])
     conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
     
     conc[conc<0] = 0
+
+    times = {'time':time,
+            'fulltime':fulltime,
+            'idx': idx.astype(int)}
        
-    return {'':conc}
+    return {'':conc,
+            '_times':times}
     
+def h_stitch_dce_scans(masterlist_name,
+                       bbox,
+                       scn_to_analyse=None, 
+                       other_dce_label=None,
+                       pdata_num = 0,
+                       **kwargs):
+
+    # Sigh, here we have to break a cardinal rule not to have anything to do with masterlists in my 
+    # analysis functions, but alas.
+
+    # Masterlist reading
+
+    root = os.path.join(os.path.expanduser('~/sdata'),
+                        masterlist_name,
+                        masterlist_name)
+
+    fname_to_open = root+'.json'
+    with open(os.path.join(fname_to_open),'r') as master_file:
+        json_str = master_file.read()
+        master_list = json.JSONDecoder(
+                           object_pairs_hook=collections.OrderedDict
+                           ).decode(json_str)
+
+    scanA = sarpy.Scan(scn_to_analyse)
+    timeA = scanA.acqp.ACQ_time # time dcea finished
+    date_objectA = datetime.datetime.strptime(timeA, '%H:%M:%S %d %b %Y')
+    patient = scanA.pdata[pdata_num].visu_pars.VisuSubjectId
+    total_timeA = scanA.pdata[pdata_num].visu_pars.VisuAcqScanTime / 1000. # total scan time in seconds
+    repsA = scanA.pdata[pdata_num].data.shape[-1]
+    time_per_repA = numpy.divide(total_timeA,repsA)
+
+    scanB = sarpy.Scan(master_list[patient][other_dce_label][0])
+    timeB = scanB.acqp.ACQ_time # time dceb finished
+    date_objectB = datetime.datetime.strptime(timeB, '%H:%M:%S %d %b %Y')
+    total_timeB = scanB.pdata[pdata_num].visu_pars.VisuAcqScanTime / 1000. # total scan time in seconds
+    repsB = scanB.pdata[pdata_num].data.shape[-1]
+    duration = scanB.pdata[pdata_num].visu_pars.VisuAcqScanTime / 1000. #duration of dceb scan
+    time_per_repB = numpy.divide(total_timeB,repsB)    
+    deltaT = date_objectB-date_objectA
+    added_reps = numpy.round(numpy.divide(deltaT.seconds - duration,time_per_repA))
+
+    dataShape = scanA.pdata[pdata_num].data.shape
+
+    timeA = numpy.linspace(0,repsA-1,num=repsA)*time_per_repA
+    timeB = numpy.linspace(0,repsB-1,num=repsB)*time_per_repB + (repsA-1+added_reps)*time_per_repA
+    timeAB = numpy.hstack((timeA,timeB))
+
+    timeAtotB = numpy.linspace(0,(repsA+repsB+added_reps)-1,num=repsA+repsB+added_reps)*time_per_repA
+
+    if time_per_repA != time_per_repB:
+        raise NotImplementedError('The time per reps of both scans need to be the same')
+
+    gd_conc_stitched = numpy.empty(shape=[dataShape[0],dataShape[1],dataShape[2],repsA+repsB]) + numpy.nan
+
+    idx = numpy.hstack((numpy.arange(0,repsA),numpy.arange(repsA+added_reps,repsA+added_reps+repsB)))
+
+    for x in xrange(bbox[0],bbox[1]):
+        for y in xrange(bbox[2],bbox[3]):
+            for slice in xrange(dataShape[2]):
+
+                dA = scanA.pdata[pdata_num].data[x,y,slice,:]
+                dB = scanB.pdata[pdata_num].data[x,y,slice,:]
+
+                gd_conc_stitched[x,y,slice,:] = numpy.hstack((dA,dB))
+
+    return {'':gd_conc_stitched,
+            '_time': timeAB,
+            '_fulltime': timeAtotB,
+            '_idx':idx}
     
 ### T1 fitting section
     
@@ -571,14 +668,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                 ## Guesses at parameters 
                 params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
                 params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
-
-                # this is to catch divide by 0 errors
-                if params[3] == 0: 
-                    params[3] = numpy.angle(numpy.mean(y_data[-10:]))
-
-                    if params[3] == 0:   
-                        params[3] = 0.5 #random starting value
-                params[1] = numpy.real(numpy.divide(-y_data[0],params[0]*numpy.exp(numpy.abs(params[3])))) #b
+                params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
 
                 # Getting a good guess for T1eff by finding the zero crossing
                 yp = y_data[0:5]
@@ -592,7 +682,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                 # phi (phase factor to fit real data)
 
                 if fit_algorithm == 'leastsq':
+
                     try:
+
                         fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
                                                                 h_residual_T1_FAind,
                                                                 params,
@@ -600,27 +692,11 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                                                                 full_output = True,
                                                                 maxfev = 200)
                     except ValueError:
-                        print x,y,slice, params, y_data
-                                                                 
-                elif fit_algorithm == 'fmin':
+                        print x,y,slice
+                        continue
+                else:
+                    print('fit type {0} not implemented yet'.format(fit_algorithm))
 
-                    # fmin actually takes 7.6x longer to run compared to leastsq 
-
-                    def errorfunc(params,y_data,t_data):
-                        result = h_residual_T1_FAind(params, y_data, t_data)
-
-                        return numpy.sum(numpy.abs(result)**2)                    
-
-                    fit_params, fopt, ier, funcalls, warnflag = scipy.optimize.fmin(
-                                                                    func = errorfunc,
-                                                                    x0=params,
-                                                                    xtol=0.0001, 
-                                                                    ftol=0.0001,
-                                                                    maxfun = 1000,
-                                                                    maxiter = 1000,
-                                                                    disp=False,
-                                                                    args=(y_data,t_data),
-                                                                    full_output = True)
                 #print fit_params
                 [a,b,T1_eff,phi] = fit_params
 
@@ -666,28 +742,27 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     fit_params1 = {'a': a_arr,
                    'b': b_arr,
                    'T1_eff': T1_eff_arr,
-                   'phi': phi_arr,
-                   'T1': T1_arr}
+                   'phi': phi_arr}
 
-    # Because currently dictionaries cannot be stored
-    fit_params_temp = numpy.array([0],dtype=dict)
+    if fit_algorithm == 'leastsq':
 
-    fit_params_temp[0] = fit_params1
+        result = {'rawdata':data,
+                'params':fit_params1,
+                'infodict':infodict1,
+                'ier':ier1,
+                'goodness':goodness_of_fit1,
+                'mesg':mesg1}
 
-    if fit_algorithm == 'leastsq': 
         return {'':numpy.squeeze(data_after_fitting),
-                '_fit_rawdata':data,
-                '_fit_params':fit_params_temp,
-                '_fit_infodict':infodict1,
-                '_fit_ier':ier1,
-                '_fit_goodness':goodness_of_fit1,
-                '_fit_mesg':mesg1}
+                '_fit':result}
 
     elif fit_algorithm == 'fmin':
 
+        result = {'params': fit_params1,
+                'iter':ier1}         
+
         return {'':numpy.squeeze(data_after_fitting),
-                '_fit_params': fit_params_temp,
-                '_fit_iter':ier1}             
+                '_fit':result}    
 
 ### Other Helpers
 

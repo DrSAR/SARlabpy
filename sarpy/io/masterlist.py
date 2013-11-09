@@ -96,19 +96,19 @@ def generate(**kwargs):
             try:
                 scns = pat.studies[study_nr].find_scan_by_protocol(prot_name)
             except IndexError:
-                print('warning (STUDY #%i not found) "%s" for %s' 
+                print('\t warning (STUDY #%i not found) "%s" for %s' 
                     % (study_nr, lbl, patname))                
             else:
                 scn_nr = int(config.get(lbl,'scan'))
                 try:
                     scn = scns[scn_nr]
                 except IndexError:
-                    print('warning (SCAN #%i not found amongst the %s) "%s" for %s' 
+                    print('\t warning (SCAN #%i not found amongst the %s) "%s" for %s' 
                         % (scn_nr, prot_name, lbl, patname))                
                 else:
                     master_list[patname][lbl] = [scn.shortdirname, bbox]
-    
-    print('ignoring {0}'.format(' '.join(patient_exclude)))
+    if patient_exclude:
+        print('ignoring {0}'.format(' '.join(patient_exclude)))
 
     check_list = expt.find_adata()        
     if 'roi' in check_list:
@@ -121,7 +121,12 @@ def generate(**kwargs):
             # Iterate over the roi list, get the updated bbox, check for same day-ness
             for r_lbl in roi_labels:        
                 scn_name = master_list[patname][r_lbl][0]
+
+                if not scn_name:
+                    continue
+
                 new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,'roi',exporttype='pct')
+
                 search_string = r_lbl.split('-',1)[-1]        
                 # Iterate over the label list, transfer the new bbox into the master list
                 for lbl in lbl_list:        
