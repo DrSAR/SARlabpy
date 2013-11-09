@@ -455,15 +455,13 @@ def h_conc_from_signal(scn_to_analyse=None,
     
     conc[conc<0] = 0
 
-    result = {'conc':conc,
-            'time':time,
+    times = {'time':time,
             'fulltime':fulltime,
             'idx': idx.astype(int)}
        
-    return {'':result}
+    return {'':conc,
+            '_times':times}
     
-
-
 def h_stitch_dce_scans(masterlist_name,
                        bbox,
                        scn_to_analyse=None, 
@@ -744,34 +742,27 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     fit_params1 = {'a': a_arr,
                    'b': b_arr,
                    'T1_eff': T1_eff_arr,
-                   'phi': phi_arr,
-                   'T1': T1_arr}
-
-    # Because currently dictionaries cannot be stored
-    fit_params_temp = numpy.array([0],dtype=dict)
-
-    fit_params_temp[0] = fit_params1
+                   'phi': phi_arr}
 
     if fit_algorithm == 'leastsq':
 
-        result = {'T1':numpy.squeeze(data_after_fitting),
-                'fit_rawdata':data,
-                'fit_params':fit_params_temp,
-                'fit_infodict':infodict1,
-                'fit_ier':ier1,
-                'fit_goodness':goodness_of_fit1,
-                'fit_mesg':mesg1}
+        result = {'rawdata':data,
+                'params':fit_params1,
+                'infodict':infodict1,
+                'ier':ier1,
+                'goodness':goodness_of_fit1,
+                'mesg':mesg1}
 
-
-        return {'':result}
+        return {'':numpy.squeeze(data_after_fitting),
+                '_fit':result}
 
     elif fit_algorithm == 'fmin':
 
-        result = {'T1':numpy.squeeze(data_after_fitting),
-                'fit_params': fit_params_temp,
-                'fit_iter':ier1}         
+        result = {'params': fit_params1,
+                'iter':ier1}         
 
-        return {'':result}    
+        return {'':numpy.squeeze(data_after_fitting),
+                '_fit':result}    
 
 ### Other Helpers
 
