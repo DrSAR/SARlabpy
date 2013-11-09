@@ -346,6 +346,7 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                                     key=lbl, 
                                     data=v,
                                             force=self.force_overwrite)    
+                                print "job id %s finished on engine %i " % (msg_id, ar.engine_id)
                                 if self.force_overwrite:
                                     print('{0} overwritten in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname))
                                 else:
