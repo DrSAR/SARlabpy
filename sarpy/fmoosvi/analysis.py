@@ -41,6 +41,8 @@ def h_calculate_AUC(scn_to_analyse=None,
             default reconstruction is pdata_num = 0.
     :return: array with auc data
     """ 
+    import sarpy.fmoosvi.analysis            
+
     
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -452,11 +454,13 @@ def h_conc_from_signal(scn_to_analyse=None,
     conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
     
     conc[conc<0] = 0
+
+    result = {'conc':conc,
+            'time':time,
+            'fulltime':fulltime,
+            'idx': idx.astype(int)}
        
-    return {'':conc,
-            '_time':time,
-            '_fulltime':fulltime,
-            '_idx': idx.astype(int)}
+    return {'':result}
     
 
 
@@ -692,27 +696,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                     except ValueError:
                         print x,y,slice
                         continue
+                else:
+                    print('fit type {0} not implemented yet'.format(fit_algorithm))
 
-
-                elif fit_algorithm == 'fmin':
-
-                    # fmin actually takes 7.6x longer to run compared to leastsq 
-
-                    def errorfunc(params,y_data,t_data):
-                        result = h_residual_T1_FAind(params, y_data, t_data)
-
-                        return numpy.sum(numpy.abs(result)**2)                    
-
-                    fit_params, fopt, ier, funcalls, warnflag = scipy.optimize.fmin(
-                                                                    func = errorfunc,
-                                                                    x0=params,
-                                                                    xtol=0.0001, 
-                                                                    ftol=0.0001,
-                                                                    maxfun = 1000,
-                                                                    maxiter = 1000,
-                                                                    disp=False,
-                                                                    args=(y_data,t_data),
-                                                                    full_output = True)
                 #print fit_params
                 [a,b,T1_eff,phi] = fit_params
 
@@ -766,20 +752,26 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
     fit_params_temp[0] = fit_params1
 
-    if fit_algorithm == 'leastsq': 
-        return {'':numpy.squeeze(data_after_fitting),
-                '_fit_rawdata':data,
-                '_fit_params':fit_params_temp,
-                '_fit_infodict':infodict1,
-                '_fit_ier':ier1,
-                '_fit_goodness':goodness_of_fit1,
-                '_fit_mesg':mesg1}
+    if fit_algorithm == 'leastsq':
+
+        result = {'T1':numpy.squeeze(data_after_fitting),
+                'fit_rawdata':data,
+                'fit_params':fit_params_temp,
+                'fit_infodict':infodict1,
+                'fit_ier':ier1,
+                'fit_goodness':goodness_of_fit1,
+                'fit_mesg':mesg1}
+
+
+        return {'':result}
 
     elif fit_algorithm == 'fmin':
 
-        return {'':numpy.squeeze(data_after_fitting),
-                '_fit_params': fit_params_temp,
-                '_fit_iter':ier1}             
+        result = {'T1':numpy.squeeze(data_after_fitting),
+                'fit_params': fit_params_temp,
+                'fit_iter':ier1}         
+
+        return {'':result}    
 
 ### Other Helpers
 
