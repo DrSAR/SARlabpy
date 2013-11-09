@@ -640,3 +640,72 @@ def fit_double_2CXM(t, ca1, ca2, data1, data2, p0):
     return (p1, success)
 
     
+    
+def fit_scn(scn_to_analyse=None,
+            use_stitch=True, 
+            model_ID='Tofts',
+            AIF_ID='Checkley',            
+            **kwargs):
+    ''' routine for remote running.
+    allowed AIFs = 'Moroz','Checkley','Lyng' and whatever else is defined in modeule PKfitlib
+    Required modules are
+    '''
+    import datetime
+    import sarpy
+    import sarpy.PKanalysis.PKfitlib as PK
+    import sarpy.fmoosvi.analysis as sfa
+    
+    allowed_models = {'Tofts': PK.conc_Tofts,
+                      'XTofts':PK.conc_XTofts,
+                      '2CXM':PK.conc_2CXM}
+    model = allowed_models[model_ID]
+    
+    scn = sarpy.Scan(scn_to_analyse)
+    roi=scn.adata['auc60_roi'].data[:,:,[3]]
+
+    # find dcedata, t, dt, inj_start for one scan
+    if  use_stitch and 'gd_conc_stitched' in scn.adata:
+        dcedata=scn.adata['gd_conc_stitched'].data[:,:,[3],:]
+        t=scn.adata['gd_conc_stitched_fulltime'].data
+        dt=t[1]-t[0]
+        time_index = scn.adata['gd_conc_stitched_idx'].data.astype(int)
+    else:
+        dcedata=scn.adata['gd_conc'].data[:,:,[3],:]
+        datetime.datetime.fromtimestamp(1374702260)
+        nreps =  scn.method.PVM_NRepetitions
+        total_time_s = scn.method.PVM_ScanTimeStr
+        format = "%Hh%Mm%Ss%fms"
+        acqt=datetime.datetime.strptime(total_time_s,format)
+        dt = (acqt - datetime.datetime(1900,1,1,0,0,0,0)).total_seconds() / nreps
+        t = dt*numpy.arange(dcedata.shape[-1])
+        time_index = slice(None)
+    inj_start = dt * sfa.h_inj_point(scn.shortdirname)
+
+    ca = PK.aif(t, t0=inj_start, aifchoice=AIF_ID, zeropad=True)
+    p_names = {conc_Tofts: ['Ktrans', 've'],
+          conc_XTofts: ['Ktrans', 've', 'vp'],
+          conc_2CXM: ['PS', 'Fpl', 've', 'vp']}
+    
+    p0 = {conc_Tofts: numpy.array([.005, .01]),
+          conc_XTofts: numpy.array([.005, .01, .01]),
+          conc_2CXM: numpy.array([.01, .002, .1, .01])}
+    
+    bds = {conc_Tofts: numpy.array([[0,5],[0,1]]),
+           conc_XTofts: numpy.array([[0,10],[0,1],[0,1]]),
+           conc_2CXM: numpy.array([[0,1],[0,1],[0,1],[0,1]])}
+    
+    xx = fit_generic_array(t, dcedata, model, p0[model], ca, dt,
+                              bounds = bds[model],
+                              fit_subset=time_index,
+                              mask=roi)
+    fitmask = xx['success']
+    fitmask[numpy.where(fitmask>4)]=numpy.NaN
+    fitmask[numpy.where(fitmask<1)]=numpy.NaN
+    mask = numpy.where(numpy.isfinite(fitmask))
+    for p_idx in xrange(xx['result'].shape[3]):
+        p_map = xx['result'][:,:,[0],p_idx] 
+        p_map[mask] = numpy.NaN
+        
+    xx['AIC']=PK.AIC_from_SSE(xx['ss'], k=len(p0[model]), N=dcedata.shape[3])
+
+    return {'':xx}
