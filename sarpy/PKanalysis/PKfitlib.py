@@ -456,6 +456,8 @@ def fit_generic(t, data, model, p0, *pargs, **kwargs):
     modelparameters: tupel depending on model
     success:         as handed back from optimize.leastsq()
     fit:             best fit
+    ss_err:          sum-of-squares
+    rsquare:         R**2
     Tip: 
     ----
     Always consult docs: http://wiki.scipy.org/Cookbook/FittingData
@@ -708,4 +710,10 @@ def fit_scn(scn_to_analyse=None,
         
     xx['AIC']=PK.AIC_from_SSE(xx['ss'], k=len(p0[model]), N=dcedata.shape[3])
 
-    return {'':xx}
+    #extract the fit results and prepare them for storage as searate adata
+    ret_dict ={}
+    for p_idx, p_name in enumerate(p_names[model]):
+        ret_dict['_'+p_name] = xx['result'][:,:,:,p_idx]
+    xx.pop('result')
+    ret_dict['_fitdetails'] = xx
+    return ret_dict
