@@ -150,7 +150,7 @@ class ADataDict(collections.MutableMapping):
 
 
     def __delitem__(self, key):
-        #print('deleting item %s' % key)
+        print('adata {0} deleted in {1}'.format(key, self[key].parent.visu_pars.VisuSubjectId))
         shutil.rmtree(os.path.join(adataroot, 
                                    self.store[key].meta['dirname']))
         del self.store[key]
