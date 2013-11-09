@@ -424,6 +424,13 @@ class Scan(object):
         self.adata[kwargs['key']] = AData_classes.AData.fromdata(
                     self.pdata[pdata_idx], **kwargs)
 
+    def rm_adata(self, key):
+        '''
+        delete adata set
+        '''
+        if self.adata.pop(key, None) is not None:
+            logger.info('adata %s for %s' %(key, self.shortdirname))
+
 class Study(object):
     '''
     A study in BRUKER parlance is a collection of scans performed on
@@ -611,8 +618,7 @@ class Study(object):
         Remove adata with given *key* by iterating over the lot
         '''
         for scn in self.scans:
-            scn.adata.pop(key, None) # remove but be quiet if not there...
-
+            scn.rm_adata(key)
 
 class StudyCollection(object):
     '''
