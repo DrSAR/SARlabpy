@@ -324,13 +324,13 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                     #ar.get()
                     try:
                         ar.get()
-
                     except Exception as e:
 
                         print('%s for %s ' % (e, 
                                               msg_ids_to_parameters[msg_id]['scn_to_analyse']))   
 
-                        #print('\t {0}'.format(traceback.print_exc(sys.exc_info()[2])))
+                        print('\t {0}'.format(traceback.print_exc(sys.exc_info()[2])))
+
 
                     else:
                         #print("and results for parameter %s :" %
