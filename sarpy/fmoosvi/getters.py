@@ -15,6 +15,20 @@ import numpy
 import copy
 import pylab
 
+def get_roi_weights(roi):
+
+    # Calculate the weights for each slice
+    weights = numpy.zeros(shape=roi.shape[-1])
+
+    roi[numpy.isfinite(roi)] = 1
+    ROIpx = numpy.nansum(roi.flatten())
+
+    for slice in xrange(roi.shape[-1]):    
+        weights[slice] = numpy.divide(numpy.nansum(roi[:,:,slice].flatten()),ROIpx)
+        weights[numpy.isnan(weights)] = 0
+
+    return weights
+
 
 def get_num_slices(scan_object_name, pdata_num = 0):
     
