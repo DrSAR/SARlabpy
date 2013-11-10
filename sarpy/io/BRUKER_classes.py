@@ -428,8 +428,10 @@ class Scan(object):
         '''
         delete adata set
         '''
-        if self.adata.pop(key, None) is not None:
-            logger.info('adata %s for %s' %(key, self.shortdirname))
+        for k in self.adata.keys():
+            if re.search(key+'$', k) is not None:
+                if self.adata.pop(k, None) is not None:
+                    logger.info('adata %s for %s' %(key, self.shortdirname))
 
 class Study(object):
     '''
