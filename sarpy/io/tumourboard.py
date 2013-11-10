@@ -73,7 +73,7 @@ conf_parser.add_argument("-c", "--conf_file",
 args, remaining_argv = conf_parser.parse_known_args()
 if args.conf_file:
     config = ConfigParser.SafeConfigParser()
-    conf_file_name = [args.conf_file]
+    conf_file_name = [os.path.join(os.path.expanduser('~/sdata'),args.conf_file)]
     config.read(conf_file_name)
     defaults = dict(config.items("Defaults"))
 else: 
@@ -392,8 +392,8 @@ for k,v in master_list.iteritems():
     testPDF.savefig(fig)      
     
     # Saving Figure    
-    filename = os.path.expanduser(os.path.join('~/sdata',rootName[-2],args.output,k + '.png'))
-    pylab.savefig(filename, bbox_inches=0, dpi=300)
+    #filename = os.path.expanduser(os.path.join('~/sdata',rootName[-2],args.output,k + '.png'))
+    #pylab.savefig(filename, bbox_inches=0, dpi=300)
     pylab.close('all')
 
 #os.remove(ref_filename)
