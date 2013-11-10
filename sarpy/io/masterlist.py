@@ -89,7 +89,7 @@ def generate(**kwargs):
                 configuration = dict(config.items(
                                 '.'.join(['EXCEPTION',lbl,patname])))
     
-            bbox=[float x for x in configuration.get('bounding_box', 
+            bbox=[float(x) for x in configuration.get('bounding_box', 
                                                      '0 1 0 1').split()]
             prot_name = configuration['protocol_name']
             study_nr = int(configuration['study'])
