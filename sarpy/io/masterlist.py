@@ -89,7 +89,8 @@ def generate(**kwargs):
                 configuration = dict(config.items(
                                 '.'.join(['EXCEPTION',lbl,patname])))
     
-            bbox=configuration.get('bounding_box', '0 1 0 1').split()
+            bbox=[float x for x in configuration.get('bounding_box', 
+                                                     '0 1 0 1').split()]
             prot_name = configuration['protocol_name']
             study_nr = int(configuration['study'])
     
@@ -170,6 +171,6 @@ if __name__ == "__main__":
     # at this point args is a 'Namespace' which is defined in the argparse module
     # to get access to its attributes you can simply say, e.g., args.conf_file
     # to treat it like a dictionary you have to use d=vars(args). Then you can
-    # read and write to it: d['newattribute']='42 at which point you can verify
+    # read and write to it: d['newattribute']=42 at which point you can verify
     # that args.newatttribute exists and equals 42. The magic of shallow copies...
     generate(**vars(args))
