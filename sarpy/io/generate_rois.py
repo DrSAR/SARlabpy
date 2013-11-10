@@ -19,6 +19,8 @@ def generate_rois(masterlist_name, ioType, path = None,
     import collections
     import sarpy.fmoosvi.analysis
     import os
+    import scipy
+    import numpy
 
     root = os.path.join(os.path.expanduser('~/sdata'),
                     masterlist_name,
@@ -64,10 +66,18 @@ def generate_rois(masterlist_name, ioType, path = None,
                 # the default foreground and background in h_image_to_mask
                 # will result in a roi_m that has NaN and 1 only (aka
                 # 'proper mask')
-                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi,peaks=peaks)  
+                roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi,peaks=peaks)
+
+                # Calculate the weights for each slice
+                weights = numpy.zeros(shape=roi_m.shape[-1])
+                ROIpx = numpy.nansum(roi_m.flatten())
+
+                for sl in xrange(roi_m.shape[-1]):
+                    weights[sl] = numpy.divide(numpy.nansum(roi_m[:,:,sl].flatten()),ROIpx)
 
                 try:             
                     scan.store_adata(key='roi', data = roi_m, force = forceVal)
+                    scan.store_adata(key='roi_weights', data = weights, force = forceVal)
                     print('h_generate_roi: saved {0} roi label'.format(scan.shortdirname))
                 except AttributeError:
                     print('h_generate_roi: force save of scan {0} is required'.format(scan.shortdirname))
