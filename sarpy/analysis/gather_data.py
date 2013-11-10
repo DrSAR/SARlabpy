@@ -167,6 +167,8 @@ def calculate_dfSeries_from_adata(
             except(KeyError, IOError):
                 print('{0}: Something not found or {1} in patient {2}'.format(adata_label,scan_label,k) )
                 continue
+
+            ## Calculate the weights of each ROI    
            
             roi_data = data * roi
             
@@ -179,6 +181,14 @@ def calculate_dfSeries_from_adata(
     
                 animal.append(k)
                 slc.append(slice+1)
+
+                # Calculate the weighted average
+
+                data[numpy.isnan(data)] = 0
+                weights[numpy.isnan(weights)] = 0
+                avg = numpy.average(data, weights=weights)
+
+
                 avg.append(scipy.stats.nanmean(roi_data[:,:,slice].flatten()))
                 std.append(scipy.stats.nanstd(roi_data[:,:,slice].flatten()))
                 px.append(numpy.nansum(roi[:,:,slice].flatten()))
