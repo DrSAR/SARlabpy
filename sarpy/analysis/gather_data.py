@@ -101,7 +101,7 @@ def calculate_dfSeries_from_adata(
         masterlist_name,
         scan_label_list,
         adata_label,
-        roi_label
+        roi_label,
         ):
     '''
     Take in previously calculated adata and work out some 
@@ -168,8 +168,10 @@ def calculate_dfSeries_from_adata(
                 print('{0}: Something not found or {1} in patient {2}'.format(adata_label,scan_label,k) )
                 continue
 
-            ## Calculate the weights of each ROI    
-           
+            # Calculate the weights for each slice
+            weights = numpy.zeros(shape=roi.shape[-1])
+            ROIpx = numpy.nansum(roi.flatten())
+
             roi_data = data * roi
             
             # Get the slices and patient names and repeat patient names for the slice
@@ -184,12 +186,11 @@ def calculate_dfSeries_from_adata(
 
                 # Calculate the weighted average
 
-                data[numpy.isnan(data)] = 0
+                roi_data[numpy.isnan(roi_data)] = 0
+                weights[sl] = numpy.divide(numpy.nansum(roi[:,:,slice].flatten()),ROIpx)
                 weights[numpy.isnan(weights)] = 0
-                avg = numpy.average(data, weights=weights)
-
-
-                avg.append(scipy.stats.nanmean(roi_data[:,:,slice].flatten()))
+                
+                avg.append(numpy.average(roi_data[:,:,slice].flatten(), weights=weights))
                 std.append(scipy.stats.nanstd(roi_data[:,:,slice].flatten()))
                 px.append(numpy.nansum(roi[:,:,slice].flatten()))
                 pos.append(scan.acqp.ACQ_slice_offset[slice])          
