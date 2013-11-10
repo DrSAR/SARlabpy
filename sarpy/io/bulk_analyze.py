@@ -345,12 +345,14 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                                 msg_ids_to_scans[msg_id].store_adata(
                                     key=lbl, 
                                     data=v,
-                                            force=self.force_overwrite)    
-                                print "job id %s finished on engine %i " % (msg_id, ar.engine_id)
+                                            force=self.force_overwrite)  
+                                jobInfo = ", job id ...%s done on E %i " % (msg_id[-5:], ar.engine_id)
                                 if self.force_overwrite:
-                                    print('{0} overwritten in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname))
+                                    print('{0} overwritten in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname+jobInfo))
                                 else:
-                                    print('{0} saved in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname))                                              
+                                    print('{0} saved in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname+jobInfo))
+
+
         else:
             print('no scans fit the criterion so nothing was processed')
         end1 = time.time()
