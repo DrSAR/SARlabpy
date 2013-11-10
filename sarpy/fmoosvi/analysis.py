@@ -852,8 +852,6 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
         roi_mask[notnanwhere] = foreground
 
         return roi_mask    
-                
-        
 
 def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
     

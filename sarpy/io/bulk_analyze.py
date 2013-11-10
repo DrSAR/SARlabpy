@@ -351,8 +351,6 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                                     print('{0} overwritten in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname+jobInfo))
                                 else:
                                     print('{0} saved in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname+jobInfo))
-
-
         else:
             print('no scans fit the criterion so nothing was processed')
         end1 = time.time()
