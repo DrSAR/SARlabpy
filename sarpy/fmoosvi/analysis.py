@@ -118,7 +118,6 @@ def h_calculate_AUC(scn_to_analyse=None,
 
 def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
 
-
     scan_object = sarpy.Scan(scn_to_analyse)
 
     ########### Getting and defining parameters
@@ -597,14 +596,23 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     ## Setting parameters
     x = sarpy.io.BRUKERIO.fftbruker(scan_object.fid)
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
-    t1points = numpy.divide(x.shape[-2],num_slices)     
-    
-    data=numpy.fliplr(
-         numpy.flipud(numpy.transpose(x.reshape(x.shape[0],
-                                                x.shape[1],
-                                                t1points,
-                                                num_slices),
-                                                [1,0,3,2])))
+    t1points = numpy.divide(x.shape[-2],num_slices)
+
+
+    #TODO: FIX THIS WHEN ISSUE 57 is fixed !!
+    try:  
+        data = numpy.empty_like(data) 
+        srcdat = scan_object.pdata[pdata_num+1].data
+        data = srcdat[:,:,:,:,0] + 1j*srcdat[:,:,:,:,1]
+
+    except IndexError:
+        data=numpy.fliplr(
+             numpy.flipud(numpy.transpose(x.reshape(x.shape[0],
+                                                    x.shape[1],
+                                                    t1points,
+                                                    num_slices),
+                                                    [1,0,3,2])))
+
     tau = scan_object.method.PVM_RepetitionTime
     total_TR = scan_object.method.Inv_Rep_time
     Nframes = scan_object.method.Nframes
@@ -620,9 +628,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     if fit_algorithm is None:
         fit_algorithm = 'leastsq'
 
-    data_after_fitting = numpy.zeros( [data.shape[0],\
-                                       data.shape[1],\
-                                       data.shape[2]] )
+    data_after_fitting = numpy.nan + numpy.empty( [x_size,y_size,num_slices] )
 
     fit_params1 = numpy.empty_like(data_after_fitting,dtype=dict)
 
@@ -637,9 +643,6 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     ier1 = numpy.empty_like(data_after_fitting)
     goodness_of_fit1 = numpy.empty_like(data_after_fitting)
 
-    fit_results = numpy.empty([x_size,y_size,num_slices], dtype=dict)
-    data_after_fitting = numpy.empty([x_size,y_size,num_slices])
-    
     ## Check for bbox traits and create bbox_mask to output only partial data
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])
