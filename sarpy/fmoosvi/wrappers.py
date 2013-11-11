@@ -18,15 +18,13 @@ import collections
 import scipy
 import scipy.stats
 
-
-
-def store_deltaT1(masterlist_name,
-                  T1map_1,
-                  T1map_2,
-                  adata_label1 = 'T1map_LL',
+def store_deltaT1(masterlist_name=None,
+                  T1map_1=None,
+                  T1map_2=None,
+                  adata_label1 = 'T1_LL',
                   adata_label2 = None,
-                  analysis_label='deltaT1',
-                  forceVal = False):
+                  adata_save_label='deltaT1',
+                  force_overwrite = False):
 
     root = os.path.join(os.path.expanduser('~/sdata'),
                         masterlist_name,
@@ -47,24 +45,23 @@ def store_deltaT1(masterlist_name,
         try:
             scan1 = sarpy.Scan(v[T1map_1][0])
             scan2 = sarpy.Scan(v[T1map_2][0])
-            bbox = sarpy.fmoosvi.getters.get_bbox(v, T1map_2)
 
     	except IOError:
     	    print('{0}: Not found adata {1} or {2} in patient {3}'.format(
-    	          analysis_label,adata_label1,adata_label2,k) )
+    	          adata_save_label,adata_label1,adata_label2,k) )
     	    continue
 
-        if (not analysis_label in scan2.adata.keys()) or forceVal is True:
+        if (not adata_save_label in scan2.adata.keys()) or force_overwrite is True:
                 
             deltaT1 = scan1.adata[adata_label1].data - scan2.adata[adata_label2].data
-            scan2.store_adata(key=analysis_label, data = deltaT1, force = forceVal)
+            scan2.store_adata(key=adata_save_label, data = deltaT1, force = force_overwrite)
 
-            print('{0}: Success. Saved {1}'.format(analysis_label,
+            print('{0}: Saved {1}'.format(adata_save_label,
                                   scan2.shortdirname))
                                   
         else:
             print('{0}: adata already exists {1} '.format(
-            analysis_label,scan2.shortdirname))
+            adata_save_label,scan2.shortdirname))
             pass
 
 ### ROI based code
