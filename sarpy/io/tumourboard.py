@@ -195,6 +195,11 @@ for k,v in master_list.iteritems():
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
+                    pylab.text(0.5,0.5,'Data not available',
+                       horizontalalignment='center',
+                       fontsize=4+mod)
+
+                    row_idx += 1
                     print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
                     continue
                     
@@ -267,7 +272,7 @@ for k,v in master_list.iteritems():
                 dat=scn.pdata[0].data[:,:,col_idx,:]
                 imgdata = numpy.mean(dat,axis=2)
                 vtcdata = data.data[:,:,col_idx]
-                bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,'auc60_roi')
+                bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn.shortdirname,'auc60_roi')
                 axs=fig.add_subplot(G[row_idx, col_idx])
                                 
                 axs.imshow(imgdata[bbox[0]:bbox[1],\
@@ -298,6 +303,12 @@ for k,v in master_list.iteritems():
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
+
+                    pylab.text(0.5,0.5,'Data not available',
+                       horizontalalignment='center',
+                       fontsize=4+mod)
+
+                    row_idx += 1                    
                     print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
                     continue                
             else:
