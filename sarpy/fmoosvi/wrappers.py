@@ -198,10 +198,12 @@ def bulk_transfer_roi(masterlist_name,
                     resampled_roi[places] = numpy.nan
                     resampled_roi[other_places] = 1
 
-                    sarpy.Scan(scn).store_adata(key = dest_adata_label, data = resampled_roi, 
+                    adata_save_label = dest_adata_label+'_roi'
+
+                    sarpy.Scan(scn).store_adata(key = adata_save_label, data = resampled_roi, 
                                      force = forceVal)   
                                      
-                    print('Saved {0} in {1}'.format(dest_adata_label,scn))   
+                    print('\t Saved {0} in {1}'.format(adata_save_label,scn))   
 
 
 
