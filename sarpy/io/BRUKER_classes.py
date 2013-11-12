@@ -765,7 +765,11 @@ class StudyCollection(object):
             return ad_dict
 
         else:
-            ad_dict_flatten = [item for sublist in ad_dict for item in sublist]
+            ad_dict_flatten = {}
+
+            for k,v in ad_dict.iteritems():
+                ad_dict_flatten[k] = [item for sublist in ad_dict[k] for item in sublist]
+
             return ad_dict_flatten
        
     def rm_adata(self, key):
