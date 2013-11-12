@@ -7,7 +7,7 @@ Created on Thu Aug 29 15:43:31 2013
 
 import sarpy
 import pandas
-from pyparsing import (Word, alphas, nums, Group, SkipTo, StringEnd)
+from pyparsing import (Word, alphas, nums, Group, SkipTo, StringEnd, Optional)
 import re
 import collections
 import os
@@ -50,7 +50,7 @@ def df_from_masterlist(masterlist_name, treatment_dict=None):
                            
     studyname = Word(alphas)+Word(nums)
     tumourtype = Word(alphas, exact=1)
-    location = Word(alphas, exact=1)
+    location = Optional(Word(alphas, exact=1), default='x')
     patientnumber = Word(nums)
     patientname = (studyname('studyname') + tumourtype('tumourtype') + 
                    location('location') + patientnumber('patientnumber'))
