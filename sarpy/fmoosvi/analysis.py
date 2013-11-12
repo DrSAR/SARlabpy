@@ -600,8 +600,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
 
     #TODO: FIX THIS WHEN ISSUE 57 is fixed !!
-    try:  
-        data = numpy.empty_like(data) 
+    try: 
+
+        data = numpy.zeros([x.shape[0],x.shape[1],t1points,num_slices])
         srcdat = scan_object.pdata[pdata_num+1].data
         data = srcdat[:,:,:,:,0] + 1j*srcdat[:,:,:,:,1]
 
