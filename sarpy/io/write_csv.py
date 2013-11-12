@@ -5,7 +5,10 @@ Created on Thu Aug  1 13:53:03 2013
 
 @author: fmoosvi
 """
-def write_csv(masterlist_name, data_label, adata_label):
+def write_csv(masterlist_name, 
+              data_label, 
+              adata_label,
+              roi_override = None):
     
     import json
     import os
@@ -28,6 +31,10 @@ def write_csv(masterlist_name, data_label, adata_label):
         master_list = json.JSONDecoder(
                            object_pairs_hook=collections.OrderedDict
                            ).decode(json_str) 
+
+    # So write csv looks at the right adata label to get the roi. primarily for deltaT1 adata
+    if roi_override is None:
+        roi_override = adata_label+'_roi'        
     
     export_data = []
 
@@ -39,11 +46,11 @@ def write_csv(masterlist_name, data_label, adata_label):
 
         try:        
             data = sarpy.Scan(v[data_label][0]).adata[adata_label].data
-            roi = sarpy.Scan(v[data_label][0]).adata[adata_label+'_roi'].data  
+            roi = sarpy.Scan(v[data_label][0]).adata[roi_override].data  
 
             numSlices.append(data.shape[-1])
-        except:
-            continue      
+        except(IOError,KeyError):
+            continue     
 
     if numSlices:
         maxSlices = numpy.max(numSlices)
@@ -52,11 +59,10 @@ def write_csv(masterlist_name, data_label, adata_label):
         
         try:        
             data = sarpy.Scan(v[data_label][0]).adata[adata_label].data
-            roi = sarpy.Scan(v[data_label][0]).adata[adata_label+'_roi'].data
+            roi = sarpy.Scan(v[data_label][0]).adata[roi_override].data
 
         except(KeyError,IOError):
             print('write_csv: Not found {0} and {1},{2}'.format(k,data_label,adata_label) )
-
             data = numpy.empty([1])*numpy.nan
             weights= numpy.empty([1])*numpy.nan
             avgL = ['AnalysisErr']
@@ -83,7 +89,7 @@ def write_csv(masterlist_name, data_label, adata_label):
             weights = weights[weights>0]
 
             avgW = numpy.array(avg)
-            avgW = avgW[numpy.isfinite(avg)].tolist()
+            avgW = avgW[numpy.isfinite(avgW)].tolist()
             
             avg.append((numpy.average(avgW, weights=weights)))
             avgL=[str(e) for e in avg]
