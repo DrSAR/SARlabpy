@@ -58,7 +58,7 @@ def df_from_masterlist(masterlist_name, treatment_dict=None):
    
     patient_df = pandas.DataFrame(columns=('studyname', 'patientnumber'))
     for patname in master_list.keys():
-        print patname
+        #print patname
         parsed_data = patientname.parseString(patname)
         row = pandas.DataFrame([{'studyname':''.join(parsed_data['studyname']),
                                  'tumourtype':parsed_data['tumourtype'],
