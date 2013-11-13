@@ -29,6 +29,30 @@ def get_roi_weights(roi):
 
     return weights
 
+def get_tumour_volume(scan_object_name, roi_label):
+
+    """ 
+    Returns the area of a volume in units of mm^3
+
+    : scan_object_name: scanname containing the roi mask
+    : roi_label: adata label of the roi mask
+    """
+
+    scan_object = sarpy.Scan(scan_object_name)
+    roi = scan_object.adata[roi_label].data
+
+    px_count = scipy.nansum(roi)
+
+    # Get the x and y dimensions
+    px_size = scan_object.method.PVM_SpatResol
+
+    if len(px_size) == 2:
+        assert(px_size[0] == px_size[1])
+
+        # Get the z-dimension
+        px_size.append(scan_object.method.PVM_SliceThick)
+
+    return px_size[0]*px_size[1]*px_size[2]*px_count
 
 def get_num_slices(scan_object_name, pdata_num = 0):
     
