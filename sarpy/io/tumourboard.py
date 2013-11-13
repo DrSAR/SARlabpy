@@ -208,8 +208,8 @@ for k,v in master_list.iteritems():
                     (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(
                                                 data.data)
                 else:
-                    (clim_min, clim_max) = (numpy.int(clim_min),
-                                            numpy.int(clim_max))
+                    (clim_min, clim_max) = (numpy.float(clim_min),
+                                            numpy.float(clim_max))
             else:
                 data = scn.pdata[0]
                                 
