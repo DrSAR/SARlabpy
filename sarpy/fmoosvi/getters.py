@@ -89,7 +89,7 @@ def get_num_slices(scan_object_name, pdata_num = 0):
     return num_slices
 
 
-def get_patients_from_experiment(Experiment_name, verbose = False):
+def get_patients_from_experiment(Experiment_name, verbose = False,namesOnly=False):
     
     subject_list = get_unique_list_elements(sarpy.Experiment(Experiment_name).get_SUBJECT_id())
 
@@ -101,8 +101,12 @@ def get_patients_from_experiment(Experiment_name, verbose = False):
         
         if verbose:
             print('Patient {0} has {1} sessions.'.format(subject,len(curr_patient.studies)))
-    
-    return Patients
+
+    if namesOnly:
+        return [a.patient_id for a in Patients]
+
+    else:
+        return Patients
     
 def get_unique_list_elements(list, idfun=None):
 
