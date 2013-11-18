@@ -63,7 +63,11 @@ def getCumData(day0scans, adata_label,roi_label):
             roi = sarpy.Scan(t).adata[roi_label].data
         
             droi = d*roi
-            droi = d[numpy.isfinite(droi)]
+
+            roi[numpy.isfinite(roi)] = True
+            roi[numpy.isnan(roi)] = False
+            droi = droi[roi.astype(int)==1]
+            #droi = d[numpy.isfinite(droi)]
                       
         dataa.append(list(droi.flatten()))
     
