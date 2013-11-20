@@ -30,6 +30,8 @@ class PTmp(pyinotify.ProcessEvent):
             lines = filter(None, (line.rstrip() for line in f_in))
         digest = hashlib.md5(lines).hexdigest()
 
+        print fname
+
         sarpy.io.mriBoard.generate(fname)
         
 notifier = pyinotify.Notifier(wm, PTmp())
@@ -43,7 +45,6 @@ while True:
         if notifier.check_events():
             # read notified events and enqueue them
             notifier.read_events()
-            raise NameError
         # you can do some tasks here...
         
     except KeyboardInterrupt:
