@@ -661,18 +661,19 @@ def fit_scn(scn_to_analyse=None,
                       'XTofts':PK.conc_XTofts,
                       '2CXM':PK.conc_2CXM}
     model = allowed_models[model_ID]
-    
+
     scn = sarpy.Scan(scn_to_analyse)
-    roi=scn.adata['auc60_roi'].data[:,:,[3]]
+    
+    roi=scn.adata['auc60_roi'].data[:,:,:]
 
     # find dcedata, t, dt, inj_start for one scan
     if  use_stitch and 'gd_conc_stitched' in scn.adata:
-        dcedata=scn.adata['gd_conc_stitched'].data[:,:,[3],:]
-        t=scn.adata['gd_conc_stitched_fulltime'].data
+        dcedata=scn.adata['gd_conc_stitched'].data[:,:,:,:]
+        t=scn.adata['gd_conc_stitched_times'].data['fulltime']
         dt=t[1]-t[0]
-        time_index = scn.adata['gd_conc_stitched_idx'].data.astype(int)
+        time_index = scn.adata['gd_conc_stitched_times'].data['idx'].astype(int)
     else:
-        dcedata=scn.adata['gd_conc'].data[:,:,[3],:]
+        dcedata=scn.adata['gd_conc'].data[:,:,:,:]
         datetime.datetime.fromtimestamp(1374702260)
         nreps =  scn.method.PVM_NRepetitions
         total_time_s = scn.method.PVM_ScanTimeStr
@@ -700,20 +701,18 @@ def fit_scn(scn_to_analyse=None,
                               bounds = bds[model],
                               fit_subset=time_index,
                               mask=roi)
-    fitmask = xx['success']
+    fitmask = xx['success']*0.0+1
     fitmask[numpy.where(fitmask>4)]=numpy.NaN
     fitmask[numpy.where(fitmask<1)]=numpy.NaN
-    mask = numpy.where(numpy.isfinite(fitmask))
-    for p_idx in xrange(xx['result'].shape[3]):
-        p_map = xx['result'][:,:,[0],p_idx] 
-        p_map[mask] = numpy.NaN
+    ret_dict ={}
+    #extract the fit results and prepare them for storage as separate adata
+    for p_idx, p_name in enumerate(p_names[model]):
+        ret_dict['_'+p_name] = xx['result'][:,:,:,p_idx]*fitmask
         
     xx['AIC']=PK.AIC_from_SSE(xx['ss'], k=len(p0[model]), N=dcedata.shape[3])
 
-    #extract the fit results and prepare them for storage as searate adata
-    ret_dict ={}
-    for p_idx, p_name in enumerate(p_names[model]):
-        ret_dict['_'+p_name] = xx['result'][:,:,:,p_idx]
     xx.pop('result')
     ret_dict['_fitdetails'] = xx
     return ret_dict
+
+print('PKfitlib loaded')

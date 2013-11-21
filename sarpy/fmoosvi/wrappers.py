@@ -52,12 +52,20 @@ def store_deltaT1(masterlist_name=None,
     	    continue
 
         if (not adata_save_label in scan2.adata.keys()) or force_overwrite is True:
-                
-            deltaT1 = scan1.adata[adata_label1].data - scan2.adata[adata_label2].data
-            scan2.store_adata(key=adata_save_label, data = deltaT1, force = force_overwrite)
 
-            print('{0}: Saved {1}'.format(adata_save_label,
-                                  scan2.shortdirname))
+            if 'R1' in adata_save_label:
+
+                deltaR1 = -(1/scan1.adata[adata_label1].data - 1/scan2.adata[adata_label2].data)
+                scan2.store_adata(key=adata_save_label, data = deltaR1, force = force_overwrite)
+                print('{0}: Saved {1}'.format(adata_save_label,
+                      scan2.shortdirname))
+            else:
+                
+                deltaT1 = scan1.adata[adata_label1].data - scan2.adata[adata_label2].data
+                scan2.store_adata(key=adata_save_label, data = deltaT1, force = force_overwrite)
+
+                print('{0}: Saved {1}'.format(adata_save_label,
+                                      scan2.shortdirname))
                                   
         else:
             print('{0}: adata already exists {1} '.format(

@@ -74,6 +74,8 @@ def write_csv(masterlist_name,
             weights = weights.tolist()
             avg = []
 
+            tumour_volume = sarpy.fmoosvi.getters.get_tumour_volume(v[data_label][0],roi_override)
+
             for slice in xrange(maxSlices): # Zero filling non-existent slices
 
                 if slice < data_roi.shape[-1]:
@@ -92,13 +94,14 @@ def write_csv(masterlist_name,
             avgW = avgW[numpy.isfinite(avgW)].tolist()
             
             avg.append((numpy.average(avgW, weights=weights)))
+            avg.append(tumour_volume)
             avgL=[str(e) for e in avg]
 
         export_data.append([k] + avgL)
 
     time = time.strftime("%Y-%m-%d %H:%M")       				       
     header =['Animal ID'] + ['Slice '+str(x+1) for x in xrange(
-                                        len(max(export_data,key=len))-2)] + ['Average']
+                                        len(max(export_data,key=len))-3)] + ['Average'] + ['Volume']
 
     footers = []
     footers.append(['# Data generated on {0} by {1}'.format(time,getpass.getuser())])

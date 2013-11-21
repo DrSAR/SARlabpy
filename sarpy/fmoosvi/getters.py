@@ -29,6 +29,30 @@ def get_roi_weights(roi):
 
     return weights
 
+def get_tumour_volume(scan_object_name, roi_label):
+
+    """ 
+    Returns the area of a volume in units of mm^3
+
+    : scan_object_name: scanname containing the roi mask
+    : roi_label: adata label of the roi mask
+    """
+
+    scan_object = sarpy.Scan(scan_object_name)
+    roi = scan_object.adata[roi_label].data
+
+    px_count = scipy.nansum(roi)
+
+    # Get the x and y dimensions
+    px_size = scan_object.method.PVM_SpatResol
+
+    if len(px_size) == 2:
+        assert(px_size[0] == px_size[1])
+
+        # Get the z-dimension
+        px_size.append(scan_object.method.PVM_SliceThick)
+
+    return px_size[0]*px_size[1]*px_size[2]*px_count
 
 def get_num_slices(scan_object_name, pdata_num = 0):
     
@@ -65,7 +89,7 @@ def get_num_slices(scan_object_name, pdata_num = 0):
     return num_slices
 
 
-def get_patients_from_experiment(Experiment_name, verbose = False):
+def get_patients_from_experiment(Experiment_name, verbose = False,namesOnly=False):
     
     subject_list = get_unique_list_elements(sarpy.Experiment(Experiment_name).get_SUBJECT_id())
 
@@ -77,8 +101,12 @@ def get_patients_from_experiment(Experiment_name, verbose = False):
         
         if verbose:
             print('Patient {0} has {1} sessions.'.format(subject,len(curr_patient.studies)))
-    
-    return Patients
+
+    if namesOnly:
+        return [a.patient_id for a in Patients]
+
+    else:
+        return Patients
     
 def get_unique_list_elements(list, idfun=None):
 
