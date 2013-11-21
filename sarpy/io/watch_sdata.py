@@ -11,11 +11,7 @@ import pyinotify
 import datetime
 import time
 import hashlib
-import sarpy.io
-
-wm = pyinotify.WatchManager()
-# watched events
-mask = pyinotify.IN_MODIFY
+import sarpy.io.mriBoards
 
 class PTmp(pyinotify.ProcessEvent):
     def process_IN_CREATE(self, event):
@@ -26,17 +22,21 @@ class PTmp(pyinotify.ProcessEvent):
         fname = os.path.join(event.path, event.name)
         print "Modify: {0} ({1})".format(fname,
                                          datetime.datetime.now().strftime('%X'))
-        with open(fname, 'r') as f_in:
-            lines = filter(None, (line.rstrip() for line in f_in))
-        digest = hashlib.md5(lines).hexdigest()
+        try:
+            sarpy.io.mriBoards.generate(conf_file=fname)        
+        except Exception as e:
+            print e
+       
+wm = pyinotify.WatchManager()
+# watched events
+mask = pyinotify.ALL_EVENTS
 
-        print fname
+pm = PTmp()
 
-        sarpy.io.mriBoard.generate(fname)
-        
-notifier = pyinotify.Notifier(wm, PTmp())
+notifier = pyinotify.Notifier(wm, pm)
 
-wdd = wm.add_watch(os.path.join(os.path.expanduser('~'),'sdata','mriBoards'), mask, rec=True)
+wm.add_watch(os.path.join(os.path.expanduser('~'),'sdata','mriBoards'), 
+                                mask, rec=True, quiet=False)
 
 while True:
     try:
@@ -45,8 +45,7 @@ while True:
         if notifier.check_events():
             # read notified events and enqueue them
             notifier.read_events()
-        # you can do some tasks here...
-        
+           
     except KeyboardInterrupt:
         # destroy the inotify's instance on this interrupt (stop monitoring)
         notifier.stop()
