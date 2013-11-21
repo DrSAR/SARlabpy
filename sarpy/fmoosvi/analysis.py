@@ -144,7 +144,6 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
     else:      
         bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
 
-
     if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
@@ -451,8 +450,13 @@ def h_conc_from_signal(scn_to_analyse=None,
     T1baseline = numpy.squeeze(data_t1map)*bbox_mask
     T1baseline = numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),source_data.shape[-1])
     conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
+
+    print T1[22,50,1]
+
+    print('T1 baseline\n')
+    print T1baseline[22,50,1]
     
-    conc[conc<0] = 0
+    #conc[conc<0] = 0
 
     times = {'time':time,
             'fulltime':fulltime,
@@ -870,17 +874,17 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         print ('There is no code to produce that indicator. Do it first.')
         raise Exception
 
-def h_generate_VTC(scn_to_analyse=None, bbox = None, pdata_num = 0, **kwargs):
+def h_generate_VTC(scn_to_analyse=None, 
+                   bbox = None, 
+                   pdata_num = 0, 
+                   **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
     # Normalize data
-    #ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scan)
+    ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
     
-    # Try without normalization
-    ndata = scan_object.pdata[pdata_num].data
-    
-   # Get useful params        
+    #Get useful params        
     x_size = ndata.shape[0]
     y_size = ndata.shape[1]
     num_slices = ndata.shape[2]
@@ -888,10 +892,19 @@ def h_generate_VTC(scn_to_analyse=None, bbox = None, pdata_num = 0, **kwargs):
     
     mask = numpy.empty([x_size,y_size,num_slices,reps])
     mask[:] = numpy.nan
+
+    # Deal with bounding boxes
+
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
+
+    else:      
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)
+
     # Set bounding boxes and get ready to join together
     mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
         
-    ndata[:,:,:,-1] = numpy.nan
+    #ndata[:,:,:,-1] = numpy.nan
     
     ndata = mask * ndata
     # Reshape it  to stitch together all the data

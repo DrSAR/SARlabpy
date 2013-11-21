@@ -66,7 +66,7 @@ def determine_figure_size(n_rows,n_cols):
 def generate(**kwargs):
     '''create tumourboard
 
-    config_file=None: name of config file as kw parameter
+    conf_file=None: name of config file as kw parameter
     test=False: Only  perform dry-run '''
 
     args = argparse.Namespace()
@@ -106,13 +106,10 @@ def generate(**kwargs):
     
     # Start a PDF file of all the animals
     
-    #TODO: figure out a way to capture the root of the experiment fast. This willwork
-    # for XXXSY. But will fail for Y >9
+    rootName = str(args.master_list).split('/')[-2]
+    pdfName = os.path.splitext(str(args.conf_file).split('/')[-1])[0]
     
-    rootName = str(args.conf_file).split('/')
-    pdfName = os.path.splitext(rootName[-1])[0]
-    
-    testPDF = PdfPages(os.path.expanduser(os.path.join('~/sdata',rootName[-2],args.output,pdfName+'.pdf')))
+    testPDF = PdfPages(os.path.expanduser(os.path.join('~/sdata',rootName,args.output,pdfName+'.pdf')))
     
     # for every patient we will create the same board
     for k,v in master_list.iteritems():
