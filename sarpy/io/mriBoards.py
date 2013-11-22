@@ -59,7 +59,10 @@ def determine_figure_size(n_rows,n_cols):
         
     else:
         print('row_size = {0} and col_size = {1}'.format(n_rows,n_cols))
-        raise NotImplementedError('Please code in this situation, missed it, figure size')
+
+        figure_size = (18,19*aspect)
+        font_modifier = 6
+        print('Please code in this situation, missed it, figure size')
         
     return figure_size,font_modifier
 
@@ -110,6 +113,8 @@ def generate(**kwargs):
     pdfName = os.path.splitext(str(args.conf_file).split('/')[-1])[0]
     
     testPDF = PdfPages(os.path.expanduser(os.path.join('~/sdata',rootName,args.output,pdfName+'.pdf')))
+
+    sepFiles = False
     
     # for every patient we will create the same board
     for k,v in master_list.iteritems():
@@ -250,12 +255,18 @@ def generate(**kwargs):
                 row_idx += 1
             
             elif row_conf.get('type', None) == 'vtc':
+
+                sepFiles = True
                 
                 scn = sarpy.Scan(fname)
                 print(lbl, fname,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
-                
-                assert(adata_key is not None), 'Please supply a valid label for VTC'
+                try:
+                    data = scn.adata[adata_key]
+                except KeyError:
+                    pylab.text(0.5,0.5,'Data not available',
+                       horizontalalignment='center',
+                       fontsize=4+mod)                
                 data = scn.adata[adata_key]
                 reps = scn.pdata[0].data.shape[-1]
     
@@ -283,7 +294,8 @@ def generate(**kwargs):
                                              box[2], height])
                         tmpax.set_axis_off()
                         tmpax.plot(vtcdata[i,(bbox[2]*reps):(bbox[3]*reps)],
-                                           color='r', linewidth=.2)
+                                           color='g', linewidth=.01)
+                        pylab.ylim([0,1.5])
                                            
             elif row_conf.get('type', None) == 'plot':
     
@@ -370,11 +382,13 @@ def generate(**kwargs):
             elif row_conf.get('type', None) == 'histo':
                 raise NotImplementedError('do not know how to draw histos')
             
-        testPDF.savefig(fig)      
-        # Saving Figure    
-        #filename = os.path.expanduser(os.path.join('~/sdata',rootName[-2],args.output,k + '.png'))
-        #pylab.savefig(filename, bbox_inches=0, dpi=300)
-        pylab.close('all')
+        testPDF.savefig(fig)
+
+        if sepFiles:
+            # Saving Figure    
+            filename = os.path.expanduser(os.path.join('~/sdata',rootName,args.output,k + '.png'))
+            pylab.savefig(filename, bbox_inches=0, dpi=300)
+            pylab.close('all')
     
     #os.remove(ref_filename)
     testPDF.close()
