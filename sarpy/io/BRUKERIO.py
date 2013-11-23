@@ -446,7 +446,8 @@ def readfid(fptr=None,
 
     if "Spectroscopic" in acqp['ACQ_dim_desc']:
         raise TypeError(
-            "Problem: Could this be a spectro scan instead of an image?")
+            "Problem: Could this be a spectro scan instead of an image?\n"+
+            "If so, use readfidspectro()")
 
     # determine data type
     if acqp['GO_raw_data_format'] == 'GO_32BIT_SGN_INT':
@@ -478,8 +479,10 @@ def readfid(fptr=None,
 
     # Number of objects
     NI = acqp['NI']
+    # Number of repeated experiments within the dataset.
+    NR = acqp['NR']
 
-    #There is the possibility of 'zero filling' since objects (aka kspace
+    # There is the possibility of 'zero filling' since objects (aka kspace
     # lines) are written n 1Kb blocks if GO_block_size != continuous
     logger.debug('GO_block_size={0}'.format(acqp['GO_block_size']))
     if acqp['GO_block_size'] == 'continuous':
@@ -503,12 +506,18 @@ def readfid(fptr=None,
     # RARE factor sort of indicates how many PE shots are spend on one slice
     # before moving on to next object (slice?) as defined in ACQ_obj_order
     ACQ_rare_factor = acqp['ACQ_rare_factor']
+    # number of scans (i.e. kspace lines) that are acquired for every phase 
+    # enc step, e.g. multi-echo, timepoint in a look-locker recovery readout ...
+    ACQ_ns_list_size = acqp['ACQ_ns_list_size']
 
-    # Number of repeated experiments within the dataset.
-    NR = acqp['NR']
-
-    if (NI!=acqp['NSLICES']):
-        raise ValueError('NI=%i != NSLICES=%i' % (NI, acqp['NSLICES']))
+    fid_size = numpy.array(ACQ_size).prod() * (
+                ACQ_ns_list_size * acqp['NSLICES'] * NR * int(datatype[1]) * 2 )
+    fid_size = numpy.array(ACQ_size).prod() * (
+                NI * NR * int(datatype[1]) * 2 )
+    file_size = os.stat(fidname).st_size
+    assert fid_size == file_size, (
+    'I am not able to calculate the filesize (%i) from the parameters given (%i)' %
+    (file_size, fid_size))
 
     # 2D vs 3D issues about slices etc.
     if ACQ_dim == 2:
