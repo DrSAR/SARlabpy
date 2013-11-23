@@ -66,7 +66,7 @@ def visu_pars_2_matrix_size(visu_pars, reco=None):
             for depval in range(depvalstart,depvalend):
                 if visu_pars.VisuGroupDepVals[depval][0] == '<VisuFGElemComment>':
                     FGcommentstart=visu_pars.VisuGroupDepVals[depval][1]
-                    fullFGcomments = visu_pars.VisuFGElemComment.split('> <')
+                    fullFGcomments = visu_pars.VisuFGElemComment
                     more_dimcomment=fullFGcomments[FGcommentstart:
                                                    FGcommentstart+FGdim]
             dimcomment.append(more_dimcomment)
