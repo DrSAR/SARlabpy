@@ -201,8 +201,10 @@ def readJCAMP(filename):
                 v = string_match.group(2)
                 shape = [int(s) for s in string_match.group(1).split(',')]
                 if re.match('<', v):
-                    # this is a string
-                    LDRdict[k] = v.strip('<>')
+                    # this is a string, possibly a list of strings (all 
+                    # demarcated  with <>)
+                    ll = re.compile("\s*>\s+<\s*").split(v.strip('<>'))
+                    LDRdict[k] = inner_value(ll)
                     logger.debug('found string): {0}={1}'.
                                 format(k,LDRdict[k]))
                     continue
@@ -236,7 +238,7 @@ def inner_value(somelist):
     Return somelist[0] a one-element list or the whole list otherwise
 
     :param list somelist: list that might contain only one element
-    :returns: element of somelist of somelist
+    :returns: element of somelist or somelist
 
     >>> inner_value([42])
     42
@@ -250,21 +252,23 @@ def inner_value(somelist):
     'spam'
     >>> inner_value(['spam'])
     'spam'
+    >>> inner_value(['s'])
+    's'
     >>> inner_value(['spam','eggs','bacon'])
     ['spam', 'eggs', 'bacon']
 
     .. warning::
        This method does not work for dictionaries (KeyError)
-       or single character strings (infinite recursion)!
 
     '''
-    try:
+    if isinstance(somelist,list):
         if len(somelist) == 1:
             return inner_value(somelist[0])
         else:
             return somelist
-    except TypeError:
+    else:
         return somelist
+
 
 def readfid(fptr=None,
             acqp=None,
@@ -976,3 +980,4 @@ def readRFshape(filename):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+#    doctest.run_docstring_examples(inner_value,globals())
