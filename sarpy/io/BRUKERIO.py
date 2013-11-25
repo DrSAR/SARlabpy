@@ -274,7 +274,8 @@ def readfid(fptr=None,
             acqp=None,
             method=None,
             untouched=False,
-            squeezed=True):
+            squeezed=True,
+            resetNR=False):
     """
     Returns BRUKER's fid file as a properly dimensioned & rearranged array.
 
@@ -284,7 +285,9 @@ def readfid(fptr=None,
         (default None: parameter file will be loaded)
     :param dict method:  dictionary of method parameters
         (default None: parameter file will be loaded)
-    :param boolean untouched: do not rearrange/reshape data
+    :param boolean untouched: do not rearrange/reshape data (default: False)
+    :param boolean squeezed: squeeze dimension of length 1 (default: True)
+    :param boolean resetNR: for incomplete scans, reset NR if needed (default: False)
     :return: Flat (untouched = True) or Rearranged and assembled array of the acquire k-space
     :rtype: numpy array
     :raises: IOERROR if filesize and matrix description appear to be inconsistent
@@ -385,7 +388,7 @@ def readfid(fptr=None,
         >>> fid['data'].shape   # MSME 3D
         (133, 105, 25)
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/6/fid'))
-        >>> fid['data'].shape   # MSME 2D-TURBO  --- THIS IS ACTUALLY WRONG!!
+        >>> fid['data'].shape   # MSME 2D-TURBO
         (256, 256, 5, 3)
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/7/fid'))
         >>> fid['data'].shape  # FLASH 2D (NR=25, NI=5, NSLICES=5)
@@ -397,7 +400,7 @@ def readfid(fptr=None,
         Traceback (most recent call last):
         ...
         OSError: ...
-        >>> # fid fil 9 was missing due to incomplete scans
+        >>> # fid file 9 was missing due to incomplete scans
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/10/fid'))
         >>> fid['data'].shape # FLASH 2D (MATRIX 32 X 32)
         (32, 32, 5)
@@ -405,25 +408,28 @@ def readfid(fptr=None,
         >>> fid['data'].shape # FLASH 3D (MATRIX 32 X 32)
         (32, 32, 5)
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/12/fid'))
-        >>> fid['data'].shape # EPI "1 segment"
-        (32, 32, 5)
-
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/13/fid'))
         ... # doctest: +ELLIPSIS
-        ... # 16 segment EPI
+        ... # 1-segment EPI - FIXME, this should be easy but somehow ACQ_size=(8192,1) 
+        ... # and ACQ_scan_size=ACQ_phase_factor_scans (instead of One_Scan)
+        ... # this should be an easy 64x64x5slice single shot EPI...
         Traceback (most recent call last):
         ...
-        IndexError: ...
+        ValueError: ...
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/13/fid'))
+        ... # doctest: +ELLIPSIS
+        ... # 16 segment EPI - FIXME
+        Traceback (most recent call last):
+        ...
+        ValueError: ...
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/14/fid'))
         >>> fid['data'].shape # DTI Standard
         (133, 105, 5, 2)
-
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/15/fid'))
         ... # doctest: +ELLIPSIS
-        ... # DTI SPIRAL
+        ... # DTI SPIRAL - FIXME
         Traceback (most recent call last):
         ...
-        KeyError: 'ACQ_phase_encoding_mode'
+        TypeError: ...
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/16/fid'))
         >>> fid['data'].shape # UTE 2D
         (64, 402, 5)
@@ -434,10 +440,15 @@ def readfid(fptr=None,
         >>> fid['data'].shape # ZTE 3D
         (512, 51896)
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/99/fid'))
-        >>> fid['data'].shape # interrupted FLASH DCE
+        ... # doctest: +ELLIPSIS
+        ... # interrupted FLASH DCE, mismatch in filesize causes IOError
+        ... # this is desired (and expected) behaviour
+        Traceback (most recent call last):
+        ...
+        IOError: ...
+        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/99/fid'), resetNR=True)
+        >>> fid['data'].shape # interrupted FLASH DCE (NR=7 from formerly 25)
         (133, 105, 5, 7)
-
-
     """
     if isinstance(fptr, FileType):
         fidname = fptr.name
@@ -466,26 +477,19 @@ def readfid(fptr=None,
                           + acqp['GO_raw_data_format'])
     dtype = numpy.dtype(datatype)
 
-    # byteorder: 'little' don't swap, 'big' do swap
-    BYTORDA = acqp['BYTORDA']
-    logger.debug('BYTORDA={0}'.format(BYTORDA))
-
     # Spatial/spectroscopic dimension of the experiment.
-    ACQ_dim = acqp['ACQ_dim']
-    logger.debug('ACQ_dim={0}'.format(ACQ_dim))
+    logger.debug('ACQ_dim={0}'.format(acqp['ACQ_dim']))
+    # only the following parameters are retrieved for easier access AND
+    # modification from their value in the acqp parameter file
     #ACQ_size[0] should be even (real valued counts)
     ACQ_size = acqp['ACQ_size'][:]
+    NR = acqp['NR']
     logger.debug('ACQ_size={0}'.format(ACQ_size))
     assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
             'I am not clever enough to read Parallel acquired data, yet')
-    assert ACQ_dim == len(ACQ_size),(
+    assert acqp['ACQ_dim'] == len(ACQ_size),(
             'ACQ_dim = {0} != len(ACQ_size={1}) ??'.format(
-            ACQ_dim, ACQ_size))
-
-    # Number of objects
-    NI = acqp['NI']
-    # Number of repeated experiments within the dataset.
-    NR = acqp['NR']
+            acqp['ACQ_dim'], ACQ_size))
 
     # There is the possibility of 'zero filling' since objects (aka kspace
     # lines) are written n 1Kb blocks if GO_block_size != continuous
@@ -496,36 +500,12 @@ def readfid(fptr=None,
     elif acqp['GO_block_size'] == 'Standard_KBlock_Format':
         true_obj_blocksize = (int(datatype[1])*ACQ_size[0])
         obj_blocksize = 1024 * ((true_obj_blocksize-1) // 1024 + 1)
-        ACQ_size[0] = obj_blocksize/2/int(datatype[1])
+        ACQ_size[0] = obj_blocksize//(2*int(datatype[1]))
     else:
         raise IOError, 'Unexpected value for GO_block_size in acqp'
-    # find BRUKER object order
-    ACQ_obj_order = acqp['ACQ_obj_order']
-    # Number of subsequent scans in the raw dataset belonging
-    # to the same Object.
-    ACQ_phase_factor = acqp['ACQ_phase_factor']
-    #  Ordering scheme for scans within the k-space.
-    ACQ_phase_encoding_mode = acqp['ACQ_phase_encoding_mode']
-    #  For positioning of first scan in phase encoding scheme.
-    ACQ_phase_enc_start = acqp['ACQ_phase_enc_start']
-    # RARE factor sort of indicates how many PE shots are spend on one slice
-    # before moving on to next object (slice?) as defined in ACQ_obj_order
-    ACQ_rare_factor = acqp['ACQ_rare_factor']
-    # number of scans (i.e. kspace lines) that are acquired for every phase 
-    # enc step, e.g. multi-echo, timepoint in a look-locker recovery readout ...
-    ACQ_ns_list_size = acqp['ACQ_ns_list_size']
 
-#    # 2D vs 3D issues about slices etc.
-    if ACQ_dim == 2:
+    if acqp['ACQ_dim'] == 2:
         # this is 2D
-#        if len(ACQ_obj_order) != acqp['NSLICES']:
-##            logger.warning('NSLICES not equal to number of ACQ_obj_order')
-##            logger.warning('experimental fix used')
-#            ACQ_size.append(acqp['NSLICES'])
-#            ACQ_size.append(len(ACQ_obj_order)/acqp['NSLICES'])
-#        else:
-#            ACQ_size.append(len(ACQ_obj_order))
-#        ACQ_size.append(len(ACQ_obj_order))
         encoding = [1, 1, 0, 0] # dimensions that require FFT
     else:
         encoding = [1, 1, 1, 0] # dimensions that require FFT
@@ -547,13 +527,12 @@ def readfid(fptr=None,
                 'trying PVM_EncSteps1 from method')
         try:
             PVM_EncSteps1 = method['PVM_EncSteps1']
-            print('='*80+'\nsaved by PVM_EncSteps1')
             # ensure that it runs from 0 to max
             Enc1Steps = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
         except KeyError:
             logger.warning('PVM_EncSteps1 missing from method parameter file')
             Enc1Steps = numpy.arange(ACQ_size[1])
-    if ACQ_dim == 3:
+    if acqp['ACQ_dim'] == 3:
         try:
             phase_range = max(acqp['ACQ_spatial_phase_2']) - \
                             min(acqp['ACQ_spatial_phase_2'])
@@ -589,17 +568,33 @@ def readfid(fptr=None,
     logger.info('loading %s' % fidname)
     if (fid_size < file_size):
         logger.warning(
-            'filesize (%i) of %s ' % (file_size, fidname) +
-            'does not follow from parameters (%i)\nwill truncate fid ...'
-             % fid_size)
+            ' %s: filesize (%i) > expected, calculated size (%i) ' % (
+                 fidname, file_size, fid_size) +
+            '\nwill truncate fid ...'
+             )
         data = numpy.fromfile(fptr, dtype = dtype)[0:(2*n_stored_datapoints)]
     elif (fid_size>file_size):
-        raise IOError('filesize (%i) < expected size of fid (%i)' % 
-                      (file_size, fid_size))
+        if resetNR: 
+            NR = int(file_size//(int(datatype[1])*2*numpy.array(ACQ_size).prod() *
+                               acqp['NSLICES']*acqp['ACQ_n_echo_images']*
+                               acqp['ACQ_n_movie_frames']))
+            n_stored_datapoints = numpy.array(ACQ_size).prod() * (
+                acqp['NSLICES']*acqp['ACQ_n_echo_images']*
+                acqp['ACQ_n_movie_frames'] * NR )
+            n_datapoints = numpy.array(acqp['ACQ_size']).prod() * (
+                acqp['NSLICES']*acqp['ACQ_n_echo_images']*
+                acqp['ACQ_n_movie_frames'] * NR )
+
+            data = numpy.fromfile(fptr, dtype = dtype)[0:(2*n_stored_datapoints)]
+        else:
+            raise IOError('filesize (%i) < expected size of fid (%i)' % 
+                          (file_size, fid_size))
     else:
         data = numpy.fromfile(fptr, dtype = dtype)
 
-    if BYTORDA =='big':
+    # byteorder: 'little' don't swap, 'big' do swap
+    logger.debug('BYTORDA={0}'.format(acqp['BYTORDA']))
+    if acqp['BYTORDA'] =='big':
         data.byteswap(True)  # swap ENDIANness in place
         
     # convert to complex data, usually we would do:
@@ -608,7 +603,7 @@ def readfid(fptr=None,
     fid = data.astype(numpy.float32).view(numpy.complex64)
 
     logger.info('ACQ_size = {0}, NR={1}, ACQ_obj_order={2}, Enc1Steps={3}'.
-                   format(ACQ_size, NR, ACQ_obj_order, Enc1Steps))
+                   format(ACQ_size, NR, acqp['ACQ_obj_order'], Enc1Steps))
 
     if untouched:
         return {'data':fid,
@@ -1009,8 +1004,15 @@ def fftbruker(array, encoding=None, DCoffset=False):
 
     return numpy.fft.fftshift(img, axes = FTaxes)
 
-def fftfid(fptr=None):
-    fid = readfid(fptr, squeezed=False)['data']
+def fftfid(fptr=None, **kwargs):
+    ''' Take filename, retrieve fid and FT as best as you can
+    
+    This relies on the FT-able axis to be in he 1st three positions.
+    Remarks: It does not account for shifts in phase-encode direction (yet).
+    It also does not transpose correctly for anything but axial scans.'''
+    if kwargs.get('squeezed',False):
+        raise ValueError('Keyword squeezed must be False')
+    fid = readfid(fptr, squeezed=False, **kwargs)['data']
     ii = numpy.fft.fftshift(numpy.fft.fftn(fid,
                                            axes=[0,1,2]),
                             axes=[0,1,2])
@@ -1064,5 +1066,5 @@ def readRFshape(filename):
 # main part - run test cases if called as a module
 if __name__ == "__main__":
     import doctest
-#    doctest.testmod()
-    doctest.run_docstring_examples(readfid,globals())
+    doctest.testmod()
+#    doctest.run_docstring_examples(readfid,globals())

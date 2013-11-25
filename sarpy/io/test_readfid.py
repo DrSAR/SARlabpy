@@ -14,12 +14,13 @@ root = '~/bdata/stefan/nmr/'
 files =  ['readfidTest.ix1/%i' % (i+1) for i 
          in range(18)+[98]]
 files.append('NecS3Hs02.iJ1/10')
-files = ['readfidTest.ix1/8']
 files = ['NecS3Hs02.iJ1/10']
+files = ['readfidTest.ix1/12']
 for fid_file in files:
         print fid_file+' '+'-'*50
 #    try:
-        fid = BRUKERIO.readfid(os.path.join(os.path.expanduser(root),fid_file,'fid'), untouched=False)
+        fid = BRUKERIO.readfid(os.path.join(os.path.expanduser(root),fid_file,'fid'), 
+                               untouched=False,resetNR=True)
         print('fid-shape = %s' % (str(fid['data'].shape)))
 #    except Exception, ex:
         print 'EXCEPTION ' + fid_file
