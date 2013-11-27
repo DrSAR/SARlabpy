@@ -1004,7 +1004,10 @@ def fftbruker(array, encoding=None, DCoffset=False):
 
     return numpy.fft.fftshift(img, axes = FTaxes)
 
-def fftfid(fptr=None,  AxisFlip=True, PEshift=True, **kwargs):
+def fftfid(fptr=None,  
+           AxisFlip=True, 
+           PEshift=True,
+           **kwargs):
     ''' Take filename, retrieve fid and FT as best as you can
     
     This relies on the FT-able axis to be in he 1st three positions.
@@ -1014,16 +1017,20 @@ def fftfid(fptr=None,  AxisFlip=True, PEshift=True, **kwargs):
                     convention (default: True)
     :param PEshift: find out shifts of slice packs and apply in the 
                     PE directions (default: True)
-    :param **kwargs: handed through to readfid. However, squeezed=True (normally
-                    accepted by readfid) is not allowed.
+    :param squeezed: squeeze FT array before returning (default: true)
+    :param **kwargs: handed through to readfid (only squeezed is handled 
+                    internally)
     :return: complex-valued array from FT of fid
     :rtype: ndarray
     
     Remarks: It does not account for the possibility of several slice packs
     with different orientations etc. As a result, tripilot scans are not 
     treated properly.'''
-    if kwargs.get('squeezed',False):
-        raise ValueError('Keyword squeezed must be False')
+    if kwargs.pop('squeezed',True):
+        # squeezed was set!
+        squeezed=True
+    else:
+        squeezed=False
     result = readfid(fptr, squeezed=False, **kwargs)
     fid = result['data']
     if PEshift:
@@ -1088,9 +1095,13 @@ def fftfid(fptr=None,  AxisFlip=True, PEshift=True, **kwargs):
             if method['PVM_SPackArrReadOrient'][0]=='L_R':
                 ii = numpy.transpose(ii, [1,0,2,3,4,5,6])
         # flip along all PE & FE dimension
-        return ii[::-1,::-1,::-1,...]
+        retarr = ii[::-1,::-1,::-1,...]
     else:
-        return ii
+        retarr = ii
+    if squeezed:
+        return numpy.squeeze(retarr)
+    else:
+        return retarr
 
 def readRFshape(filename):
     '''reads BRUKERS RF shape files spnam0 etc that are stored with experiments
