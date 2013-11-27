@@ -1004,22 +1004,93 @@ def fftbruker(array, encoding=None, DCoffset=False):
 
     return numpy.fft.fftshift(img, axes = FTaxes)
 
-def fftfid(fptr=None, **kwargs):
+def fftfid(fptr=None,  AxisFlip=True, PEshift=True, **kwargs):
     ''' Take filename, retrieve fid and FT as best as you can
     
     This relies on the FT-able axis to be in he 1st three positions.
-    Remarks: It does not account for shifts in phase-encode direction (yet).
-    It also does not transpose correctly for anything but axial scans.'''
+    
+    :param fptr: input fid file (handed through to readfid)
+    :param AxisFlip: Flip axis to achieve display in agreement with radiological
+                    convention (default: True)
+    :param PEshift: find out shifts of slice packs and apply in the 
+                    PE directions (default: True)
+    :param **kwargs: handed through to readfid. However, squeezed=True (normally
+                    accepted by readfid) is not allowed.
+    :return: complex-valued array from FT of fid
+    :rtype: ndarray
+    
+    Remarks: It does not account for the possibility of several slice packs
+    with different orientations etc. As a result, tripilot scans are not 
+    treated properly.'''
     if kwargs.get('squeezed',False):
         raise ValueError('Keyword squeezed must be False')
-    fid = readfid(fptr, squeezed=False, **kwargs)['data']
+    result = readfid(fptr, squeezed=False, **kwargs)
+    fid = result['data']
+    if PEshift:
+        method = result['header']['method']
+        # Shifting along the phase encodes is not implemented through any modification
+        # of the acquisition. Instead, one has to roll the arrays along those
+        # dimensions during reconstruction. The amount of rolling (in pixels) 
+        # depends on the amount of shift and the FoV in that direction.
+        xyz_shift_mm = numpy.array([method['PVM_SPackArrReadOffset'][0]]+
+                                [method['PVM_SPackArrPhase1Offset'][0]]+
+                                [method['PVM_SPackArrPhase2Offset'][0]], 
+                                dtype=float).flatten()
+        
+        xyz_pix = fid.shape[0:3] # always 3D
+        # make 3D even for 2D acq
+        xyz_FoV_mm = numpy.hstack([method['PVM_Fov'],
+                                   numpy.tile(1,3-len(method['PVM_Fov']))])
+        xyz_shift_fraction = xyz_shift_mm/xyz_FoV_mm    
+        # create meshed arrays that have linearly increasing values along the 1st
+        # and 2nd dimension
+        PE1 = numpy.meshgrid(numpy.zeros(xyz_pix[0]),
+                             numpy.arange(xyz_pix[1]),
+                             numpy.zeros(xyz_pix[2]),
+                             numpy.zeros(fid.shape[3]),
+                             numpy.zeros(fid.shape[4]),
+                             numpy.zeros(fid.shape[5]),
+                             numpy.zeros(fid.shape[6]), indexing='ij')[1]
+        pe1shift = numpy.exp(complex(0,-2*numpy.pi)*PE1*xyz_shift_fraction[1])
+        fid *= pe1shift
+        if xyz_pix[2]>1:
+            PE2 = numpy.meshgrid(numpy.zeros(xyz_pix[0]),
+                                 numpy.zeros(xyz_pix[1]),
+                                 numpy.arange(xyz_pix[2]),
+                                 numpy.zeros(fid.shape[3]),
+                                 numpy.zeros(fid.shape[4]),
+                                 numpy.zeros(fid.shape[5]),
+                                 numpy.zeros(fid.shape[6]), indexing='ij')[2]
+            pe2shift = numpy.exp(complex(0,-2*numpy.pi)*PE2*xyz_shift_fraction[2])
+            fid *= pe2shift
+    # Performing the FT can always be done along 3 dimensions! This is because
+    # the readfid routine slots read, phase and slice encode into array 
+    # dimensions 0, 1, 2. Multi-slice fids have the slices in the 4th
+    # dimension...
     ii = numpy.fft.fftshift(numpy.fft.fftn(fid,
                                            axes=[0,1,2]),
-                            axes=[0,1,2])
-    ii = numpy.transpose(ii, [1,0,2,3,4,5,6])
-    # flip along all three PE dimension which is wrong if not axial
-    return ii[::-1,::-1,::-1,...]
-
+                            axes=[0,1])
+    # The 1st, 2nd, 3rd direction always contains the Read, phase, and slice.
+    # Typically, for display purposes we like AP, LR, HF direction along
+    # certain directions depending on the image orientation:
+    # axial updown[0] = AP, leftright[1] = LR
+    if AxisFlip:
+        method = result['header']['method']
+        if method['PVM_SPackArrSliceOrient'][0]=='axial':
+            if method['PVM_SPackArrReadOrient'][0]=='L_R':
+                ii = numpy.transpose(ii, [1,0,2,3,4,5,6])
+        # sag: updown[0]= HF, leftright[1] = AP
+        elif method['PVM_SPackArrSliceOrient'][0]=='sagittal':
+            if method['PVM_SPackArrReadOrient'][0]=='A_P':
+                ii = numpy.transpose(ii, [1,0,2,3,4,5,6])
+        # cor: updown[0]= HF, leftright[1] = LR                           
+        elif method['PVM_SPackArrSliceOrient'][0]=='coronal':
+            if method['PVM_SPackArrReadOrient'][0]=='L_R':
+                ii = numpy.transpose(ii, [1,0,2,3,4,5,6])
+        # flip along all PE & FE dimension
+        return ii[::-1,::-1,::-1,...]
+    else:
+        return ii
 
 def readRFshape(filename):
     '''reads BRUKERS RF shape files spnam0 etc that are stored with experiments
