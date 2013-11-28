@@ -598,25 +598,8 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     scan_object = sarpy.Scan(scn_to_analyse)
    
     ## Setting parameters
-    x = sarpy.io.BRUKERIO.fftbruker(scan_object.fid)
+    data = scan_object.fftfid
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
-    t1points = numpy.divide(x.shape[-2],num_slices)
-
-
-    #TODO: FIX THIS WHEN ISSUE 57 is fixed !!
-    try: 
-
-        data = numpy.zeros([x.shape[0],x.shape[1],t1points,num_slices])
-        srcdat = scan_object.pdata[pdata_num+1].data
-        data = srcdat[:,:,:,:,0] + 1j*srcdat[:,:,:,:,1]
-
-    except IndexError:
-        data=numpy.fliplr(
-             numpy.flipud(numpy.transpose(x.reshape(x.shape[0],
-                                                    x.shape[1],
-                                                    t1points,
-                                                    num_slices),
-                                                    [1,0,3,2])))
 
     tau = scan_object.method.PVM_RepetitionTime
     total_TR = scan_object.method.Inv_Rep_time
