@@ -245,6 +245,7 @@ class Scan(object):
     def fid(self):
         try:
             kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
+                                      squeezed=False,
                                       acqp=self.acqp.__dict__,
                                       method=self.method.__dict__)['data']
         except TypeError:
@@ -258,6 +259,13 @@ class Scan(object):
                                           acqp=self.acqp.__dict__,
                                           method=self.method.__dict__)['data']
         return kspace
+
+    @lazy_property
+    def fftfid(self):
+        readfidresult = {'data': self.fid,
+                         'header':{'method':self.method.__dict__}}
+        return BRUKERIO.fftfid(os.path.join(self.dirname,'fid'),
+                               readfidresult=readfidresult)
 
     @lazy_property
     def adata(self):

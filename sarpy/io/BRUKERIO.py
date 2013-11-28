@@ -1004,7 +1004,8 @@ def fftbruker(array, encoding=None, DCoffset=False):
 
     return numpy.fft.fftshift(img, axes = FTaxes)
 
-def fftfid(fptr=None,  
+def fftfid(fptr=None,
+           readfidresult=None,
            AxisFlip=True, 
            PEshift=True,
            **kwargs):
@@ -1031,10 +1032,11 @@ def fftfid(fptr=None,
         squeezed=True
     else:
         squeezed=False
-    result = readfid(fptr, squeezed=False, **kwargs)
-    fid = result['data']
+    if readfidresult is None:
+        readfidresult = readfid(fptr, squeezed=False, **kwargs)
+    fid = readfidresult['data']
     if PEshift:
-        method = result['header']['method']
+        method = readfidresult['header']['method']
         # Shifting along the phase encodes is not implemented through any modification
         # of the acquisition. Instead, one has to roll the arrays along those
         # dimensions during reconstruction. The amount of rolling (in pixels) 
@@ -1082,7 +1084,7 @@ def fftfid(fptr=None,
     # certain directions depending on the image orientation:
     # axial updown[0] = AP, leftright[1] = LR
     if AxisFlip:
-        method = result['header']['method']
+        method = readfidresult['header']['method']
         if method['PVM_SPackArrSliceOrient'][0]=='axial':
             if method['PVM_SPackArrReadOrient'][0]=='L_R':
                 ii = numpy.transpose(ii, [1,0,2,3,4,5,6])
