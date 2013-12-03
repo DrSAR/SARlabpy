@@ -66,13 +66,20 @@ def generate(**kwargs):
                        glob.glob(os.path.join(root, v, '*tiff')) +
                        glob.glob(os.path.join(root, v, '*png')))
         # strip out the patient+slice ID from filename
-        patient_slice_ID.update([os.path.basename(x).split(' ')[0] 
-                                for x in image_files])
+        for x in [os.path.basename(x) for x in image_files]:
+            regmatch = re.match('([0-9]+-)([0-9]+\.{0,1}[0-9]*)([ab]*)(.*)', x)
+            if regmatch is not None:
+                to_join = ''.join(regmatch.groups()[0:3])
+                patient_slice_ID.add(to_join)
+            else:
+                print 'did not match'+x
     
     patients=set()
+    print patient_slice_ID
     violation = False
     for img_ID in patient_slice_ID:
-        img_ID_parsed = re.match('([0-9]+)([a-z])([0-9]+)([ab]*)', img_ID)
+#        img_ID_parsed = re.match('([0-9]+)([a-z])([0-9]+)([ab]*)', img_ID)
+        img_ID_parsed = re.match('([0-9]+-)([0-9]+\.{0,1}[0-9]*)([ab]*)(.*)', img_ID)
         if img_ID_parsed is None:
             print('convention violation (type I): %s' % img_ID)
             violation = True
@@ -99,17 +106,16 @@ def generate(**kwargs):
     # and only once in each of the marker subfolders.
             
     patient_ID_sorted = helpers.natural_sort(patient_slice_ID)
-    
     for patient in patients:
-        # find all the images for the current patient
+        # find all the images for the *current* patient
         imges = [x for x in patient_ID_sorted 
-                            if re.match(patient+'[a-z].*', x) is not None]                
+                 if re.match(patient+'.*', x) is not None]                
         histo_row_files = []
         for k,v in markers.iteritems():
-            img_fnames = [glob.glob(os.path.join(root, v, x+'*jpg'))[0] for x in imges]
+            img_fnames = [glob.glob(os.path.join(root, v, x+'*'))[0] for x in imges]
             print patient, v
             
-            histo_row_files.append(os.path.join(args.output, patient+'-'+k+'.jpg'))
+            histo_row_files.append(os.path.join(args.output, patient+k+'.jpg'))
             
             # check whether file exists and don't bother recreating if it present
             if os.path.exists(histo_row_files[-1]) and not args.overwrite:
@@ -118,7 +124,11 @@ def generate(**kwargs):
                 # annotate file
                 labelled_img_fnames=[]
                 for image_file in img_fnames:
-                    lbl = os.path.basename(image_file).split()[0]
+                    #lbl = os.path.basename(image_file).split()[0]
+                    regmatch = re.match('([0-9]+-)([0-9]+\.{0,1}[0-9]*)([ab]*)(.*)',
+                                        os.path.basename(image_file))
+                    lbl = ''.join(regmatch.groups()[0:3])
+                    print image_file
                     #cmd = 'convert -size 100x14 xc:none -gravity center '+ \
                     #      '-stroke black -strokewidth 2 -annotate 0 "%s"' % lbl + \
                     #      '-background none -shadow 100x3+0+0 +repage ' +\
