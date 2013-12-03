@@ -114,12 +114,16 @@ def generate_summary(masterlist_name):
                 curr.append('Yes')
         checks.append(curr)
     
-        
     from reportlab.lib import colors
-    from reportlab.lib.pagesizes import letter, inch, landscape
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-     
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.pagesizes import letter, inch, landscape, cm 
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
+    from reportlab.pdfgen import canvas
+
+
     doc = SimpleDocTemplate(filename, pagesize=landscape(letter))
+
+    width, height = 8.5,11
     # container for the 'Flowable' objects
     elements = []
      
@@ -153,10 +157,13 @@ def generate_summary(masterlist_name):
     t.setStyle(TableStyle(styled))
     elements.append(t)
 
+    elements.append(PageBreak())
 
     ## Construct the table for the scan information
 
     combinedParams = []
+
+    styles = getSampleStyleSheet()
 
     for stype in natural_sort(list(setvals)):
 
@@ -164,18 +171,19 @@ def generate_summary(masterlist_name):
         fov = set()
         px_size = set()
         scanParams = set()
+        adata = set()
 
         for k,v in master_list.iteritems():
 
             if master_list[k][stype][0] != "":
                 scn = sarpy.Scan(master_list[k][stype][0])
-
                 pack_extent = [scn.method.PVM_SPackArrSliceDistance[0]*scn.method.PVM_SPackArrNSlices[0] - scn.method.PVM_SPackArrSliceGap[0]]
 
                 scanType.add(scn.method.Method)
                 fov.add(str(scn.method.PVM_FovCm+pack_extent).strip('[,]'))
                 px_size.add(str(scn.method.PVM_SpatResol+[scn.method.PVM_SliceThick]).strip('[,]'))
                 scanParams.add(str([scn.method.PVM_RepetitionTime,scn.method.PVM_EchoTime1]).strip('[,]'))
+                adata.add(str(scn.adata.keys()).strip('[,]'))
 
         if len(fov) != 1:
             fov = [str(len(fov)) + ' diff']
@@ -186,9 +194,9 @@ def generate_summary(masterlist_name):
         if len(scanParams) != 1:
             scanParams = [str(len(scanParams)) + ' diff']
              
-        combinedParams.append([stype, list(fov)[0],list(px_size)[0],list(scanParams)[0]])
+        combinedParams.append([stype, list(fov)[0],list(px_size)[0],list(scanParams)[0],Paragraph(list(adata)[0],styles['BodyText'])])
     
-    combinedParams.insert(0,['','FoV (x,y,z) [mm]','SpatRes (x,y,z) [mm]','TR, TE [ms]'])  
+    combinedParams.insert(0,['','FoV (x,y,z) [mm]','SpatRes (x,y,z) [mm]','TR, TE [ms]', 'Available adata'])  
 
     ##This transposes the list
     #combinedParams = map(None,*combinedParams) 
@@ -200,10 +208,10 @@ def generate_summary(masterlist_name):
 
     #return combinedParams
 
-    colwidths = checks_size[1]*[1.3*inch]
-    colwidths.insert(0,1*inch)
+    colwidths = (checks_size[1]-1)*[1.4*inch]
+    colwidths.append(4*inch)
     
-    rowHeights = checks_size[0]*[0.4*inch]
+    rowHeights = (checks_size[0])*[0.8*inch]
 
     t=Table(combinedParams,colwidths, rowHeights)
     styled = []
@@ -219,6 +227,14 @@ def generate_summary(masterlist_name):
     t.setStyle(TableStyle(styled))
     elements.append(t)
 
+    def coord(x, y, unit=1):
+        x, y = x * unit, height -  y * unit
+        return x, y
+
+    c = canvas.Canvas("a.pdf", pagesize=letter)
+    t.wrapOn(c, width, height)
+    t.drawOn(c, *coord(1.8, 9.6, cm))
+    c.save()
 
 
 
@@ -240,30 +256,6 @@ def generate_summary(masterlist_name):
     #         else:
     #             curr.append('Yes')
     #     checks.append(curr)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
