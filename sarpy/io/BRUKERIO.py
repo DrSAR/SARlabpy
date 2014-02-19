@@ -1070,13 +1070,24 @@ def fftfid(fptr=None,
                                  numpy.zeros(fid.shape[4]),
                                  numpy.zeros(fid.shape[5]),
                                  numpy.zeros(fid.shape[6]), indexing='ij')[2]
-            pe2shift = numpy.exp(complex(0,-2*numpy.pi)*PE2*xyz_shift_fraction[2])
+            # echo position 
+            echopos = method.get('PVM_EchoPosition',None)
+            if echopos is None:
+                echopos = 0.5
+            else:
+                echopos /=100.
+            pe2shift = numpy.exp(complex(0,-2*numpy.pi)*PE2*
+                                     (xyz_shift_fraction[2]-
+                                      (echopos*xyz_pix[2]-1)/xyz_pix[2]))
             fid *= pe2shift
+    # shifting along axes that require FT by half the size removes the 
+    # horrible phase ripples
+    fidshifted = numpy.fft.fftshift(fid, axes=[0,1,2])
     # Performing the FT can always be done along 3 dimensions! This is because
     # the readfid routine slots read, phase and slice encode into array 
     # dimensions 0, 1, 2. Multi-slice fids have the slices in the 4th
     # dimension...
-    ii = numpy.fft.fftshift(numpy.fft.fftn(fid,
+    ii = numpy.fft.fftshift(numpy.fft.fftn(fidshifted,
                                            axes=[0,1,2]),
                             axes=[0,1])
     # The 1st, 2nd, 3rd direction always contains the Read, phase, and slice.
