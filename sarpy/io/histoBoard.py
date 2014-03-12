@@ -135,8 +135,8 @@ def generate(**kwargs):
                     #      '-stroke none -fill white -annotate 0 "%s" ' % lbl + \
                     #      "'%s' " % image_file +'+swap -gravity south ' + \
                     #      ' -geometry +0-3 -composite '+\
-                    #      "'%s.jpg'" % os.path.expanduser(os.path.join('~/hdata', lbl+'.png')
-                    labelled_outfile = os.path.expanduser(os.path.join('~/hdata', lbl+'.jpg'))
+                    #      "'%s.jpg'" % os.path.expanduser(os.path.join('~/hdata',args.output lbl+'.png'))
+                    labelled_outfile = os.path.expanduser(os.path.join('~/hdata',args.output, lbl+'.jpg'))
                     cmd = "convert %s -pointsize 155 " % helpers.shellquote(image_file) + \
                           "label:'%s' +swap -gravity Center " % lbl+ \
                           "-append %s" %  helpers.shellquote(labelled_outfile)
@@ -152,7 +152,7 @@ def generate(**kwargs):
                     print('removing %s' % f)
                     os.remove(f)
                     
-        largeoutfile = os.path.expanduser(os.path.join('~/hdata',args.output, patient+'.jpg')
+        largeoutfile = os.path.expanduser(os.path.join('~/hdata',args.output, patient+'.jpg'))
         cmd = 'convert -append {0} {1}'.format(
                           ' '.join([helpers.shellquote(x) for x in histo_row_files]), 
                           largeoutfile)
@@ -163,7 +163,7 @@ def generate(**kwargs):
             if not args.test: os.system(cmd)
             
         if args.scale:
-            outfile = os.path.expanduser(os.path.join('~/hdata', patient+'-width%s.jpg' % args.factor)
+            outfile = os.path.expanduser(os.path.join('~/hdata', patient+'-width%s.jpg' % args.factor))
             cmd = 'convert -scale {0} {1} {2}'.format(
                                 args.factor, largeoutfile, outfile)
             if os.path.exists(outfile) and not args.overwrite:
