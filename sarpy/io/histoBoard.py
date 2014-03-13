@@ -129,6 +129,7 @@ def generate(**kwargs):
                                         os.path.basename(image_file))
                     lbl = ''.join(regmatch.groups()[0:3])
                     print image_file
+
                     #cmd = 'convert -size 100x14 xc:none -gravity center '+ \
                     #      '-stroke black -strokewidth 2 -annotate 0 "%s"' % lbl + \
                     #      '-background none -shadow 100x3+0+0 +repage ' +\
@@ -152,7 +153,7 @@ def generate(**kwargs):
                     print('removing %s' % f)
                     os.remove(f)
                     
-        largeoutfile = os.path.expanduser(os.path.join('~/hdata',args.output, patient+'.jpg'))
+        largeoutfile = os.path.expanduser(os.path.join('~/hdata',args.output, patient+'large.jpg'))
         cmd = 'convert -append {0} {1}'.format(
                           ' '.join([helpers.shellquote(x) for x in histo_row_files]), 
                           largeoutfile)
@@ -163,7 +164,7 @@ def generate(**kwargs):
             if not args.test: os.system(cmd)
             
         if args.scale:
-            outfile = os.path.expanduser(os.path.join('~/hdata', patient+'-width%s.jpg' % args.factor))
+            outfile = os.path.expanduser(os.path.join('~/hdata',args.output, patient+'-width%s.jpg' % args.factor))
             cmd = 'convert -scale {0} {1} {2}'.format(
                                 args.factor, largeoutfile, outfile)
             if os.path.exists(outfile) and not args.overwrite:
