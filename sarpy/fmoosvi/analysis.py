@@ -584,9 +584,134 @@ def h_residual_T1_FAind(params, y_data, t_data):
     bounds[3,1] = +5
 
     if h_within_bounds(params,bounds):
-        return numpy.abs(y_data - h_func_T1_FAind(params, t_data))
+        return numpy.abs(y_data - h_func_T1_FAind(params,t_data))
     else:
         return 1e30
+
+
+def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
+                        y_data=None,
+                        slice=None,
+                        initial_params = None,
+                        fit_algorithm=None,
+                        **kwargs):
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+
+    if fit_algorithm is None:
+        fit_algorithm = 'leastsq'
+
+    # Get the parameters necessary for fitting the individual pixel
+
+    tau = scan_object.method.PVM_RepetitionTime
+    total_TR = scan_object.method.Inv_Rep_time
+    Nframes = scan_object.method.Nframes
+    delay = scan_object.method.InterSliceDelay
+    FA = numpy.radians(scan_object.acqp.ACQ_flip_angle)    
+
+    # The following are slice dependent parameters
+
+    Td = delay*(slice+1)
+    Tp = total_TR - (Nframes -1)*tau - Td    
+    #TODO: make this better; slice dependent
+    t_data = numpy.arange(0,Nframes) * tau + scan_object.method.PVM_InversionTime
+
+    params = numpy.ones(4)                   
+
+    fit_dict = {}
+
+    if initial_params is None:
+
+        ## Guesses at parameters if none provided
+        params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
+        params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
+        params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
+
+        # Getting a good guess for T1eff by finding the zero crossing
+        yp = y_data[0:5]
+        xp = t_data[0:5]
+
+        A = numpy.array([xp, numpy.ones(xp.shape[0])])
+        w=numpy.linalg.lstsq(A.T,yp)[0]
+        params[2] = numpy.real(numpy.divide(-w[1],w[0]))
+
+        # To prevent negative T1_eff
+        if params[2] < 0:
+            params[2] = 50
+    else:
+        try:
+            params = initial_params
+        except:
+            print('Please supply a list of 4 starting parameters')
+            raise
+
+    # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
+    # phi (phase factor to fit real data)
+
+    if fit_algorithm == 'leastsq':
+
+        try:
+
+            fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                    h_residual_T1_FAind,
+                                                    params,
+                                                    args=(y_data, t_data), 
+                                                    full_output = True,
+                                                    maxfev = 200)
+        except ValueError:
+            # This is going to fail because when i moved the innards into a different function, x and y are no longer defined
+            #TODO fix this because this might actually be useful.
+            #print "Firas, look here fix this because it might actually be useful to know where I'm failing."
+            #print x,y,slice
+            raise
+    else:
+        print('fit type {0} not implemented yet'.format(fit_algorithm))
+
+    [a,b,T1_eff,phi] = fit_params
+
+    # Step 2: Calculate M(N-1)/M(inf) from Eq.1 from Koretsky paper
+    # Divide both sides by M(inf) and then use M(0)/M(inf) -> step1
+
+    c = 1- (1-b)*numpy.exp(-(Nframes-1)*tau/T1_eff)
+
+    # Step 3: Get initial guess for T1 based on nominal flip angle:
+    # Use equation 3 from Chuang and Koretsky paper
+
+    T1_guess = 1/ (1/T1_eff + numpy.log(numpy.cos(FA))/tau)
+
+    # To prevent absurd values of T1_guess
+    if T1_guess < 0:
+        T1_guess = params[2] + 200
+
+    # Step 4: Solve Equation 6 to get T1 from it. Try using Newton-
+    # Rhapsod method
+   
+    calc_params = (Td, Tp, tau, T1_eff,b,c)
+    
+    try:                    
+        T1 = scipy.optimize.newton(T1eff_to_T1, T1_guess, maxiter=300, 
+                                   args= (calc_params))
+    except RuntimeError:
+        T1=numpy.nan
+        pass
+    
+    # Make absurd values nans to make my life easer:
+    if (T1<0 or T1>=1e4):
+        T1 = numpy.nan
+
+    # Add the T1 to the fitted parameters 
+    # This needs to be a list because numpy.append wasn't working !?!?!
+    # It worked in the ipython notebook, but not inside the code
+
+    fit_params = list(fit_params)                     
+    fit_params.append(T1)
+
+    if fit_algorithm == 'leastsq':
+        return infodict,mesg,ier,fit_params,t_data
+
+    else:
+        return a,b,T1_eff,phi,T1, t_data
+
 
 def h_fit_T1_LL_FAind(scn_to_analyse=None, 
                       bbox = None, 
@@ -601,16 +726,8 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     data = scan_object.fftfid
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
 
-    tau = scan_object.method.PVM_RepetitionTime
-    total_TR = scan_object.method.Inv_Rep_time
-    Nframes = scan_object.method.Nframes
-    delay = scan_object.method.InterSliceDelay
-    FA = numpy.radians(scan_object.acqp.ACQ_flip_angle)
     x_size = data.shape[0]
     y_size = data.shape[1]
-
-    #TODO: make this better; slice dependent
-    t_data = numpy.arange(0,Nframes) * tau + scan_object.method.PVM_InversionTime
                                        
     # Initializations
 
@@ -640,92 +757,18 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
         
     # Start the fitting process        
 
-    for slice in xrange(num_slices):  
-
-        # The following are slice dependent parameters
-
-        Td = delay*(slice+1)
-        Tp = total_TR - (Nframes -1)*tau - Td
-        
+    for slice in xrange(num_slices):          
         for x in xrange(bbox[0],bbox[1]):
             for y in xrange(bbox[2],bbox[3]):
 
-                params = numpy.ones(4)                   
                 y_data = data[x,y,slice,:]
 
-                fit_dict = {}
+                [infodict,mesg,ier,res_fit_params,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
+                                                                    y_data,
+                                                                    slice,
+                                                                    fit_algorithm)
 
-                ## Guesses at parameters 
-                params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
-                params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
-                params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
-
-                # Getting a good guess for T1eff by finding the zero crossing
-                yp = y_data[0:5]
-                xp = t_data[0:5]
-
-                A = numpy.array([xp, numpy.ones(xp.shape[0])])
-                w=numpy.linalg.lstsq(A.T,yp)[0]
-                params[2] = numpy.real(numpy.divide(-w[1],w[0]))
-
-                # To prevent negative T1_eff
-                if params[2] < 0:
-                    params[2] = 50
-
-                # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
-                # phi (phase factor to fit real data)
-
-                if fit_algorithm == 'leastsq':
-
-                    try:
-
-                        fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
-                                                                h_residual_T1_FAind,
-                                                                params,
-                                                                args=(y_data,t_data), 
-                                                                full_output = True,
-                                                                maxfev = 200)
-                    except ValueError:
-                        print x,y,slice
-                        continue
-                else:
-                    print('fit type {0} not implemented yet'.format(fit_algorithm))
-
-                #print fit_params
-                [a,b,T1_eff,phi] = fit_params
-
-                # Step 2: Calculate M(N-1)/M(inf) from Eq.1 from Koretsky paper
-                # Divide both sides by M(inf) and then use M(0)/M(inf) -> step1
-
-                c = 1- (1-b)*numpy.exp(-(Nframes-1)*tau/T1_eff)
-
-                # Step 3: Get initial guess for T1 based on nominal flip angle:
-                # Use equation 3 from Chuang and Koretsky paper
-
-                T1_guess = 1/ (1/T1_eff + numpy.log(numpy.cos(FA))/tau)
-
-                # To prevent absurd values of T1_guess
-                if T1_guess < 0:
-                    T1_guess = params[2] + 200
-
-                # Step 4: Solve Equation 6 to get T1 from it. Try using Newton-
-                # Rhapsod method
-               
-                calc_params = (Td, Tp, tau, T1_eff,b,c)
-                
-                try:                    
-                    T1 = scipy.optimize.newton(T1eff_to_T1, T1_guess, maxiter=300, 
-                                               args= (calc_params))
-                except RuntimeError:
-                    T1=numpy.nan
-                    pass
-                
-                # Make absurd values nans to make my life easer:
-                if (T1<0 or T1>=1e4):
-                    T1 = numpy.nan
-
-                # Add the T1 to the fitted parameters                      
-                numpy.append(fit_params,T1)
+                [a,b,T1_eff,phi, T1] = res_fit_params
 
                 a_arr[x,y,slice] = a
                 b_arr[x,y,slice] = b
@@ -742,6 +785,11 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 ier1[x,y,slice] = ier
 
+
+### this will need some serious debugging
+
+## Moved the entire T1 fitting process into a separate function
+
     fit_params1 = {'a': a_arr,
                    'b': b_arr,
                    'T1_eff': T1_eff_arr,
@@ -750,11 +798,12 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     if fit_algorithm == 'leastsq':
 
         result = {'rawdata':data,
-                'params':fit_params1,
-                'infodict':infodict1,
-                'ier':ier1,
-                'goodness':goodness_of_fit1,
-                'mesg':mesg1}
+                  't_data':t_data,
+                  'params':fit_params1,
+                  'infodict':infodict1,
+                  'ier':ier1,
+                  'goodness':goodness_of_fit1,
+                  'mesg':mesg1}
 
         return {'':numpy.squeeze(data_after_fitting),
                 '_fit':result}
