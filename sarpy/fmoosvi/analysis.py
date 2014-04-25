@@ -624,7 +624,6 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
 
     else:
         params = numpy.ones(4)
-
         try:
             params = initial_params
         except ValueError:
@@ -772,10 +771,10 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 y_data = data[x,y,slice,:]
 
-                [infodict,mesg,ier,res_fit_params,T1, t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
-                                                                    y_data,
-                                                                    slice,
-                                                                    fit_algorithm)
+                [infodict,mesg,ier,res_fit_params,T1,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
+                                                                                   y_data=y_data,
+                                                                                   slice=slice,
+                                                                                   fit_algorithm=fit_algorithm)
 
                 [a,b,T1_eff,phi] = res_fit_params
 
