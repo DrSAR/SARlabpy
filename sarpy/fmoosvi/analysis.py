@@ -466,7 +466,7 @@ def h_conc_from_signal(scn_to_analyse=None,
             '_times':times}
     
 def h_stitch_dce_scans(masterlist_name,
-                       bbox,
+                        bbox,
                        scn_to_analyse=None, 
                        other_dce_label=None,
                        pdata_num = 0,
@@ -566,7 +566,7 @@ def h_func_T1_FAind(params,t_data):
     if numpy.isfinite(res).all():
         return res
     else:
-        return 1e30
+        return [1e30]*t_data.shape[-1]
 
 def T1eff_to_T1(T1,Td, Tp, tau, T1_eff, b, c):    
     return (1-2*numpy.exp(-Td/T1) + numpy.exp(-(Tp+Td)/T1))*((1-numpy.exp(-tau/T1_eff))/(1-numpy.exp(-tau/T1))) -c*(numpy.exp(-tau/T1_eff)/(numpy.exp(-tau/T1)))*numpy.exp(-(Tp+Td)/T1) - b 
@@ -605,6 +605,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     total_TR = scan_object.method.Inv_Rep_time
     Nframes = scan_object.method.Nframes
     delay = scan_object.method.InterSliceDelay
+    FA = numpy.radians(scan_object.acqp.ACQ_flip_angle)
     x_size = data.shape[0]
     y_size = data.shape[1]
 
@@ -634,8 +635,6 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     ## Check for bbox traits and create bbox_mask to output only partial data
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])
-    if bbox.shape != (4,):    
-        raise ValueError('Please supply a bbox for h_fit_T1_LL_FAind')
     else:
         bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)  
         
@@ -667,7 +666,11 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 A = numpy.array([xp, numpy.ones(xp.shape[0])])
                 w=numpy.linalg.lstsq(A.T,yp)[0]
-                params[2] = numpy.real(numpy.divide(-w[1],w[0]))   
+                params[2] = numpy.real(numpy.divide(-w[1],w[0]))
+
+                # To prevent negative T1_eff
+                if params[2] < 0:
+                    params[2] = 50
 
                 # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
                 # phi (phase factor to fit real data)
@@ -696,13 +699,22 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 c = 1- (1-b)*numpy.exp(-(Nframes-1)*tau/T1_eff)
 
-                # Step 3: Solve Equation 6 to get T1 from it. Try using Newton-
+                # Step 3: Get initial guess for T1 based on nominal flip angle:
+                # Use equation 3 from Chuang and Koretsky paper
+
+                T1_guess = 1/ (1/T1_eff + numpy.log(numpy.cos(FA))/tau)
+
+                # To prevent absurd values of T1_guess
+                if T1_guess < 0:
+                    T1_guess = params[2] + 200
+
+                # Step 4: Solve Equation 6 to get T1 from it. Try using Newton-
                 # Rhapsod method
                
                 calc_params = (Td, Tp, tau, T1_eff,b,c)
                 
                 try:                    
-                    T1 = scipy.optimize.newton(T1eff_to_T1, 1500, maxiter=100, 
+                    T1 = scipy.optimize.newton(T1eff_to_T1, T1_guess, maxiter=300, 
                                                args= (calc_params))
                 except RuntimeError:
                     T1=numpy.nan
