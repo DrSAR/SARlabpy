@@ -614,34 +614,20 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
     Td = delay*(slice+1)
     Tp = total_TR - (Nframes -1)*tau - Td    
     #TODO: make this better; slice dependent
-    t_data = numpy.arange(0,Nframes) * tau + scan_object.method.PVM_InversionTime
-
-    params = numpy.ones(4)                   
+    t_data = numpy.arange(0,Nframes) * tau + scan_object.method.PVM_InversionTime         
 
     fit_dict = {}
 
     if initial_params is None:
 
-        ## Guesses at parameters if none provided
-        params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
-        params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
-        params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
+        params = h_fit_T1_LL_FAind_initial_params_guess(y_data,t_data)
 
-        # Getting a good guess for T1eff by finding the zero crossing
-        yp = y_data[0:5]
-        xp = t_data[0:5]
-
-        A = numpy.array([xp, numpy.ones(xp.shape[0])])
-        w=numpy.linalg.lstsq(A.T,yp)[0]
-        params[2] = numpy.real(numpy.divide(-w[1],w[0]))
-
-        # To prevent negative T1_eff
-        if params[2] < 0:
-            params[2] = 50
     else:
+        params = numpy.ones(4)
+
         try:
             params = initial_params
-        except:
+        except ValueError:
             print('Please supply a list of 4 starting parameters')
             raise
 
@@ -703,14 +689,37 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
     # This needs to be a list because numpy.append wasn't working !?!?!
     # It worked in the ipython notebook, but not inside the code
 
-    fit_params = list(fit_params)                     
-    fit_params.append(T1)
+    #fit_params = list(fit_params)                     
+    #fit_params.append(T1)
 
     if fit_algorithm == 'leastsq':
-        return infodict,mesg,ier,fit_params,t_data
+        return infodict,mesg,ier,fit_params, T1,t_data
 
     else:
         return a,b,T1_eff,phi,T1, t_data
+
+def h_fit_T1_LL_FAind_initial_params_guess(y_data,t_data):
+
+    params = numpy.ones(4)  
+
+    ## Guesses at parameters if none provided
+    params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
+    params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
+    params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
+
+    # Getting a good guess for T1eff by finding the zero crossing
+    yp = y_data[0:5]
+    xp = t_data[0:5]
+
+    A = numpy.array([xp, numpy.ones(xp.shape[0])])
+    w=numpy.linalg.lstsq(A.T,yp)[0]
+    params[2] = numpy.real(numpy.divide(-w[1],w[0]))
+
+    # To prevent negative T1_eff
+    if params[2] < 0:
+        params[2] = 50
+
+    return params
 
 
 def h_fit_T1_LL_FAind(scn_to_analyse=None, 
@@ -763,12 +772,12 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 y_data = data[x,y,slice,:]
 
-                [infodict,mesg,ier,res_fit_params,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
+                [infodict,mesg,ier,res_fit_params,T1, t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
                                                                     y_data,
                                                                     slice,
                                                                     fit_algorithm)
 
-                [a,b,T1_eff,phi, T1] = res_fit_params
+                [a,b,T1_eff,phi] = res_fit_params
 
                 a_arr[x,y,slice] = a
                 b_arr[x,y,slice] = b
