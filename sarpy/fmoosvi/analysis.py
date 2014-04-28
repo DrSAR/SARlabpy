@@ -94,7 +94,11 @@ def h_calculate_AUC(scn_to_analyse=None,
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
     for slice in range(num_slices):
-        auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        if inj_point+auc_reps <= reps:
+            auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        else:
+            auc_data[:,:,slice] = numpy.nan
+
        
     # Deal with bounding boxes
 
