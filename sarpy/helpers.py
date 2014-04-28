@@ -123,7 +123,7 @@ def generate_summary(masterlist_name):
 
     doc = SimpleDocTemplate(filename, pagesize=landscape(letter))
 
-    width, height = 8.5,11
+    width, height = 8.5,14
     # container for the 'Flowable' objects
     elements = []
      
@@ -167,11 +167,11 @@ def generate_summary(masterlist_name):
 
     for stype in natural_sort(list(setvals)):
 
-        scanType = set()
-        fov = set()
-        px_size = set()
-        scanParams = set()
-        adata = set()
+        scanType = set('Nothing')
+        fov = set('Nothing')
+        px_size = set('Nothing')
+        scanParams = set('Nothing')
+        adata = set('Nothing')
 
         for k,v in master_list.iteritems():
 
@@ -193,7 +193,7 @@ def generate_summary(masterlist_name):
 
         if len(scanParams) != 1:
             scanParams = [str(len(scanParams)) + ' diff']
-             
+
         combinedParams.append([stype, list(fov)[0],list(px_size)[0],list(scanParams)[0],Paragraph(list(adata)[0],styles['BodyText'])])
     
     combinedParams.insert(0,['','FoV (x,y,z) [mm]','SpatRes (x,y,z) [mm]','TR, TE [ms]', 'Available adata'])  
@@ -209,9 +209,9 @@ def generate_summary(masterlist_name):
     #return combinedParams
 
     colwidths = (checks_size[1]-1)*[1.4*inch]
-    colwidths.append(4*inch)
+    colwidths.append(4.2*inch)
     
-    rowHeights = (checks_size[0])*[0.8*inch]
+    rowHeights = (checks_size[0])*[1*inch]
 
     t=Table(combinedParams,colwidths, rowHeights)
     styled = []
