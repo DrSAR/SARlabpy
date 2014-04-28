@@ -56,7 +56,7 @@ def store_deltaT1(masterlist_name=None,
 
             if 'R1' in adata_save_label and 'multiday_' not in adata_save_label:
 
-                deltaR1 = -(1/scan1.adata[adata_label1].data - 1/scan2.adata[adata_label2].data)
+                deltaR1 = -(1/scan2.adata[adata_label2].data - 1/scan1.adata[adata_label1].data)
                 scan2.store_adata(key=adata_save_label, data = deltaR1, force = force_overwrite)
                 print('{0}: Saved {1}'.format(adata_save_label,
                       scan2.shortdirname))
@@ -80,7 +80,7 @@ def store_deltaT1(masterlist_name=None,
 
             else:
                 
-                deltaT1 = scan1.adata[adata_label1].data - scan2.adata[adata_label2].data
+                deltaT1 = scan2.adata[adata_label2].data - scan1.adata[adata_label1].data
                 scan2.store_adata(key=adata_save_label, data = deltaT1, force = force_overwrite)
 
                 print('{0}: Saved {1}'.format(adata_save_label,
