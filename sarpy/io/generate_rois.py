@@ -28,6 +28,12 @@ def generate_rois(masterlist_name,
     import scipy
     import numpy
 
+    # Quick check to see if the name of the roi matches convention
+    if roi_suffix is not None:
+        assert(type(roi_suffix) is str and len(roi_suffix)==1)
+    else:
+        roi_suffix = ''
+
     root = os.path.join(os.path.expanduser('~/sdata'),
                     masterlist_name,
                     masterlist_name)
@@ -40,7 +46,11 @@ def generate_rois(masterlist_name,
                            object_pairs_hook=collections.OrderedDict
                            ).decode(json_str) 
     if path is None:
-        path = os.path.expanduser(os.path.join('~','sdata',masterlist_name,'rois'))
+        if roi_suffix == '':
+            roi_key_name = 'roi'
+        else:
+            roi_key_name = 'roi' + '_' + roi_suffix        
+        path = os.path.expanduser(os.path.join('~','sdata',masterlist_name,roi_key_name))
     
     for k,v in master_list.iteritems():
 
@@ -62,12 +72,21 @@ def generate_rois(masterlist_name,
             
             if ioType == 'export':
                 fname = os.path.join(path, sdir + '.nii')
+
+                # Note: std_modifier is a value that controls scaling of the image 
+                # Look at code in getters.get_image_clims(data,std_modifier=None):
+                # Basically controls the upper limit of the default image scaling
+
                 scan.pdata[0].export2nii(fname,rescale,std_modifier)
             
             elif ioType == 'import':
-                                        
-                fname = os.path.join(path, sdir + 'a.nii')
-                roi = nibabel.load(fname).get_data()[:,:,:,0]
+                                                        
+                fname = os.path.join(path, sdir + roi_suffix + '.nii')
+
+                try:
+                    roi = nibabel.load(fname).get_data()[:,:,:,0]
+                except IndexError:
+                    roi = nibabel.load(fname).get_data()[:,:,:]
                 
                 # the default foreground and background in h_image_to_mask
                 # will result in a roi_m that has NaN and 1 only (aka
@@ -82,9 +101,9 @@ def generate_rois(masterlist_name,
                     weights[sl] = numpy.divide(numpy.nansum(roi_m[:,:,sl].flatten()),ROIpx)
 
                 try:             
-                    scan.store_adata(key='roi', data = roi_m, force = forceVal)
-                    scan.store_adata(key='roi_weights', data = weights, force = forceVal)
-                    print('h_generate_roi: saved {0} roi label'.format(scan.shortdirname))
+                    scan.store_adata(key=roi_key_name, data = roi_m, force = forceVal)
+                    scan.store_adata(key=roi_key_name+'_weights', data = weights, force = forceVal)
+                    print('h_generate_roi: saved {0} roi label as {1}'.format(scan.shortdirname,roi_key_name))
                 except AttributeError:
                     print('h_generate_roi: force save of scan {0} is required'.format(scan.shortdirname))
 
@@ -106,7 +125,10 @@ if __name__ == '__main__':
     
     parser.add_argument('-m', '--masterlist_name', type=str, required=True,
                        help='Name of the masterlist file. e.g. NecS3 \
-                       Usage: python generate_rois.py -m HerP2 -d axref -a roi -i export ')                
+                       Usage: python generate_rois.py -m HerP2 -d axref -a roi -i export ')
+
+    parser.add_argument('-s', '--suffix', type=str, required=True,
+                       help='Optional: adds _b, _c, etc... to rois. only insert the letter after _')                                       
     
     parser.add_argument('-i', '--iotype', type=str, required=True,
                        choices = ['import','export'], help='IOType, import or export')    
