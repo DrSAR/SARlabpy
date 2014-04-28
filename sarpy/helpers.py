@@ -167,11 +167,11 @@ def generate_summary(masterlist_name):
 
     for stype in natural_sort(list(setvals)):
 
-        scanType = set('Nothing')
-        fov = set('Nothing')
-        px_size = set('Nothing')
-        scanParams = set('Nothing')
-        adata = set('Nothing')
+        scanType = set()
+        fov = set()
+        px_size = set()
+        scanParams = set()
+        adata = set()
 
         for k,v in master_list.iteritems():
 
