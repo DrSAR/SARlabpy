@@ -23,6 +23,7 @@ def store_deltaT1(masterlist_name=None,
                   T1map_2=None,
                   adata_label1 = 'T1_LL',
                   adata_label2 = None,
+                  adata_label3 = 'T1_LL_roi',
                   adata_save_label='deltaT1',
                   force_overwrite = False):
 
@@ -53,12 +54,30 @@ def store_deltaT1(masterlist_name=None,
 
         if (not adata_save_label in scan2.adata.keys()) or force_overwrite is True:
 
-            if 'R1' in adata_save_label:
+            if 'R1' in adata_save_label and 'multiday_' not in adata_save_label:
 
                 deltaR1 = -(1/scan1.adata[adata_label1].data - 1/scan2.adata[adata_label2].data)
                 scan2.store_adata(key=adata_save_label, data = deltaR1, force = force_overwrite)
                 print('{0}: Saved {1}'.format(adata_save_label,
                       scan2.shortdirname))
+
+            # This is the part of the code to subtract T1 voxel by voxel with a baseline T1 from the day before            
+
+            elif 'multiday_' in adata_save_label:
+
+                # Only take the mean of the tumour ROI, not the whole tumour
+                baseline = scan1.adata[adata_label1].data * scan1.adata[adata_label3].data
+                baseline = scipy.stats.nanmean(baseline,axis=None)
+
+                # Apply the roi to the treated tumour as well
+                treated = scan2.adata[adata_label2].data * scan2.adata[adata_label3].data
+                deltaR1 = 1/baseline - 1/treated
+
+                scan2.store_adata(key=adata_save_label, data = deltaR1, force = force_overwrite)
+
+                print('{0}: Saved {1}'.format(adata_save_label,
+                                      scan2.shortdirname))
+
             else:
                 
                 deltaT1 = scan1.adata[adata_label1].data - scan2.adata[adata_label2].data
