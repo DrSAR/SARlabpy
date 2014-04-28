@@ -10,9 +10,15 @@ Created on Thu May 30 17:49:35 2013
 #TODO: for some reason the required args still show up as optional
 
 
-def generate_rois(masterlist_name, ioType, path = None, 
-                  rescale = None, std_modifier = None, 
-                  peaks = None, forceVal = False):
+def generate_rois(masterlist_name, 
+                  ioType, 
+                  roi_suffix = None, 
+                  path = None,
+                  rescale = None,
+                  std_modifier = None, 
+                  peaks = None, 
+                  forceVal = False):
+    # e.g., roi_suffix = 'b' or 'c' or 'd' or 'e' etc...
 
     import json
     import nibabel

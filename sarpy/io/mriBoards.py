@@ -260,6 +260,9 @@ def generate(**kwargs):
                 scn = sarpy.Scan(fname)
                 print(lbl, fname,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
+                vtc_min = row_conf.pop('vtc_min',None)
+                vtc_max = row_conf.pop('vtc_max',None)
+                
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
@@ -267,10 +270,17 @@ def generate(**kwargs):
                        horizontalalignment='center',
                        fontsize=4+mod)     
                     row_idx += 1
-                    print('Something failed in the vtc code cant get adata for scan{0}'.format(scn))
+                    print('Something failed in the vtc cose  cant get adata for scan{0}'.format(scn))
                     continue
 
                 reps = scn.pdata[0].data.shape[-1]
+                # Set the image limits for the vtcs
+                if (vtc_min is None) and (vtc_max is None):
+                    vtc_min = 0
+                    vtc_max = 1.5
+                else:
+                    vtc_min = numpy.float(vtc_min)
+                    vtc_max = numpy.float(vtc_max)
     
                 for col_idx in xrange(min(n_cols, data.data.shape[2])):
                     
@@ -297,7 +307,7 @@ def generate(**kwargs):
                         tmpax.set_axis_off()
                         tmpax.plot(vtcdata[i,(bbox[2]*reps):(bbox[3]*reps)],
                                            color='g', linewidth=.01)
-                        pylab.ylim([0,1.5])
+                        pylab.ylim([vtc_min,vtc_max])
                 row_idx += 1
                                            
             elif row_conf.get('type', None) == 'plot':
