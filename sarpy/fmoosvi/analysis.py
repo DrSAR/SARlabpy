@@ -773,7 +773,12 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
         for x in xrange(bbox[0],bbox[1]):
             for y in xrange(bbox[2],bbox[3]):
 
-                y_data = data[x,y,slice,:]
+
+                # Deal with scans that have only one slice
+                if num_slices > 1:
+                    y_data = data[x,y,slice,:]
+                else:
+                    y_data = data[x,y,:]
 
                 [infodict,mesg,ier,res_fit_params,T1,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
                                                                                    y_data=y_data,
