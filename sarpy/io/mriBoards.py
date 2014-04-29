@@ -204,8 +204,19 @@ def generate(**kwargs):
                     if (clim_min is None) and (clim_max is None):
                         (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(
                                                     data.data)
-                    else:
+                    else: #TODO This else statement (maybe) does NOTHING, get rid of it?
                         (clim_min, clim_max) = (clim_min,clim_max)
+
+                    # When clim_min is negative, it makes sense to invert the colorbar so that 
+                    # the more negative values appear red and the values that are 0 appear blue
+                    #
+                    # See Github issue: https://github.com/DrSAR/SARlabpy/issues/275
+
+                    if clim_min < 0:
+                        cm = row_conf.pop('type', 'jet')
+                        cm = cm + '_r'
+
+
                 else:
                     data = scn.pdata[0]
                                     

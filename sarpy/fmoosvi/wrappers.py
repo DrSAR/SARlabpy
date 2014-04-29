@@ -56,7 +56,7 @@ def store_deltaT1(masterlist_name=None,
 
             if 'R1' in adata_save_label and 'multiday_' not in adata_save_label:
 
-                deltaR1 = -(1/scan2.adata[adata_label2].data - 1/scan1.adata[adata_label1].data)
+                deltaR1 = (1/scan2.adata[adata_label2].data - 1/scan1.adata[adata_label1].data)
                 scan2.store_adata(key=adata_save_label, data = deltaR1, force = force_overwrite)
                 print('{0}: Saved {1}'.format(adata_save_label,
                       scan2.shortdirname))
@@ -71,7 +71,7 @@ def store_deltaT1(masterlist_name=None,
 
                 # Apply the roi to the treated tumour as well
                 treated = scan2.adata[adata_label2].data * scan2.adata[adata_label3].data
-                deltaR1 = 1/baseline - 1/treated
+                deltaR1 = 1/treated - 1/baseline
 
                 scan2.store_adata(key=adata_save_label, data = deltaR1, force = force_overwrite)
 
