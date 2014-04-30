@@ -454,12 +454,7 @@ def h_conc_from_signal(scn_to_analyse=None,
     T1baseline = numpy.squeeze(data_t1map)*bbox_mask
     T1baseline = numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),source_data.shape[-1])
     conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
-
-    print T1[22,50,1]
-
-    print('T1 baseline\n')
-    print T1baseline[22,50,1]
-    
+   
     #conc[conc<0] = 0
 
     times = {'time':time,
@@ -607,18 +602,18 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
 
     # Get the parameters necessary for fitting the individual pixel
 
-    tau = scan_object.method.PVM_RepetitionTime
-    total_TR = scan_object.method.Inv_Rep_time
-    Nframes = scan_object.method.Nframes
-    delay = scan_object.method.InterSliceDelay
-    FA = numpy.radians(scan_object.acqp.ACQ_flip_angle)    
-
+    tau = float(scan_object.method.PVM_RepetitionTime)
+    total_TR = float(scan_object.method.Inv_Rep_time)
+    Nframes = float(scan_object.method.Nframes)
+    delay = float(scan_object.method.InterSliceDelay)
+    FA = float(numpy.radians(scan_object.acqp.ACQ_flip_angle))    
+    inv_time = float(scan_object.method.PVM_InversionTime)
     # The following are slice dependent parameters
 
-    Td = delay*(slice+1)
-    Tp = total_TR - (Nframes -1)*tau - Td    
+    Td = delay*(slice+1.0)
+    Tp = total_TR - (Nframes -1.0)*tau - Td    
     #TODO: make this better; slice dependent
-    t_data = numpy.arange(0,Nframes) * tau + scan_object.method.PVM_InversionTime         
+    t_data = numpy.arange(0,Nframes) * tau + inv_time     
 
     fit_dict = {}
 
@@ -666,21 +661,35 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
     # Step 3: Get initial guess for T1 based on nominal flip angle:
     # Use equation 3 from Chuang and Koretsky paper
 
-    T1_guess = 1/ (1/T1_eff + numpy.log(numpy.cos(FA))/tau)
+    T1_guess = 1./ (1./T1_eff + numpy.log(numpy.cos(FA))/tau)
 
     # To prevent absurd values of T1_guess
     if T1_guess < 0:
-        T1_guess = params[2] + 200
+        T1_guess = params[2] + 200.
+
+    elif T1_guess > 3500.:
+        T1_guess = 2000.
 
     # Step 4: Solve Equation 6 to get T1 from it. Try using Newton-
     # Rhapsod method
    
     calc_params = (Td, Tp, tau, T1_eff,b,c)
+
+    #print calc_params
     
+    # Debugging
+    T1_guess = 1500.
+
     try:                    
-        T1 = scipy.optimize.newton(T1eff_to_T1, T1_guess, maxiter=300, 
-                                   args= (calc_params))
-    except RuntimeError:
+        #T1 = scipy.optimize.newton(T1eff_to_T1, T1_guess, maxiter=300, 
+        #                           args= (calc_params))
+
+        # Using Bisect method:
+
+        T1 = scipy.optimize.bisect(T1eff_to_T1,5,4000,
+                                   args = (calc_params))
+
+    except ValueError:#,RuntimeError:
         T1=numpy.nan
         pass
     
