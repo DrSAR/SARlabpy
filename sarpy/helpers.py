@@ -261,4 +261,11 @@ def generate_summary(masterlist_name):
 
     # write the document to disk
     doc.build(elements)             
-    
+
+
+def replace_nan_with(arr, value=0):
+    '''replace the NaN values (isnan) with value (default=0) for better ImageJ
+    compatibility'''
+    arr[numpy.where(numpy.isnan(arr))]=value
+    return arr
+
