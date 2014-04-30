@@ -1,3 +1,6 @@
+import re
+import numpy
+import sarpy
 def get_histogram(masterlist,
                   pat_regex='', # the empty regex fits all
                   scan_regex='',
