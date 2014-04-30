@@ -111,8 +111,10 @@ def generate(**kwargs):
     
     rootName = str(args.master_list).split('/')[-2]
     pdfName = os.path.splitext(str(args.conf_file).split('/')[-1])[0]
+
+    pdfPath = os.path.expanduser(os.path.join('~/sdata',rootName,args.output,pdfName+'.pdf'))
     
-    testPDF = PdfPages(os.path.expanduser(os.path.join('~/sdata',rootName,args.output,pdfName+'.pdf')))
+    testPDF = PdfPages(pdfPath)
 
     sepFiles = False
     
@@ -416,6 +418,12 @@ def generate(**kwargs):
     
     #os.remove(ref_filename)
     testPDF.close()
+
+    import time
+    now = time.strftime("%c")
+    print('File is opened and ready to use')
+    print time.strftime("%c")
+
     
 if __name__ == "__main__":
     # we are being run from the commandline

@@ -4,8 +4,8 @@ Copyright: SARlab members, UBC, Vancouver
 """
 import numpy
 import SimpleITK as sitk
-from sarpy import (visu_pars_2_Nifti1Header,
-                    visu_pars_2_matrix_size)
+import sarpy.io.visu_pars_2_Nifti1Header
+from sarpy.io.visu_pars_2_Nifti1Header import visu_pars_2_matrix_size
 import copy
 
 def atleast_4d(arr):
