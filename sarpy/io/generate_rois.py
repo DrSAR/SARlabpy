@@ -32,7 +32,7 @@ def generate_rois(masterlist_name,
     if roi_suffix is not None:
         assert(type(roi_suffix) is str and len(roi_suffix)==1)
     else:
-        roi_suffix = ''
+        roi_suffix = '' # AA Don't want to set this to a for backwards compatibility
 
     root = os.path.join(os.path.expanduser('~/sdata'),
                     masterlist_name,
@@ -80,9 +80,17 @@ def generate_rois(masterlist_name,
                 scan.pdata[0].export2nii(fname,rescale,std_modifier)
             
             elif ioType == 'import':
-                                                        
-                fname = os.path.join(path, sdir + roi_suffix + '.nii')
 
+                # AA cont'd This is to ensure that the first roi in the folder 'roi' 
+                # gets saved with adata label 'roi' --> for backwards compatibility
+
+                if roi_suffix == '':
+                    fname = os.path.join(path, sdir + 'a.nii')
+                else:
+                    fname = os.path.join(path, sdir + roi_suffix + '.nii')
+
+                                                        
+                
                 try:
                     roi = nibabel.load(fname).get_data()[:,:,:,0]
                 except IndexError:
