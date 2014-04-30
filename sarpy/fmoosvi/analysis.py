@@ -697,13 +697,6 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
     if (T1<0 or T1>=1e4):
         T1 = numpy.nan
 
-    # Add the T1 to the fitted parameters 
-    # This needs to be a list because numpy.append wasn't working !?!?!
-    # It worked in the ipython notebook, but not inside the code
-
-    #fit_params = list(fit_params)                     
-    #fit_params.append(T1)
-
     if fit_algorithm == 'leastsq':
         return infodict,mesg,ier,fit_params, T1,t_data
 
