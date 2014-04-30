@@ -658,38 +658,18 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
 
     c = 1- (1-b)*numpy.exp(-(Nframes-1)*tau/T1_eff)
 
-    # Step 3: Get initial guess for T1 based on nominal flip angle:
-    # Use equation 3 from Chuang and Koretsky paper
-
-    T1_guess = 1./ (1./T1_eff + numpy.log(numpy.cos(FA))/tau)
-
-    # To prevent absurd values of T1_guess
-    if T1_guess < 0:
-        T1_guess = params[2] + 200.
-
-    elif T1_guess > 3500.:
-        T1_guess = 2000.
-
-    # Step 4: Solve Equation 6 to get T1 from it. Try using Newton-
+    # Step 3: Solve Equation 6 to get T1 from it. Try using Newton-
     # Rhapsod method
    
     calc_params = (Td, Tp, tau, T1_eff,b,c)
 
-    #print calc_params
-    
-    # Debugging
-    T1_guess = 1500.
-
     try:                    
-        #T1 = scipy.optimize.newton(T1eff_to_T1, T1_guess, maxiter=300, 
-        #                           args= (calc_params))
-
-        # Using Bisect method:
-
+        
+        # Using Bisect method (other possibilities include newton, brentq:
         T1 = scipy.optimize.bisect(T1eff_to_T1,5,4000,
                                    args = (calc_params))
 
-    except ValueError:#,RuntimeError:
+    except ValueError:
         T1=numpy.nan
         pass
     
