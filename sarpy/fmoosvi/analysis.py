@@ -94,7 +94,11 @@ def h_calculate_AUC(scn_to_analyse=None,
     auc_data = numpy.empty([x_size,y_size,num_slices])
     
     for slice in range(num_slices):
-        auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        if inj_point+auc_reps <= reps:
+            auc_data[:,:,slice] = scipy.integrate.simps(norm_data[:,:,slice,inj_point:inj_point+auc_reps],x=time_points)
+        else:
+            auc_data[:,:,slice] = numpy.nan
+
        
     # Deal with bounding boxes
 
@@ -450,12 +454,7 @@ def h_conc_from_signal(scn_to_analyse=None,
     T1baseline = numpy.squeeze(data_t1map)*bbox_mask
     T1baseline = numpy.tile(T1baseline.reshape(x_size,y_size,num_slices,1),source_data.shape[-1])
     conc = (1/relaxivity) * ( (1/T1) - (1/T1baseline) )
-
-    print T1[22,50,1]
-
-    print('T1 baseline\n')
-    print T1baseline[22,50,1]
-    
+   
     #conc[conc<0] = 0
 
     times = {'time':time,
@@ -466,7 +465,7 @@ def h_conc_from_signal(scn_to_analyse=None,
             '_times':times}
     
 def h_stitch_dce_scans(masterlist_name,
-                       bbox,
+                        bbox,
                        scn_to_analyse=None, 
                        other_dce_label=None,
                        pdata_num = 0,
@@ -566,7 +565,7 @@ def h_func_T1_FAind(params,t_data):
     if numpy.isfinite(res).all():
         return res
     else:
-        return 1e30
+        return [1e30]*t_data.shape[-1]
 
 def T1eff_to_T1(T1,Td, Tp, tau, T1_eff, b, c):    
     return (1-2*numpy.exp(-Td/T1) + numpy.exp(-(Tp+Td)/T1))*((1-numpy.exp(-tau/T1_eff))/(1-numpy.exp(-tau/T1))) -c*(numpy.exp(-tau/T1_eff)/(numpy.exp(-tau/T1)))*numpy.exp(-(Tp+Td)/T1) - b 
@@ -584,9 +583,129 @@ def h_residual_T1_FAind(params, y_data, t_data):
     bounds[3,1] = +5
 
     if h_within_bounds(params,bounds):
-        return numpy.abs(y_data - h_func_T1_FAind(params, t_data))
+        return numpy.abs(y_data - h_func_T1_FAind(params,t_data))
     else:
         return 1e30
+
+
+def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
+                        y_data=None,
+                        slice=None,
+                        initial_params = None,
+                        fit_algorithm=None,
+                        **kwargs):
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+
+    if fit_algorithm is None:
+        fit_algorithm = 'leastsq'
+
+    # Get the parameters necessary for fitting the individual pixel
+
+    tau = float(scan_object.method.PVM_RepetitionTime)
+    total_TR = float(scan_object.method.Inv_Rep_time)
+    Nframes = float(scan_object.method.Nframes)
+    delay = float(scan_object.method.InterSliceDelay)
+    FA = float(numpy.radians(scan_object.acqp.ACQ_flip_angle))    
+    inv_time = float(scan_object.method.PVM_InversionTime)
+    # The following are slice dependent parameters
+
+    Td = delay*(slice+1.0)
+    Tp = total_TR - (Nframes -1.0)*tau - Td    
+    #TODO: make this better; slice dependent
+    t_data = numpy.arange(0,Nframes) * tau + inv_time     
+
+    fit_dict = {}
+
+    if initial_params is None:
+
+        params = h_fit_T1_LL_FAind_initial_params_guess(y_data,t_data)
+
+    else:
+        params = numpy.ones(4)
+        try:
+            params = initial_params
+        except ValueError:
+            print('Please supply a list of 4 starting parameters')
+            raise
+
+    # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
+    # phi (phase factor to fit real data)
+
+    if fit_algorithm == 'leastsq':
+
+        try:
+
+            fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                    h_residual_T1_FAind,
+                                                    params,
+                                                    args=(y_data, t_data), 
+                                                    full_output = True,
+                                                    maxfev = 200)
+        except ValueError:
+            # This is going to fail because when i moved the innards into a different function, x and y are no longer defined
+            #TODO fix this because this might actually be useful.
+            #print "Firas, look here fix this because it might actually be useful to know where I'm failing."
+            #print x,y,slice
+            raise
+    else:
+        print('fit type {0} not implemented yet'.format(fit_algorithm))
+
+    [a,b,T1_eff,phi] = fit_params
+
+    # Step 2: Calculate M(N-1)/M(inf) from Eq.1 from Koretsky paper
+    # Divide both sides by M(inf) and then use M(0)/M(inf) -> step1
+
+    c = 1- (1-b)*numpy.exp(-(Nframes-1)*tau/T1_eff)
+
+    # Step 3: Solve Equation 6 to get T1 from it. Try using Newton-
+    # Rhapsod method
+   
+    calc_params = (Td, Tp, tau, T1_eff,b,c)
+
+    try:                    
+        
+        # Using Bisect method (other possibilities include newton, brentq:
+        T1 = scipy.optimize.bisect(T1eff_to_T1,5,4000,
+                                   args = (calc_params))
+
+    except ValueError:
+        T1=numpy.nan
+        pass
+    
+    # Make absurd values nans to make my life easer:
+    if (T1<0 or T1>=1e4):
+        T1 = numpy.nan
+
+    if fit_algorithm == 'leastsq':
+        return infodict,mesg,ier,fit_params, T1,t_data
+
+    else:
+        return a,b,T1_eff,phi,T1, t_data
+
+def h_fit_T1_LL_FAind_initial_params_guess(y_data,t_data):
+
+    params = numpy.ones(4)  
+
+    ## Guesses at parameters if none provided
+    params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
+    params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
+    params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
+
+    # Getting a good guess for T1eff by finding the zero crossing
+    yp = y_data[0:5]
+    xp = t_data[0:5]
+
+    A = numpy.array([xp, numpy.ones(xp.shape[0])])
+    w=numpy.linalg.lstsq(A.T,yp)[0]
+    params[2] = numpy.real(numpy.divide(-w[1],w[0]))
+
+    # To prevent negative T1_eff
+    if params[2] < 0:
+        params[2] = 50
+
+    return params
+
 
 def h_fit_T1_LL_FAind(scn_to_analyse=None, 
                       bbox = None, 
@@ -601,15 +720,8 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     data = scan_object.fftfid
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
 
-    tau = scan_object.method.PVM_RepetitionTime
-    total_TR = scan_object.method.Inv_Rep_time
-    Nframes = scan_object.method.Nframes
-    delay = scan_object.method.InterSliceDelay
     x_size = data.shape[0]
     y_size = data.shape[1]
-
-    #TODO: make this better; slice dependent
-    t_data = numpy.arange(0,Nframes) * tau + scan_object.method.PVM_InversionTime
                                        
     # Initializations
 
@@ -634,86 +746,28 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     ## Check for bbox traits and create bbox_mask to output only partial data
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])
-    if bbox.shape != (4,):    
-        raise ValueError('Please supply a bbox for h_fit_T1_LL_FAind')
     else:
         bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)  
         
     # Start the fitting process        
 
-    for slice in xrange(num_slices):  
-
-        # The following are slice dependent parameters
-
-        Td = delay*(slice+1)
-        Tp = total_TR - (Nframes -1)*tau - Td
-        
+    for slice in xrange(num_slices):          
         for x in xrange(bbox[0],bbox[1]):
             for y in xrange(bbox[2],bbox[3]):
 
-                params = numpy.ones(4)                   
-                y_data = data[x,y,slice,:]
 
-                fit_dict = {}
-
-                ## Guesses at parameters 
-                params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
-                params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
-                params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
-
-                # Getting a good guess for T1eff by finding the zero crossing
-                yp = y_data[0:5]
-                xp = t_data[0:5]
-
-                A = numpy.array([xp, numpy.ones(xp.shape[0])])
-                w=numpy.linalg.lstsq(A.T,yp)[0]
-                params[2] = numpy.real(numpy.divide(-w[1],w[0]))   
-
-                # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
-                # phi (phase factor to fit real data)
-
-                if fit_algorithm == 'leastsq':
-
-                    try:
-
-                        fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
-                                                                h_residual_T1_FAind,
-                                                                params,
-                                                                args=(y_data,t_data), 
-                                                                full_output = True,
-                                                                maxfev = 200)
-                    except ValueError:
-                        print x,y,slice
-                        continue
+                # Deal with scans that have only one slice
+                if num_slices > 1:
+                    y_data = data[x,y,slice,:]
                 else:
-                    print('fit type {0} not implemented yet'.format(fit_algorithm))
+                    y_data = data[x,y,:]
 
-                #print fit_params
-                [a,b,T1_eff,phi] = fit_params
+                [infodict,mesg,ier,res_fit_params,T1,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
+                                                                                   y_data=y_data,
+                                                                                   slice=slice,
+                                                                                   fit_algorithm=fit_algorithm)
 
-                # Step 2: Calculate M(N-1)/M(inf) from Eq.1 from Koretsky paper
-                # Divide both sides by M(inf) and then use M(0)/M(inf) -> step1
-
-                c = 1- (1-b)*numpy.exp(-(Nframes-1)*tau/T1_eff)
-
-                # Step 3: Solve Equation 6 to get T1 from it. Try using Newton-
-                # Rhapsod method
-               
-                calc_params = (Td, Tp, tau, T1_eff,b,c)
-                
-                try:                    
-                    T1 = scipy.optimize.newton(T1eff_to_T1, 1500, maxiter=100, 
-                                               args= (calc_params))
-                except RuntimeError:
-                    T1=numpy.nan
-                    pass
-                
-                # Make absurd values nans to make my life easer:
-                if (T1<0 or T1>=1e4):
-                    T1 = numpy.nan
-
-                # Add the T1 to the fitted parameters                      
-                numpy.append(fit_params,T1)
+                [a,b,T1_eff,phi] = res_fit_params
 
                 a_arr[x,y,slice] = a
                 b_arr[x,y,slice] = b
@@ -730,6 +784,11 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
                 ier1[x,y,slice] = ier
 
+
+### this will need some serious debugging
+
+## Moved the entire T1 fitting process into a separate function
+
     fit_params1 = {'a': a_arr,
                    'b': b_arr,
                    'T1_eff': T1_eff_arr,
@@ -738,11 +797,12 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     if fit_algorithm == 'leastsq':
 
         result = {'rawdata':data,
-                'params':fit_params1,
-                'infodict':infodict1,
-                'ier':ier1,
-                'goodness':goodness_of_fit1,
-                'mesg':mesg1}
+                  't_data':t_data,
+                  'params':fit_params1,
+                  'infodict':infodict1,
+                  'ier':ier1,
+                  'goodness':goodness_of_fit1,
+                  'mesg':mesg1}
 
         return {'':numpy.squeeze(data_after_fitting),
                 '_fit':result}

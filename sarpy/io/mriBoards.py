@@ -111,8 +111,10 @@ def generate(**kwargs):
     
     rootName = str(args.master_list).split('/')[-2]
     pdfName = os.path.splitext(str(args.conf_file).split('/')[-1])[0]
+
+    pdfPath = os.path.expanduser(os.path.join('~/sdata',rootName,args.output,pdfName+'.pdf'))
     
-    testPDF = PdfPages(os.path.expanduser(os.path.join('~/sdata',rootName,args.output,pdfName+'.pdf')))
+    testPDF = PdfPages(pdfPath)
 
     sepFiles = False
     
@@ -204,9 +206,19 @@ def generate(**kwargs):
                     if (clim_min is None) and (clim_max is None):
                         (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(
                                                     data.data)
-                    else:
-                        (clim_min, clim_max) = (numpy.int(clim_min),
-                                                numpy.int(clim_max))
+                    else: #TODO This else statement (maybe) does NOTHING, get rid of it?
+                        (clim_min, clim_max) = (clim_min,clim_max)
+
+                    # When clim_min is negative, it makes sense to invert the colorbar so that 
+                    # the more negative values appear red and the values that are 0 appear blue
+                    #
+                    # See Github issue: https://github.com/DrSAR/SARlabpy/issues/275
+
+                    if clim_min < 0:
+                        cm = row_conf.pop('type', 'jet')
+                        cm = cm + '_r'
+
+
                 else:
                     data = scn.pdata[0]
                                     
@@ -261,14 +273,27 @@ def generate(**kwargs):
                 scn = sarpy.Scan(fname)
                 print(lbl, fname,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
+                vtc_min = row_conf.pop('vtc_min',None)
+                vtc_max = row_conf.pop('vtc_max',None)
+                
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
                     pylab.text(0.5,0.5,'Data not available',
                        horizontalalignment='center',
-                       fontsize=4+mod)                
-                data = scn.adata[adata_key]
+                       fontsize=4+mod)     
+                    row_idx += 1
+                    print('Something failed in the vtc cose  cant get adata for scan{0}'.format(scn))
+                    continue
+
                 reps = scn.pdata[0].data.shape[-1]
+                # Set the image limits for the vtcs
+                if (vtc_min is None) and (vtc_max is None):
+                    vtc_min = 0
+                    vtc_max = 1.5
+                else:
+                    vtc_min = numpy.float(vtc_min)
+                    vtc_max = numpy.float(vtc_max)
     
                 for col_idx in xrange(min(n_cols, data.data.shape[2])):
                     
@@ -295,7 +320,8 @@ def generate(**kwargs):
                         tmpax.set_axis_off()
                         tmpax.plot(vtcdata[i,(bbox[2]*reps):(bbox[3]*reps)],
                                            color='g', linewidth=.01)
-                        pylab.ylim([0,1.5])
+                        pylab.ylim([vtc_min,vtc_max])
+                row_idx += 1
                                            
             elif row_conf.get('type', None) == 'plot':
     
@@ -392,6 +418,12 @@ def generate(**kwargs):
     
     #os.remove(ref_filename)
     testPDF.close()
+
+    import time
+    now = time.strftime("%c")
+    print('File is opened and ready to use')
+    print time.strftime("%c")
+
     
 if __name__ == "__main__":
     # we are being run from the commandline
