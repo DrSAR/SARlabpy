@@ -15,7 +15,7 @@ import os
 import collections
 import json
 import matplotlib
-matplotlib.use('Agg')# where did I come from !?
+#matplotlib.use('Agg')# where did I come from !?
 import pylab
 import numpy
 import sarpy
@@ -214,9 +214,9 @@ def generate(**kwargs):
                     #
                     # See Github issue: https://github.com/DrSAR/SARlabpy/issues/275
 
-                    if clim_min < 0:
-                        cm = row_conf.pop('type', 'jet')
-                        cm = cm + '_r'
+                    #if clim_min <= 0:
+                    #    cm = row_conf.pop('type', 'jet')
+                    #    cm = cm + '_r'
 
 
                 else:
