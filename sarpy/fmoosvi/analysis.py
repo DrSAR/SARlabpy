@@ -905,7 +905,7 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
         return roi_mask    
 
 def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
-    
+
     if indicator == 'rsquared':
         ss_err=(infodict['fvec']**2).sum()
         ss_tot=((data-data.mean())**2).sum()
@@ -957,6 +957,162 @@ def h_generate_VTC(scn_to_analyse=None,
         nrdata[:,:,s] = ndata[:,:,s,:].reshape([x_size,y_size*reps])
         
     return {'':nrdata}
+
+######################
+###
+###
+### Fitting T1 IR data
+###
+###
+#####################
+
+def h_func_T1_IR(params,TI,parallelExperiment=False):
+
+    a,b,T1 = params
+    # Function to fit:
+    # Intensity = a*(1-b*numpy.exp(-TI / T1))
+
+    res = a*(1-b*numpy.exp(-TI/T1))
+
+    if numpy.isfinite(res).all():
+    	# in case you're fitting pdata, you'll need to take abs
+
+    	if parallelExperiment:
+            return numpy.abs(res)
+    	else:
+        	return res
+    else:
+        return [1e30]*TI.shape[-1]
+
+def h_residual_T1_IR(params, y_data, TI, parallelExperiment=False):
+    
+    bounds = numpy.zeros(shape=[3,2])
+    bounds[0,0] = 1.E2
+    bounds[0,1] = 5.E10
+    bounds[1,0] = 0.1
+    bounds[1,1] = 3.0
+    bounds[2,0] = 0.0
+    bounds[2,1] = 4000.0
+
+    if h_within_bounds(params,bounds):
+        return numpy.abs(y_data - h_func_T1_IR(params,TI,parallelExperiment))
+    else:
+        return 1e30
+
+def h_fitpx_T1_IR(y_data,TI,initial_guess = None,parallelExperiment=False):
+
+    if initial_guess is None:
+
+        # Get the TI when Y-data is at minimum
+        c=numpy.min(numpy.real(y_data))
+        guess = TI[list(numpy.real(y_data)).index(c)]
+        params = [y_data[-1],2.0,guess]
+    else:
+        params = initial_guess
+
+    # Not sure if I need this, but I needed to resolve this error:
+    # TypeError: Cannot cast array data from dtype('complex128') to dtype('float64') 
+    # according to the rule 'safe'
+
+    fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                        h_residual_T1_IR,
+                                                        params,
+                                                        args=(y_data, TI,parallelExperiment), 
+                                                        full_output = True,
+                                                        maxfev = 600)
+
+    return fit_params,cov,infodict,mesg,ier
+
+
+def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
+
+    # Convert scan_name_list to scan_list:
+
+    scan_list = []
+    for hh in scan_name_list:
+        scan_list.append(sarpy.Scan(hh))
+
+    data_shape = scan_list[0].pdata[0].data.shape
+
+    # Collect Inversion Times
+    TI = numpy.array([float(x.method.PVM_SelIrInvTime) for x in scan_list])
+
+    # Check to make sure all the scans have the same data
+    assert([x.pdata[0].data.shape == data_shape for x in scan_list], "Data shapes don't match")
+
+    # Definitions
+    data_after_fitting = numpy.nan + numpy.empty( data_shape )
+    fit_params1 = numpy.empty_like(data_after_fitting,dtype=dict)
+    a_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    b_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    T1_arr = numpy.empty_like(data_after_fitting)+numpy.nan    
+
+    infodict1 = numpy.empty_like(data_after_fitting,dtype=dict)
+    mesg1 = numpy.empty_like(data_after_fitting,dtype=str)
+    ier1 = numpy.empty_like(data_after_fitting)
+    goodness_of_fit1 = numpy.empty_like(data_after_fitting)
+
+    # Loop through the data
+
+    for x in xrange(data_shape[0]):
+        for y in xrange(data_shape[1]):
+            for slice in xrange(data_shape[2]):
+
+                # Collect the data
+                if len(data_shape) == 3:
+                    if parallelExperiment:
+                        # in case of a Parallel Experiment as in the case of 
+                        # patient DevRF1106.jr1 - for RF1106 experiment          
+                        y_data = numpy.array([sc.pdata[0].data[x,y,slice] for sc in scan_list])                                  	
+                    else:
+                        y_data = numpy.array([sc.fftfid[x,y,slice] for sc in scan_list])
+
+                elif len(data_shape) == 2:
+                    if parallelExperiment:
+                        # in case of a Parallel Experiment as in the case of 
+                        # patient DevRF1106.jr1 - for RF1106 experiment  
+                        y_data = numpy.array([sc.pdata[0].data[x,y] for sc in scan_list])                                          	
+                    else:
+                        y_data = numpy.array([sc.fftfid[x,y] for sc in scan_list])
+
+                y_data = numpy.real(y_data)
+
+            	fit_params,cov,infodict,mesg,ier = h_fitpx_T1_IR(y_data,
+                                                                 TI,
+                                                                 parallelExperiment=parallelExperiment)
+
+                [a,b,T1] = fit_params
+
+                # Make absurd values nans to make my life easer:
+                if (T1<0 or T1>=1e4):
+                    T1 = numpy.nan
+                    
+                data_after_fitting[x,y,slice]  = T1
+
+                a_arr[x,y,slice] = a
+                b_arr[x,y,slice] = b
+                T1_arr[x,y,slice] = T1                
+
+                infodict1[x,y,slice] = infodict
+                mesg1[x,y,slice] = mesg
+                goodness_of_fit1[x,y,slice] = h_goodness_of_fit(y_data,infodict)  
+                ier1[x,y,slice] = ier
+
+                fit_params1 = {'a': a_arr,
+                               'b': b_arr,
+                               'T1': T1}                
+
+    # Returning the fit results
+    result = {'rawdata':y_data,
+              'TI':TI,
+              'params':fit_params1,
+              'infodict':infodict1,
+              'ier':ier1,
+              'goodness':goodness_of_fit1,
+              'mesg':mesg1}
+
+    return {'':numpy.squeeze(data_after_fitting),
+            '_fit':result}
 
 ## Not working, or of unknown reliability
 
