@@ -232,7 +232,7 @@ def convert_bbox(scan_object_name, bbox, exporttype=None):
     data = sarpy.Scan(scan_object_name)
     shape = data.pdata[0].data.shape
 
-    bbox_px = (bbox.reshape(2,2).T*shape[0:2]).T.flatten()
+    bbox_px = (numpy.array(bbox).reshape(2,2).T*shape[0:2]).T.flatten()
     
     #TODO: this will need to be updated for python 3.x+
     bbox_px = map(int,bbox_px) # Casts all elements to ints
