@@ -56,7 +56,11 @@ def determine_figure_size(n_rows,n_cols):
 
         figure_size = (18,19*aspect)
         font_modifier = 6
-        
+
+    elif n_rows >= 2 and n_cols >= 9:
+
+        figure_size = (8,4)
+        font_modifier = 3       
     else:
         print('row_size = {0} and col_size = {1}'.format(n_rows,n_cols))
 
