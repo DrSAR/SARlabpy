@@ -104,6 +104,7 @@ def generate(roi_suffix=None,**kwargs):
                                                      '0 1 0 1').split()]
             prot_name = configuration['protocol_name']
             study_nr = int(configuration['study'])
+            scn_nr = int(configuration['scan'])
     
             try:
                 scns = pat.studies[study_nr].find_scan_by_protocol(prot_name)
@@ -111,7 +112,7 @@ def generate(roi_suffix=None,**kwargs):
                 print('\t warning (STUDY #%i not found) "%s" for %s' 
                     % (study_nr, lbl, patname))                
             else:
-                scn_nr = int(config.get(lbl,'scan'))
+                #scn_nr = int(config.get(lbl,'scan'))
                 try:
                     scn = scns[scn_nr]
                 except IndexError:
@@ -137,9 +138,12 @@ def generate(roi_suffix=None,**kwargs):
                 if not scn_name:
                     continue
 
-                new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,'roi',exporttype='pct')
-
-                search_string = r_lbl.split('-',1)[-1]        
+                try:
+                	new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,roi_key_name,exporttype='pct')
+                except KeyError:
+                	print('\n\n\n\n\n\n\n\n No ROI exists for scan {0} \n\n\n\n'.format(scn_name))
+                	new_bbox = [0,0,0,0]
+                search_string = r_lbl.split('-',1)[-1]
                 # Iterate over the label list, transfer the new bbox into the master list
                 for lbl in lbl_list:        
                     if search_string in lbl and len(master_list[patname][lbl][1])==4: 
