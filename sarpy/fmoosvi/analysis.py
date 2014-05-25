@@ -605,15 +605,18 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
     tau = float(scan_object.method.PVM_RepetitionTime)
     total_TR = float(scan_object.method.Inv_Rep_time)
     Nframes = float(scan_object.method.Nframes)
-    delay = float(scan_object.method.InterSliceDelay)
-    FA = float(numpy.radians(scan_object.acqp.ACQ_flip_angle))    
-    inv_time = float(scan_object.method.PVM_InversionTime)
-    # The following are slice dependent parameters
+    delay = float(scan_object.acqp.ACQ_inversion_time[0]) # same as .method.PVM_InversionTime
+    FA = float(numpy.radians(scan_object.acqp.ACQ_flip_angle))
+    interSliceDelay = float(scan_object.method.InterSliceDelay)
+    sliceAcqTime = float(scan_object.method.SliceSeqTime)
+    sliceOrder = scan_object.method.PVM_ObjOrderList
 
-    Td = delay*(slice+1.0)
+    # The following are slice dependent parameters
+    slicedelay = (interSliceDelay + sliceAcqTime) * sliceOrder.index(slice)
+    t_data = delay + numpy.arange(0,Nframes)*tau + slicedelay
+
+    Td = delay
     Tp = total_TR - (Nframes -1.0)*tau - Td    
-    #TODO: make this better; slice dependent
-    t_data = numpy.arange(0,Nframes) * tau + inv_time     
 
     fit_dict = {}
 
@@ -754,7 +757,6 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     for slice in xrange(num_slices):          
         for x in xrange(bbox[0],bbox[1]):
             for y in xrange(bbox[2],bbox[3]):
-
 
                 # Deal with scans that have only one slice
                 if num_slices > 1:
