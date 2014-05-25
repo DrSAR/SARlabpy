@@ -214,7 +214,10 @@ def bulk_transfer_roi(masterlist_name,
             except(AttributeError, IOError):
                 print 'adata or scan data not found for {0}'.format(scn,roi_src_adata_label)
                 continue
-
+            except KeyError:
+                print 'adata or scan data not found for {0}'.format(scn,roi_src_adata_label)
+                continue
+                
             for v in master_list[patname].keys():
                 if master_list[patname][v][0] == scn and search_string.split('-',1)[-1] in v:
 
