@@ -125,7 +125,7 @@ def get_unique_list_elements(list, idfun=None):
        result.append(item)
    return result         
 
-def get_image_clims(data,std_modifier=None):
+def get_image_clims(data,std_modifier=None,allowNegative=False):
     
     xd = data[numpy.isfinite(data)].flatten()
     
@@ -138,7 +138,7 @@ def get_image_clims(data,std_modifier=None):
     min_lim = mean - std_modifier*std
     max_lim = mean + std_modifier*std
     
-    if min_lim < 0:
+    if min_lim < 0 and allowNegative == False:
         min_lim = 0
     
     return [min_lim, max_lim]
