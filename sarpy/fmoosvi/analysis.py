@@ -667,7 +667,6 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
     calc_params = (Td, Tp, tau, T1_eff,b,c)
 
     try:                    
-        
         # Using Bisect method (other possibilities include newton, brentq:
         T1 = scipy.optimize.bisect(T1eff_to_T1,5,4000,
                                    args = (calc_params))
@@ -740,6 +739,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     T1_eff_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     phi_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     T1_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    t_data_arr = numpy.empty_like(data_after_fitting,dtype='object')
 
     infodict1 = numpy.empty_like(data_after_fitting,dtype=dict)
     mesg1 = numpy.empty_like(data_after_fitting,dtype=str)
@@ -776,6 +776,8 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                 T1_eff_arr[x,y,slice] = T1_eff
                 phi_arr[x,y,slice] = phi
                 T1_arr[x,y,slice] = T1
+                t_data_arr[x,y,slice] = t_data
+                test = numpy.ndarray([10,10,10],dtype='object')
 
                 data_after_fitting[x,y,slice] = T1
 
@@ -785,9 +787,6 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
                     goodness_of_fit1[x,y,slice] = h_goodness_of_fit(y_data,infodict)  
 
                 ier1[x,y,slice] = ier
-
-
-### this will need some serious debugging
 
 ## Moved the entire T1 fitting process into a separate function
 
@@ -799,7 +798,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     if fit_algorithm == 'leastsq':
 
         result = {'rawdata':data,
-                  't_data':t_data,
+                  't_data':t_data_arr,
                   'params':fit_params1,
                   'infodict':infodict1,
                   'ier':ier1,
