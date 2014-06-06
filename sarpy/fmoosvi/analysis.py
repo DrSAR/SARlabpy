@@ -577,6 +577,13 @@ def T1eff_to_T1(T1,     # true T1
                                        (1-numpy.exp(-tau/T1))) - 
             c*(numpy.exp(-tau/T1_eff)/(numpy.exp(-tau/T1))) * numpy.exp(-(Tp+Td)/T1)
             - b) 
+
+def T1simple(T1,     # true T1
+             tau,    # time of one frame (long is better for long T1)
+             T1_eff, # T1*
+             FA      # Flip angle
+             ):    
+    return 1.0/T1 - 1.0/T1_eff - numpy.divide(numpy.log(numpy.cos(FA)),tau) 
              
 def h_residual_T1_FAind(params, y_data, t_data):
     
@@ -594,6 +601,199 @@ def h_residual_T1_FAind(params, y_data, t_data):
         return numpy.abs(y_data - h_func_T1_FAind(params,t_data))
     else:
         return 1e30
+
+def h_fitpx_T1_LL_FAassumed(scn_to_analyse=None,
+                        y_data=None,
+                        slc=None,
+                        initial_params = None,
+                        fit_algorithm=None,
+                        **kwargs):
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+
+    if fit_algorithm is None:
+        fit_algorithm = 'leastsq'
+
+    # Get the parameters necessary for fitting the individual pixel
+
+    tau = float(scan_object.method.PVM_RepetitionTime)
+    total_TR = float(scan_object.method.Inv_Rep_time)
+    Nframes = float(scan_object.method.Nframes)
+    delay = float(scan_object.acqp.ACQ_inversion_time[0]) # same as .method.PVM_InversionTime
+    FA = float(numpy.radians(scan_object.acqp.ACQ_flip_angle))
+    interSliceDelay = float(scan_object.method.InterSliceDelay)
+    sliceAcqTime = float(scan_object.method.SliceSeqTime)
+    sliceOrder = scan_object.method.PVM_ObjOrderList
+
+    # The following are slice dependent parameters
+    slicedelay = (interSliceDelay + sliceAcqTime) * sliceOrder.index(slc)
+    #t_data = delay + numpy.arange(0,Nframes)*tau + slicedelay 
+    t_data = numpy.arange(0,Nframes)*tau
+    
+    fit_dict = {}
+
+    if initial_params is None:
+
+        params = h_fit_T1_LL_FAind_initial_params_guess(y_data,t_data)
+
+    else:
+        params = numpy.ones(4)
+        try:
+            params = initial_params
+        except ValueError:
+            print('Please supply a list of 4 starting parameters')
+            raise
+
+    # Step 1: Fit Eq.1 from Koretsky paper for a,b,T1_eff, and 
+    # phi (phase factor to fit real data)
+
+    if fit_algorithm == 'leastsq':
+
+        try:
+
+            fit_params,cov,infodict,mesg,ier = scipy.optimize.leastsq(
+                                                    h_residual_T1_FAind,
+                                                    params,
+                                                    args=(y_data, t_data), 
+                                                    full_output = True,
+                                                    maxfev = 200)
+        except ValueError:
+            # This is going to fail because when i moved the innards into a different function, x and y are no longer defined
+            #TODO fix this because this might actually be useful.
+            #print "Firas, look here fix this because it might actually be useful to know where I'm failing."
+            #print x,y,slc
+            raise
+    else:
+        print('fit type {0} not implemented yet'.format(fit_algorithm))
+
+    [a,b,T1_eff,phi] = fit_params
+
+    # Step 2: Calculate T1 from T1_eff using equation relating T1, T1_eff and cos(a)
+
+    calc_params = (tau,T1_eff,FA)
+
+    try:                    
+        # Using Bisect method (other possibilities include newton, brentq:
+        T1 = scipy.optimize.bisect(T1simple,5,4000,
+                                   args = (calc_params))
+
+    except ValueError:
+        T1=numpy.nan
+        pass
+    
+    # Make absurd values nans to make my life easer:
+    if (T1<0 or T1>=1e4):
+        T1 = numpy.nan
+
+    return infodict,mesg,ier,fit_params, T1,t_data
+
+def h_fit_T1_LL_FAassumed(scn_to_analyse=None, 
+                      bbox = None, 
+                      pdata_num = 0, 
+                      params = [],
+                      fit_algorithm = None,
+                      **kwargs):
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+   
+    ## Setting parameters
+    data = scan_object.fftfid
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
+
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+                                       
+    # Initializations
+
+    if fit_algorithm is None:
+        fit_algorithm = 'leastsq'
+
+    data_after_fitting = numpy.nan + numpy.empty( [x_size,y_size,num_slices] )
+
+    fit_params1 = numpy.empty_like(data_after_fitting,dtype=dict)
+
+    a_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    b_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    T1_eff_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    phi_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    T1_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    t_data_arr = numpy.empty_like(data_after_fitting,dtype='object')
+
+    infodict1 = numpy.empty_like(data_after_fitting,dtype=dict)
+    mesg1 = numpy.empty_like(data_after_fitting,dtype=str)
+    ier1 = numpy.empty_like(data_after_fitting)
+    goodness_of_fit1 = numpy.empty_like(data_after_fitting)
+
+    ## Check for bbox traits and create bbox_mask to output only partial data
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
+    else:
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)  
+        
+    # Start the fitting process        
+
+    for slc in xrange(num_slices):          
+        for x in xrange(bbox[0],bbox[1]):
+            for y in xrange(bbox[2],bbox[3]):
+
+                # Deal with scans that have only one slice
+                if num_slices > 1:
+                    y_data = data[x,y,slc,:]
+                else:
+                    y_data = data[x,y,:]
+
+                [infodict,mesg,ier,res_fit_params,T1,t_data] = h_fitpx_T1_LL_FAassumed(scn_to_analyse,
+                                                                                   y_data=y_data,
+                                                                                   slc=slc,
+                                                                                   fit_algorithm=fit_algorithm)
+
+                [a,b,T1_eff,phi] = res_fit_params
+
+                a_arr[x,y,slc] = a
+                b_arr[x,y,slc] = b
+                T1_eff_arr[x,y,slc] = T1_eff
+                phi_arr[x,y,slc] = phi
+                T1_arr[x,y,slc] = T1
+                t_data_arr[x,y,slc] = t_data
+
+                data_after_fitting[x,y,slc] = T1
+
+                if fit_algorithm == 'leastsq':   
+                    infodict1[x,y,slc] = infodict
+                    mesg1[x,y,slc] = mesg
+                    goodness_of_fit1[x,y,slc] = h_goodness_of_fit(y_data,infodict)  
+
+                ier1[x,y,slc] = ier
+
+## Moved the entire T1 fitting process into a separate function
+
+    fit_params1 = {'a': a_arr,
+                   'b': b_arr,
+                   'T1_eff': T1_eff_arr,
+                   'phi': phi_arr}
+
+    if fit_algorithm == 'leastsq':
+
+        result = {'rawdata':data,
+                  't_data':t_data_arr,
+                  'params':fit_params1,
+                  'infodict':infodict1,
+                  'ier':ier1,
+                  'goodness':goodness_of_fit1,
+                  'mesg':mesg1}
+
+        return {'':numpy.squeeze(data_after_fitting),
+                '_fit':result}
+
+    elif fit_algorithm == 'fmin':
+
+        result = {'params': fit_params1,
+                'iter':ier1}         
+
+        return {'':numpy.squeeze(data_after_fitting),
+                '_fit':result}    
+
+
 
 
 def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
@@ -621,7 +821,8 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
 
     # The following are slice dependent parameters
     slicedelay = (interSliceDelay + sliceAcqTime) * sliceOrder.index(slc)
-    t_data = delay + numpy.arange(0,Nframes)*tau + slicedelay
+    #t_data = delay + numpy.arange(0,Nframes)*tau + slicedelay
+    t_data = numpy.arange(0,Nframes)*tau
 
     Td = delay + slicedelay
     Tp = total_TR - (Nframes -1.0)*tau - Td    
