@@ -1242,13 +1242,15 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
     for hh in scan_name_list:
         scan_list.append(sarpy.Scan(hh))
 
-    data_shape = scan_list[0].pdata[0].data.shape
+    data_shape = scan_list[0].fftfid.shape
+    data_shape = numpy.atleast_3d(data_shape)[0]
+
 
     # Collect Inversion Times
     TI = numpy.array([float(x.method.PVM_SelIrInvTime) for x in scan_list])
 
     # Check to make sure all the scans have the same data
-    assert([x.pdata[0].data.shape == data_shape for x in scan_list], "Data shapes don't match")
+    assert [x.pdata[0].data.shape == data_shape for x in scan_list], "Data shapes don't match"
 
     # Definitions
     data_after_fitting = numpy.nan + numpy.empty( data_shape )
@@ -1264,15 +1266,18 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
 
     # Loop through the data
 
+    # Hack to get it to work, fix this properly later
+    if len(data_shape) == 2:
+        hack_shape = 1
+    else:
+        hack_shape = data_shape[2]
 
+    for x in xrange(data_shape[0]):
+        for y in xrange(data_shape[1]):
+            for slc in xrange(hack_shape):
 
-    # Collect the data
-    if len(data_shape) == 3:
-
-        for x in xrange(data_shape[0]):
-            for y in xrange(data_shape[1]):
-                for slc in xrange(data_shape[2]):   
-                                 
+                # Collect the data
+                if hack_shape> 2:
                     if parallelExperiment:
                         # in case of a Parallel Experiment as in the case of 
                         # patient DevRF1106.jr1 - for RF1106 experiment          
@@ -1280,43 +1285,57 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
                     else:
                         y_data = numpy.array([sc.fftfid[x,y,slc] for sc in scan_list])
 
-    elif len(data_shape) == 2:
-
-        for x in xrange(data_shape[0]):
-            for y in xrange(data_shape[1]):                    
-                if parallelExperiment:
-                    # in case of a Parallel Experiment as in the case of 
-                    # patient DevRF1106.jr1 - for RF1106 experiment  
-                    y_data = numpy.array([sc.pdata[0].data[x,y] for sc in scan_list])                                          	
                 else:
-                    y_data = numpy.array([sc.fftfid[x,y] for sc in scan_list])
+                    if parallelExperiment:
+                        # in case of a Parallel Experiment as in the case of 
+                        # patient DevRF1106.jr1 - for RF1106 experiment  
+                        y_data = numpy.array([sc.pdata[0].data[x,y] for sc in scan_list])                                          	
+                    else:
+                        y_data = numpy.array([sc.fftfid[x,y] for sc in scan_list])
 
-    y_data = numpy.real(y_data)
+                y_data = numpy.real(y_data)
 
-	fit_params,cov,infodict,mesg,ier = h_fitpx_T1_IR(y_data,
-                                                     TI,
-                                                     parallelExperiment=parallelExperiment)
+            	fit_params,cov,infodict,mesg,ier = h_fitpx_T1_IR(numpy.squeeze(y_data),
+                                                                 TI,
+                                                                 parallelExperiment=parallelExperiment)
 
-    [a,b,T1] = fit_params
+                [a,b,T1] = fit_params
 
-    # Make absurd values nans to make my life easer:
-    if (T1<0 or T1>=1e4):
-        T1 = numpy.nan
-        
-    data_after_fitting[x,y,slc]  = T1
+                # Make absurd values nans to make my life easer:
+                if (T1<0 or T1>=1e4):
+                    T1 = numpy.nan
 
-    a_arr[x,y,slc] = a
-    b_arr[x,y,slc] = b
-    T1_arr[x,y,slc] = T1                
+                # Hacked to get it working with one slice data
+                if hack_shape > 2:
+                    
+                    data_after_fitting[x,y,slc]  = T1
 
-    infodict1[x,y,slc] = infodict
-    mesg1[x,y,slc] = mesg
-    goodness_of_fit1[x,y,slc] = h_goodness_of_fit(y_data,infodict)  
-    ier1[x,y,slc] = ier
+                    a_arr[x,y,slc] = a
+                    b_arr[x,y,slc] = b
+                    T1_arr[x,y,slc] = T1                
 
-    fit_params1 = {'a': a_arr,
-                   'b': b_arr,
-                   'T1': T1}                
+                    infodict1[x,y,slc] = infodict
+                    mesg1[x,y,slc] = mesg
+                    goodness_of_fit1[x,y,slc] = h_goodness_of_fit(y_data,infodict)  
+                    ier1[x,y,slc] = ier
+
+                else:
+
+                    data_after_fitting[x,y]  = T1
+
+                    a_arr[x,y] = a
+                    b_arr[x,y] = b
+                    T1_arr[x,y] = T1                
+
+                    infodict1[x,y] = infodict
+                    mesg1[x,y] = mesg
+                    goodness_of_fit1[x,y] = h_goodness_of_fit(y_data,infodict)  
+                    ier1[x,y] = ier
+
+
+                fit_params1 = {'a': a_arr,
+                               'b': b_arr,
+                               'T1': T1}                
 
     # Returning the fit results
     result = {'rawdata':y_data,
