@@ -1214,9 +1214,8 @@ def h_fitpx_T1_IR(y_data,TI,initial_guess = None,parallelExperiment=False):
     if initial_guess is None:
 
         # Get the TI when Y-data is at minimum
-        c=numpy.min(numpy.real(y_data))
-        guess = TI[list(numpy.real(y_data)).index(c)]
-        params = [y_data[-1],2.0,guess]
+        guess = TI[list(numpy.real(y_data)).index(min(numpy.real(y_data),key=abs))]
+        params = [max(y_data),2.0,guess]
     else:
         params = initial_guess
 
@@ -1258,6 +1257,7 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
     a_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     b_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     T1_arr = numpy.empty_like(data_after_fitting)+numpy.nan    
+    raw_data = numpy.empty_like(data_after_fitting,dtype='object') 
 
     infodict1 = numpy.empty_like(data_after_fitting,dtype=dict)
     mesg1 = numpy.empty_like(data_after_fitting,dtype=str)
@@ -1312,7 +1312,8 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
 
                     a_arr[x,y,slc] = a
                     b_arr[x,y,slc] = b
-                    T1_arr[x,y,slc] = T1                
+                    T1_arr[x,y,slc] = T1
+                    raw_data[x,y,slc] = y_data         
 
                     infodict1[x,y,slc] = infodict
                     mesg1[x,y,slc] = mesg
@@ -1325,7 +1326,8 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
 
                     a_arr[x,y] = a
                     b_arr[x,y] = b
-                    T1_arr[x,y] = T1                
+                    T1_arr[x,y] = T1       
+                    raw_data[x,y] = y_data         
 
                     infodict1[x,y] = infodict
                     mesg1[x,y] = mesg
@@ -1335,10 +1337,10 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
 
                 fit_params1 = {'a': a_arr,
                                'b': b_arr,
-                               'T1': T1}                
+                               'T1': T1_arr}                
 
     # Returning the fit results
-    result = {'rawdata':y_data,
+    result = {'rawdata':raw_data,
               'TI':TI,
               'params':fit_params1,
               'infodict':infodict1,
