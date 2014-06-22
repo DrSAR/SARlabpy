@@ -31,6 +31,22 @@ def generate(**kwargs):
     args.test = kwargs.get('test', False) # default for dry run
     args.force = kwargs.get('force', False) # default: don't ignore syntax errors
 
+    # Fixes the bug that causes the program to crash spectacularly when scale 
+    # isn't specified in the config file
+
+    try:
+        if args.scale:
+            print('\n')
+    except AttributeError:
+        args.scale = 'False'
+
+    try:
+        if args.overwrite:
+            print('\n')
+    except AttributeError:
+        args.overwrite = 'False'        
+
+
     if args.conf_file:
         print("loading config file %s" % args.conf_file)
         config = ConfigParser.SafeConfigParser()
