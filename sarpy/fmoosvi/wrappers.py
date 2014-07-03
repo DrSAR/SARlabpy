@@ -71,9 +71,14 @@ def store_deltaT1(masterlist_name=None,
 
                 # Apply the roi to the treated tumour as well
                 treated = scan2.adata[adata_label2].data * scan2.adata[adata_label3].data
-                deltaR1 = 1/treated - 1/baseline
 
-                scan2.store_adata(key=adata_save_label, data = deltaR1, force = force_overwrite)
+                if 'T1' in adata_save_label:
+
+                    dat = treated - baseline
+                else:
+                    dat = 1/treated - 1/baseline
+
+                scan2.store_adata(key=adata_save_label, data = dat, force = force_overwrite)
 
                 print('{0}: Saved {1}'.format(adata_save_label,
                                       scan2.shortdirname))
@@ -141,14 +146,15 @@ def roi_average(masterlist_name,
             weights.append(numpy.nansum(roi[:,:,slice]))
             
         if (not analysis_label in scan.adata.keys()) or forceVal is True:
-                
-            scan.store_adata(key=analysis_label, 
-                             data = numpy.array(avg_T1), 
-                             force = forceVal)
+            
+            return roi_data,avg_T1
+            # scan.store_adata(key=analysis_label, 
+            #                  data = numpy.array(avg_T1), 
+            #                  force = forceVal)
 
-            scan.store_adata(key=analysis_label+'_weights', 
-                             data = numpy.array(weights), 
-                             force = forceVal)                             
+            # scan.store_adata(key=analysis_label+'_weights', 
+            #                  data = numpy.array(weights), 
+            #                  force = forceVal)                             
 
             print('{0}: Success. Saved {1}'.format(analysis_label,
                                   scan.shortdirname))
@@ -208,7 +214,10 @@ def bulk_transfer_roi(masterlist_name,
             except(AttributeError, IOError):
                 print 'adata or scan data not found for {0}'.format(scn,roi_src_adata_label)
                 continue
-
+            except KeyError:
+                print 'adata or scan data not found for {0}'.format(scn,roi_src_adata_label)
+                continue
+                
             for v in master_list[patname].keys():
                 if master_list[patname][v][0] == scn and search_string.split('-',1)[-1] in v:
 
