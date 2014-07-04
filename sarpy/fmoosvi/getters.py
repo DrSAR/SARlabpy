@@ -125,7 +125,7 @@ def get_unique_list_elements(list, idfun=None):
        result.append(item)
    return result         
 
-def get_image_clims(data,std_modifier=None):
+def get_image_clims(data,std_modifier=None,allowNegative=False):
     
     xd = data[numpy.isfinite(data)].flatten()
     
@@ -138,7 +138,7 @@ def get_image_clims(data,std_modifier=None):
     min_lim = mean - std_modifier*std
     max_lim = mean + std_modifier*std
     
-    if min_lim < 0:
+    if min_lim < 0 and allowNegative == False:
         min_lim = 0
     
     return [min_lim, max_lim]
@@ -229,10 +229,15 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         
 def convert_bbox(scan_object_name, bbox, exporttype=None):
     
-    data = sarpy.Scan(scan_object_name)
-    shape = data.pdata[0].data.shape
 
-    bbox_px = (bbox.reshape(2,2).T*shape[0:2]).T.flatten()
+    data = sarpy.Scan(scan_object_name)
+
+    if data.pdata[0].data.shape == data.fftfid.shape:
+        shape = data.pdata[0].data.shape
+    else: # Addresses #281
+        shape = data.fftfid.shape
+
+    bbox_px = (numpy.array(bbox).reshape(2,2).T*shape[0:2]).T.flatten()
     
     #TODO: this will need to be updated for python 3.x+
     bbox_px = map(int,bbox_px) # Casts all elements to ints

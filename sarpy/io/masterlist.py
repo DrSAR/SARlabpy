@@ -17,7 +17,7 @@ import pprint
 import sarpy
 import sarpy.fmoosvi.getters
 
-def generate(**kwargs):
+def generate(roi_suffix=None,**kwargs):
     '''Generate a masterlist from a config file.
 
     config_file=None: name of config file as kw parameter
@@ -30,7 +30,8 @@ def generate(**kwargs):
     argsvars = vars(args)
     argsvars.update(kwargs)
     args.test = kwargs.get('test', False) # default for dry run
-    
+    args.roi_suffix = kwargs.get('roi_suffix','')
+
     if args.conf_file:
         print("loading config file %s" % args.conf_file)
         config = ConfigParser.SafeConfigParser()
@@ -42,6 +43,16 @@ def generate(**kwargs):
         else:
             raise IOError('Could not read config file %s' % base_fname)
 
+    # Added to allow rois of not _a type to be used for defining bounding box
+    if roi_suffix is not None:
+        assert(type(roi_suffix) is str and len(roi_suffix)==1)
+    else:
+        roi_suffix = '' # AA Don't want to set this to a for backwards compatibility
+
+    if roi_suffix == '':
+        roi_key_name = 'roi'
+    else:
+        roi_key_name = 'roi' + '_' + roi_suffix        
     
     labels = [lbl for lbl in config.sections() if not((lbl=='MasterList') or
                                                 re.match('EXCEPTION.',lbl))]
@@ -93,6 +104,7 @@ def generate(**kwargs):
                                                      '0 1 0 1').split()]
             prot_name = configuration['protocol_name']
             study_nr = int(configuration['study'])
+            scn_nr = int(configuration['scan'])
     
             try:
                 scns = pat.studies[study_nr].find_scan_by_protocol(prot_name)
@@ -100,7 +112,7 @@ def generate(**kwargs):
                 print('\t warning (STUDY #%i not found) "%s" for %s' 
                     % (study_nr, lbl, patname))                
             else:
-                scn_nr = int(config.get(lbl,'scan'))
+                #scn_nr = int(config.get(lbl,'scan'))
                 try:
                     scn = scns[scn_nr]
                 except IndexError:
@@ -111,8 +123,8 @@ def generate(**kwargs):
     if patient_exclude:
         print('ignoring {0}'.format(' '.join(patient_exclude)))
 
-    check_list = expt.find_adata()        
-    if 'roi' in check_list:
+    check_list = expt.find_adata()
+    if roi_key_name in check_list:
         ###### Updating bboxes #####
         for patname,v in master_list.iteritems():  
             # First get all the labels and put it in a list
@@ -126,9 +138,12 @@ def generate(**kwargs):
                 if not scn_name:
                     continue
 
-                new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,'roi',exporttype='pct')
-
-                search_string = r_lbl.split('-',1)[-1]        
+                try:
+                	new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,roi_key_name,exporttype='pct')
+                except KeyError:
+                	print('\n\n\n\n\n\n\n\n No ROI exists for scan {0} \n\n\n\n'.format(scn_name))
+                	new_bbox = [0.4,1.0,0.35,0.85]
+                search_string = r_lbl.split('-',1)[-1]
                 # Iterate over the label list, transfer the new bbox into the master list
                 for lbl in lbl_list:        
                     if search_string in lbl and len(master_list[patname][lbl][1])==4: 
@@ -162,6 +177,8 @@ if __name__ == "__main__":
             description=__doc__)
     conf_parser.add_argument("-c", "--conf_file",
                              help="Specify full path to config file", metavar="FILE")
+    conf_parser.add_argument("-s", "--roi_;;suffix",default=None, action="store_true", 
+                        help='roi suffix for multiple rois')    
     conf_parser.add_argument("-t", "--test",default=False, action="store_true", 
                         help='dry run of masterlist creation')
 

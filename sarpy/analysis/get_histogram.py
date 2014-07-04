@@ -6,7 +6,7 @@ def get_histogram(masterlist,
                   scan_regex='',
                   adata_regex='',
                   slice_range=None,
-                  roi_label=None, # tupel containing scan and adata label
+                  roi_label=None, # tuple containing scan and adata label
                   verbose=False):
     '''Returns histogram for a parameter map inside a given ROI
     
@@ -22,20 +22,32 @@ def get_histogram(masterlist,
     for pat in [x for x in masterlist if re.search(pat_regex, x)]:
         if verbose: print('looking at {0}'.format(pat))
         for scn_lbl in [x for x in masterlist[pat] if re.search(scan_regex, x)]:
-            if verbose: print('- scan {0}'.format(scn_lbl))
+            if verbose: 
+                print('\t - scan {0}'.format(scn_lbl))
             try:
                 scn = sarpy.Scan(masterlist[pat][scn_lbl][0])
             except IOError:
-                if verbose: print('!! could not find data for {0}'.format(scn_lbl))
+                if verbose: print('\t !! could not find data for {0}'.format(scn_lbl))
             else:
                 for adata_lbl in [x for x in scn.adata.keys() if re.search(adata_regex, x)]:
                     target_data = scn.adata[adata_lbl].data
-                    if verbose: print('  - adata {0} {1}'.format(adata_lbl,target_data.shape))
+                    if verbose: print('\t - adata {0} {1}'.format(adata_lbl,target_data.shape))
                     if roi_label is not None:
                         # mask the target_data with a ROI mask
-                        scn_roi = sarpy.Scan(masterlist[pat][roi_label[0]][0])
-                        roi = scn_roi.adata[roi_label[1]].data
-                        target_data = target_data * roi
+                        
+                        # Not sure why this check wasn't here before, 
+                        # some scans just don't exist in the masterlist because they weren't acquired
+                        print scn.shortdirname
+
+                        try: 
+                            scn_roi = sarpy.Scan(masterlist[pat][roi_label[0]][0])
+
+                            roi = scn_roi.adata[roi_label[1]].data
+
+                            target_data = target_data * roi
+                                                    
+                        except:
+                            print('\t !! could not find data for {0} and {1}'.format(pat,scn_lbl))
                         
                     if slice_range is None:
                         slice_range = numpy.arange(scn.adata[adata_lbl].data.shape[-1])

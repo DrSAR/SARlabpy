@@ -15,7 +15,7 @@ import os
 import collections
 import json
 import matplotlib
-matplotlib.use('Agg')# where did I come from !?
+#matplotlib.use('Agg')# where did I come from !?
 import pylab
 import numpy
 import sarpy
@@ -56,7 +56,11 @@ def determine_figure_size(n_rows,n_cols):
 
         figure_size = (18,19*aspect)
         font_modifier = 6
-        
+
+    elif n_rows >= 2 and n_cols >= 9:
+
+        figure_size = (8,4)
+        font_modifier = 3       
     else:
         print('row_size = {0} and col_size = {1}'.format(n_rows,n_cols))
 
@@ -214,9 +218,9 @@ def generate(**kwargs):
                     #
                     # See Github issue: https://github.com/DrSAR/SARlabpy/issues/275
 
-                    if clim_min < 0:
-                        cm = row_conf.pop('type', 'jet')
-                        cm = cm + '_r'
+                    #if clim_min <= 0:
+                    #    cm = row_conf.pop('type', 'jet')
+                    #    cm = cm + '_r'
 
 
                 else:
