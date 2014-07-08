@@ -15,7 +15,7 @@ import os
 import collections
 import json
 import matplotlib
-#matplotlib.use('Agg')# where did I come from !?
+matplotlib.use('Agg')# where did I come from !?
 import pylab
 import numpy
 import sarpy
@@ -25,50 +25,6 @@ import scipy
 import copy
 import re
 from matplotlib.backends.backend_pdf import PdfPages
-
-
-def determine_figure_size(n_rows,n_cols):
-    
-    aspect = numpy.true_divide(n_rows,n_cols)
-       
-    if n_rows <= 4 and n_cols <= 6:
-        #moderately tested
-        figure_size = (6,5*aspect)
-        font_modifier = 0
-        
-    elif (n_rows >= 4 and n_rows <=8) and (n_cols>=6 and n_cols <= 10) :
-        #moderately tested               
-
-        figure_size = (8,8*aspect)
-        font_modifier = 3
-    
-    elif n_rows <=4 and n_cols >=10:
-        #moderately tested               
-        figure_size = (10,14*aspect)
-        font_modifier = 1
-
-    elif n_rows >=8 and n_cols <=10:
-        #moderately tested        
-        figure_size = (16,8*aspect)
-        font_modifier = 6      
-
-    elif n_rows >= 6 and n_cols > 10:
-
-        figure_size = (18,19*aspect)
-        font_modifier = 6
-
-    elif n_rows >= 2 and n_cols >= 9:
-
-        figure_size = (8,4)
-        font_modifier = 3       
-    else:
-        print('row_size = {0} and col_size = {1}'.format(n_rows,n_cols))
-
-        figure_size = (18,19*aspect)
-        font_modifier = 6
-        print('Please code in this situation, missed it, figure size')
-        
-    return figure_size,font_modifier
 
 def generate(**kwargs):
     '''create tumourboard
@@ -137,12 +93,13 @@ def generate(**kwargs):
         ref_filename = tempfile.mktemp(suffix='.nii')
         ref_data.export2nii(ref_filename)
         n_cols=ref_data.data.shape[2]
-    
-        fig_size,mod = determine_figure_size(n_rows,n_cols)
+
+        aspect = numpy.true_divide(n_rows,n_cols)
+        fig_size = (n_cols*1.3, n_cols*aspect)    
         
         title = k
         fig = pylab.figure(figsize=fig_size)
-        fig.suptitle(k,fontsize=10+mod)
+        fig.suptitle(k)
         G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
         print('\n'+'-'*80+'\n'+title)
     
@@ -154,23 +111,31 @@ def generate(**kwargs):
             fname = v[lbl][0]
             bbox_pct = numpy.array([float(x) for x in v[lbl][1]])
             #bbox = sarpy.fmoosvi.getters.get_bbox(v,lbl)
-            fig.add_subplot(G[row_idx, 0])
+            ax = fig.add_subplot(G[row_idx, 0])
             pylab.axis('off')
-            pylab.text(-0.65,0.5,'\n'.join([lbl,subtitle]), 
+            ax.text(-.5,0.5,'\n'.join([lbl]), 
                      horizontalalignment='center', 
                      verticalalignment='center',
-                     fontsize=5+mod, rotation='vertical')
-    
-            pylab.text(-0.35,0.5,'{0}'.format(fname), 
+                     rotation='vertical',
+                     transform=ax.transAxes)
+
+            ax.text(-0.325,0.5,'\n'.join([subtitle]), 
                      horizontalalignment='center', 
                      verticalalignment='center',
-                     fontsize=2+mod, rotation='vertical')
-    
-    
+                     rotation='vertical',
+                     transform=ax.transAxes,
+                     size='x-small')            
+
+            ax.text(-0.15,0.5,'{0}'.format(fname), 
+                    horizontalalignment='center', 
+                    verticalalignment='center',
+                    rotation='vertical',
+                    transform=ax.transAxes,
+                    size='xx-small')
+
             if fname == '':
                 pylab.text(0.5,0.5,'Data not available',
-                           horizontalalignment='center',
-                           fontsize=4+mod)
+                           horizontalalignment='center')
     
                 row_idx += 1
                 continue
@@ -199,8 +164,7 @@ def generate(**kwargs):
                         data = scn.adata[adata_key]
                     except KeyError:
                         pylab.text(0.5,0.5,'Data not available',
-                           horizontalalignment='center',
-                           fontsize=4+mod)
+                           horizontalalignment='center')
     
                         row_idx += 1
                         print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
@@ -266,7 +230,7 @@ def generate(**kwargs):
                     pylab.axis('off')
                     
                     if row_idx == 0:
-                        pylab.title('{0}'.format(col_idx+1), fontsize=6+mod)
+                        pylab.title('{0}'.format(col_idx+1))
                         
                 row_idx += 1
             
@@ -284,8 +248,7 @@ def generate(**kwargs):
                     data = scn.adata[adata_key]
                 except KeyError:
                     pylab.text(0.5,0.5,'Data not available',
-                       horizontalalignment='center',
-                       fontsize=4+mod)     
+                       horizontalalignment='center')     
                     row_idx += 1
                     print('Something failed in the vtc cose  cant get adata for scan{0}'.format(scn))
                     continue
@@ -339,8 +302,7 @@ def generate(**kwargs):
                     except KeyError:
     
                         pylab.text(0.5,0.5,'Data not available',
-                           horizontalalignment='center',
-                           fontsize=4+mod)
+                           horizontalalignment='center')
     
                         row_idx += 1                    
                         print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
@@ -358,13 +320,13 @@ def generate(**kwargs):
                     pylab.ylim(0,numpy.nanmax(xdata[:,1,:]*1.3))
                     pylab.locator_params(axis='both',which='both',
                                          nbins=3) 
-                    pylab.xlabel('Time (ms)',fontsize=0+mod)
-                    pylab.ylabel('Enhancement (au)',fontsize=0+mod)                
+                    pylab.xlabel('Time (ms)',size='xx-small')
+                    pylab.ylabel('Enhancement (au)',size='xx-small')                
                     
                     ax = pylab.gca()
                     
                     if row_idx == 0:
-                        pylab.title('{0}'.format(col_idx+1), fontsize=6+mod)
+                        pylab.title('{0}'.format(col_idx+1))
                     if col_idx != 0:
                         ax.axes.get_yaxis().set_visible([])
                         ax.axes.get_xaxis().set_visible([])
@@ -372,10 +334,10 @@ def generate(**kwargs):
     #TODO: finda way to put the axis labels on th INSIDE of the plot
                     
                     for label in ax.get_xticklabels():
-                        label.set_fontsize(0+mod)
+                        label.set_fontsize(15)
     
                     for label in ax.get_yticklabels():
-                        label.set_fontsize(0+mod)
+                        label.set_fontsize(15)
     
                 row_idx += 1
     
@@ -401,17 +363,15 @@ def generate(**kwargs):
                 pylab.text(-0.15,0.5,'Avg: {0}'.format(subtitle), 
                                  horizontalalignment='center', 
                                  verticalalignment='center',
-                                 fontsize=5+mod, rotation='vertical')            
+                                 rotation='vertical')            
     
                 for col_idx in xrange(min(n_cols, xdata.shape[0])):
                     fig.add_subplot(G[row_idx, col_idx])
                     pylab.axis('off')
-                    pylab.text(0.3,0.5,'{0}'.format(numpy.round(xdata[col_idx])), fontsize=8+mod)
+                    pylab.text(0.3,0.5,'{0}'.format(numpy.round(xdata[col_idx])))
                         
                 row_idx += 1
-            elif row_conf.get('type', None) == 'histo':
-                raise NotImplementedError('do not know how to draw histos')
-            
+
         testPDF.savefig(fig)
 
         if sepFiles:
@@ -420,7 +380,6 @@ def generate(**kwargs):
             pylab.savefig(filename, bbox_inches=0, dpi=300)
             pylab.close('all')
     
-    #os.remove(ref_filename)
     testPDF.close()
 
     import time
