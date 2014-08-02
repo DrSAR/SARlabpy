@@ -143,7 +143,7 @@ def generate(roi_suffix=None,**kwargs):
                 except KeyError:
                 	print('\n\n\n\n\n\n\n\n No ROI exists for scan {0} \n\n\n\n'.format(scn_name))
                 	new_bbox = [0.4,1.0,0.35,0.85]
-                search_string = r_lbl.split('-',1)[-1]
+                search_string = '-' + r_lbl.split('-',1)[-1]
                 # Iterate over the label list, transfer the new bbox into the master list
                 for lbl in lbl_list:        
                     if search_string in lbl and len(master_list[patname][lbl][1])==4: 
