@@ -134,7 +134,7 @@ def generate(**kwargs):
                     size='xx-small')
 
             if fname == '':
-                pylab.text(0.5,0.5,'Data not available',
+                pylab.text(0.85,0.5,'Data not available',
                            horizontalalignment='center')
     
                 row_idx += 1
@@ -163,7 +163,7 @@ def generate(**kwargs):
                     try:
                         data = scn.adata[adata_key]
                     except KeyError:
-                        pylab.text(0.5,0.5,'Data not available',
+                        pylab.text(0.85,0.5,'Data not available',
                            horizontalalignment='center')
     
                         row_idx += 1
@@ -191,6 +191,7 @@ def generate(**kwargs):
                     data = scn.pdata[0]
                                     
                 xdata = data.data
+                xdata_slices = sarpy.fmoosvi.getters.get_num_slices(scn.shortdirname)
     
     
                 # Used masked arrays to show nan values as black
@@ -209,12 +210,19 @@ def generate(**kwargs):
                 #find out where the 0 1 etc end up.
     #            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
     
-                for col_idx in xrange(min(n_cols, xdata.shape[2])):
-                    fig.add_subplot(G[row_idx, col_idx])
-                    bbox = (bbox_pct.reshape(2,2).T*xdata.shape[0:2]).T.flatten()
-                    t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
-                                     bbox[2]:bbox[3],col_idx],
-                                     **row_conf)
+                for col_idx in xrange(min(n_cols, xdata_slices)):
+                    fig.add_subplot(G[row_idx,col_idx])
+                    bbox = numpy.squeeze((bbox_pct.reshape(2,2).T*xdata.shape[0:2]).T.flatten())
+
+                    if xdata_slices >1:
+                        t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
+                                         bbox[2]:bbox[3],col_idx],
+                                         **row_conf)
+
+                    else:
+                        t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
+                                         bbox[2]:bbox[3]],
+                                         **row_conf)                        
     
                     # Use black to show nan values
                     # Source: http://stackoverflow.com/questions/2578752/how-can-i-plot-nan-values-as-a-special-color-with-imshow-in-matplotlib
@@ -247,7 +255,7 @@ def generate(**kwargs):
                 try:
                     data = scn.adata[adata_key]
                 except KeyError:
-                    pylab.text(0.5,0.5,'Data not available',
+                    pylab.text(0.85,0.5,'Data not available',
                        horizontalalignment='center')     
                     row_idx += 1
                     print('Something failed in the vtc cose  cant get adata for scan{0}'.format(scn))
@@ -262,13 +270,21 @@ def generate(**kwargs):
                     vtc_min = numpy.float(vtc_min)
                     vtc_max = numpy.float(vtc_max)
     
-                for col_idx in xrange(min(n_cols, data.data.shape[2])):
+                for col_idx in xrange(min(n_cols, xdata_slices)):
                     
-                    dat=scn.pdata[0].data[:,:,col_idx,:]
-                    imgdata = numpy.mean(dat,axis=2)
-                    vtcdata = data.data[:,:,col_idx]
+
+                    if xdata_slices ==1:
+                        dat=scn.pdata[0].data[:,:,col_idx,:]
+                        vtcdata = data.data[:,:,col_idx]
+
+                    else: 
+                        dat=scn.pdata[0].data[:,:,:]
+                        vtcdata = data.data[:,:]
+
                     bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn.shortdirname,'auc60_roi')
-                    axs=fig.add_subplot(G[row_idx, col_idx])
+                    imgdata = numpy.mean(dat,axis=2)
+                    axs=fig.add_subplot(G[row_idx,col_idx])
+
                                     
                     axs.imshow(imgdata[bbox[0]:bbox[1],\
                                        bbox[2]:bbox[3]],\
@@ -301,7 +317,7 @@ def generate(**kwargs):
                         data = scn.adata[adata_key]
                     except KeyError:
     
-                        pylab.text(0.5,0.5,'Data not available',
+                        pylab.text(0.85,0.5,'Data not available',
                            horizontalalignment='center')
     
                         row_idx += 1                    
@@ -313,7 +329,7 @@ def generate(**kwargs):
                 xdata = data.data
     
                 for col_idx in xrange(min(n_cols, xdata.shape[0])):
-                    fig.add_subplot(G[row_idx, col_idx])
+                    fig.add_subplot(G[row_idx,col_idx])
                     pylab.plot(xdata[col_idx,0,:],xdata[col_idx,1,:])  
     
                     pylab.xlim(0,numpy.nanmax(xdata[:,0,:]))
@@ -366,7 +382,7 @@ def generate(**kwargs):
                                  rotation='vertical')            
     
                 for col_idx in xrange(min(n_cols, xdata.shape[0])):
-                    fig.add_subplot(G[row_idx, col_idx])
+                    fig.add_subplot(G[row_idx,col_idx])
                     pylab.axis('off')
                     pylab.text(0.3,0.5,'{0}'.format(numpy.round(xdata[col_idx])))
                         
