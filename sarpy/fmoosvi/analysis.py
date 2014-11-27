@@ -88,16 +88,23 @@ def h_calculate_AUC(scn_to_analyse=None,
     # Size info
     x_size = norm_data.shape[0]
     y_size = norm_data.shape[1]
-    num_slices = norm_data.shape[2]    
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
 
     # Now calculate the actual AUC
-    auc_data = numpy.empty([x_size,y_size,num_slices])
+    auc_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices]))
     
-    for slc in range(num_slices):
+    if num_slices > 1:
+        for slc in range(num_slices):
+            if inj_point+auc_reps <= reps:
+                auc_data[:,:,slc] = scipy.integrate.simps(norm_data[:,:,slc,inj_point:inj_point+auc_reps],x=time_points)
+            else:
+                auc_data[:,:,slc] = numpy.nan
+
+    else:
         if inj_point+auc_reps <= reps:
-            auc_data[:,:,slc] = scipy.integrate.simps(norm_data[:,:,slc,inj_point:inj_point+auc_reps],x=time_points)
+            auc_data[:,:] = scipy.integrate.simps(norm_data[:,:,inj_point:inj_point+auc_reps],x=time_points)
         else:
-            auc_data[:,:,slc] = numpy.nan
+            auc_data[:,:] = numpy.nan        
 
        
     # Deal with bounding boxes
@@ -115,7 +122,13 @@ def h_calculate_AUC(scn_to_analyse=None,
         bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
     
         # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices) 
+        if num_slices > 1:
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices) 
+        else:
+            # Do nothing because the bbox max is of one shape
+            bbox_mask = numpy.squeeze(bbox_mask.reshape(x_size,y_size,1))
+
+
      
     return {'':auc_data*bbox_mask}
 
@@ -166,22 +179,37 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
         bbox_mask[:] = numpy.nan        
         bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
     
-        # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
-        # Next tile for reps
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)
+        if num_slices > 1:
+            # First tile for slice
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+            # Next tile for reps
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)
+        else:
+            # First tile for slice
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size),num_slices)
+            # Next tile for reps
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),reps)            
 
 
     # Calculated params      
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
     
-    norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-    for slc in xrange(num_slices):
-        baseline = numpy.mean(data[:,:,slc,0:inj_point],axis=2)
-        norm_data[:,:,slc,:] = (data[:,:,slc,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
+    if num_slices > 1:
+        norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-    return norm_data*bbox_mask
+        for slc in range(num_slices):
+            baseline = numpy.mean(data[:,:,slc,0:inj_point],axis=2)
+            norm_data[:,:,slc,:] = (data[:,:,slc,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
+
+        return norm_data*bbox_mask
+    else:
+        norm_data = numpy.empty([x_size,y_size,reps])
+
+        baseline = numpy.mean(data[:,:,0:inj_point],axis=2)
+        norm_data[:,:,:] = (data[:,:,:] / numpy.squeeze(numpy.tile(baseline.reshape(x_size,y_size,1),reps)) )-1
+
+        return norm_data*bbox_mask
  
 def h_enhancement_curve(scn_to_analyse=None, 
                         adata_roi_label=None, 
@@ -267,14 +295,17 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
         img_mean = numpy.sum(numpy.sum(data[:,:,:,0:dcelimit],axis=0),axis=0)
 
     except IndexError:
-        print('h_inj_point: Scan {0}: You might only have 2D or 3D data, need 4D data check data source!'.format(scan_object.shortdirname))
-        raise IndexError
+        # If it's only one slice, maybe this will still work
+        img_mean = data[:,:,:].sum(0).sum(0)
         
     injection_point = []
 
     for slc in xrange(num_slices):
         
-        diff_slice = numpy.diff(img_mean[slc,:])
+        try:
+            diff_slice = numpy.diff(img_mean[slc,:])
+        except IndexError:
+            diff_slice = numpy.diff(img_mean[:])
         std_slice =  numpy.std(diff_slice)
         
         try: 
@@ -351,7 +382,7 @@ def h_calculate_AUGC(scn_to_analyse=None,
     # Size info
     x_size = data.shape[0]
     y_size = data.shape[1]
-    num_slices = data.shape[2]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
     
     # Now calculate the actual AUGC
     augc_data = numpy.empty([x_size,y_size,num_slices])
