@@ -17,7 +17,9 @@ import pprint
 import sarpy
 import sarpy.fmoosvi.getters
 
-def generate(roi_suffix=None,**kwargs):
+def generate(roi_suffix=None,
+             bbox_override=False,
+             **kwargs):
     '''Generate a masterlist from a config file.
 
     config_file=None: name of config file as kw parameter
@@ -123,34 +125,37 @@ def generate(roi_suffix=None,**kwargs):
     if patient_exclude:
         print('ignoring {0}'.format(' '.join(patient_exclude)))
 
-    check_list = expt.find_adata()
-    if roi_key_name in check_list:
-        ###### Updating bboxes #####
-        for patname,v in master_list.iteritems():  
-            # First get all the labels and put it in a list
-            lbl_list = master_list[patname].keys()        
-            # Search for all the labels that have roi and create an roi list 
-            roi_labels = [r for r in lbl_list if 'roi' in r]        
-            # Iterate over the roi list, get the updated bbox, check for same day-ness
-            for r_lbl in roi_labels:        
-                scn_name = master_list[patname][r_lbl][0]
 
-                if not scn_name:
-                    continue
+    if bbox_override is False:
 
-                try:
-                	new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,roi_key_name,exporttype='pct')
-                except KeyError:
-                	print('\n\n\n\n\n\n\n\n No ROI exists for scan {0} \n\n\n\n'.format(scn_name))
-                	new_bbox = [0.4,1.0,0.35,0.85]
-                search_string = '-' + r_lbl.split('-',1)[-1]
-                # Iterate over the label list, transfer the new bbox into the master list
-                for lbl in lbl_list:        
-                    if search_string in lbl and len(master_list[patname][lbl][1])==4: 
-                        # If 0h/24h/48h/ exists and if scan + bbox exists, update bbox
-                            master_list[patname][lbl][1] = new_bbox                
-    else:        
-        print("No rois were found, bboxes are likely incorrect. Proceed with caution!")
+        check_list = expt.find_adata()
+        if roi_key_name in check_list:
+            ###### Updating bboxes #####
+            for patname,v in master_list.iteritems():  
+                # First get all the labels and put it in a list
+                lbl_list = master_list[patname].keys()        
+                # Search for all the labels that have roi and create an roi list 
+                roi_labels = [r for r in lbl_list if 'roi' in r]        
+                # Iterate over the roi list, get the updated bbox, check for same day-ness
+                for r_lbl in roi_labels:        
+                    scn_name = master_list[patname][r_lbl][0]
+
+                    if not scn_name:
+                        continue
+
+                    try:
+                    	new_bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,roi_key_name,exporttype='pct')
+                    except KeyError:
+                    	print('\n\n\n\n\n\n\n\n No ROI exists for scan {0} \n\n\n\n'.format(scn_name))
+                    	new_bbox = [0.4,1.0,0.35,0.85]
+                    search_string = '-' + r_lbl.split('-',1)[-1]
+                    # Iterate over the label list, transfer the new bbox into the master list
+                    for lbl in lbl_list:        
+                        if search_string in lbl and len(master_list[patname][lbl][1])==4: 
+                            # If 0h/24h/48h/ exists and if scan + bbox exists, update bbox
+                                master_list[patname][lbl][1] = new_bbox                
+        else:        
+            print("No rois were found, bboxes are likely incorrect. Proceed with caution!")
 
     # create string to write to file
     json_str = json.dumps(master_list, indent=4)
