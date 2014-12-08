@@ -248,7 +248,13 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
 
     try:      
         # Pool all the data together
-        img_mean = data[:,:,:,:].sum(0).sum(0)
+
+        dcelimit = 150
+
+        if dcelimit > rawdata.shape[-1]:
+            dcelimit = rawdata.shape[-1]
+
+        img_mean = numpy.sum(numpy.sum(data[:,:,:,0:dcelimit],axis=0),axis=0)
 
     except IndexError:
         print('h_inj_point: Scan {0}: You might only have 2D or 3D data, need 4D data check data source!'.format(scan_object.shortdirname))
