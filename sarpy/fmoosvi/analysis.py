@@ -1500,7 +1500,63 @@ def bolus_arrival_time(scn_to_analyse=None,
    
     return {'':time_per_rep*(BAT+1)}
 
+def checkSNR(scn_to_analyse=None,
+             pdata_num = 0,
+             limits = (0,3500)):
 
+    import pylab
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+
+    dcedata = scan_object.pdata[pdata_num].data
+
+    assert(dcedata.shape[-1] >3),"Need more than 3 reps to check the SNR"
+
+    # First check to see if there is an injection point, if so consider the points before it only:
+    inj_point = h_inj_point(scn_to_analyse)
+
+    if  inj_point > 1:
+        snrcheck_data = dcedata[:,...,1:inj_point]
+        print('Injection, points before {0} used'.format(inj_point))
+
+    else:
+        snrcheck_data = dcedata[:,:,:,1:]
+
+    # Mean of each pixel divided by the std dev of each pixel
+    # SAR's special SNR definition
+    snrMap = numpy.divide(numpy.mean(snrcheck_data,axis=-1),
+                          numpy.sqrt(numpy.std(snrcheck_data,axis=-1)))
+
+    # Conventional SNR definition
+    # Take the mean of the top snrMap voxels in the map above, and divide them by the sqrt(std in the bottom)
+    hist = numpy.histogram(snrMap)
+
+    lowEstimate = numpy.mean(snrcheck_data[snrMap>hist[1][1]])/numpy.sqrt(numpy.std(snrcheck_data[snrMap<hist[1][1]]))
+    highEstimate= numpy.mean(snrcheck_data[snrMap>hist[1][4]])/numpy.sqrt(numpy.std(snrcheck_data[snrMap<hist[1][1]]))
+
+
+    gridSize = numpy.ceil(numpy.sqrt(dcedata.shape[-2]))
+
+    if len(dcedata.shape)>3:
+
+        pylab.suptitle('Estimated Conventional SNR: {0} - {1}'.format(int(lowEstimate),int(highEstimate)))
+
+        for s in xrange(dcedata.shape[-2]):
+            pylab.subplot(gridSize,gridSize,s+1)
+            pylab.imshow(snrMap[:,:,s],vmin=limits[0],vmax=limits[1])
+            pylab.title('Slice {0}'.format(s))
+            pylab.colorbar()
+            pylab.axis('off')
+    else:
+            pylab.imshow(snrMap,vmin=limits[0],vmax=limits[1])
+            pylab.colorbar()
+            pylab.axis('off')
+
+    return snrMap
+
+
+
+    
 
 ## Not working, or of unknown reliability
 
