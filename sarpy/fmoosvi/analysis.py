@@ -1378,7 +1378,7 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
 ###
 #####################            
 
-def bolus_arrival_time(scan_to_analyse=None,
+def bolus_arrival_time(scn_to_analyse=None,
                        pdata_num = 0,
                        bbox = None ):
     
@@ -1401,7 +1401,7 @@ def bolus_arrival_time(scan_to_analyse=None,
     import sarpy.fmoosvi.getters as getters
     import sarpy.ImageProcessing.resample_onto
     import copy
-    scan_object = sarpy.Scan(scan_to_analyse)
+    scan_object = sarpy.Scan(scn_to_analyse)
     rawdata = scan_object.pdata[0].data
 
     # Get time from Index
@@ -1427,7 +1427,7 @@ def bolus_arrival_time(scan_to_analyse=None,
     # First, get the injection point determined by averaging the image.
     # Then below, only use the first inj_point*5 number of data points
     # otherwise it takes forever to process
-    inj_point =  sarpy.fmoosvi.analysis.h_inj_point(scan_to_analyse) + 1
+    inj_point =  sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse) + 1
 
     # Add a third spatial dimension if it's missing.
     if numpy.size(rawdata.shape) == 3:
@@ -1442,17 +1442,17 @@ def bolus_arrival_time(scan_to_analyse=None,
         #TODO: this is going to cause a problem one day when reps < 100
         data = data[:,:,:,0:numpy.max([100,inj_point*5])]
     else:
-        data = data[:,:,:,0:numpy.max([100,inj_point*5])]
+        data = rawdata[:,:,:,0:numpy.max([100,inj_point*5])]
 
     x_size = data.shape[0]
     y_size = data.shape[1]
-    num_slices = getters.get_num_slices(scan_to_analyse,pdata_num)
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
 
     # Deal with bounding boxes
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
     else:      
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scan_to_analyse,bbox) 
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
 
     if bbox.shape == (4,):            
 
