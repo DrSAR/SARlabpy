@@ -1537,10 +1537,10 @@ def checkSNR(scn_to_analyse=None,
 
     gridSize = numpy.ceil(numpy.sqrt(dcedata.shape[-2]))
 
+    pylab.suptitle('Estimated Conventional SNR: {0} - {1}'.format(int(lowEstimate),int(highEstimate)))
+
+
     if len(dcedata.shape)>3:
-
-        pylab.suptitle('Estimated Conventional SNR: {0} - {1}'.format(int(lowEstimate),int(highEstimate)))
-
         for s in xrange(dcedata.shape[-2]):
             pylab.subplot(gridSize,gridSize,s+1)
             pylab.imshow(snrMap[:,:,s],vmin=limits[0],vmax=limits[1])
