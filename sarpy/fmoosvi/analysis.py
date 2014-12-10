@@ -1502,7 +1502,7 @@ def bolus_arrival_time(scn_to_analyse=None,
 
 def checkSNR(scn_to_analyse=None,
              pdata_num = 0,
-             limits = (0,3500)):
+             limits = (0,100)):
 
     import pylab
 
@@ -1525,7 +1525,7 @@ def checkSNR(scn_to_analyse=None,
     # Mean of each pixel divided by the std dev of each pixel
     # SAR's special SNR definition
     snrMap = numpy.divide(numpy.mean(snrcheck_data,axis=-1),
-                          numpy.sqrt(numpy.std(snrcheck_data,axis=-1)))
+                          numpy.std(snrcheck_data,axis=-1))
 
     # Conventional SNR definition
     # Take the mean of the top snrMap voxels in the map above, and divide them by the sqrt(std in the bottom)
