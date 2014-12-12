@@ -127,10 +127,10 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
     ########### Getting and defining parameters
     
     # Data
-    data = scan_object.pdata[pdata_num].data
+    rdata = scan_object.pdata[pdata_num].data
 
-    x_size = data.shape[0]
-    y_size = data.shape[1]
+    x_size = rdata.shape[0]
+    y_size = rdata.shape[1]
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
     
     # Method params
@@ -140,6 +140,18 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
         print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) )
+
+    # Add a third spatial dimension if it's missing.
+    if numpy.size(rdata.shape) == 3:
+
+        # add an empty dimension to make it 4D, this code appends the exta axis
+        data = sarpy.ImageProcessing.resample_onto.atleast_4d(rdata.copy()) 
+
+        # Move the appended dimension to position 2 to keep data formats the same
+        data = data.reshape([data.shape[0], data.shape[1],
+                             data.shape[3], data.shape[2]])
+    else:
+        data = rdata
 
     ## Check for bbox traits and create bbox_mask to output only partial data
 
@@ -151,7 +163,6 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
     if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
-
         bbox_mask[:] = numpy.nan        
         bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
     
@@ -166,8 +177,7 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
     
     norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-
-    for slc in range(num_slices):
+    for slc in xrange(num_slices):
         baseline = numpy.mean(data[:,:,slc,0:inj_point],axis=2)
         norm_data[:,:,slc,:] = (data[:,:,slc,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
 
@@ -1169,7 +1179,6 @@ def h_generate_VTC(scn_to_analyse=None,
 
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])
-
     else:      
         bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)
 
@@ -1376,12 +1385,19 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
 ### Calculating Bolus Arrival Time (BAT)
 ###
 ###
-#####################            
+#####################           
 
 def bolus_arrival_time(scn_to_analyse=None,
                        pdata_num = 0,
                        bbox = None ):
     
+    def first4D(a):  # Written by SAR to return the first non-zero entry in a 4D array in the 4th axis
+        di = numpy.zeros(a.shape[0:3])+numpy.Inf
+        for i, j, k, l in zip(*numpy.where(a>0)):
+            if l<di[i,j,k]:
+                di[i,j,k] = l
+        return di
+
     def runningSum(x, N):
         output = numpy.empty_like(x)
         for i in xrange(x.shape[0]):
@@ -1389,13 +1405,6 @@ def bolus_arrival_time(scn_to_analyse=None,
                 for k in xrange(x.shape[2]):
                     output[i,j,k,:] = numpy.convolve(x[i,j,k,:],numpy.ones(N))[N-1:]
         return output
-
-    def first4D(a):  # Written by SAR to return the first non-zero entry in a 4D array in the 4th axis
-        di = numpy.zeros(a.shape[0:3])+numpy.Inf
-        for i, j, k, l in zip(*numpy.where(a>0)):
-            if l<di[i,j,k]:
-                di[i,j,k] = l
-        return di
 
     import sarpy
     import sarpy.fmoosvi.getters as getters
