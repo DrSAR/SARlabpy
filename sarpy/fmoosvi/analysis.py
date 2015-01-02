@@ -206,8 +206,8 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
     else:
         norm_data = numpy.empty([x_size,y_size,reps])
 
-        baseline = numpy.mean(data[:,:,0:inj_point],axis=2)
-        norm_data[:,:,:] = (data[:,:,:] / numpy.squeeze(numpy.tile(baseline.reshape(x_size,y_size,1),reps)) )-1
+        baseline = numpy.mean(data[:,:,0,0:inj_point],axis=2)
+        norm_data[:,:,:] = (data[:,:,0,:] / numpy.squeeze(numpy.tile(baseline.reshape(x_size,y_size,1),reps)) )-1
 
         return norm_data*bbox_mask
  
