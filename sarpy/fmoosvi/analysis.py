@@ -1200,11 +1200,11 @@ def h_generate_VTC(scn_to_analyse=None,
     #Get useful params        
     x_size = ndata.shape[0]
     y_size = ndata.shape[1]
-    num_slices = ndata.shape[2]
-    reps = ndata.shape[3]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+    reps = ndata.shape[-1]
     
-    mask = numpy.empty([x_size,y_size,num_slices,reps])
-    mask[:] = numpy.nan
+    mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
+    #mask[:] = numpy.nan
 
     # Deal with bounding boxes
 
@@ -1214,17 +1214,27 @@ def h_generate_VTC(scn_to_analyse=None,
         bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)
 
     # Set bounding boxes and get ready to join together
-    mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
-        
-    #ndata[:,:,:,-1] = numpy.nan
+    if num_slices > 1:
+        mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
+        ndata = mask * ndata
+
+        # Reshape it  to stitch together all the data
+        nrdata = numpy.empty([x_size,y_size*reps,num_slices]).astype(float)        
+        for s in xrange(num_slices):
+            tmp = ndata[:,:,s,:].flatten()
+            tmp[::reps] = numpy.nan
+            # Sets the last point of each enhancement curve to numpy.nan
+            nrdata[:,:,s] = tmp.reshape([x_size,y_size*reps])
     
-    ndata = mask * ndata
-    # Reshape it  to stitch together all the data
-    nrdata = numpy.empty([x_size,y_size*reps,num_slices])
-    
-    for s in xrange(num_slices):
-        nrdata[:,:,s] = ndata[:,:,s,:].reshape([x_size,y_size*reps])
-        
+    else: # Account for single slice data
+        mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:] = 1
+        ndata = mask * ndata
+        nrdata = numpy.empty([x_size,y_size*reps]) 
+        # Incomprehensible list comprehenshion
+        # Sets the last point of each enhancement curve to numpy.nan 
+        tmp = ndata.flatten()
+        tmp[::reps] = numpy.nan               
+        nrdata = tmp.reshape([x_size,y_size*reps])
     return {'':nrdata}
 
 ######################
