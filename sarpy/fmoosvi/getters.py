@@ -251,30 +251,40 @@ def convert_bbox(scan_object_name, bbox, exporttype=None):
 def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',exporttype=None):
     
     scan_object = sarpy.Scan(scan_object_name)
+    roi = scan_object.adata[roi_adata_label].data  
+    
+    # First check to see if the roi is filled with 0s and 1s or nans and 1s,
+    # otherwise assume it's in 1s and 0s format already
 
-    roi = scan_object.adata[roi_adata_label].data   
-    
-    # First prepare the roi array to have it contain only 0s and 1s
-    mask = numpy.where(numpy.isnan(roi),0,1) # where ever roi is nan, give it a value of 0, else 1
-    
-    # Next, sum up the array in the slice dimension and convert the aray to a float
-    mask_sum = numpy.array(numpy.sum(mask,axis=2))
-    mask_sum = mask_sum.astype(float)
-    
-    mask_sum[mask_sum != 0 ] = 1 # undo the effects of summing
+    if numpy.isnan(numpy.sum(roi.flatten())):
+        mask = numpy.where(numpy.isnan(roi),0,1) # where ever roi is nan, give it a value of 0, else 1
+    else:
+        mask = roi
+
+    # Add a third spatial dimension if it's missing.
+    if numpy.size(roi.shape) == 2:
+        # add an empty dimension to make it 4D, this code appends the exta axis
+        mask_sum = mask.copy()
+
+    else: 
+        # Next, sum up the array in the slice dimension and convert the aray to a float
+        mask_sum = numpy.array(numpy.sum(mask,axis=-1))
+        mask_sum = mask_sum.astype(float)
+        
+        mask_sum[mask_sum != 0 ] = 1 # undo the effects of summing
     
     # Perform calculations to get the bounds of the box in pixels for each dim
     
     a = numpy.sum(mask_sum,axis=0) 
-    a[a==0] = numpy.nan 
-    a_low = numpy.where(~numpy.isnan(a))[0][0]
-    a_high = numpy.where(~numpy.isnan(a))[0][-1]
+    numpy.where(a>1E-4,a,numpy.nan)
+    a_low = numpy.where(a>0)[0][0]
+    a_high = numpy.where(a>0)[0][-1]
  
     b = numpy.sum(mask_sum,axis=1)
-    b[b==0] = numpy.nan
+    numpy.where(b>1E-4,b,numpy.nan)
 
-    b_low = numpy.where(~numpy.isnan(b))[0][0]
-    b_high = numpy.where(~numpy.isnan(b))[0][-1]
+    b_low = numpy.where(b>0)[0][0]
+    b_high = numpy.where(b>0)[0][-1]
     
     # Add a border around this to avoid cliping (aesthetics mostly)
     b_low=b_low -numpy.round(roi.shape[0]*0.10)
