@@ -1187,7 +1187,7 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         print ('There is no code to produce that indicator. Do it first.')
         raise Exception
 
-def h_generate_VTC(scn_to_analyse=None, 
+def h_generate_VTC(scn_to_analyse=None,
                    bbox = None, 
                    pdata_num = 0, 
                    **kwargs):
@@ -1204,7 +1204,6 @@ def h_generate_VTC(scn_to_analyse=None,
     reps = ndata.shape[-1]
     
     mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
-    #mask[:] = numpy.nan
 
     # Deal with bounding boxes
 
@@ -1238,6 +1237,7 @@ def h_generate_VTC(scn_to_analyse=None,
     return {'':nrdata}
 
 def createSaveVTC(scn_to_analyse=None,
+                  roi_label = 'roi',
                   bbox = None, 
                   pdata_num = 0, 
                   **kwargs):
@@ -1245,7 +1245,7 @@ def createSaveVTC(scn_to_analyse=None,
 
     scan_object = sarpy.Scan(scn_to_analyse)
     #bbox = sarpy.fmoosvi.getters.convert_bbox(scn_name,bbox)
-    bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_to_analyse,'roi_KM')
+    bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_to_analyse,'roi_label')
     fig = pylab.figure()
     G = pylab.matplotlib.gridspec.GridSpec(1,1, wspace=0.0, hspace=0.0)   
     reps = scan_object.pdata[0].data.shape[-1]
