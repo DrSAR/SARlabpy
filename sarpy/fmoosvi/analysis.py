@@ -1237,6 +1237,83 @@ def h_generate_VTC(scn_to_analyse=None,
         nrdata = tmp.reshape([x_size,y_size*reps])
     return {'':nrdata}
 
+def createSaveVTC(scn_to_analyse=None,
+                  bbox = None, 
+                  pdata_num = 0, 
+                  **kwargs):
+
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+    #bbox = sarpy.fmoosvi.getters.convert_bbox(scn_name,bbox)
+    bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_to_analyse,'roi_KM')
+    fig = pylab.figure()
+    G = pylab.matplotlib.gridspec.GridSpec(1,1, wspace=0.0, hspace=0.0)   
+    reps = scan_object.pdata[0].data.shape[-1]
+    dat = scan_object.pdata[0].data
+    imgdata = numpy.mean(dat,axis=2)
+    vtcdata = scan_object.adata['vtc'].data
+    axs = fig.add_subplot(G[0, 0])
+    #aspect = scn.method.PVM_SpatResol[0]*(bbox[1]-bbox[0]) / scn.method.PVM_SpatResol[1]*(bbox[3]-bbox[2])
+    aspect= (scan_object.method.PVM_FovCm[0]/scan_object.method.PVM_Matrix[0])/ \
+            (scan_object.method.PVM_FovCm[1]/scan_object.method.PVM_Matrix[1])
+    #aspect
+    axs.imshow(numpy.flipud(imgdata[bbox[0]:bbox[1],\
+                       bbox[2]:bbox[3]]),\
+                       cmap='gray', 
+                       interpolation='None',
+                       alpha=1.0,
+                       zorder=0,
+                       aspect=aspect,
+                       vmin=0,
+                       vmax=1)
+    axs.set_axis_off()
+    fig.canvas.draw()
+    axis('off')
+
+    #axs=fig.add_subplot(G[0, 0])
+    box = axs.get_position().bounds
+    height = box[3] / (bbox[1]-bbox[0])
+
+    for ht,i in enumerate(xrange(bbox[0], bbox[1])):
+
+        #, simply use the add_axes() method which takes a list of 
+        # [left, bottom, width, height] values in 0-1 relative figure coordinates
+        
+    #The add_axes method takes a list of four values, which are 
+    #xmin, ymin, dx, and dy for the subplot, where xmin and ymin 
+    #are the coordinates of the lower left corner of the subplot, 
+    #and dx and dy are the width and height of the subplot, 
+    #with all values specified in relative units 
+    #(where 0 is left/bottom and 1 is top/right)
+
+        tmpax = fig.add_axes([box[0], box[1]+ht*height,
+                             box[2], height])
+
+
+        tmpax.plot(vtcdata[i,((bbox[2])*reps):((bbox[3])*reps)],
+                           color='g', 
+                           linewidth=.1,
+                           zorder=1)
+        tmpax.set_axis_off()
+        pylab.ylim([-0.2,4])
+        pylab.xlim([0,((bbox[3])*reps)-(bbox[2])*reps])
+    
+    savefig('{0}.png'.format(scn.shortdirname.split('/')[0]),dpi=300)
+    
+    pylab.close(fig)
+    fig = pylab.figure()
+    G = pylab.matplotlib.gridspec.GridSpec(1,1, wspace=0.0, hspace=0.0)
+    axs=fig.add_subplot(G[0, 0])
+    axs.imshow(numpy.flipud(imgdata[bbox[0]:bbox[1],\
+                           bbox[2]:bbox[3]]),\
+                           cmap='gray', 
+                           interpolation='None',
+                           alpha=1.0,
+                           zorder=0,
+                           aspect=aspect)  
+    axs.set_axis_off()    
+    savefig('{0}.png'.format(scn.shortdirname.split('/')[0]+'_anatomy'),dpi=300)    
+
 ######################
 ###
 ###
