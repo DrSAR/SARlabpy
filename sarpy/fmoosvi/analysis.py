@@ -128,8 +128,6 @@ def h_calculate_AUC(scn_to_analyse=None,
             # Do nothing because the bbox max is of one shape
             bbox_mask = numpy.squeeze(bbox_mask.reshape(x_size,y_size,1))
 
-
-     
     return {'':auc_data*bbox_mask}
 
 
@@ -852,9 +850,6 @@ def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
 
         return {'':numpy.squeeze(data_after_fitting),
                 '_fit':result}    
-
-
-
 
 def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
                         y_data=None,
