@@ -1183,37 +1183,65 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         raise Exception
 
 def h_generate_VTC(scn_to_analyse=None,
-                   bbox = None, 
+                   bbox = None,
+                   vtc_type = None,
+                   roi_label = None,
                    pdata_num = 0, 
                    **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
-    # Normalize data
-    ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
-    
+    # Specify VTC data
+
+    if vtc_type is None:
+        ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
+    elif vtc_type == 'gd_KM':
+        ndata = numpy.squeeze(sarpy.Scan(scn_to_analyse).adata['gd_KM'].data)
+    elif vtc_type =='CEST':
+
+        dat = sarpy.Scan(scn_to_analyse).pdata[0].data
+        sorted_data = numpy.empty_like(dat)        
+        offsets = sorted(scan_object.method.KD_MagTransOffsetList)
+        offset_index = [scan_object.method.KD_MagTransOffsetList.index(i) for i in offsets]
+
+        # Sort the offset frequencies from smallest to largest so the spectrum 
+        # is put together properly.
+        
+        for i,offsets in enumerate(offset_index):   
+            sorted_data[:,:,i] = dat[:,:,offsets]
+
+        ndata = sorted_data
     #Get useful params        
     x_size = ndata.shape[0]
     y_size = ndata.shape[1]
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
     reps = ndata.shape[-1]
     
-    mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
-
     # Deal with bounding boxes
-
     if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])
+        bbox = numpy.array([0,x_size,0,y_size])
     else:      
         bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)
+
+    if roi_label is None:
+        mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
+    else:
+        mask = scan_object.adata[roi_label].data
+        mask = numpy.tile(mask.reshape(x_size,y_size,num_slices,1),reps)
 
     # Set bounding boxes and get ready to join together
     if num_slices > 1:
         mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
         ndata = mask * ndata
 
+        if roi_label is None: # In case you want a bboxed VTC map
+            mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
+        else: # In the case where you want JUST the roi VTCs (not bboxed)
+            mask = numpy.where(mask<1,numpy.nan,1)
+            mask = numpy.squeeze(mask)        
+
         # Reshape it  to stitch together all the data
-        nrdata = numpy.empty([x_size,y_size*reps,num_slices]).astype(float)        
+        nrdata = numpy.empty([x_size,y_size*reps,num_slices]).astype(float)  
         for s in xrange(num_slices):
             tmp = ndata[:,:,s,:].flatten()
             tmp[::reps] = numpy.nan
@@ -1221,7 +1249,13 @@ def h_generate_VTC(scn_to_analyse=None,
             nrdata[:,:,s] = tmp.reshape([x_size,y_size*reps])
     
     else: # Account for single slice data
-        mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:] = 1
+
+        if roi_label is None: # In case you want a bboxed VTC map
+            mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:] = 1
+        else: # In the case where you want JUST the roi VTCs (not bboxed)
+            mask = numpy.where(mask<1,numpy.nan,1)
+            mask = numpy.squeeze(mask)
+
         ndata = mask * ndata
         nrdata = numpy.empty([x_size,y_size*reps]) 
         # Incomprehensible list comprehenshion
@@ -1232,28 +1266,37 @@ def h_generate_VTC(scn_to_analyse=None,
     return {'':nrdata}
 
 def createSaveVTC(scn_to_analyse=None,
+                  adata_label=None,
                   roi_label = 'roi',
                   bbox = None, 
                   pdata_num = 0, 
                   **kwargs):
 
+    import pylab
 
     scan_object = sarpy.Scan(scn_to_analyse)
-    #bbox = sarpy.fmoosvi.getters.convert_bbox(scn_name,bbox)
-    bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_to_analyse,'roi_label')
     fig = pylab.figure()
     G = pylab.matplotlib.gridspec.GridSpec(1,1, wspace=0.0, hspace=0.0)   
     reps = scan_object.pdata[0].data.shape[-1]
     dat = scan_object.pdata[0].data
+
+    x_size = dat.shape[0]
+    y_size = dat.shape[1]
+
+    # Deal with bounding boxes
+    if bbox is None:        
+        bbox = numpy.array([0,x_size,0,y_size])
+
     imgdata = numpy.mean(dat,axis=2)
-    vtcdata = scan_object.adata['vtc'].data
+    vtcdata = scan_object.adata[adata_label].data
+
     axs = fig.add_subplot(G[0, 0])
     #aspect = scn.method.PVM_SpatResol[0]*(bbox[1]-bbox[0]) / scn.method.PVM_SpatResol[1]*(bbox[3]-bbox[2])
     aspect= (scan_object.method.PVM_FovCm[0]/scan_object.method.PVM_Matrix[0])/ \
             (scan_object.method.PVM_FovCm[1]/scan_object.method.PVM_Matrix[1])
     #aspect
-    axs.imshow(numpy.flipud(imgdata[bbox[0]:bbox[1],\
-                       bbox[2]:bbox[3]]),\
+    axs.imshow(imgdata[bbox[0]:bbox[1],\
+                       bbox[2]:bbox[3]],\
                        cmap='gray', 
                        interpolation='None',
                        alpha=1.0,
@@ -1263,7 +1306,7 @@ def createSaveVTC(scn_to_analyse=None,
                        vmax=1)
     axs.set_axis_off()
     fig.canvas.draw()
-    axis('off')
+    pylab.axis('off')
 
     #axs=fig.add_subplot(G[0, 0])
     box = axs.get_position().bounds
@@ -1274,12 +1317,12 @@ def createSaveVTC(scn_to_analyse=None,
         #, simply use the add_axes() method which takes a list of 
         # [left, bottom, width, height] values in 0-1 relative figure coordinates
         
-    #The add_axes method takes a list of four values, which are 
-    #xmin, ymin, dx, and dy for the subplot, where xmin and ymin 
-    #are the coordinates of the lower left corner of the subplot, 
-    #and dx and dy are the width and height of the subplot, 
-    #with all values specified in relative units 
-    #(where 0 is left/bottom and 1 is top/right)
+        #The add_axes method takes a list of four values, which are 
+        #xmin, ymin, dx, and dy for the subplot, where xmin and ymin 
+        #are the coordinates of the lower left corner of the subplot, 
+        #and dx and dy are the width and height of the subplot, 
+        #with all values specified in relative units 
+        #(where 0 is left/bottom and 1 is top/right)
 
         tmpax = fig.add_axes([box[0], box[1]+ht*height,
                              box[2], height])
@@ -1290,10 +1333,10 @@ def createSaveVTC(scn_to_analyse=None,
                            linewidth=.1,
                            zorder=1)
         tmpax.set_axis_off()
-        pylab.ylim([-0.2,4])
+        #pylab.ylim([35000,65000])
         pylab.xlim([0,((bbox[3])*reps)-(bbox[2])*reps])
     
-    savefig('{0}.png'.format(scn.shortdirname.split('/')[0]),dpi=300)
+    pylab.savefig('{0}.png'.format(scan_object.shortdirname.split('/')[0]),dpi=600)
     
     pylab.close(fig)
     fig = pylab.figure()
@@ -1307,7 +1350,7 @@ def createSaveVTC(scn_to_analyse=None,
                            zorder=0,
                            aspect=aspect)  
     axs.set_axis_off()    
-    savefig('{0}.png'.format(scn.shortdirname.split('/')[0]+'_anatomy'),dpi=300)    
+    pylab.savefig('{0}.png'.format(scan_object.shortdirname.split('/')[0]+'_anatomy'),dpi=300)    
 
 ######################
 ###
