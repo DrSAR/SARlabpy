@@ -1681,9 +1681,105 @@ def checkSNR(scn_to_analyse=None,
 
     return snrMap
 
+def MMCA_model_fit(timecourse, start_fit=0, dt=1):
+    '''Fits a linear model to a time course starting some way through the injection.
+    Ostensibly, the jump from baseline to the data just after injection is related to 
+    blood volume (100% BV should jump to a concentration of v_c). The slope of the curve
+    after that initial line is related to extravasation (as a result of leakage from vessels?)'''
 
+    # Removing the nans before calculating the BV and leakage
+    timeaxis = dt*numpy.arange(len(timecourse))
+    start_time = timeaxis[start_fit]
 
+    nan_whereabout = numpy.where(numpy.isfinite(timecourse))
+    timecourse = timecourse[nan_whereabout]
+    timeaxis = timeaxis[nan_whereabout]
+    timecourse = timecourse[numpy.where(timeaxis>=start_time)]
+    timeaxis = timeaxis[numpy.where(timeaxis>=start_time)]
     
+
+    try: 
+        (slope,intercept,r,tt,stderr) = scipy.stats.linregress(timeaxis, timecourse)
+        rel_bloodvol = intercept
+        leakage_param = slope
+    except ValueError:
+        rel_bloodvol = numpy.nan
+        leakage_param = numpy.nan   
+
+    return (rel_bloodvol,leakage_param)
+
+def h_fit_ec(scn_to_analyse=None,
+            roi_label=None,
+            bbox = None,
+            pdata_num = 0, 
+            **kwargs):
+    '''Fits a linear model to a time course starting some way through the injection.
+    Ostensibly, the jump from baseline to the data just after injection is related to 
+    blood volume (100% BV should jump to a concentration of v_c). The slope of the curve
+    after that initial line is related to extravasation (as a result of leakage from vessels?)'''
+    
+    import scipy.stats
+    scan_object = sarpy.Scan(scn_to_analyse)
+    #norm_data = h_normalize_dce(scn_to_analyse)
+    #norm_data = sarpy.Scan(scn_to_analyse).pdata[0].data
+    norm_data = numpy.squeeze(sarpy.Scan(scn_to_analyse).adata['gd_KM'].data)
+
+    # Size info
+    x_size = norm_data.shape[0]
+    y_size = norm_data.shape[1]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+    reps =  scan_object.method.PVM_NRepetitions
+
+    if roi_label is None:
+        norm_data =norm_data
+    else:
+        msk = numpy.squeeze(scan_object.adata[roi_label].data)
+        # Tile for reps
+        bbox_mask = numpy.tile(msk.reshape(x_size,y_size,1),reps) 
+
+        norm_data = norm_data*bbox_mask
+
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+    
+    time_per_rep = numpy.round(numpy.divide(total_time,reps))
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
+
+    print inj_point
+    # Deal with bounding boxes
+    if bbox is None:        
+        bbox = numpy.array([0,x_size,0,y_size])
+    else:      
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)               
+
+    # Now calculate the actual Blood Volume & Leakage Param
+    bloodvolume_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices]))
+    leakage_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices]))
+    
+    # Start the fitting process        
+    for slc in xrange(num_slices):          
+        for x in xrange(bbox[0],bbox[1]):
+            for y in xrange(bbox[2],bbox[3]):
+
+                if num_slices > 2:
+                    bloodvolume, leakage = MMCA_model_fit(norm_data[x,y,slc,:],
+                                                          start_fit=inj_point+2,
+                                                          dt = time_per_rep)
+                    bloodvolume_data[x,y,slc] = bloodvolume
+                    leakage_data[x,y,slc] = leakage
+                else:
+                    bloodvolume, leakage = MMCA_model_fit(norm_data[x,y],
+                                                          start_fit=inj_point+2,
+                                                          dt = time_per_rep)                    
+                    bloodvolume_data[x,y] = bloodvolume
+                    leakage_data[x,y] = leakage
+
+    return {'bloodvolume':bloodvolume_data, 
+            'leakage': leakage_data}
 
 ## Not working, or of unknown reliability
 
