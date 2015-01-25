@@ -229,7 +229,6 @@ roi_mask.shape[0], roi_mask.shape[1], roi_mask.shape[2],1]),reps)
         
 def convert_bbox(scan_object_name, bbox, exporttype=None):
     
-
     data = sarpy.Scan(scan_object_name)
 
     if data.pdata[0].data.shape == data.fftfid.shape:
