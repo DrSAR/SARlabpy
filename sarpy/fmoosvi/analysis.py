@@ -28,7 +28,8 @@ import random
 import copy
 
 def h_calculate_AUC(scn_to_analyse=None, 
-                    bbox = None, 
+                    bbox = None,
+                    adata_label=None,
                     time = 60, 
                     pdata_num = 0,
                     **kwargs):
@@ -42,7 +43,6 @@ def h_calculate_AUC(scn_to_analyse=None,
     :return: array with auc data
     """ 
     import sarpy.fmoosvi.analysis            
-
     
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -82,22 +82,32 @@ def h_calculate_AUC(scn_to_analyse=None,
     # Determine point of injection by averaging one slice in the entire image
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
     
-    # Now calculate the Normalized Intesity voxel by voxel
-    norm_data = h_normalize_dce(scn_to_analyse)
+    if adata_label is None:
+        # Now calculate the Normalized Intesity voxel by voxel
+        norm_data = h_normalize_dce(scn_to_analyse)
+    else:
+        norm_data = scan_object.adata[adata_label].data
 
     # Size info
     x_size = norm_data.shape[0]
     y_size = norm_data.shape[1]
-    num_slices = norm_data.shape[2]    
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
 
     # Now calculate the actual AUC
-    auc_data = numpy.empty([x_size,y_size,num_slices])
+    auc_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices]))
     
-    for slc in range(num_slices):
+    if num_slices > 1:
+        for slc in range(num_slices):
+            if inj_point+auc_reps <= reps:
+                auc_data[:,:,slc] = scipy.integrate.simps(norm_data[:,:,slc,inj_point:inj_point+auc_reps],x=time_points)
+            else:
+                auc_data[:,:,slc] = numpy.nan
+
+    else:
         if inj_point+auc_reps <= reps:
-            auc_data[:,:,slc] = scipy.integrate.simps(norm_data[:,:,slc,inj_point:inj_point+auc_reps],x=time_points)
+            auc_data[:,:] = scipy.integrate.simps(norm_data[:,:,inj_point:inj_point+auc_reps],x=time_points)
         else:
-            auc_data[:,:,slc] = numpy.nan
+            auc_data[:,:] = numpy.nan        
 
        
     # Deal with bounding boxes
@@ -115,8 +125,12 @@ def h_calculate_AUC(scn_to_analyse=None,
         bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
     
         # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices) 
-     
+        if num_slices > 1:
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices) 
+        else:
+            # Do nothing because the bbox max is of one shape
+            bbox_mask = numpy.squeeze(bbox_mask.reshape(x_size,y_size,1))
+
     return {'':auc_data*bbox_mask}
 
 
@@ -166,22 +180,36 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
         bbox_mask[:] = numpy.nan        
         bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
     
-        # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
-        # Next tile for reps
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)
+        if num_slices > 1:
+            # First tile for slice
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+            # Next tile for reps
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,num_slices,1),reps)
+        else:
+            # First tile for slice
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size),num_slices)
+            # Next tile for reps
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),reps)            
 
 
     # Calculated params      
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
-    
-    norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-    for slc in xrange(num_slices):
-        baseline = numpy.mean(data[:,:,slc,0:inj_point],axis=2)
-        norm_data[:,:,slc,:] = (data[:,:,slc,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
+    if num_slices > 1:
+        norm_data = numpy.empty([x_size,y_size,num_slices,reps])
 
-    return norm_data*bbox_mask
+        for slc in range(num_slices):
+            baseline = numpy.mean(data[:,:,slc,0:inj_point],axis=2)
+            norm_data[:,:,slc,:] = (data[:,:,slc,:] / numpy.tile(baseline.reshape(x_size,y_size,1),reps))-1
+
+        return norm_data*bbox_mask
+    else:
+        norm_data = numpy.empty([x_size,y_size,reps])
+
+        baseline = numpy.mean(data[:,:,0,0:inj_point],axis=2)
+        norm_data[:,:,:] = (data[:,:,0,:] / numpy.squeeze(numpy.tile(baseline.reshape(x_size,y_size,1),reps)) )-1
+
+        return norm_data*bbox_mask
  
 def h_enhancement_curve(scn_to_analyse=None, 
                         adata_roi_label=None, 
@@ -267,14 +295,17 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
         img_mean = numpy.sum(numpy.sum(data[:,:,:,0:dcelimit],axis=0),axis=0)
 
     except IndexError:
-        print('h_inj_point: Scan {0}: You might only have 2D or 3D data, need 4D data check data source!'.format(scan_object.shortdirname))
-        raise IndexError
+        # If it's only one slice, maybe this will still work
+        img_mean = data[:,:,:].sum(0).sum(0)
         
     injection_point = []
 
     for slc in xrange(num_slices):
         
-        diff_slice = numpy.diff(img_mean[slc,:])
+        try:
+            diff_slice = numpy.diff(img_mean[slc,:])
+        except IndexError:
+            diff_slice = numpy.diff(img_mean[:])
         std_slice =  numpy.std(diff_slice)
         
         try: 
@@ -286,6 +317,10 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
     # look through the list of elements in injection point and report the most common (mode)
     injection_point_counter = Counter(injection_point)
     injection_point = injection_point_counter.most_common(1)
+
+
+    if scn_to_analyse == 'SARgalbpiB.PG1/6':
+        injection_point[0] = (10,0)
 
     return injection_point[0][0]+1
 
@@ -351,7 +386,7 @@ def h_calculate_AUGC(scn_to_analyse=None,
     # Size info
     x_size = data.shape[0]
     y_size = data.shape[1]
-    num_slices = data.shape[2]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
     
     # Now calculate the actual AUGC
     augc_data = numpy.empty([x_size,y_size,num_slices])
@@ -822,9 +857,6 @@ def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
         return {'':numpy.squeeze(data_after_fitting),
                 '_fit':result}    
 
-
-
-
 def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
                         y_data=None,
                         slc=None,
@@ -1156,45 +1188,175 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         print ('There is no code to produce that indicator. Do it first.')
         raise Exception
 
-def h_generate_VTC(scn_to_analyse=None, 
-                   bbox = None, 
+def h_generate_VTC(scn_to_analyse=None,
+                   bbox = None,
+                   vtc_type = None,
+                   roi_label = None,
                    pdata_num = 0, 
                    **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
-    # Normalize data
-    ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
-    
+    # Specify VTC data
+
+    if vtc_type is None:
+        ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
+    elif vtc_type == 'gd_KM':
+        ndata = numpy.squeeze(sarpy.Scan(scn_to_analyse).adata['gd_KM'].data)
+    elif vtc_type =='CEST':
+
+        dat = sarpy.Scan(scn_to_analyse).pdata[0].data
+        sorted_data = numpy.empty_like(dat)        
+        offsets = sorted(scan_object.method.KD_MagTransOffsetList)
+        offset_index = [scan_object.method.KD_MagTransOffsetList.index(i) for i in offsets]
+
+        # Sort the offset frequencies from smallest to largest so the spectrum 
+        # is put together properly.
+        
+        for i,offsets in enumerate(offset_index):   
+            sorted_data[:,:,i] = dat[:,:,offsets]
+
+        ndata = sorted_data
     #Get useful params        
     x_size = ndata.shape[0]
     y_size = ndata.shape[1]
-    num_slices = ndata.shape[2]
-    reps = ndata.shape[3]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+    reps = ndata.shape[-1]
     
-    mask = numpy.empty([x_size,y_size,num_slices,reps])
-    mask[:] = numpy.nan
-
     # Deal with bounding boxes
-
     if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])
+        bbox = numpy.array([0,x_size,0,y_size])
     else:      
         bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)
 
+    if roi_label is None:
+        mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
+    else:
+        mask = scan_object.adata[roi_label].data
+        mask = numpy.tile(mask.reshape(x_size,y_size,num_slices,1),reps)
+
     # Set bounding boxes and get ready to join together
-    mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
-        
-    #ndata[:,:,:,-1] = numpy.nan
+    if num_slices > 1:
+        mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
+        ndata = mask * ndata
+
+        if roi_label is None: # In case you want a bboxed VTC map
+            mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:,:] = 1
+        else: # In the case where you want JUST the roi VTCs (not bboxed)
+            mask = numpy.where(mask<1,numpy.nan,1)
+            mask = numpy.squeeze(mask)        
+
+        # Reshape it  to stitch together all the data
+        nrdata = numpy.empty([x_size,y_size*reps,num_slices]).astype(float)  
+        for s in xrange(num_slices):
+            tmp = ndata[:,:,s,:].flatten()
+            tmp[::reps] = numpy.nan
+            # Sets the last point of each enhancement curve to numpy.nan
+            nrdata[:,:,s] = tmp.reshape([x_size,y_size*reps])
     
-    ndata = mask * ndata
-    # Reshape it  to stitch together all the data
-    nrdata = numpy.empty([x_size,y_size*reps,num_slices])
-    
-    for s in xrange(num_slices):
-        nrdata[:,:,s] = ndata[:,:,s,:].reshape([x_size,y_size*reps])
-        
+    else: # Account for single slice data
+
+        if roi_label is None: # In case you want a bboxed VTC map
+            mask[bbox[0]:bbox[1],bbox[2]:bbox[3],:] = 1
+        else: # In the case where you want JUST the roi VTCs (not bboxed)
+            mask = numpy.where(mask<1,numpy.nan,1)
+            mask = numpy.squeeze(mask)
+
+        ndata = mask * ndata
+        nrdata = numpy.empty([x_size,y_size*reps]) 
+        # Incomprehensible list comprehenshion
+        # Sets the last point of each enhancement curve to numpy.nan 
+        tmp = ndata.flatten()
+        tmp[::reps] = numpy.nan               
+        nrdata = tmp.reshape([x_size,y_size*reps])
     return {'':nrdata}
+
+def createSaveVTC(scn_to_analyse=None,
+                  adata_label=None,
+                  roi_label = 'roi',
+                  bbox = None, 
+                  pdata_num = 0, 
+                  **kwargs):
+
+    import pylab
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+    fig = pylab.figure()
+    G = pylab.matplotlib.gridspec.GridSpec(1,1, wspace=0.0, hspace=0.0)   
+    reps = scan_object.pdata[0].data.shape[-1]
+    dat = scan_object.pdata[0].data
+
+    x_size = dat.shape[0]
+    y_size = dat.shape[1]
+
+    # Deal with bounding boxes
+    if bbox is None:        
+        bbox = numpy.array([0,x_size,0,y_size])
+
+    imgdata = numpy.mean(dat,axis=2)
+    vtcdata = scan_object.adata[adata_label].data
+
+    axs = fig.add_subplot(G[0, 0])
+    #aspect = scn.method.PVM_SpatResol[0]*(bbox[1]-bbox[0]) / scn.method.PVM_SpatResol[1]*(bbox[3]-bbox[2])
+    aspect= (scan_object.method.PVM_FovCm[0]/scan_object.method.PVM_Matrix[0])/ \
+            (scan_object.method.PVM_FovCm[1]/scan_object.method.PVM_Matrix[1])
+    #aspect
+    axs.imshow(imgdata[bbox[0]:bbox[1],\
+                       bbox[2]:bbox[3]],\
+                       cmap='gray', 
+                       interpolation='None',
+                       alpha=1.0,
+                       zorder=0,
+                       aspect=aspect,
+                       vmin=0,
+                       vmax=1)
+    axs.set_axis_off()
+    fig.canvas.draw()
+    pylab.axis('off')
+
+    #axs=fig.add_subplot(G[0, 0])
+    box = axs.get_position().bounds
+    height = box[3] / (bbox[1]-bbox[0])
+
+    for ht,i in enumerate(xrange(bbox[0], bbox[1])):
+
+        #, simply use the add_axes() method which takes a list of 
+        # [left, bottom, width, height] values in 0-1 relative figure coordinates
+        
+        #The add_axes method takes a list of four values, which are 
+        #xmin, ymin, dx, and dy for the subplot, where xmin and ymin 
+        #are the coordinates of the lower left corner of the subplot, 
+        #and dx and dy are the width and height of the subplot, 
+        #with all values specified in relative units 
+        #(where 0 is left/bottom and 1 is top/right)
+
+        tmpax = fig.add_axes([box[0], box[1]+ht*height,
+                             box[2], height])
+
+
+        tmpax.plot(vtcdata[i,((bbox[2])*reps):((bbox[3])*reps)],
+                           color='g', 
+                           linewidth=.1,
+                           zorder=1)
+        tmpax.set_axis_off()
+        #pylab.ylim([35000,65000])
+        pylab.xlim([0,((bbox[3])*reps)-(bbox[2])*reps])
+    
+    pylab.savefig('{0}.png'.format(scan_object.shortdirname.split('/')[0]),dpi=600)
+    
+    pylab.close(fig)
+    fig = pylab.figure()
+    G = pylab.matplotlib.gridspec.GridSpec(1,1, wspace=0.0, hspace=0.0)
+    axs=fig.add_subplot(G[0, 0])
+    axs.imshow(numpy.flipud(imgdata[bbox[0]:bbox[1],\
+                           bbox[2]:bbox[3]]),\
+                           cmap='gray', 
+                           interpolation='None',
+                           alpha=1.0,
+                           zorder=0,
+                           aspect=aspect)  
+    axs.set_axis_off()    
+    pylab.savefig('{0}.png'.format(scan_object.shortdirname.split('/')[0]+'_anatomy'),dpi=300)    
 
 ######################
 ###
@@ -1563,9 +1725,119 @@ def checkSNR(scn_to_analyse=None,
 
     return snrMap
 
+def MMCA_model_fit(timecourse, start_fit=0, dt=1):
+    '''Fits a linear model to a time course starting some way through the injection.
+    Ostensibly, the jump from baseline to the data just after injection is related to 
+    blood volume (100% BV should jump to a concentration of v_c). The slope of the curve
+    after that initial line is related to extravasation (as a result of leakage from vessels?)'''
 
+    # Removing the nans before calculating the BV and leakage
+    timeaxis = dt*numpy.arange(len(timecourse))
+    start_time = timeaxis[start_fit]
 
+    nan_whereabout = numpy.where(numpy.isfinite(timecourse))
+    timecourse = timecourse[nan_whereabout]
+    timeaxis = timeaxis[nan_whereabout]
+    timecourse = timecourse[numpy.where(timeaxis>=start_time)]
+    timeaxis = timeaxis[numpy.where(timeaxis>=start_time)]
     
+
+    try: 
+        (slope,intercept,r,tt,stderr) = scipy.stats.linregress(timeaxis, timecourse)
+        rel_bloodvol = intercept
+        leakage_param = slope
+    except ValueError:
+        rel_bloodvol = numpy.nan
+        leakage_param = numpy.nan   
+
+    return (rel_bloodvol,leakage_param)
+
+def h_fit_ec(scn_to_analyse=None,
+            roi_label=None,
+            adata_label='gd_KM',
+            bbox = None,
+            pdata_num = 0, 
+            **kwargs):
+    '''Fits a linear model to a time course starting some way through the injection.
+    Ostensibly, the jump from baseline to the data just after injection is related to 
+    blood volume (100% BV should jump to a concentration of v_c). The slope of the curve
+    after that initial line is related to extravasation (as a result of leakage from vessels?)'''
+    
+    import scipy.stats
+    scan_object = sarpy.Scan(scn_to_analyse)
+    
+
+    if adata_label is None:
+        norm_data = h_normalize_dce(scn_to_analyse)
+        norm_data = sarpy.Scan(scn_to_analyse).pdata[0].data
+    else:
+        norm_data = numpy.squeeze(scan_object.adata[adata_label].data)
+
+    # Size info
+    x_size = norm_data.shape[0]
+    y_size = norm_data.shape[1]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+    reps =  scan_object.method.PVM_NRepetitions
+
+    if roi_label is None:
+        norm_data =norm_data
+    else:
+
+        msk = numpy.squeeze(scan_object.adata[roi_label].data)
+
+        if num_slices > 1:
+            # First tile for slice
+            # Next tile for reps
+            bbox_mask = numpy.tile(msk.reshape(x_size,y_size,num_slices,1),reps)
+        else:
+            # First tile for slice
+            bbox_mask = numpy.tile(msk.reshape(x_size,y_size),num_slices)
+            # Next tile for reps
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),reps)   
+
+        norm_data = norm_data*bbox_mask
+
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+    
+    time_per_rep = numpy.round(numpy.divide(total_time,reps))
+    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
+
+    print inj_point
+    # Deal with bounding boxes
+    if bbox is None:        
+        bbox = numpy.array([0,x_size,0,y_size])
+    else:      
+        bbox = bbox               
+
+    # Now calculate the actual Blood Volume & Leakage Param
+    bloodvolume_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices])+numpy.nan)
+    leakage_data = numpy.nan*numpy.squeeze(numpy.empty([x_size,y_size,num_slices])+numpy.nan)
+    
+    # Start the fitting process        
+    for slc in xrange(num_slices):          
+        for x in xrange(bbox[0],bbox[1]):
+            for y in xrange(bbox[2],bbox[3]):
+
+                if num_slices > 2:
+                    bloodvolume, leakage = MMCA_model_fit(norm_data[x,y,slc,:],
+                                                          start_fit=inj_point+2,
+                                                          dt = time_per_rep)
+                    bloodvolume_data[x,y,slc] = bloodvolume
+                    leakage_data[x,y,slc] = leakage
+                else:
+                    bloodvolume, leakage = MMCA_model_fit(norm_data[x,y],
+                                                          start_fit=inj_point+2,
+                                                          dt = time_per_rep)                    
+                    bloodvolume_data[x,y] = bloodvolume
+                    leakage_data[x,y] = leakage
+
+    return {'bloodvolume':bloodvolume_data, 
+            'leakage': leakage_data}
 
 ## Not working, or of unknown reliability
 
