@@ -28,7 +28,8 @@ import random
 import copy
 
 def h_calculate_AUC(scn_to_analyse=None, 
-                    bbox = None, 
+                    bbox = None,
+                    adata_label=None,
                     time = 60, 
                     pdata_num = 0,
                     **kwargs):
@@ -42,7 +43,6 @@ def h_calculate_AUC(scn_to_analyse=None,
     :return: array with auc data
     """ 
     import sarpy.fmoosvi.analysis            
-
     
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -82,8 +82,11 @@ def h_calculate_AUC(scn_to_analyse=None,
     # Determine point of injection by averaging one slice in the entire image
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
     
-    # Now calculate the Normalized Intesity voxel by voxel
-    norm_data = h_normalize_dce(scn_to_analyse)
+    if adata_label is None:
+        # Now calculate the Normalized Intesity voxel by voxel
+        norm_data = h_normalize_dce(scn_to_analyse)
+    else:
+        norm_data = scan_object.adata[adata_label].data
 
     # Size info
     x_size = norm_data.shape[0]
