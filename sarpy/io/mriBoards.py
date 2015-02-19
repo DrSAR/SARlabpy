@@ -15,7 +15,7 @@ import os
 import collections
 import json
 import matplotlib
-matplotlib.use('Agg')# where did I come from !?
+matplotlib.use('Agg',warn=False)# where did I come from !?
 import pylab
 import numpy
 import sarpy
