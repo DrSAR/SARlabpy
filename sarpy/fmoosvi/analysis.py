@@ -194,7 +194,6 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
 
     # Calculated params      
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
-    
 
     if num_slices > 1:
         norm_data = numpy.empty([x_size,y_size,num_slices,reps])
@@ -318,6 +317,10 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
     # look through the list of elements in injection point and report the most common (mode)
     injection_point_counter = Counter(injection_point)
     injection_point = injection_point_counter.most_common(1)
+
+
+    if scn_to_analyse == 'SARgalbpiB.PG1/6':
+        injection_point[0] = (10,0)
 
     return injection_point[0][0]+1
 
@@ -1751,6 +1754,7 @@ def MMCA_model_fit(timecourse, start_fit=0, dt=1):
 
 def h_fit_ec(scn_to_analyse=None,
             roi_label=None,
+            adata_label='gd_KM',
             bbox = None,
             pdata_num = 0, 
             **kwargs):
@@ -1761,9 +1765,13 @@ def h_fit_ec(scn_to_analyse=None,
     
     import scipy.stats
     scan_object = sarpy.Scan(scn_to_analyse)
-    #norm_data = h_normalize_dce(scn_to_analyse)
-    #norm_data = sarpy.Scan(scn_to_analyse).pdata[0].data
-    norm_data = numpy.squeeze(sarpy.Scan(scn_to_analyse).adata['gd_KM'].data)
+    
+
+    if adata_label is None:
+        norm_data = h_normalize_dce(scn_to_analyse)
+        norm_data = sarpy.Scan(scn_to_analyse).pdata[0].data
+    else:
+        norm_data = numpy.squeeze(scan_object.adata[adata_label].data)
 
     # Size info
     x_size = norm_data.shape[0]
@@ -1774,9 +1782,18 @@ def h_fit_ec(scn_to_analyse=None,
     if roi_label is None:
         norm_data =norm_data
     else:
+
         msk = numpy.squeeze(scan_object.adata[roi_label].data)
-        # Tile for reps
-        bbox_mask = numpy.tile(msk.reshape(x_size,y_size,1),reps) 
+
+        if num_slices > 1:
+            # First tile for slice
+            # Next tile for reps
+            bbox_mask = numpy.tile(msk.reshape(x_size,y_size,num_slices,1),reps)
+        else:
+            # First tile for slice
+            bbox_mask = numpy.tile(msk.reshape(x_size,y_size),num_slices)
+            # Next tile for reps
+            bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),reps)   
 
         norm_data = norm_data*bbox_mask
 
@@ -1795,11 +1812,11 @@ def h_fit_ec(scn_to_analyse=None,
     if bbox is None:        
         bbox = numpy.array([0,x_size,0,y_size])
     else:      
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)               
+        bbox = bbox               
 
     # Now calculate the actual Blood Volume & Leakage Param
-    bloodvolume_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices]))
-    leakage_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices]))
+    bloodvolume_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices])+numpy.nan)
+    leakage_data = numpy.nan*numpy.squeeze(numpy.empty([x_size,y_size,num_slices])+numpy.nan)
     
     # Start the fitting process        
     for slc in xrange(num_slices):          
