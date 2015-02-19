@@ -86,7 +86,7 @@ def h_calculate_AUC(scn_to_analyse=None,
         # Now calculate the Normalized Intesity voxel by voxel
         norm_data = h_normalize_dce(scn_to_analyse)
     else:
-        norm_data = scan_object.adata[adata_label].data
+        norm_data = numpy.squeeze(scan_object.adata[adata_label].data)
 
     # Size info
     x_size = norm_data.shape[0]
