@@ -647,6 +647,8 @@ def fit_scn(scn_to_analyse=None,
             use_stitch=True, 
             model_ID='Tofts',
             AIF_ID='Checkley',            
+            roi_mask_label='auc60_roi',
+            gd_conc_label='gd_conc',
             **kwargs):
     ''' routine for remote running.
     allowed AIFs = 'Moroz','Checkley','Lyng' and whatever else is defined in modeule PKfitlib
@@ -664,17 +666,16 @@ def fit_scn(scn_to_analyse=None,
 
     scn = sarpy.Scan(scn_to_analyse)
     
-    roi=scn.adata['auc60_roi'].data[:,:,:]
+    roi=scn.adata[roi_mask_label].data#[:,:,:]
 
     # find dcedata, t, dt, inj_start for one scan
-    if  use_stitch and 'gd_conc_stitched' in scn.adata:
-        dcedata=scn.adata['gd_conc_stitched'].data[:,:,:,:]
+    if  use_stitch and gd_conc_label in scn.adata:
+        dcedata=scn.adata[gd_conc_label].data[:,:,:,:]
         t=scn.adata['gd_conc_stitched_times'].data['fulltime']
         dt=t[1]-t[0]
         time_index = scn.adata['gd_conc_stitched_times'].data['idx'].astype(int)
     else:
-        dcedata=scn.adata['gd_conc'].data[:,:,:,:]
-        datetime.datetime.fromtimestamp(1374702260)
+        dcedata=scn.adata[gd_conc_label].data[:,:,:,:]
         nreps =  scn.method.PVM_NRepetitions
         total_time_s = scn.method.PVM_ScanTimeStr
         format = "%Hh%Mm%Ss%fms"
@@ -685,19 +686,19 @@ def fit_scn(scn_to_analyse=None,
     inj_start = dt * sfa.h_inj_point(scn.shortdirname)
 
     ca = PK.aif(t, t0=inj_start, aifchoice=AIF_ID, zeropad=True)
-    p_names = {conc_Tofts: ['Ktrans', 've'],
-          conc_XTofts: ['Ktrans', 've', 'vp'],
-          conc_2CXM: ['PS', 'Fpl', 've', 'vp']}
-    
-    p0 = {conc_Tofts: numpy.array([.005, .01]),
-          conc_XTofts: numpy.array([.005, .01, .01]),
-          conc_2CXM: numpy.array([.01, .002, .1, .01])}
-    
-    bds = {conc_Tofts: numpy.array([[0,5],[0,1]]),
-           conc_XTofts: numpy.array([[0,10],[0,1],[0,1]]),
-           conc_2CXM: numpy.array([[0,1],[0,1],[0,1],[0,1]])}
-    
-    xx = fit_generic_array(t, dcedata, model, p0[model], ca, dt,
+    p_names = {PK.conc_Tofts: ['Ktrans', 've'],
+          PK.conc_XTofts: ['Ktrans', 've', 'vp'],
+          PK.conc_2CXM: ['PS', 'Fpl', 've', 'vp']}
+
+    p0 = {PK.conc_Tofts: numpy.array([.005, .01]),
+          PK.conc_XTofts: numpy.array([.005, .01, .01]),
+          PK.conc_2CXM: numpy.array([.01, .002, .1, .01])}
+
+    bds = {PK.conc_Tofts: numpy.array([[0,5],[0,1]]),
+           PK.conc_XTofts: numpy.array([[0,10],[0,1],[0,1]]),
+           PK.conc_2CXM: numpy.array([[0,1],[0,1],[0,1],[0,1]])}
+    print('ca.shape = {0}, dcedata.shape = {1}'.format(ca.shape, dcedata.shape))
+    xx = PK.fit_generic_array(t, dcedata, model, p0[model], ca, dt,
                               bounds = bds[model],
                               fit_subset=time_index,
                               mask=roi)
