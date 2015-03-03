@@ -23,9 +23,15 @@ def get_roi_weights(roi):
     roi[numpy.isfinite(roi)] = 1
     ROIpx = numpy.nansum(roi.flatten())
 
-    for slice in xrange(roi.shape[-1]):    
-        weights[slice] = numpy.divide(numpy.nansum(roi[:,:,slice].flatten()),ROIpx)
-        weights[numpy.isnan(weights)] = 0
+    # Single slice ROIs
+    if len(roi.shape)==2:
+        weights= [1]
+
+    # Multi slice ROIs
+    else:
+        for slice in xrange(roi.shape[-1]):    
+            weights[slice] = numpy.divide(numpy.nansum(roi[:,:,slice].flatten()),ROIpx)
+            weights[numpy.isnan(weights)] = 0
 
     return weights
 
