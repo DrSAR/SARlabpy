@@ -55,7 +55,10 @@ class roipoly:
 
         ROIpath = mplPath.Path(poly_verts)
         grid = ROIpath.contains_points(points).reshape((nx,ny))
-        return grid
+
+        # Creating a binary mask with 1s and 0s
+        proper_mask = numpy.where(grid,1,0)
+        return proper_mask
       
     def displayROI(self,**linekwargs):
         l = plt.Line2D(self.allxpoints +
