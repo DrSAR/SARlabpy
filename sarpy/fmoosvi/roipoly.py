@@ -5,11 +5,11 @@ Created by Joerg Doepfert 2014 based on code posted by Daniel
 Kornhauser.
 '''
 
-
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
 import matplotlib.path as mplPath
+import numpy
 
 class roipoly:
 
@@ -135,3 +135,11 @@ class roipoly:
                 else:
                     #figure has to be closed so that code can continue
                     plt.close(self.fig) 
+
+
+
+
+
+
+
+
