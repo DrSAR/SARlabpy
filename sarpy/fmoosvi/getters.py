@@ -6,7 +6,6 @@ Created on Tue Mar 12 14:41:54 2013
 """
 
 import sarpy
-import sarpy.ImageProcessing.resample_onto
 import nibabel
 import scipy
 import scipy.stats
@@ -193,6 +192,7 @@ def get_enhancement_curve(scan_object_name, adata_mask=None, pdata_num = 0):
 
     scan_object = sarpy.Scan(scan_object_name)
 
+    import sarpy.ImageProcessing.resample_onto
 
     try:
         norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scan_object)

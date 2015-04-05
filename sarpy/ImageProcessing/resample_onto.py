@@ -3,7 +3,6 @@
 Copyright: SARlab members, UBC, Vancouver
 """
 import numpy
-import SimpleITK as sitk
 from sarpy.io.visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
 from sarpy.io.visu_pars_2_Nifti1Header import visu_pars_2_matrix_size
 import copy
@@ -79,6 +78,9 @@ def resample_onto(source_fname, target_fname):
     check out possibilty of creating SimpleITK:image orientations from visu_para
 
     '''
+    import SimpleITK as sitk
+
+
     img_input = sitk.ReadImage(source_fname)
 
     ref_input = sitk.ReadImage(target_fname)
@@ -138,6 +140,8 @@ def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False,
     '''
     # the affine transform information has the pixel dimensions (sizes) rolled
     # into the. We need information from the header to extricate that.
+    import SimpleITK as sitk
+
     header = visu_pars_2_Nifti1Header(source_pdata.visu_pars)
     aff = header.get_qform()
     header_ref = visu_pars_2_Nifti1Header(target_pdata.visu_pars)
