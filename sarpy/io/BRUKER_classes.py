@@ -345,7 +345,7 @@ class Scan(object):
                          '(2dseq)').format(self.dirname))
 
 
-    def __str__(self):
+    def __repr__(self):
         '''
         Simple print representation of the Scan object:
 
@@ -357,7 +357,7 @@ class Scan(object):
                     strip_all_but_classname(self, 'Scan'),
                     self.shortdirname)
 
-    def __repr__(self):
+    def __str__(self):
         '''
         More elaborate string representation of the Scan object:
 
@@ -501,7 +501,7 @@ class Study(object):
                     pass
         return scans
 
-    def __str__(self):
+    def __repr__(self):
         '''
         Simple print representation of the Study object
 
@@ -513,7 +513,7 @@ class Study(object):
                     strip_all_but_classname(self, 'Study'),
                     self.shortdirname)
 
-    def __repr__(self):
+    def __str__(self):
         '''
         More elaborate string representation of the Study object:
 
@@ -645,7 +645,7 @@ class StudyCollection(object):
         self.study_instance_uids = []
         self.studies = []
 
-    def __str__(self):
+    def __repr__(self):
         '''
         Simple print representation of the Study object
 
@@ -656,7 +656,7 @@ class StudyCollection(object):
         return '{0}()'.format(
                     strip_all_but_classname(self, 'StudyCollection'))
 
-    def __repr__(self):
+    def __str__(self):
         '''
         More elaborate string representation of the StudyCollection object:
 
@@ -810,7 +810,7 @@ class Patient(StudyCollection):
             else:
                 self.add_study(study)
 
-    def __str__(self):
+    def __repr__(self):
         '''
         Simple print representation of the Patient object
 
@@ -822,7 +822,7 @@ class Patient(StudyCollection):
                 strip_all_but_classname(self, 'Patient'),
                 self.patient_id)
 
-    def __repr__(self):
+    def __str__(self):
         '''
         More elaborate string representation of the Patient object:
 
@@ -871,7 +871,7 @@ class Experiment(StudyCollection):
         if root:
             self.find_studies(root=root, absolute_root=absolute_root)
 
-    def __str__(self):
+    def __repr__(self):
         '''
         Simple print representation of Experiment object
 
@@ -883,7 +883,7 @@ class Experiment(StudyCollection):
                 strip_all_but_classname(self, 'Experiment'),
                 self.root)
 
-    def __repr__(self):
+    def __str__(self):
         '''
         More elaborate string representation of the Experiment object:
 
