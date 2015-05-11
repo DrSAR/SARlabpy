@@ -1754,7 +1754,7 @@ def MMCA_model_fit(timecourse, start_fit=0, dt=1):
 
 def h_fit_ec(scn_to_analyse=None,
             roi_label=None,
-            adata_label='gd_KM',
+            adata_label=None,
             bbox = None,
             pdata_num = 0, 
             **kwargs):
@@ -1769,7 +1769,7 @@ def h_fit_ec(scn_to_analyse=None,
 
     if adata_label is None:
         norm_data = h_normalize_dce(scn_to_analyse)
-        norm_data = sarpy.Scan(scn_to_analyse).pdata[0].data
+        #norm_data = sarpy.Scan(scn_to_analyse).pdata[0].data
     else:
         norm_data = numpy.squeeze(scan_object.adata[adata_label].data)
 
