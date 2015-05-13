@@ -320,7 +320,6 @@ class Scan(object):
         
         #if this is successfull then the dictionary will be accessible as scn.__masterlist
         if configfile is not None:
-            print configfile
             conf = configobj.ConfigObj(configfile)
             return conf
         else:
@@ -363,6 +362,22 @@ class Scan(object):
                 filename)
 
         self.shortdirname = last_path_components(self.dirname, depth=2)
+        
+        mtch = re.match('[^.]+', self.shortdirname)
+        if mtch is not None:
+            self.patientname = mtch.group()
+        else:
+            self.patientname = None
+            
+        mtch = re.search('\....', self.shortdirname)
+        if mtch is not None:
+            self.studyname = mtch.group()[1:]
+        else:
+            self.studyname = None
+            
+        mtch = re.search('\/[0-9]+', self.shortdirname)
+        if mtch is not None:
+            self.scannumber = mtch.group()[1:]
 
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
@@ -476,6 +491,48 @@ class Scan(object):
             if re.search(key+'$', k) is not None:
                 if self.adata.pop(k, None) is not None:
                     logger.info('adata %s for %s' %(key, self.shortdirname))
+                    
+    def masterlist_attr(self, attr, level=None):
+        '''look up attr in the hierarchy of dictionaries of the masterlist
+        config file. As a rule, the attribute stored at the more specific
+        (deeper) level takes precedence.
+        
+        level = 'Experiment', 'Patient', 'Study', 'Scan', None
+        '''
+        
+        (attr_experiment, attr_patient, attr_study, attr_scan) = (None,
+                                                                  None,
+                                                                  None,
+                                                                  None)
+        attr_experiment = self._masterlist.get(attr)
+        patient_dic = self._masterlist.get(self.patientname)
+        if patient_dic is not None:
+            attr_patient = patient_dic.get(attr)
+            study_dic = patient_dic.get('study '+self.studyname)
+            if study_dic is not None:
+                attr_study = study_dic.get(attr)
+                scanlabels_dic = study_dic.get('scanlabels')
+                if scanlabels_dic is not None:
+                    for k,v in scanlabels_dic.iteritems():
+                        if v == self.scannumber:
+                            scan_dic = study_dic.get(k)
+                    if scan_dic is not None:
+                        attr_scan = scan_dic.get(attr)
+            
+        # attributes at all the levels are assembled
+        attribs = (attr_experiment, attr_patient, attr_study, attr_scan)
+        logger.debug('Attributes found: {0}'.format(attribs))
+        # find out which one takes precedence
+        level_number = {'Experiment':0,
+                        'Patient':1,
+                        'Study':2,
+                        'Scan':3}.get(level, 3)
+        
+        # climb up the levels in search for the attribute and see whether
+        # any of them (i) is not None; stop when reaching level=0=Experiment
+        while (attribs[level_number] is None) and (level_number > 0):
+            level_number = level_number-1
+        return attribs[level_number]
 
 class Study(object):
     '''
@@ -822,8 +879,6 @@ class StudyCollection(object):
         '''
         for stdy in self.studies:
             stdy.rm_adata(key)
-
-
 
 class Patient(StudyCollection):
     '''
