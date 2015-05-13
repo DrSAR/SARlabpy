@@ -9,6 +9,8 @@ import glob
 import nibabel
 import collections
 
+import configobj
+
 import BRUKERIO
 import AData_classes
 from lazy_property import lazy_property
@@ -54,6 +56,22 @@ def last_path_components(absdirname, depth=1):
         head, tail = os.path.split(head)
         rval.insert(0,tail)
     return os.sep.join(rval)
+
+masterlist_lookup = None
+def find_all_patients_in_masterlists():
+    global masterlist_lookup
+    if masterlist_lookup is None:
+        masterlist_lookup={}
+        masterlist_root = os.path.expanduser('~/sdata/masterlists')
+        config_file_names = os.listdir(masterlist_root)
+        for config_file_name in config_file_names:
+            fname = os.path.join(masterlist_root, config_file_name)
+            conf = configobj.ConfigObj(fname)
+            for k in conf.keys():
+                if k <> 'General':
+                    masterlist_lookup[k]=fname
+    else:
+        raise RuntimeError("Config Files have already been perused.")
 
 # ===========================================================
 
@@ -290,6 +308,24 @@ class Scan(object):
     def pdata_uids(self):
         return [pdata.uid() for pdata in self.pdata]
 
+    @lazy_property
+    def _masterlist(self):
+        global masterlist_lookup
+        PatName = re.match('[^.]+', self.shortdirname).group()
+        # look for PatName amongst the section defined in any of the masterlists
+        # masterlist_lookup gets populated once at the module level
+        if masterlist_lookup is None:
+            find_all_patients_in_masterlists()
+        configfile = masterlist_lookup.get(PatName, None)
+        
+        #if this is successfull then the dictionary will be accessible as scn.__masterlist
+        if configfile is not None:
+            print configfile
+            conf = configobj.ConfigObj(configfile)
+            return conf
+        else:
+            return None
+        
     def __init__(self, root, absolute_root=False):
         '''
         Is the filename a direcotry and can we at least find
