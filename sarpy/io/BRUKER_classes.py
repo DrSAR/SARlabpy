@@ -332,6 +332,10 @@ class Scan(object):
 
         :param string filename: directory name for the BRUKER data set
         '''
+        global masterlist_lookup
+        if masterlist_lookup is None:
+            find_all_patients_in_masterlists()
+
         if absolute_root:
             filename = root
         else:
@@ -364,6 +368,10 @@ class Scan(object):
         self.shortdirname = last_path_components(self.dirname, depth=2)
         
         mtch = re.match('[^.]+', self.shortdirname)
+        # patientname should match SUBJECT_id as given in file subject for 
+        # every Study. However, at the Scan level we have no notion
+        # of Studies. Ideally one would assert consistency when Scans
+        # are assembled into Studies
         if mtch is not None:
             self.patientname = mtch.group()
         else:
@@ -378,6 +386,8 @@ class Scan(object):
         mtch = re.search('\/[0-9]+', self.shortdirname)
         if mtch is not None:
             self.scannumber = mtch.group()[1:]
+            
+        self.masterlist_filename = masterlist_lookup.get(self.patientname)
 
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
