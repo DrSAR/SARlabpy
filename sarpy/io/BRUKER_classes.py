@@ -69,6 +69,8 @@ def find_all_patients_in_masterlists():
             conf = configobj.ConfigObj(fname)
             for k in conf.keys():
                 if k <> 'General':
+                    assert masterlist_lookup.get(k) is None, \
+                        'Non-unique section name {0} in masterlist {1} (previously in {2})'.format(k, fname, masterlist_lookup[k])
                     masterlist_lookup[k]=fname
     else:
         raise RuntimeError("Config Files have already been perused.")
@@ -590,6 +592,25 @@ class Study(object):
         self.subject = JCAMP_file(os.path.join(self.dirname,'subject'))
 
     @lazy_property
+    def masterlist_filename(self):
+        if self.scans:
+            default_name = self.scans[0].masterlist_filename
+            for scn in self.scans:
+                assert scn.masterlist_filename == default_name, \
+                    'Scans within Study described by multiple masterlist files! ({0} != {1})'.format(
+                    default_name, scn.masterlist_filename)
+            return default_name
+        else:
+            return None
+
+    @lazy_property
+    def _masterlist(self):
+        if self.masterlist_filename is None:
+            return None
+        else:
+            return configobj.ConfigObj(self.masterlist_filename)
+    
+    @lazy_property
     def scans(self):
         scans = []
         eligible_dirs = sarpy.natural_sort(os.listdir(self.dirname))
@@ -1007,6 +1028,22 @@ class Experiment(StudyCollection):
             return self.__str__()
 
 
+    @lazy_property
+    def masterlist_filename(self):
+        if self.studies:
+            default_masterlistname = self.studies[0].masterlist_filename
+            for stdy in self.studies:
+                assert default_masterlistname == stdy.masterlist_filename, \
+                    'Studies ({0}, {1}) in Experiment described by multiple masterlists \n({2}, {3})'.format(
+                    self.studies[0].shortdirname, stdy.shortdirname,
+                    default_masterlistname, stdy.masterlist_filename)
+            return default_masterlistname
+        else:
+            return None
+    
+    @lazy_property
+    def _masterlist(self):
+        return configobj.ConfigObj(self.masterlist_filename)
 
     def find_studies(self, root=None, absolute_root=False):
         if absolute_root:
