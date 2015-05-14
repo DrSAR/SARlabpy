@@ -10,6 +10,7 @@ import nibabel
 import collections
 
 import configobj
+import pandas
 
 import BRUKERIO
 import AData_classes
@@ -1021,8 +1022,11 @@ class Experiment(StudyCollection):
             study_list = [study.shortdirname for study in self.studies]
 
             return ('Experiment object: Experiment("{0}")\n'+
-                    '   studies: --Total ({1})--\n'+
-                    '            {2}').format(self.root, len(study_list),
+                    '   masterlist: {1}\n' +
+                    '   studies: --Total ({2})--\n'+
+                    '            {3q}').format(self.root,
+                                              os.path.basename(self.masterlist_filename),
+                                              len(study_list),
                                 '\n            '.join(study_list))
         except AttributeError:
             return self.__str__()
@@ -1056,6 +1060,42 @@ class Experiment(StudyCollection):
         for dirname in directories:
             study = Study(dirname)
             self.add_study(study)
+            
+    @lazy_property
+    def masterlist_df(self):
+        '''iterates over all sections (=Patient labels) in config file
+        with the exception of section 'General' and turns it into a
+        pandas.DataFrame
+        
+        This will ignore all rows whose label starts with study. A design assumption is that the
+        masterlist only contains a General section and all other sections actually describe
+        Patients. The naming of those patients has to follow *exactly* the naming of BRUKER
+        patients. Inside those patient sections there may be subsections title "study xxx"
+        where xxx is the BRUKER three-letter study abbreviation.'''
+        pat_iterator = ((k,v) for k,v in self._masterlist.iteritems() if k<>'General')
+        df = pandas.DataFrame.from_items(pat_iterator)
+        #identify all indices that don't start with "study "
+        indexarr = map(lambda x: re.match('study ',x) is None, df.index)
+        return df[indexarr]
+    
+    @lazy_property
+    def study_masterlist_df(self):
+        '''iterates over all sections referring to studies in config file
+        and turns it into a pandas.DataFrame
+        
+        The string used in the index is reconstructed from patient name and
+        three-letter study abbreviation. See comments on the assumption of section naming in
+        the doc string to masterlist_df.
+        '''
+        temp_dict = {}
+        for k,v in self._masterlist.iteritems():
+            for ki,vi in v.iteritems():
+                if re.match('study ', ki):                    
+                    temp_dict[re.sub('study ', k+'.', ki)]=vi
+                    
+        df = pandas.DataFrame.from_items(temp_dict.iteritems())
+        return df
+
 
 if __name__ == '__main__':
     import doctest
