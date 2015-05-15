@@ -173,7 +173,7 @@ def get_fid_enhancement(scan_string):
         
     fiddir = os.path.join(scan.dirname,'fid')
     
-    data = numpy.abs(sarpy.io.BRUKERIO.readfid(fiddir)['data'])
+    data = numpy.abs(sarpy.io.BRUKERIO.readfid(fiddir,resetNR=True)['data'])
     
     x = data.shape[0]
     y = data.shape[1]
