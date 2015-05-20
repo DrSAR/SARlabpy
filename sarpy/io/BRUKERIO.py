@@ -485,8 +485,8 @@ def readfid(fptr=None,
     ACQ_size = acqp['ACQ_size'][:]
     NR = acqp['NR']
     logger.debug('ACQ_size={0}'.format(ACQ_size))
-    assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
-            'I am not clever enough to read Parallel acquired data, yet')
+#    assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
+#            'I am not clever enough to read Parallel acquired data, yet')
     assert acqp['ACQ_dim'] == len(ACQ_size),(
             'ACQ_dim = {0} != len(ACQ_size={1}) ??'.format(
             acqp['ACQ_dim'], ACQ_size))

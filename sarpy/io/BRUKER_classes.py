@@ -9,6 +9,9 @@ import glob
 import nibabel
 import collections
 
+import configobj
+import pandas
+
 import BRUKERIO
 import AData_classes
 from lazy_property import lazy_property
@@ -54,6 +57,24 @@ def last_path_components(absdirname, depth=1):
         head, tail = os.path.split(head)
         rval.insert(0,tail)
     return os.sep.join(rval)
+
+masterlist_lookup = None
+def find_all_patients_in_masterlists():
+    global masterlist_lookup
+    if masterlist_lookup is None:
+        masterlist_lookup={}
+        masterlist_root = os.path.expanduser('~/sdata/masterlists')
+        config_file_names = os.listdir(masterlist_root)
+        for config_file_name in config_file_names:
+            fname = os.path.join(masterlist_root, config_file_name)
+            conf = configobj.ConfigObj(fname)
+            for k in conf.keys():
+                if k <> 'General':
+                    assert masterlist_lookup.get(k) is None, \
+                        'Non-unique section name {0} in masterlist {1} (previously in {2})'.format(k, fname, masterlist_lookup[k])
+                    masterlist_lookup[k]=fname
+    else:
+        raise RuntimeError("Config Files have already been perused.")
 
 # ===========================================================
 
@@ -290,6 +311,23 @@ class Scan(object):
     def pdata_uids(self):
         return [pdata.uid() for pdata in self.pdata]
 
+    @lazy_property
+    def _masterlist(self):
+        global masterlist_lookup
+        PatName = re.match('[^.]+', self.shortdirname).group()
+        # look for PatName amongst the section defined in any of the masterlists
+        # masterlist_lookup gets populated once at the module level
+        if masterlist_lookup is None:
+            find_all_patients_in_masterlists()
+        configfile = masterlist_lookup.get(PatName, None)
+        
+        #if this is successfull then the dictionary will be accessible as scn.__masterlist
+        if configfile is not None:
+            conf = configobj.ConfigObj(configfile)
+            return conf
+        else:
+            return None
+        
     def __init__(self, root, absolute_root=False):
         '''
         Is the filename a direcotry and can we at least find
@@ -297,6 +335,10 @@ class Scan(object):
 
         :param string filename: directory name for the BRUKER data set
         '''
+        global masterlist_lookup
+        if masterlist_lookup is None:
+            find_all_patients_in_masterlists()
+
         if absolute_root:
             filename = root
         else:
@@ -327,6 +369,28 @@ class Scan(object):
                 filename)
 
         self.shortdirname = last_path_components(self.dirname, depth=2)
+        
+        mtch = re.match('[^.]+', self.shortdirname)
+        # patientname should match SUBJECT_id as given in file subject for 
+        # every Study. However, at the Scan level we have no notion
+        # of Studies. Ideally one would assert consistency when Scans
+        # are assembled into Studies
+        if mtch is not None:
+            self.patientname = mtch.group()
+        else:
+            self.patientname = None
+            
+        mtch = re.search('\....', self.shortdirname)
+        if mtch is not None:
+            self.studyname = mtch.group()[1:]
+        else:
+            self.studyname = None
+            
+        mtch = re.search('\/[0-9]+', self.shortdirname)
+        if mtch is not None:
+            self.scannumber = mtch.group()[1:]
+            
+        self.masterlist_filename = masterlist_lookup.get(self.patientname)
 
         # see whether we can find an fid file
         # in all likelihood this means that an acqp and method file
@@ -440,6 +504,48 @@ class Scan(object):
             if re.search(key+'$', k) is not None:
                 if self.adata.pop(k, None) is not None:
                     logger.info('adata %s for %s' %(key, self.shortdirname))
+                    
+    def masterlist_attr(self, attr, level=None):
+        '''look up attr in the hierarchy of dictionaries of the masterlist
+        config file. As a rule, the attribute stored at the more specific
+        (deeper) level takes precedence.
+        
+        level = 'Experiment', 'Patient', 'Study', 'Scan', None
+        '''
+        
+        (attr_experiment, attr_patient, attr_study, attr_scan) = (None,
+                                                                  None,
+                                                                  None,
+                                                                  None)
+        attr_experiment = self._masterlist.get(attr)
+        patient_dic = self._masterlist.get(self.patientname)
+        if patient_dic is not None:
+            attr_patient = patient_dic.get(attr)
+            study_dic = patient_dic.get('study '+self.studyname)
+            if study_dic is not None:
+                attr_study = study_dic.get(attr)
+                scanlabels_dic = study_dic.get('scanlabels')
+                if scanlabels_dic is not None:
+                    for k,v in scanlabels_dic.iteritems():
+                        if v == self.scannumber:
+                            scan_dic = study_dic.get(k)
+                    if scan_dic is not None:
+                        attr_scan = scan_dic.get(attr)
+            
+        # attributes at all the levels are assembled
+        attribs = (attr_experiment, attr_patient, attr_study, attr_scan)
+        logger.debug('Attributes found: {0}'.format(attribs))
+        # find out which one takes precedence
+        level_number = {'Experiment':0,
+                        'Patient':1,
+                        'Study':2,
+                        'Scan':3}.get(level, 3)
+        
+        # climb up the levels in search for the attribute and see whether
+        # any of them (i) is not None; stop when reaching level=0=Experiment
+        while (attribs[level_number] is None) and (level_number > 0):
+            level_number = level_number-1
+        return attribs[level_number]
 
 class Study(object):
     '''
@@ -486,6 +592,25 @@ class Study(object):
         self.shortdirname = last_path_components(self.dirname)
         self.subject = JCAMP_file(os.path.join(self.dirname,'subject'))
 
+    @lazy_property
+    def masterlist_filename(self):
+        if self.scans:
+            default_name = self.scans[0].masterlist_filename
+            for scn in self.scans:
+                assert scn.masterlist_filename == default_name, \
+                    'Scans within Study described by multiple masterlist files! ({0} != {1})'.format(
+                    default_name, scn.masterlist_filename)
+            return default_name
+        else:
+            return None
+
+    @lazy_property
+    def _masterlist(self):
+        if self.masterlist_filename is None:
+            return None
+        else:
+            return configobj.ConfigObj(self.masterlist_filename)
+    
     @lazy_property
     def scans(self):
         scans = []
@@ -787,8 +912,6 @@ class StudyCollection(object):
         for stdy in self.studies:
             stdy.rm_adata(key)
 
-
-
 class Patient(StudyCollection):
     '''
     A Patient is a special Collection of studies in that the subject_id
@@ -899,13 +1022,32 @@ class Experiment(StudyCollection):
             study_list = [study.shortdirname for study in self.studies]
 
             return ('Experiment object: Experiment("{0}")\n'+
-                    '   studies: --Total ({1})--\n'+
-                    '            {2}').format(self.root, len(study_list),
+                    '   masterlist: {1}\n' +
+                    '   studies: --Total ({2})--\n'+
+                    '            {3q}').format(self.root,
+                                              os.path.basename(self.masterlist_filename),
+                                              len(study_list),
                                 '\n            '.join(study_list))
         except AttributeError:
             return self.__str__()
 
 
+    @lazy_property
+    def masterlist_filename(self):
+        if self.studies:
+            default_masterlistname = self.studies[0].masterlist_filename
+            for stdy in self.studies:
+                assert default_masterlistname == stdy.masterlist_filename, \
+                    'Studies ({0}, {1}) in Experiment described by multiple masterlists \n({2}, {3})'.format(
+                    self.studies[0].shortdirname, stdy.shortdirname,
+                    default_masterlistname, stdy.masterlist_filename)
+            return default_masterlistname
+        else:
+            return None
+    
+    @lazy_property
+    def _masterlist(self):
+        return configobj.ConfigObj(self.masterlist_filename)
 
     def find_studies(self, root=None, absolute_root=False):
         if absolute_root:
@@ -918,6 +1060,42 @@ class Experiment(StudyCollection):
         for dirname in directories:
             study = Study(dirname)
             self.add_study(study)
+            
+    @lazy_property
+    def masterlist_df(self):
+        '''iterates over all sections (=Patient labels) in config file
+        with the exception of section 'General' and turns it into a
+        pandas.DataFrame
+        
+        This will ignore all rows whose label starts with study. A design assumption is that the
+        masterlist only contains a General section and all other sections actually describe
+        Patients. The naming of those patients has to follow *exactly* the naming of BRUKER
+        patients. Inside those patient sections there may be subsections title "study xxx"
+        where xxx is the BRUKER three-letter study abbreviation.'''
+        pat_iterator = ((k,v) for k,v in self._masterlist.iteritems() if k<>'General')
+        df = pandas.DataFrame.from_items(pat_iterator)
+        #identify all indices that don't start with "study "
+        indexarr = map(lambda x: re.match('study ',x) is None, df.index)
+        return df[indexarr]
+    
+    @lazy_property
+    def study_masterlist_df(self):
+        '''iterates over all sections referring to studies in config file
+        and turns it into a pandas.DataFrame
+        
+        The string used in the index is reconstructed from patient name and
+        three-letter study abbreviation. See comments on the assumption of section naming in
+        the doc string to masterlist_df.
+        '''
+        temp_dict = {}
+        for k,v in self._masterlist.iteritems():
+            for ki,vi in v.iteritems():
+                if re.match('study ', ki):                    
+                    temp_dict[re.sub('study ', k+'.', ki)]=vi
+                    
+        df = pandas.DataFrame.from_items(temp_dict.iteritems())
+        return df
+
 
 if __name__ == '__main__':
     import doctest
