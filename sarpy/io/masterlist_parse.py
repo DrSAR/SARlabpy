@@ -3,11 +3,11 @@ import sarpy.helpers
 def masterlist_parse(BrukerObject,
 					 ):
 
-'''parse the file and:
+	'''parse the file and:
 
-	- get all the patients (easy: file.keys())
-	- get all the studies abbreviations 
-	- get all the scan labels'''
+		- get all the patients (easy: file.keys())
+		- get all the studies abbreviations 
+		- get all the scan labels'''
 
 	masterlist = BrukerObject._masterlist
 
