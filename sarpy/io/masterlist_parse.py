@@ -40,12 +40,12 @@ def masterlist_parse(BrukerObject,
 	for k,v in studies_dict.iteritems():
 
 		for stud in v:
-			scanlabels_dict[pat][stud] = {}
+			scanlabels_dict[k][stud] = {}
 
 			try:
-				scanlabels.append(masterlist[pat][stud]['scanlabels'].keys())
-				for lbl in masterlist[pat][stud]['scanlabels'].keys():
-					scanlabels_dict[pat][stud][lbl] = masterlist[pat][stud]['scanlabels'][lbl]
+				scanlabels.append(masterlist[k][stud]['scanlabels'].keys())
+				for lbl in masterlist[k][stud]['scanlabels'].keys():
+					scanlabels_dict[k][stud][lbl] = masterlist[k][stud]['scanlabels'][lbl]
 
 			except KeyError: # Skip studies that don't exist
 				pass
