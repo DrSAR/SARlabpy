@@ -1,7 +1,7 @@
 import sarpy.helpers
 import os
 
-def masterlist_parse(BrukerObject):
+def masterlist_parse(BrukerObject, getScanLabels = False):
 
 	'''parse the file and:
 
@@ -19,17 +19,12 @@ def masterlist_parse(BrukerObject):
 
 	patients = masterlist.keys()
 
-	# Then get the studies abbreviations
-
-	studies = []
 	studies_dict = {}
-
-	scanlabels = []
 	scanlabels_dict = {}
+	scanlabels = []
+
 
 	for pat in patients:
-
-		studies.append(masterlist[pat].keys())
 
 		#
 		studies_dict[pat] = masterlist[pat].keys()
@@ -50,17 +45,22 @@ def masterlist_parse(BrukerObject):
 			except KeyError: # Skip studies that don't exist
 				pass
 
-	# Flatten and uniquify all the lists
-
-	scanlabels = list(set(sarpy.helpers.flatten_list(scanlabels)))
-	studies = list(set(sarpy.helpers.flatten_list(studies)))
-
-
-	return studies, studies_dict, scanlabels_dict,scanlabels
-
+	if getScanLabels:
+		# Flatten and uniquify all the lists
+		scanlabels = list(set(sarpy.helpers.flatten_list(scanlabels)))
+		return scanlabels_dict,scanlabels
+	else:
+		return scanlabels_dict
 
 def get_scans_from_masterlist(BrukerObject,scan_label_list):
 
+	''' Helper function to get a dictionary of scan labels and scans 
+
+		Input is any bruker object, and a list of scan_labels
+	'''
+
+
+	# First help the user out a bit by taking the input and turning it into a list 
 	if type(scan_label_list) is str:
 
 		tmp = []
