@@ -69,8 +69,13 @@ def get_scans_from_masterlist(BrukerObject,scan_label_list):
 
 		print('String converted to list of size 1 \n Next time, please supply a proper list')
 
-	a,b,scanlabels_dict,d = masterlist_parse(BrukerObject)
+
+	# Then get the scanlabels_dict by parsing the masterlist
+
+	scanlabels_dict = masterlist_parse(BrukerObject)
 	scan_dict = {}
+
+	# Loop through the scan_label_list and get a nice dictionary of the scans for a scan labels
 
 	for scan_label in scan_label_list:
 
@@ -79,6 +84,9 @@ def get_scans_from_masterlist(BrukerObject,scan_label_list):
 		for k,v in scanlabels_dict.iteritems():
 			for stud in v:
 				if scan_label in v[stud].keys():
+					# This requires the study format to be in 'study vxi'
+					# the os path join makes sure that the correct / or \ is used depending on OS
+					
 					scan_dict[scan_label].append(os.path.join(k+'.'+stud.strip('study ')+'/',v[stud][scan_label]))	
 
 	return scan_dict
