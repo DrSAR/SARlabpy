@@ -26,7 +26,6 @@ def masterlist_parse(BrukerObject, getScanLabels = False):
 
 	for pat in patients:
 
-		#
 		studies_dict[pat] = masterlist[pat].keys()
 		scanlabels_dict[pat] = {}
 
@@ -59,7 +58,6 @@ def get_scans_from_masterlist(BrukerObject,scan_label_list):
 		Input is any bruker object, and a list of scan_labels
 	'''
 
-
 	# First help the user out a bit by taking the input and turning it into a list 
 	if type(scan_label_list) is str:
 
@@ -90,4 +88,38 @@ def get_scans_from_masterlist(BrukerObject,scan_label_list):
 					scan_dict[scan_label].append(os.path.join(k+'.'+stud.strip('study ')+'/',v[stud][scan_label]))	
 
 	return scan_dict
+
+def get_patient_scans_from_dict(scan_dict,patient_name):
+	'''This function expects a dictionary of the type that gets returned from get_scans_from_masterlist()
+		The purpose of this function is to get the scannames of a particular patient from a scan_dict
+		Usage:
+
+		exp = sarpy.Experiment('HPGP4')
+		scan_dict = sarpy.io.masterlist_parse.get_scans_from_masterlist(exp,'dce.HPG')
+		print scan_dict
+			{'dce.HPG': [ 'HPGP4Ts08.vx1/7',
+						  'HPGP4Ts05.vx1/7',
+						  'HPGP4Ts04.vw1/6',
+						  'HPGP4Ts06.vx1/7',
+						  'HPGP4Ts03.vw1/7',
+						  'HPGP4Ts02.vw1/7']}
+		scans = sarpy.io.masterlist_parse.get_patient_scans_from_dict(scan_dict,'HPGP4Ts08')
+
+		print scans
+			'HPGP4Ts08.vx1/7'
+
+		Comment: I suppose this will also work if you want to only get data from a single study
+	'''
+
+	scan_list = []
+	for k,v in scan_dict.iteritems():
+
+		for scan in v:
+			if patient_name in scan:
+				scan_list.append(scan)
+
+	if len(scan_list) == 1:
+		return scan_list[0]
+	else:
+		return scan_list
 

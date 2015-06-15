@@ -24,6 +24,10 @@ import tempfile
 import scipy
 import copy
 import re
+import sarpy
+import sarpy.io.masterlist_parse
+import sarpy.fmoosvi.getters
+
 from matplotlib.backends.backend_pdf import PdfPages
 
 def generate(**kwargs):
@@ -69,7 +73,8 @@ def generate(**kwargs):
     
     # Start a PDF file of all the animals
     
-    rootName = str(args.master_list).split('/')[-2]
+    #rootName = str(args.master_list).split('/')[-2]
+    rootName = 'HerS11'
     pdfName = os.path.splitext(str(args.conf_file).split('/')[-1])[0]
 
     pdfPath = os.path.expanduser(os.path.join('~/sdata',rootName,args.output,pdfName+'.pdf'))
@@ -77,13 +82,25 @@ def generate(**kwargs):
     testPDF = PdfPages(pdfPath)
 
     sepFiles = False
+
+################################
+    import sarpy.io.masterlist_parse
+    import sarpy
+    exp = sarpy.Experiment(rootName)
     
+
+    ref_scans_dict = sarpy.io.masterlist_parse.get_scans_from_masterlist(exp,[ref_lbl])
+
+    patients = sarpy.fmoosvi.getters.get_patients_from_experiment(rootName,namesOnly=True)
+
     # for every patient we will create the same board
-    for k,v in master_list.iteritems():
-    
+    for k in patients:
+################################    
         try:
-            ref_scn = sarpy.Scan(v[ref_lbl][0])
-        except(IOError,KeyError):
+            ref_scan_name = sarpy.io.masterlist_parse.get_patient_scans_from_dict(ref_scans_dict,k)
+            print ref_scan_name
+            ref_scn = sarpy.Scan(ref_scan_name)
+        except(AttributeError,IOError,KeyError):
             print('Ref Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
             continue
         try:
@@ -107,10 +124,17 @@ def generate(**kwargs):
         for row in rows:
             row_conf = dict(config.items(row))
             lbl =row_conf.pop('label')
+
+            ######################
+            lbl_scans_dict = sarpy.io.masterlist_parse.get_scans_from_masterlist(exp,[lbl])
+            lbl_scan_name  = sarpy.io.masterlist_parse.get_patient_scans_from_dict(lbl_scans_dict,k)
+            try:
+                bbox_pct = numpy.array(sarpy.fmoosvi.getters.get_roi_bbox(lbl_scan_name,roi_adata_label=ref_lbl,exporttype='pct'))
+            except KeyError:
+                bbox_pct = numpy.array([0,1,0,1])
+            ######################
             subtitle = row_conf.pop('subtitle','')
-            fname = v[lbl][0]
-            bbox_pct = numpy.array([float(x) for x in v[lbl][1]])
-            #bbox = sarpy.fmoosvi.getters.get_bbox(v,lbl)
+
             ax = fig.add_subplot(G[row_idx, 0])
             pylab.axis('off')
             ax.text(-.5,0.5,'\n'.join([lbl]), 
@@ -126,14 +150,14 @@ def generate(**kwargs):
                      transform=ax.transAxes,
                      size='x-small')            
 
-            ax.text(-0.15,0.5,'{0}'.format(fname), 
+            ax.text(-0.15,0.5,'{0}'.format(lbl_scan_name), 
                     horizontalalignment='center', 
                     verticalalignment='center',
                     rotation='vertical',
                     transform=ax.transAxes,
                     size='xx-small')
 
-            if fname == '':
+            if lbl_scan_name == '':
                 pylab.text(0.85,0.5,'Data not available',
                            horizontalalignment='center')
     
@@ -153,8 +177,8 @@ def generate(**kwargs):
                 clim_min = row_conf.pop('clim_min',None)
                 clim_max = row_conf.pop('clim_max',None)
     
-                scn = sarpy.Scan(fname)
-                print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+                scn = sarpy.Scan(lbl_scan_name)
+                print(lbl, lbl_scan_name,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
                 if adata_key is not None:
     
@@ -186,13 +210,11 @@ def generate(**kwargs):
                     #    cm = row_conf.pop('type', 'jet')
                     #    cm = cm + '_r'
 
-
                 else:
                     data = scn.pdata[0]
                                     
                 xdata = data.data
                 xdata_slices = sarpy.fmoosvi.getters.get_num_slices(scn.shortdirname)
-    
     
                 # Used masked arrays to show nan values as black
     
@@ -208,7 +230,7 @@ def generate(**kwargs):
                 #xdata = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(data, ref_data)
                 #os.remove(src_filename)
                 #find out where the 0 1 etc end up.
-    #            print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
+                #print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
     
                 for col_idx in xrange(min(n_cols, xdata_slices)):
                     fig.add_subplot(G[row_idx,col_idx])
@@ -246,8 +268,8 @@ def generate(**kwargs):
 
                 sepFiles = True
                 
-                scn = sarpy.Scan(fname)
-                print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+                scn = sarpy.Scan(lbl_scan_name)
+                print(lbl, lbl_scan_name,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
                 vtc_min = row_conf.pop('vtc_min',None)
                 vtc_max = row_conf.pop('vtc_max',None)
@@ -271,7 +293,6 @@ def generate(**kwargs):
                     vtc_max = numpy.float(vtc_max)
     
                 for col_idx in xrange(min(n_cols, xdata_slices)):
-                    
 
                     if xdata_slices ==1:
                         dat=scn.pdata[0].data[:,:,col_idx,:]
@@ -308,8 +329,8 @@ def generate(**kwargs):
                                            
             elif row_conf.get('type', None) == 'plot':
     
-                scn = sarpy.Scan(fname)
-                print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+                scn = sarpy.Scan(lbl_scan_name)
+                print(lbl, lbl_scan_name,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
                 if adata_key is not None:
                     
@@ -359,8 +380,8 @@ def generate(**kwargs):
     
             if row_conf.get('type', None) == 'text':
     
-                scn = sarpy.Scan(fname)
-                print(lbl, fname,scn.acqp.ACQ_protocol_name)            
+                scn = sarpy.Scan(lbl_scan_name)
+                print(lbl, lbl_scan_name,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
                 
                 if adata_key is not None:                
