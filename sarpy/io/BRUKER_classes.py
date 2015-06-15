@@ -1061,8 +1061,17 @@ class Experiment(StudyCollection):
     @lazy_property
     def masterlist_filename(self):
         if self.studies:
+            new_study_list = []
+            for stdy in self.studies:
+                if stdy.masterlist_filename is not None:
+                    new_study_list.append(stdy)
+                else:
+                    print('WARNING: removing study {0} from Experiment'.format(stdy.shortdirname))
+            self.studies = new_study_list 
+        if self.studies:
             default_masterlistname = self.studies[0].masterlist_filename
             for stdy in self.studies:
+		
                 assert default_masterlistname == stdy.masterlist_filename, \
                     'Studies ({0}, {1}) in Experiment described by multiple masterlists \n({2}, {3})'.format(
                     self.studies[0].shortdirname, stdy.shortdirname,
