@@ -1020,6 +1020,7 @@ class Experiment(StudyCollection):
                                 bare_experiment.labels[kk]=list()
                             bare_experiment.labels[kk].append(sclbs[kk])
                         bare_experiment.patients[k].update(sclbs)
+        bare_experiment.root='masterlistname'
         return bare_experiment # not so bare by now since we have added studies
     
     def __repr__(self):
@@ -1052,7 +1053,7 @@ class Experiment(StudyCollection):
             return ('Experiment object: Experiment("{0}")\n'+
                     '   masterlist: {1}\n' +
                     '   studies: --Total ({2})--\n'+
-                    '            {3q}').format(self.root,
+                    '            {3}').format(self.root,
                                               os.path.basename(self.masterlist_filename),
                                               len(study_list),
                                 '\n            '.join(study_list))
