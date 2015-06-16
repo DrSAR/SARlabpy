@@ -17,6 +17,7 @@ import sarpy.ImageProcessing.resample_onto
 import collections
 import scipy
 import scipy.stats
+import sarpy.io.masterlist_parse
 
 def store_deltaT1(masterlist_name=None,
                   T1map_1=None,
@@ -119,50 +120,56 @@ def roi_average(masterlist_name,
                            object_pairs_hook=collections.OrderedDict
                            ).decode(json_str)
 
-    for k,v in master_list.iteritems():
-        
-        try:
-            scan = sarpy.Scan(v[data_label][0])           
-            data = scan.adata[adata_label].data
-            roi = sarpy.Scan(v[data_label][0]).adata[roi_label].data
-        except(KeyError, IOError):
-            print('{0}: Not found adata {1} or {2} in patient {3}'.format(
-                                    analysis_label,adata_label,roi_label,k) )
-            continue
-       
-        roi_data = data * roi
-        
-        # I think this might be necessary to ensure that values don't get carried
-        # over from previous iterations?
-        try:
-            del avg_T1,weights
-        except NameError:
-            pass
-        avg_T1 = []
-        weights = []
-       
-        for slice in xrange(roi_data.shape[-1]):
-            avg_T1.append(scipy.stats.nanmean(roi_data[:,:,slice].flatten()))
-            weights.append(numpy.nansum(roi[:,:,slice]))
-            
-        if (not analysis_label in scan.adata.keys()) or forceVal is True:
-            
-            return roi_data,avg_T1
-            # scan.store_adata(key=analysis_label, 
-            #                  data = numpy.array(avg_T1), 
-            #                  force = forceVal)
+    experiment = sarpy.Experiment(masterlist_name)
+    new_masterlist = sarpy.io.masterlist_parse.get_scans_from_masterlist(experiment)
+    new_masterlist.pop('General',None)
 
-            # scan.store_adata(key=analysis_label+'_weights', 
-            #                  data = numpy.array(weights), 
-            #                  force = forceVal)                             
+    for k,v in new_masterlist.iteritems():
+        for stud in v:
+            if data_label in v[stud].keys():
+                try:
+                    scn_name = os.path.join(k+'.'+stud.strip('study '),v[stud][data_label])
+                    scan = sarpy.Scan(scn_name)
+                    data = scan.adata[adata_label].data
+                    roi = sarpy.Scan(v[data_label][0]).adata[roi_label].data
+                except(KeyError, IOError):
+                    print('{0}: Not found adata {1} or {2} in patient {3}'.format(
+                                            analysis_label,adata_label,roi_label,k) )
+                    continue
+               
+                roi_data = data * roi
+                
+                # I think this might be necessary to ensure that values don't get carried
+                # over from previous iterations?
+                try:
+                    del avg_T1,weights
+                except NameError:
+                    pass
+                avg_T1 = []
+                weights = []
+               
+                for slice in xrange(roi_data.shape[-1]):
+                    avg_T1.append(scipy.stats.nanmean(roi_data[:,:,slice].flatten()))
+                    weights.append(numpy.nansum(roi[:,:,slice]))
+                    
+                if (not analysis_label in scan.adata.keys()) or forceVal is True:
+                    
+                    return roi_data,avg_T1
+                    # scan.store_adata(key=analysis_label, 
+                    #                  data = numpy.array(avg_T1), 
+                    #                  force = forceVal)
 
-            print('{0}: Success. Saved {1}'.format(analysis_label,
-                                  scan.shortdirname))
-                                  
-        else:
-            print('{0}: adata already exists {1} '.format(
-            analysis_label,scan.shortdirname))
-            pass
+                    # scan.store_adata(key=analysis_label+'_weights', 
+                    #                  data = numpy.array(weights), 
+                    #                  force = forceVal)                             
+
+                    print('{0}: Success. Saved {1}'.format(analysis_label,
+                                          scan.shortdirname))
+                                          
+                else:
+                    print('{0}: adata already exists {1} '.format(
+                    analysis_label,scan.shortdirname))
+                    pass
 
 def bulk_transfer_roi(masterlist_name,
                       dest_adata_label, 
