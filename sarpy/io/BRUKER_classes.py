@@ -24,6 +24,7 @@ logger=logging.getLogger('sarpy.io.BRUKER_classes')
 logger.setLevel(level=40)
 
 dataroot = os.path.expanduser(os.path.join('~','bdata'))
+masterlist_root = os.path.expanduser('~/sdata/masterlists')
 
 import sarpy # make natural_sort in helpers.py available
 
@@ -63,7 +64,6 @@ def find_all_patients_in_masterlists():
     global masterlist_lookup
     if masterlist_lookup is None:
         masterlist_lookup={}
-        masterlist_root = os.path.expanduser('~/sdata/masterlists')
         config_file_names = os.listdir(masterlist_root)
         for config_file_name in config_file_names:
             fname = os.path.join(masterlist_root, config_file_name)
@@ -993,7 +993,35 @@ class Experiment(StudyCollection):
         super(Experiment, self).__init__()
         if root:
             self.find_studies(root=root, absolute_root=absolute_root)
-
+            
+    @classmethod
+    def from_filter(cls, filterstring):
+        return cls(filterstring)
+    @classmethod
+    def from_masterlist(cls, masterlistname):
+        bare_experiment = cls(root=None, absolute_root=None)
+        bare_experiment.patients = collections.OrderedDict()
+        bare_experiment.labels = collections.OrderedDict()
+        if masterlistname is not None:
+            conf = configobj.ConfigObj(os.path.join(masterlist_root, masterlistname))
+            for k in conf.keys():
+                if k <> 'General':
+                    bare_experiment.patients[k] = collections.OrderedDict()
+                    for stdy_str in conf[k]:
+                        short_stdy_str = stdy_str.split()[1]
+                        long_stdy_str = k+'.'+short_stdy_str
+                        study = Study(long_stdy_str)
+                        bare_experiment.add_study(study)
+                        # populate the dict attributes for ease of access
+                        sclbs = conf[k][stdy_str]['scanlabels']
+                        for kk in sclbs:
+                            sclbs[kk] = os.path.join(long_stdy_str, sclbs[kk]) 
+                            if kk not in bare_experiment.labels:
+                                bare_experiment.labels[kk]=list()
+                            bare_experiment.labels[kk].append(sclbs[kk])
+                        bare_experiment.patients[k].update(sclbs)
+        return bare_experiment # not so bare by now since we have added studies
+    
     def __repr__(self):
         '''
         Simple print representation of Experiment object
