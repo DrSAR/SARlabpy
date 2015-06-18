@@ -57,14 +57,7 @@ def generate(**kwargs):
 
     if args.test:
         print('test mode:\n')
-        print(args)
-    
-    # load the master_list to have easy access to data
-    with open(os.path.join(os.path.expanduser('~/sdata'),args.master_list),'r') as master_file:
-        json_str = master_file.read()
-        master_list = json.JSONDecoder(
-                           object_pairs_hook=collections.OrderedDict
-                           ).decode(json_str)    
+        print(args)   
     
     # determine the layout
     rows = [row for row in config.sections() if not((row=='Defaults'))]
@@ -73,32 +66,23 @@ def generate(**kwargs):
     
     # Start a PDF file of all the animals
     
-    #rootName = str(args.master_list).split('/')[-2]
-    rootName = 'HerS11'
+    exp_name = str(args.experiment_name)
     pdfName = os.path.splitext(str(args.conf_file).split('/')[-1])[0]
 
-    pdfPath = os.path.expanduser(os.path.join('~/sdata',rootName,args.output,pdfName+'.pdf'))
-    
+    pdfPath = os.path.expanduser(os.path.join('~/sdata',exp_name,args.output,pdfName+'.pdf'))
     testPDF = PdfPages(pdfPath)
 
     sepFiles = False
 
-################################
     import sarpy.io.masterlist_parse
     import sarpy
-    exp = sarpy.Experiment(rootName)
-    
-
-    ref_scans_dict = sarpy.io.masterlist_parse.get_scans_from_masterlist(exp,[ref_lbl])
-
-    patients = sarpy.fmoosvi.getters.get_patients_from_experiment(rootName,namesOnly=True)
+    reload(sarpy)
+    exp = sarpy.Experiment.from_masterlist(exp_name+'.config')        
 
     # for every patient we will create the same board
-    for k in patients:
-################################    
+    for k in exp.patients.keys():
         try:
-            ref_scan_name = sarpy.io.masterlist_parse.get_patient_scans_from_dict(ref_scans_dict,k)
-            print ref_scan_name
+            ref_scan_name = exp.patients[k][ref_lbl]
             ref_scn = sarpy.Scan(ref_scan_name)
         except(AttributeError,IOError,KeyError):
             print('Ref Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
@@ -124,15 +108,8 @@ def generate(**kwargs):
         for row in rows:
             row_conf = dict(config.items(row))
             lbl =row_conf.pop('label')
+            lbl_scan_name = exp.patients[k][lbl]
 
-            ######################
-            lbl_scans_dict = sarpy.io.masterlist_parse.get_scans_from_masterlist(exp,[lbl])
-            lbl_scan_name  = sarpy.io.masterlist_parse.get_patient_scans_from_dict(lbl_scans_dict,k)
-            try:
-                bbox_pct = numpy.array(sarpy.fmoosvi.getters.get_roi_bbox(lbl_scan_name,roi_adata_label=ref_lbl,exporttype='pct'))
-            except KeyError:
-                bbox_pct = numpy.array([0,1,0,1])
-            ######################
             subtitle = row_conf.pop('subtitle','')
 
             ax = fig.add_subplot(G[row_idx, 0])
@@ -178,8 +155,9 @@ def generate(**kwargs):
                 clim_max = row_conf.pop('clim_max',None)
     
                 scn = sarpy.Scan(lbl_scan_name)
-                print(lbl, lbl_scan_name,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
+                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
+
                 if adata_key is not None:
     
                     if re.search('roi',adata_key):
@@ -234,7 +212,8 @@ def generate(**kwargs):
     
                 for col_idx in xrange(min(n_cols, xdata_slices)):
                     fig.add_subplot(G[row_idx,col_idx])
-                    bbox = numpy.squeeze((bbox_pct.reshape(2,2).T*xdata.shape[0:2]).T.flatten())
+                    # Get the bbox as an adata 
+                    bbox = scn.adata['bbox'].data
 
                     if xdata_slices >1:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
@@ -269,8 +248,8 @@ def generate(**kwargs):
                 sepFiles = True
                 
                 scn = sarpy.Scan(lbl_scan_name)
-                print(lbl, lbl_scan_name,scn.acqp.ACQ_protocol_name)            
-                adata_key = row_conf.pop('adata', None)
+                adata_key = row_conf.pop('adata', None)                
+                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
                 vtc_min = row_conf.pop('vtc_min',None)
                 vtc_max = row_conf.pop('vtc_max',None)
                 
@@ -280,7 +259,7 @@ def generate(**kwargs):
                     pylab.text(0.85,0.5,'Data not available',
                        horizontalalignment='center')     
                     row_idx += 1
-                    print('Something failed in the vtc cose  cant get adata for scan{0}'.format(scn))
+                    print('Something failed in the vtc, cant get adata for scan {0}'.format(scn))
                     continue
 
                 reps = scn.pdata[0].data.shape[-1]
@@ -302,7 +281,9 @@ def generate(**kwargs):
                         dat=scn.pdata[0].data[:,:,:]
                         vtcdata = data.data[:,:]
 
-                    bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn.shortdirname,'auc60_roi')
+                    # Get the bbox as an adata 
+                    bbox = scn.adata['bbox'].data
+
                     imgdata = numpy.mean(dat,axis=2)
                     axs=fig.add_subplot(G[row_idx,col_idx])
 
@@ -330,8 +311,8 @@ def generate(**kwargs):
             elif row_conf.get('type', None) == 'plot':
     
                 scn = sarpy.Scan(lbl_scan_name)
-                print(lbl, lbl_scan_name,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
+                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
                 if adata_key is not None:
                     
                     try:
@@ -368,7 +349,7 @@ def generate(**kwargs):
                         ax.axes.get_yaxis().set_visible([])
                         ax.axes.get_xaxis().set_visible([])
                     
-    #TODO: finda way to put the axis labels on th INSIDE of the plot
+    #TODO: finda way to put the axis labels on the INSIDE of the plot
                     
                     for label in ax.get_xticklabels():
                         label.set_fontsize(15)
@@ -381,8 +362,9 @@ def generate(**kwargs):
             if row_conf.get('type', None) == 'text':
     
                 scn = sarpy.Scan(lbl_scan_name)
-                print(lbl, lbl_scan_name,scn.acqp.ACQ_protocol_name)            
                 adata_key = row_conf.pop('adata', None)
+
+                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
                 
                 if adata_key is not None:                
                     try:
@@ -413,7 +395,7 @@ def generate(**kwargs):
 
         if sepFiles:
             # Saving Figure    
-            filename = os.path.expanduser(os.path.join('~/sdata',rootName,args.output,k + '.png'))
+            filename = os.path.expanduser(os.path.join('~/sdata',exp_name,args.output,k + '.png'))
             pylab.savefig(filename, bbox_inches=0, dpi=300)
             pylab.close('all')
     
