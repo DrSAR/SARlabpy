@@ -906,9 +906,9 @@ def read2dseq(scandirname,
     # extract binary data from 2dseq. For now, format the data shape so all
     # the image frames are lumped together in the 3rd dimension.
     reco_offset = numpy.asarray(visu_pars['VisuCoreDataOffs'])
-    assert len(set(reco_offset)) == 1, 'Cannot deal with multiple VisuCoreDataOffs'
+    #assert len(set(reco_offset)) == 1, 'Cannot deal with multiple VisuCoreDataOffs'
     reco_slope = numpy.asarray(visu_pars['VisuCoreDataSlope'])
-    assert len(set(reco_slope)) == 1, 'Cannot deal with multiple VisuCoreDataSlope'
+    #assert len(set(reco_slope)) == 1, 'Cannot deal with multiple VisuCoreDataSlope'
 
 
     n_frames = numpy.asarray(matrix_size)[2:].prod()
@@ -926,7 +926,9 @@ def read2dseq(scandirname,
 
     # now apply the data slopes and offsets to transform the stored binary
     # number into a absolute number
-    data = reco_offset[0] + reco_slope[0]*data
+    reco_offset_multiplexed = reco_offset.reshape(len(reco_offset),1,1)
+    reco_slope_multiplexed = reco_slope.reshape(len(reco_slope),1,1)
+    data = reco_offset_multiplexed + reco_slope_multiplexed*data
 
     # Finally, shape the data so all frames are put into separate dimensions.
     data = data.reshape(matrix_size)
