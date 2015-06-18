@@ -269,3 +269,26 @@ def replace_nan_with(arr, value=0):
     arr[numpy.where(numpy.isnan(arr))]=value
     return arr
 
+class AttrDict(object):
+    '''a class that behaves like a dict but gives you access to its attributes
+    directly'''
+    
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+#    def __init__(self, init=None):
+#        if init is not None: 
+#            self.__dict__.update(init)
+    def __getitem__(self, key):
+        return self.__dict__[key]
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
+    def __delitem__(self, key):
+        del self.__dict__[key]
+    def __contains__(self, key):
+        return key in self.__dict__
+    def __len__(self):
+        return len(self.__dict__) 
+    def __repr__(self):
+        args = ['{}={}'.format(k, repr(v)) for (k,v) in vars(self).items()]
+        name_str = self.__class__.__name__+'(\n{}\n)'
+        return name_str.format(',\n'.join(args))

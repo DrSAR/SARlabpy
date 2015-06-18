@@ -78,22 +78,19 @@ def find_all_patients_in_masterlists():
 
 # ===========================================================
 
-class JCAMP_file(object):
+class JCAMP_file(sarpy.helpers.AttrDict):
     '''
     Represents a JCAMP encoded parameter file.
 
     Parameters become attributes in this class
     '''
     def __init__(self, filename):
+        '''read subject (JCAMP) file and fill dictionary using the 
+        __init__ routine of parent class'''
         if not os.path.isfile(filename):
             raise IOError('File "%s" not found' % filename)
         self.filename = filename
-        acqp = BRUKERIO.readJCAMP(self.filename)
-        for k,v in acqp.iteritems():
-            self.__dict__[k] = v
-
-    def __getitem__(self, key):
-        return self.__dict__[key]
+        super(JCAMP_file, self).__init__(**BRUKERIO.readJCAMP(self.filename))
 
 class PDATA_file(object):
     '''
@@ -1000,8 +997,8 @@ class Experiment(StudyCollection):
     @classmethod
     def from_masterlist(cls, masterlistname):
         bare_experiment = cls(root=None, absolute_root=None)
-        bare_experiment.patients = collections.OrderedDict()
-        bare_experiment.labels = collections.OrderedDict()
+        bare_experiment.patients = sarpy.helpers.AttrDict()
+        bare_experiment.labels = sarpy.helpers.AttrDict()
         if masterlistname is not None:
             conf = configobj.ConfigObj(os.path.join(masterlist_root, masterlistname))
             for k in conf.keys():
