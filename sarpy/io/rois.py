@@ -12,7 +12,6 @@ def export_roi(masterlist_name,
                path = None,
                rescale = None,
                std_modifier = None,
-               peaks = None,
                forceVal = False):
     '''
     e.g., roi_suffix = 'b' or 'c' or 'd' or 'e' etc...
