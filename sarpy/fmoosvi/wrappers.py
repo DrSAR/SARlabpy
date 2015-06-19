@@ -27,25 +27,16 @@ def store_deltaT1(masterlist_name=None,
                   adata_save_label='deltaT1',
                   force_overwrite = False):
 
-    root = os.path.join(os.path.expanduser('~/sdata'),
-                        masterlist_name,
-                        masterlist_name)
-
-    fname_to_open = root+'.json'
-    with open(os.path.join(fname_to_open),'r') as master_file:
-        json_str = master_file.read()
-        master_list = json.JSONDecoder(
-                           object_pairs_hook=collections.OrderedDict
-                           ).decode(json_str)
+    exp = sarpy.Experiment.from_masterlist(masterlist_name + '.config')
 
     if adata_label2 is None:
         adata_label2 = adata_label1
 
-    for k,v in master_list.iteritems():
+    for k in exp.patients.keys():
 
         try:
-            scan1 = sarpy.Scan(v[T1map_1][0])
-            scan2 = sarpy.Scan(v[T1map_2][0])
+            scan1 = exp.patients[k][T1map_1]
+            scan2 = exp.patients[k][T1map_2]
 
     	except IOError:
     	    print('{0}: Not found adata {1} or {2} in patient {3}'.format(
@@ -108,28 +99,21 @@ def roi_average(masterlist_name,
     if analysis_label is None:
         analysis_label = adata_label + '_avg'                   
 
-    root = os.path.join(os.path.expanduser('~/sdata'),
-                        masterlist_name,
-                        masterlist_name)
+    exp = sarpy.Experiment.from_masterlist(masterlist_name + '.config')
 
-    fname_to_open = root+'.json'
-    with open(os.path.join(fname_to_open),'r') as master_file:
-        json_str = master_file.read()
-        master_list = json.JSONDecoder(
-                           object_pairs_hook=collections.OrderedDict
-                           ).decode(json_str)
-
-    for k,v in master_list.iteritems():
-        
+    for k in exp.patients.keys():
         try:
-            scan = sarpy.Scan(v[data_label][0])           
+            scn_name = exp.patients[k][data_label]
+            scan = sarpy.Scan(scn_name)
             data = scan.adata[adata_label].data
-            roi = sarpy.Scan(v[data_label][0]).adata[roi_label].data
+
+            roi_name = exp.patients[k][roi_label]
+            roi = sarpy.Scan(roi_name).adata[roi_label].data            
         except(KeyError, IOError):
             print('{0}: Not found adata {1} or {2} in patient {3}'.format(
                                     analysis_label,adata_label,roi_label,k) )
-            continue
-       
+            continue        
+               
         roi_data = data * roi
         
         # I think this might be necessary to ensure that values don't get carried
@@ -241,143 +225,53 @@ def bulk_transfer_roi(masterlist_name,
                                      
                     print('\t Saved {0} in {1}'.format(adata_save_label,scn))   
 
+# def plotVTC(masterlist_name, 
+#             key, 
+#             data_label, 
+#             adata_label = None):
 
-
-# def bulk_transfer_roi(masterlist_name,
-#                       dest_adata_label, 
-#                       roi_src_adata_label = None, 
-#                       tag = None, 
-#                       forceVal = False):
-#     '''
-#     Move an ROI from one scan to another. E.g., Moving an roi from an anatomy 
-#     scan to a LL scan. 
-    
-#     dest_adata_label: Label specifying the destination of the roi transfer
-    
-#     tag: string to prepend before _roi. useful if auc60_roi exists and you want 
-#             auc60_old_roi
-    
-#     Note: this routine looks for the special 'roi' label. This is the canonical
-#     label used to specify ROIs and other scans will 'inherit' - by way of resample
-#     - this roi. 
-
-#     Example:
-        
-#     sarpy.fmoosvi.wrappers.bulk_transfer_roi('NecS3',dest_adata_label,
-#                                              forceVal = False)
-#     '''
-    
-#     # Set the name of the destination scan
-
-#     if tag is None:
-#         dest_label = dest_adata_label + '_roi'
-#     else:
-#         dest_label = dest_adata_label + str(tag) + '_roi'
-   
 #     root = os.path.join(os.path.expanduser('~/sdata'),
 #                         masterlist_name,
 #                         masterlist_name)
-
 #     fname_to_open = root+'.json'
 #     with open(os.path.join(fname_to_open),'r') as master_file:
 #         json_str = master_file.read()
 #         master_list = json.JSONDecoder(
 #                            object_pairs_hook=collections.OrderedDict
 #                            ).decode(json_str)
-
-#     # Open up the tumourboard and do it tumourboard style
-#     for patname,v in master_list.iteritems():
-
-#         # First get all the labels and put it in a list
-#         lbl_list = master_list[patname].keys()
-
-#         # Search for all the labels that have roi and create an roi list 
-#         roi_labels = [r for r in lbl_list if 'roi' in r]
-
-#         # Iterate over the roi list, get the updated bbox, check for same day-ness
-#         for r_lbl in roi_labels:
-
-#             if master_list[patname][r_lbl][0]: # check if this isn't blank
-
-#                 search_string = r_lbl.split('-',1)[-1]
-
-#                 # Iterate over the label list, transfer the roi into the other adata
-#                 # Unfortunately this might be a bit slow as you iterate through all 
-#                 # the scans
-#                 #TODO: Figure out if this is a bottleneck and fix it!
-#                 for lbl in lbl_list:
-
-#                     # Check if the 0h/24h is in the label, and if a scan exists
-#                     # In other words ignore labels with no scans present
-
-#                     if search_string in lbl and master_list[patname][lbl][0] != '':
-#                         scn = sarpy.Scan(master_list[patname][lbl][0])
-#                         ad = sarpy.Scan(master_list[patname][lbl][0]).adata.keys()
-
-#                         if dest_adata_label in ad:
-#                             dest_pd = scn.pdata[0]
-
-#                             resampled_roi = sarpy.ImageProcessing.resample_onto.\
-#                             resample_onto_pdata(src_roi, dest_pd, replace_nan=0)
-
-#                             ## WHY DO I HAVE THIS? WHAT IS THIS FOR ?
-#                             #TODO: FIRAS, PLEASE FIGURE THIS OUT ASAP
-                            
-#                             places = numpy.where(resampled_roi < .5)
-#                             other_places = numpy.where(resampled_roi >= .5)
-#                             resampled_roi[places] = numpy.nan
-#                             resampled_roi[other_places] = 1
+#     value = master_list[key]
         
-#                             scn.store_adata(key = dest_label, data = resampled_roi, 
-#                                              force = forceVal)   
-                                             
-#                             print('Saved {0} in {1}'.format(dest_label, 
-#                                           scn.shortdirname))    
-
-def plotVTC(masterlist_name, key, data_label, adata_label = None):
-
-    root = os.path.join(os.path.expanduser('~/sdata'),
-                        masterlist_name,
-                        masterlist_name)
-    fname_to_open = root+'.json'
-    with open(os.path.join(fname_to_open),'r') as master_file:
-        json_str = master_file.read()
-        master_list = json.JSONDecoder(
-                           object_pairs_hook=collections.OrderedDict
-                           ).decode(json_str)
-    value = master_list[key]
-        
-    data = sarpy.Scan(value[data_label][0])
-    bbox_px = sarpy.fmoosvi.getters.get_bbox(value,data_label)
+#     data = sarpy.Scan(value[data_label][0])
+#     bbox_px = sarpy.fmoosvi.getters.get_bbox(value,data_label)
     
-    if adata_label is None:
-        nrdata = sarpy.Scan(value[data_label][0]).adata['vtc'].data        
-    else:      
-        nrdata = sarpy.Scan(value[data_label][0]).adata[adata_label].data
+#     if adata_label is None:
+#         nrdata = sarpy.Scan(value[data_label][0]).adata['vtc'].data        
+#     else:      
+#         nrdata = sarpy.Scan(value[data_label][0]).adata[adata_label].data
         
-    num_slices = nrdata.shape[2]
+#     num_slices = nrdata.shape[2]
  
-    x_bbox_px = bbox_px[1] - bbox_px[0] +1
+#     x_bbox_px = bbox_px[1] - bbox_px[0] +1
 
-    # Handle the special case of a corner bbox at origin
-    if bbox_px[0]==0: x_bbox_px - 1
+#     # Handle the special case of a corner bbox at origin
+#     if bbox_px[0]==0: x_bbox_px - 1
     
-#    pylab.figure(figsize = [10,data.method.PVM_FovCm[1]/data.method.PVM_FovCm[0]*10])
-#    pylab.imshow(data.pdata[0].data[:,:,3,80])
-#   
-    for slice in xrange(num_slices):
-        G = pylab.matplotlib.gridspec.GridSpec(x_bbox_px, 1)
-        fig = pylab.figure(figsize = [10,data.method.PVM_FovCm[1]/data.method.PVM_FovCm[0]*10])       
+# #    pylab.figure(figsize = [10,data.method.PVM_FovCm[1]/data.method.PVM_FovCm[0]*10])
+# #    pylab.imshow(data.pdata[0].data[:,:,3,80])
+# #   
+#     for slice in xrange(num_slices):
+#         G = pylab.matplotlib.gridspec.GridSpec(x_bbox_px, 1)
+#         fig = pylab.figure(figsize = [10,data.method.PVM_FovCm[1]/data.method.PVM_FovCm[0]*10])       
     
-        i = 0
+#         i = 0
         
-        for x in xrange(bbox_px[0],bbox_px[1]):
+#         for x in xrange(bbox_px[0],bbox_px[1]):
          
-            fig.add_subplot(G[i],frameon=False,xticks=[],yticks=[])
+#             fig.add_subplot(G[i],frameon=False,xticks=[],yticks=[])
         
-            d = nrdata[x,:,slice]
+#             d = nrdata[x,:,slice]
         
-            pylab.plot(d,'-',linewidth=0.1)
-            pylab.ylim([-0.2,2])
+#             pylab.plot(d,'-',linewidth=0.1)
+#             pylab.ylim([-0.2,2])
             
-            i+=1 # increment counter for the subplot (x)             
+#             i+=1 # increment counter for the subplot (x)             

@@ -1,4 +1,4 @@
-version = '3.0'
+version = '4.0'
 release = version + 'beta'
 from helpers import git_repo_state
 repo_state = git_repo_state()
@@ -16,7 +16,7 @@ from io.BRUKER_classes import (Scan, Study, StudyCollection,
 
 from io.AData_classes import (adataroot, AData)
 
-from io import (generate_rois, write_csv, bulk_analyze, mriBoards)
+from io import (rois, write_csv, bulk_analyze, mriBoards)
 
 from io.visu_pars_2_Nifti1Header import (visu_pars_2_Nifti1Header,
                                       visu_pars_2_matrix_size)

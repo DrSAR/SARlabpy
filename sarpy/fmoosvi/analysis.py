@@ -27,8 +27,7 @@ import collections
 import random
 import copy
 
-def h_calculate_AUC(scn_to_analyse=None, 
-                    bbox = None,
+def h_calculate_AUC(scn_to_analyse=None,
                     adata_label=None,
                     time = 60, 
                     pdata_num = 0,
@@ -108,17 +107,15 @@ def h_calculate_AUC(scn_to_analyse=None,
             auc_data[:,:] = scipy.integrate.simps(norm_data[:,:,inj_point:inj_point+auc_reps],x=time_points)
         else:
             auc_data[:,:] = numpy.nan        
-
        
     # Deal with bounding boxes
 
-    if bbox is None:        
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
 
-    else:
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
-
-    if bbox.shape == (4,):            
+    if bbox.shape == 4:            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -134,7 +131,7 @@ def h_calculate_AUC(scn_to_analyse=None,
     return {'':auc_data*bbox_mask}
 
 
-def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
+def h_normalize_dce(scn_to_analyse=None, pdata_num = 0):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -167,14 +164,15 @@ def h_normalize_dce(scn_to_analyse=None, bbox = None, pdata_num = 0):
     else:
         data = rdata
 
+    # Deal with bounding boxes
     ## Check for bbox traits and create bbox_mask to output only partial data
 
-    if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])
-    else:      
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])   
 
-    if bbox.shape == (4,):            
+    if bbox.shape == 4:            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -325,8 +323,7 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
     return injection_point[0][0]+1
 
 def h_calculate_AUGC(scn_to_analyse=None, 
-                     adata_label=None, 
-                     bbox = None, 
+                     adata_label=None,
                      time = 60, 
                      pdata_num = 0,
                      **kwargs):
@@ -396,13 +393,12 @@ def h_calculate_AUGC(scn_to_analyse=None,
     
     # Deal with bounding boxes
 
-    if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])
-
-    else:      
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)           
-       
-    if bbox.shape == (4,):            
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])   
+          
+    if bbox.shape == 4:            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -411,13 +407,12 @@ def h_calculate_AUGC(scn_to_analyse=None,
         # First tile for slice
         bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
 
-        # If this gives a value error about operands not being broadcast together, go backand change your adata to make sure it is squeezed
+        # If this gives a value error about operands not being broadcast together, go back and change your adata to make sure it is squeezed
     return {'':augc_data*bbox_mask}
     
 def h_conc_from_signal(scn_to_analyse=None, 
                        other_scan_name=None, 
                        adata_label = None,
-                       bbox = None,
                        relaxivity=4.3e-3, 
                        pdata_num = 0,
                        masterlist_name=None,
@@ -458,12 +453,12 @@ def h_conc_from_signal(scn_to_analyse=None,
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse, pdata_num = 0)    
     
     # Deal with bounding boxes
-    if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])    
-    else:      
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])   
 
-    if bbox.shape == (4,):            
+    if bbox.shape == 4:            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -538,6 +533,11 @@ def h_stitch_dce_scans(masterlist_name,
     # Sigh, here we have to break a cardinal rule not to have anything to do with masterlists in my 
     # analysis functions, but alas.
 
+    ######################
+    # WARNING
+    # This will likely break in v4 of sarpy where new masterlists were introduced, and bbox behaviour was changed
+    # Guess I shouldn't have broken that cardinal rule afterall
+    ######################
     # Masterlist reading
 
     root = os.path.join(os.path.expanduser('~/sdata'),
@@ -751,8 +751,7 @@ def h_fitpx_T1_LL_FAassumed(scn_to_analyse=None,
 
     return infodict,mesg,ier,fit_params, T1,t_data
 
-def h_fit_T1_LL_FAassumed(scn_to_analyse=None, 
-                      bbox = None, 
+def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
                       pdata_num = 0, 
                       params = [],
                       fit_algorithm = None,
@@ -789,10 +788,10 @@ def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
     goodness_of_fit1 = numpy.empty_like(data_after_fitting)
 
     ## Check for bbox traits and create bbox_mask to output only partial data
-    if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])
-    else:
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)  
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])   
         
     # Start the fitting process        
 
@@ -979,8 +978,7 @@ def h_fit_T1_LL_FAind_initial_params_guess(y_data,t_data):
     return params
 
 
-def h_fit_T1_LL_FAind(scn_to_analyse=None, 
-                      bbox = None, 
+def h_fit_T1_LL_FAind(scn_to_analyse=None,
                       pdata_num = 0, 
                       params = [],
                       fit_algorithm = None,
@@ -1017,10 +1015,10 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     goodness_of_fit1 = numpy.empty_like(data_after_fitting)
 
     ## Check for bbox traits and create bbox_mask to output only partial data
-    if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])
-    else:
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)  
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])   
         
     # Start the fitting process        
 
@@ -1189,7 +1187,6 @@ def h_goodness_of_fit(data,infodict, indicator = 'rsquared'):
         raise Exception
 
 def h_generate_VTC(scn_to_analyse=None,
-                   bbox = None,
                    vtc_type = None,
                    roi_label = None,
                    pdata_num = 0, 
@@ -1224,10 +1221,10 @@ def h_generate_VTC(scn_to_analyse=None,
     reps = ndata.shape[-1]
     
     # Deal with bounding boxes
-    if bbox is None:        
-        bbox = numpy.array([0,x_size,0,y_size])
-    else:      
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox)
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
 
     if roi_label is None:
         mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
@@ -1274,7 +1271,6 @@ def h_generate_VTC(scn_to_analyse=None,
 def createSaveVTC(scn_to_analyse=None,
                   adata_label=None,
                   roi_label = 'roi',
-                  bbox = None, 
                   pdata_num = 0, 
                   **kwargs):
 
@@ -1290,8 +1286,11 @@ def createSaveVTC(scn_to_analyse=None,
     y_size = dat.shape[1]
 
     # Deal with bounding boxes
-    if bbox is None:        
-        bbox = numpy.array([0,x_size,0,y_size])
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])   
+
 
     imgdata = numpy.mean(dat,axis=2)
     vtcdata = scan_object.adata[adata_label].data
@@ -1620,12 +1619,12 @@ def bolus_arrival_time(scn_to_analyse=None,
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
 
     # Deal with bounding boxes
-    if bbox is None:        
-        bbox = numpy.array([0,x_size-1,0,y_size-1])    
-    else:      
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])   
 
-    if bbox.shape == (4,):            
+    if bbox.shape == 4:            
 
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -1755,7 +1754,6 @@ def MMCA_model_fit(timecourse, start_fit=0, dt=1):
 def h_fit_ec(scn_to_analyse=None,
             roi_label=None,
             adata_label=None,
-            bbox = None,
             pdata_num = 0, 
             **kwargs):
     '''Fits a linear model to a time course starting some way through the injection.
@@ -1838,50 +1836,3 @@ def h_fit_ec(scn_to_analyse=None,
 
     return {'bloodvolume':bloodvolume_data, 
             'leakage': leakage_data}
-
-## Not working, or of unknown reliability
-
-    
-# def h_calculate_KBS(scan_object):
-    
-#     KBS = 71.16*2
-#     # print('Still working on it')
-    
-#     return KBS
-
-# def h_BS_B1map(zero_BSminus, zero_BSplus, high_BSminus, high_BSplus, scan_with_POI):
-    
-#     try:
-#         TPQQ_POI = scan_with_POI.method.ExcPulse[3] #11.3493504066491 # 5.00591 #11.3493504066491
-#         pulse_width_POI = scan_with_POI.method.ExcPulse[0]*1E-3
-#     except:
-#         print('Please use a scan that has a valid power level for the pulse \
-#                 of interest. scan_with_POI.method.ExcPulse[3]')
-    
-#     TPQQ_BS = high_BSminus.method.BSPulse[3]
-    
-#     integral_ratio = high_BSminus.method.ExcPulse[10] #0.071941 default from AY
-
-#     #TODO: Write function to calculateKBS
-#     KBS = h_calculate_KBS(high_BSminus)
-#     gamma = 267.513e6
-    
-#     # Get phase data from fid
-#     offset = h_phase_from_fid(zero_BSplus) - h_phase_from_fid(zero_BSminus)
-#     phase_diff = h_phase_from_fid(high_BSplus) - h_phase_from_fid(high_BSminus) + offset
-    
-#     # Calculate B1 peak
-#     B1peak = numpy.sqrt(numpy.absolute(phase_diff)/(2*KBS))
-    
-#     # Calculate Flip Angle for the pulse of interest
-#     alpha_BS = (gamma*B1peak/10000) * (math.pow(10,(TPQQ_BS-TPQQ_POI)/20)) *\
-#                 integral_ratio*pulse_width_POI
-
-
-#     return alpha_BS
-    
-    
-
-
-
-#######
