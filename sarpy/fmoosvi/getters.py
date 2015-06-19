@@ -111,7 +111,7 @@ def get_patients_from_experiment(Experiment_name, verbose = False,namesOnly=Fals
         return [a.patient_id for a in Patients]
 
     else:
-        return Patients
+        return list(set(Patients))
     
 def get_unique_list_elements(list, idfun=None):
 

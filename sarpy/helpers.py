@@ -13,7 +13,7 @@ import numpy
 
 def flatten_list(l):
 
-    if type(len(l)) is int:
+    if len(l) < 2:
         print('List is already flat')
         return l
 
