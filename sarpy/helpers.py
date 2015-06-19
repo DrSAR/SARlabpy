@@ -292,3 +292,9 @@ class AttrDict(object):
         args = ['{}={}'.format(k, repr(v)) for (k,v) in vars(self).items()]
         name_str = self.__class__.__name__+'(\n{}\n)'
         return name_str.format(',\n'.join(args))
+    def keys(self):
+        return self.__dict__.keys()
+    def iteritems(self):
+        return self.__dict__.iteritems()
+    def values(self):
+        return self.__dict__.values()
