@@ -115,7 +115,7 @@ def h_calculate_AUC(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
 
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -172,7 +172,7 @@ def h_normalize_dce(scn_to_analyse=None, pdata_num = 0):
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
 
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -398,7 +398,7 @@ def h_calculate_AUGC(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
           
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -458,7 +458,7 @@ def h_conc_from_signal(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
 
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -1624,7 +1624,7 @@ def bolus_arrival_time(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
 
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
 
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -1807,10 +1807,11 @@ def h_fit_ec(scn_to_analyse=None,
 
     print inj_point
     # Deal with bounding boxes
-    if bbox is None:        
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:    
         bbox = numpy.array([0,x_size,0,y_size])
-    else:      
-        bbox = bbox               
+        
 
     # Now calculate the actual Blood Volume & Leakage Param
     bloodvolume_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices])+numpy.nan)
