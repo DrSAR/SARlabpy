@@ -1005,18 +1005,19 @@ class Experiment(StudyCollection):
                 if k <> 'General':
                     bare_experiment.patients[k] = collections.OrderedDict()
                     for stdy_str in conf[k]:
-                        short_stdy_str = stdy_str.split()[1]
-                        long_stdy_str = k+'.'+short_stdy_str
-                        study = Study(long_stdy_str)
-                        bare_experiment.add_study(study)
-                        # populate the dict attributes for ease of access
-                        sclbs = conf[k][stdy_str]['scanlabels']
-                        for kk in sclbs:
-                            sclbs[kk] = os.path.join(long_stdy_str, sclbs[kk]) 
-                            if kk not in bare_experiment.labels:
-                                bare_experiment.labels[kk]=list()
-                            bare_experiment.labels[kk].append(sclbs[kk])
-                        bare_experiment.patients[k].update(sclbs)
+                        if isinstance(conf[k][stdy_str], configobj.Section):
+                            short_stdy_str = stdy_str.split()[1]
+                            long_stdy_str = k+'.'+short_stdy_str
+                            study = Study(long_stdy_str)
+                            bare_experiment.add_study(study)
+                            # populate the dict attributes for ease of access
+                            sclbs = conf[k][stdy_str]['scanlabels']
+                            for kk in sclbs:
+                                sclbs[kk] = os.path.join(long_stdy_str, sclbs[kk]) 
+                                if kk not in bare_experiment.labels:
+                                    bare_experiment.labels[kk]=list()
+                                bare_experiment.labels[kk].append(sclbs[kk])
+                            bare_experiment.patients[k].update(sclbs)
         bare_experiment.root='masterlistname'
         return bare_experiment # not so bare by now since we have added studies
     
