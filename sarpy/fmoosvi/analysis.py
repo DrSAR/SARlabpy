@@ -1194,6 +1194,22 @@ def h_generate_VTC(scn_to_analyse=None,
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
+    # Hack for the moment
+
+    ndata = scan_object.pdata[0].data
+
+    #Get useful params        
+    x_size = ndata.shape[0]
+    y_size = ndata.shape[1]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+    reps = ndata.shape[-1]
+
+    # Deal with bounding boxes
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+
     # Specify VTC data
 
     if vtc_type is None:
@@ -1202,29 +1218,33 @@ def h_generate_VTC(scn_to_analyse=None,
         ndata = numpy.squeeze(sarpy.Scan(scn_to_analyse).adata['gd_KM'].data)
     elif vtc_type =='CEST':
 
-        dat = sarpy.Scan(scn_to_analyse).pdata[0].data
-        sorted_data = numpy.empty_like(dat)        
-        offsets = sorted(scan_object.method.KD_MagTransOffsetList)
-        offset_index = [scan_object.method.KD_MagTransOffsetList.index(i) for i in offsets]
+        import cest.cest as cest
+        reload(cest)
 
-        # Sort the offset frequencies from smallest to largest so the spectrum 
-        # is put together properly.
-        
-        for i,offsets in enumerate(offset_index):   
-            sorted_data[:,:,i] = dat[:,:,offsets]
+        # Get the ndata to figure out the shape of the array (since some data gets thrown out)
+        # make it nan
+        throwaway, ndata = cest.cest_spectrum(scn_to_analyse,
+                                    bbox[0],bbox[2],
+                                    shift_water_peak = True,
+                                    normalize=True,
+                                    normalize_to_ppm = 200,
+                                    ppm_limit_min = -1,
+                                    ppm_limit_max = 2)
 
-        ndata = sorted_data
-    #Get useful params        
-    x_size = ndata.shape[0]
-    y_size = ndata.shape[1]
-    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
-    reps = ndata.shape[-1]
-    
-    # Deal with bounding boxes
-    try:
-        bbox = scan_object.adata['bbox'].data
-    except KeyError:       
-        bbox = numpy.array([0,x_size-1,0,y_size-1])
+        reps = len(ndata)
+
+        ndata = numpy.empty(shape=[x_size,y_size,reps]) + numpy.nan
+
+        for xx in xrange(bbox[0],bbox[1]):
+            for yy in xrange(bbox[2],bbox[3]):
+
+                xvals, ndata[xx,yy,:] = cest.cest_spectrum(scn_to_analyse,
+                                                            xx,yy,
+                                                            shift_water_peak = True,
+                                                            normalize=True,
+                                                            normalize_to_ppm = 200,
+                                                            ppm_limit_min = 2,
+                                                            ppm_limit_max = 4)
 
     if roi_label is None:
         mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
