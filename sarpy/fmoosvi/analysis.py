@@ -1218,7 +1218,7 @@ def h_generate_VTC(scn_to_analyse=None,
         ndata = numpy.squeeze(sarpy.Scan(scn_to_analyse).adata['gd_KM'].data)
     elif vtc_type =='CEST':
 
-        import cest.cest as cest
+        import cest.analysis as cest
         reload(cest)
 
         # Get the ndata to figure out the shape of the array (since some data gets thrown out)
@@ -1228,8 +1228,10 @@ def h_generate_VTC(scn_to_analyse=None,
                                     shift_water_peak = True,
                                     normalize=True,
                                     normalize_to_ppm = 200,
-                                    ppm_limit_min = -1,
-                                    ppm_limit_max = 2)
+                                    ppm_limit_min = -5,
+                                    ppm_limit_max = 5,
+                                    exclude_ppm = 66.6,
+                                    pdata_num = 0)
 
         reps = len(ndata)
 
@@ -1238,13 +1240,18 @@ def h_generate_VTC(scn_to_analyse=None,
         for xx in xrange(bbox[0],bbox[1]):
             for yy in xrange(bbox[2],bbox[3]):
 
-                xvals, ndata[xx,yy,:] = cest.cest_spectrum(scn_to_analyse,
+                xvals, res = cest.cest_spectrum(scn_to_analyse,
                                                             xx,yy,
                                                             shift_water_peak = True,
                                                             normalize=True,
                                                             normalize_to_ppm = 200,
-                                                            ppm_limit_min = 2,
-                                                            ppm_limit_max = 4)
+                                                            ppm_limit_min = -5,
+                                                            ppm_limit_max = 5,
+                                                            exclude_ppm = 66.6,
+                                                            pdata_num = 0)
+
+                # Flip the x-axis to deal with stupid spectroscopy convention of + then -
+                ndata[xx,yy,:] = res[::-1]
 
     if roi_label is None:
         mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
@@ -1284,7 +1291,8 @@ def h_generate_VTC(scn_to_analyse=None,
         # Incomprehensible list comprehenshion
         # Sets the last point of each enhancement curve to numpy.nan 
         tmp = ndata.flatten()
-        tmp[::reps] = numpy.nan               
+        tmp[::reps] = numpy.nan   
+
         nrdata = tmp.reshape([x_size,y_size*reps])
     return {'':nrdata}
 
