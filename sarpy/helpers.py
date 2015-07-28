@@ -8,6 +8,7 @@ import re
 import sarpy
 import os
 import collections
+from collections import defaultdict
 import json
 import numpy
 
