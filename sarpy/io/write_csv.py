@@ -166,8 +166,125 @@ def adata_roi_average(scn_to_analyze,
 
     return avgL
 
+def create_export_csv(exp_abbreviation = 'HPGP4',
+                      day_label = 'dce-0h',
+                      data_scan_label = 'dce.HPG',
+                      roi_scan_label = 'roi',
+                      roi_adata = 'roi',
+                      data_adata = 'auc60'):
 
+    import time
+    import getpass
+    import os
+    import csv
+
+    export_data = []
+
+    for pat in sorted(allExperiment.patients.keys()):
+
+        avg_data = []
+
+        data_scn_to_analyze = allExperiment.patients[pat][data_scan_label]
+        roi_scn_to_analyze = allExperiment.patients[pat][roi_scan_label]
+
+        data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
+        roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_adata].data   
+
+        # Create empty list so that it can be populated with rows
+        avg_data = determine_averages(data_scn_to_analyze,data_adata,
+                                      roi_scn_to_analyze, roi_adata)
+
+        avg_data.insert(0,data_scn_to_analyze)
+
+        export_data.append(avg_data)
+
+    timer = time.strftime("%Y-%m-%d %H:%M")   
+    header =['Animal ID'] + ['Slice '+str(x+1) for x in xrange(
+                                        len(max(export_data,key=len))-3)] + ['Weighted Average'] + ['Volume']
+
+    footers = []
+    footers.append(['# Data generated on {0} by {1}'.format(timer,getpass.getuser())])
+    footers.append(["#Legend"])
+    footers.append(["#inf:slice wasn't acquired"])
+    footers.append(["#nan: no roi in slice"])
+    footers.append(["#AnalysisErr: No Data available"])
+
+    for f in footers:
+        export_data.append(f)    
+
+
+    filename = os.path.expanduser(os.path.join(
+                                          '~','sdata',exp_abbreviation,'export',
+                                          day_label+'_'+data_adata+'.csv'))
+
+    # open output file
+    outfile = open(filename, "wb" )
+
+    # get a csv writer
+    writer = csv.writer( outfile )
+
+    # write header
+    writer.writerow(header)
+
+    # write data
+    [ writer.writerow(x) for x in export_data ]
+
+    # close file
+    outfile.close()    
        
+
+def determine_averages(data_scn_to_analyze,
+                       adata_label,
+                       roi_scn_to_analyze,
+                       roi_label):
+    
+    data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
+    roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
+    
+    data_roi = data*roi
+    weights = sarpy.fmoosvi.getters.get_roi_weights(roi)
+    weights = list(weights)
+    avg = []
+
+    try:
+        tumour_volume = sarpy.fmoosvi.getters.get_tumour_volume(roi_scn_to_analyze,roi_label)
+    except AssertionError:
+        tumour_volume = numpy.nan
+
+    maxSlices = sarpy.fmoosvi.getters.get_num_slices(data_scn_to_analyze)            
+
+    if maxSlices>1:
+
+        for slice in xrange(maxSlices): # Zero filling non-existent slices
+
+            if slice < maxSlices:
+                avg.append(scipy.stats.nanmean(data_roi[:,:,slice].flatten()))
+            else:
+                avg.append(numpy.inf)
+                weights.append(0)
+    else:
+        avg.append(scipy.stats.nanmean(data_roi[:,:].flatten()))
+        
+    # Removing infs and nans from the avg to get a proper weighted avg
+    # Also removing 0 weights                    
+
+    weights = numpy.array(weights)
+    weights = weights[weights>0]
+
+    avgW = numpy.array(avg)
+    avgW = list(avgW[numpy.isfinite(avgW)])
+
+    try:
+        avg.append((numpy.average(avgW, weights=weights)))
+
+    except TypeError:
+        avg.append(numpy.nan)
+
+    avg.append(tumour_volume)
+    avgL=[str(e) for e in avg]
+
+    return avgL
+           
 if __name__ == '__main__':
 
     import argparse
