@@ -299,8 +299,9 @@ class AttrDict(object):
     def values(self):
         return self.__dict__.values()
 
-def smooth(y, window_size, order, deriv=0, rate=1):
+def smooth_SG(y, window_size, order, deriv=0, rate=1):
 
+    # Implementation of a Savitzky-Golay filter
     # Acquired from: 
     # http://stackoverflow.com/questions/22988882/how-to-smooth-a-curve-in-python
 
