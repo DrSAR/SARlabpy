@@ -260,21 +260,22 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
 
     import sarpy
     import sarpy.ImageProcessing.resample_onto
-    from collections import Counter  
+    from collections import Counter    
     import copy
+    import sarpy.helpers
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
     # Method params    
-    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
-          
+    num_slices = sarpy.fmoosvi.getters.get_num_slices(scn_to_analyse,pdata_num)
+
      # Data
-    rawdata = scan_object.pdata[pdata_num].data  
+    rawdata = scan_object.pdata[pdata_num].data
 
     if numpy.size(rawdata.shape) == 3:
 
         # add an empty dimension to make it 4D, this code appends the exta axis
-        data = sarpy.ImageProcessing.resample_onto.atleast_4d(rawdata.copy()) 
+        data = sarpy.ImageProcessing.resample_onto.atleast_4d(rawdata.copy())
 
         # Move the appended dimension to position 2 to keep data formats the same
         data = data.reshape([data.shape[0], data.shape[1],
@@ -282,7 +283,7 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
     else:
         data = rawdata
 
-    try:      
+    try:
         # Pool all the data together
 
         dcelimit = 150
@@ -290,37 +291,38 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
         if dcelimit > rawdata.shape[-1]:
             dcelimit = rawdata.shape[-1]
 
-        img_mean = numpy.sum(numpy.sum(data[:,:,:,0:dcelimit],axis=0),axis=0)
+        global_sum = numpy.sum(numpy.sum(data[:,:,:,0:dcelimit],axis=0),axis=0)
 
     except IndexError:
         # If it's only one slice, maybe this will still work
-        img_mean = data[:,:,:].sum(0).sum(0)
-        
+        global_sum = data[:,:,:].sum(0).sum(0)
+
     injection_point = []
 
     for slc in xrange(num_slices):
-        
+
         try:
-            diff_slice = numpy.diff(img_mean[slc,:])
+            filtered_sum = sarpy.helpers.smooth_SG(global_sum[slc,:],11,3)
         except IndexError:
-            diff_slice = numpy.diff(img_mean[:])
+            filtered_sum = sarpy.helpers.smooth_SG(global_sum,11,3)
+
+        diff_slice = numpy.diff(filtered_sum)
         std_slice =  numpy.std(diff_slice)
-        
-        try: 
+
+        try:
             injection_point.append(next(i for i,v in enumerate(diff_slice) if v > 2*std_slice))
         except StopIteration:
             print "Could not find the injection point, possibly okay" + str(slc)
             injection_point.append(0)
-            
+
     # look through the list of elements in injection point and report the most common (mode)
     injection_point_counter = Counter(injection_point)
-    injection_point = injection_point_counter.most_common(1)
-
+    final_injection_point = injection_point_counter.most_common(1)
 
     if scn_to_analyse == 'SARgalbpiB.PG1/6':
-        injection_point[0] = (10,0)
+        final_injection_point[0] = (10,0)
 
-    return injection_point[0][0]+1
+    return final_injection_point[0][0]+1
 
 def h_calculate_AUGC(scn_to_analyse=None, 
                      adata_label=None,
