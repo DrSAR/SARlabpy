@@ -51,7 +51,7 @@ def export_roi(masterlist_name,
         for r_lbl in roi_labels:
                   
             try:
-                scn_name = exp[k][r_lbl]
+                scn_name = exp.patients[k][r_lbl]
                 scan = sarpy.Scan(scn_name)
                 
             except IOError:    
