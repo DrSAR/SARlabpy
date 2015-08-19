@@ -1867,3 +1867,148 @@ def h_fit_ec(scn_to_analyse=None,
 
     return {'bloodvolume':bloodvolume_data, 
             'leakage': leakage_data}
+
+
+def bolus_arrival_time(scn_to_analyse=None,
+                       pdata_num = 0,
+                       bbox = None,
+                       verbose=False):
+    
+    def runningSum(x, N):
+        output = numpy.empty_like(x)
+        
+        if len(x.shape)>3: #Multi Slice
+            for i in xrange(x.shape[0]):
+                for j in xrange(x.shape[1]):
+                    for k in xrange(x.shape[2]):
+                        output[i,j,k,:] = numpy.convolve(x[i,j,k,:],numpy.ones(N))[N-1:]
+        elif len(x.shape) ==3: #Single Slice
+            for i in xrange(x.shape[0]):
+                for j in xrange(x.shape[1]):
+                        output[i,j,:] = numpy.convolve(x[i,j,:],numpy.ones(N))[N-1:]            
+            
+        return output
+
+    def first4D(a):  # Written by SAR to return the first non-zero entry in a 4D array in the 4th axis
+        
+        if len(a.shape)>3:
+            di = numpy.zeros(a.shape[0:3])+numpy.Inf
+            for i, j, k, l in zip(*numpy.where(a>0)):
+                if l<di[i,j,k]:
+                    di[i,j,k] = l
+                    
+        elif len(a.shape)==3:
+            
+            di = numpy.zeros(a.shape[0:2])+numpy.Inf
+            for i, j, l in zip(*numpy.where(a>0)):
+                if l<di[i,j]:
+                    di[i,j] = l            
+        return di
+
+    import sarpy
+    import sarpy.fmoosvi.getters as getters
+    import datetime
+    
+    ## Get the data and various sizes
+    
+    scan_object = sarpy.Scan(scn_to_analyse)
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+    data = scan_object.pdata[0].data
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    
+    ## Deal with bounding boxes
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+    else:      
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+
+    if bbox.shape == (4,):            
+
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+
+        # First tile for slice
+        bbox_mask = numpy.squeeze(numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices))
+        
+    ############################################################   
+    #
+    # Begin BAT Code here
+    #
+    ############################################################
+    
+    ## Determine the injection point using Firas' function
+    # This averages and flattens the entire DCE-MRI dataset to a single 
+    # Time course and determines the point of injection in a 
+    # very simple way (using the largest change)
+    
+    #inj_point =  sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse) + 1
+    inj_point =  h_inj_point(scn_to_analyse) + 1
+
+    # Check for number of slices; this could be made more efficient, 
+    # there is a lot of repeated code here
+    
+    # only consider means and std for data at baseline but exclude
+    # 1st point (that one is always wonky (TM))
+    if num_slices >1:
+        sd = numpy.std(data[:,:,:,1:inj_point],axis=-1)*bbox_mask
+        mean = numpy.mean(data[:,:,:,1:inj_point],axis=-1)*bbox_mask
+        
+    elif num_slices ==1:
+        sd = numpy.std(data[:,:,1:inj_point],axis=-1)*bbox_mask
+        mean = numpy.mean(data[:,:,1:inj_point],axis=-1)*bbox_mask        
+        
+    ## Compute the SD and Mean to be used for Analysis
+    sd = numpy.repeat(sd,data.shape[-1]).reshape(data.shape)
+    mean = numpy.repeat(mean,data.shape[-1]).reshape(data.shape)
+    
+    ## Setting Conditions
+    cond1 = numpy.where(data >= (mean+3*sd),1,0)
+
+    # Condition 2
+    condaux = numpy.where(data >= mean+2*sd,1,0)
+    cond2 = numpy.where(runningSum(condaux,3)>=2,1,0) 
+
+    # Condition 3
+    condaux = numpy.where(data >= mean+sd,1,0)
+    cond3 = numpy.where(runningSum(condaux,5)>=4,1,0)
+
+    # Condition 4
+    condaux = numpy.where(data >= mean,1,0)
+    cond4 = numpy.where(runningSum(condaux,8)>=8,1,0)
+
+    # Condition 5 - super condition
+    allcond = cond1 + cond2 + cond3 + cond4
+    #cond = numpy.where(runningSum(allcond,3) >=3)
+    cond = numpy.where(runningSum(allcond,3) >=3,runningSum(allcond,3),0)
+
+    # Find the first finite entry in the array
+    BAT = first4D(cond)
+
+    # Condition 6 - compare cond to inj_point 
+    # (throws away if it's more than 10 points away from inj_point)
+    #BAT = numpy.where(BAT > inj_point+30,numpy.Inf,BAT)
+    BAT = numpy.where(BAT==0,numpy.Inf,BAT)
+    
+    # Switch from Index to a time in seconds
+    
+    reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )    
+    
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"                                            
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+
+    time_per_rep = numpy.divide(total_time,reps)
+    
+    if verbose: 
+        return time_per_rep*(BAT+1), (cond1,cond2,cond3,cond4,1.*cond/4)
+    else:
+        return time_per_rep*(BAT+1)
