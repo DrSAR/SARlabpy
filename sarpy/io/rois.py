@@ -7,6 +7,8 @@ Created on Thu May 30 17:49:35 2013
 @author: fmoosvi
 """
 
+import sarpy.fmoosvi.getters
+
 def export_roi(masterlist_name,
                roi_suffix = None,
                path = None,
@@ -115,7 +117,7 @@ def import_roi(masterlist_name,
         for r_lbl in roi_labels:
                   
             try:
-                scn_name = exp[k][r_lbl]
+                scn_name = exp.patients[k][r_lbl]
                 scan = sarpy.Scan(scn_name)
                 
             except IOError:    
@@ -136,7 +138,7 @@ def import_roi(masterlist_name,
                 roi = nibabel.load(fname).get_data()[:,:,:,0]
             except IndexError:
                 roi = nibabel.load(fname).get_data()[:,:,:]
-            
+
             # the default foreground and background in h_image_to_mask
             # will result in a roi_m that has NaN and 1 only (aka
             # 'proper mask')
@@ -149,11 +151,33 @@ def import_roi(masterlist_name,
             for sl in xrange(roi_m.shape[-1]):
                 weights[sl] = numpy.divide(numpy.nansum(roi_m[:,:,sl].flatten()),ROIpx)
 
-            try:             
+            try:
                 scan.store_adata(key=roi_key_name, data = roi_m, force = forceVal)
                 scan.store_adata(key=roi_key_name+'_weights', data = weights, force = forceVal)
+
+
+                # get the bbox for this roi and scan
+                bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,
+                                                      roi_adata_label=roi_key_name)
+                scan.store_adata(key='bbox',data=bbox,force=forceVal)
+
                 print('h_generate_roi: saved {0} roi label as {1}'.format(scan.shortdirname,roi_key_name))
             except AttributeError:
                 print('h_generate_roi: force save of scan {0} is required'.format(scan.shortdirname))
+
+    # Save adata in all scans 
+    for k in exp.patients.keys():
+
+        pat = exp.patients[k]
+
+        try:
+            bbox = sarpy.Scan(pat['roi']).adata['bbox'].data
+
+            for lbl,scn in pat.iteritems():
+
+                scn = sarpy.Scan(scn)
+                scn.store_adata(key='bbox', data = bbox,force=True)
+        except:
+            raise
 
     print('Nifti images were processed in {0}'.format(path))
