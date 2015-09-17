@@ -170,6 +170,7 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
                       day_label = 'dce-0h',
                       data_scan_label = 'dce.HPG',
                       roi_scan_label = 'roi',
+                      BATscreened_adata_label = 'BAT',
                       roi_adata = 'roi',
                       data_adata = 'auc60'):
 
@@ -180,6 +181,19 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
 
     export_data = []
 
+    # First check to make sure that the number of slices for all patients is the same, 
+    # if not, print an error message and record the exception in a dictionary for processing later
+    
+    allExperiment = sarpy.Experiment.from_masterlist(exp_abbreviation+'.config')
+    
+    maxSlicesList = []
+    
+    for scn in sorted(allExperiment.labels[data_scan_label]):
+                
+        maxSlicesList.append(sarpy.fmoosvi.getters.get_num_slices(scn))
+
+    maxSlices = numpy.max(maxSlicesList)
+    
     for pat in sorted(allExperiment.patients.keys()):
 
         avg_data = []
@@ -187,13 +201,17 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
         data_scn_to_analyze = allExperiment.patients[pat][data_scan_label]
         roi_scn_to_analyze = allExperiment.patients[pat][roi_scan_label]
 
-        data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
-        roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_adata].data   
+        #data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
+        #roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_adata].data   
 
         # Create empty list so that it can be populated with rows
-        avg_data = determine_averages(data_scn_to_analyze,data_adata,
-                                      roi_scn_to_analyze, roi_adata)
-
+        avg_data = determine_averages(data_scn_to_analyze,
+                                      data_adata,
+                                      BATscreened_adata_label,                                        
+                                      roi_scn_to_analyze, 
+                                      roi_adata,
+                                      maxSlices = maxSlices)
+        
         avg_data.insert(0,data_scn_to_analyze)
 
         export_data.append(avg_data)
@@ -232,16 +250,20 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
     # close file
     outfile.close()    
        
-
 def determine_averages(data_scn_to_analyze,
                        adata_label,
+                       BAT_adata_label,
                        roi_scn_to_analyze,
-                       roi_label):
+                       roi_label,
+                       maxSlices):
     
     data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
+    
+    BAT = sarpy.Scan(data_scn_to_analyze).adata[BAT_adata_label].data
+    BAT_mask = sarpy.fmoosvi.analysis.h_make_binary_mask(BAT,0,150)
     roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
     
-    data_roi = data*roi
+    data_roi = data*roi*BAT_mask
     weights = sarpy.fmoosvi.getters.get_roi_weights(roi)
     weights = list(weights)
     avg = []
@@ -251,14 +273,14 @@ def determine_averages(data_scn_to_analyze,
     except AssertionError:
         tumour_volume = numpy.nan
 
-    maxSlices = sarpy.fmoosvi.getters.get_num_slices(data_scn_to_analyze)            
+    totalSlices = sarpy.fmoosvi.getters.get_num_slices(data_scn_to_analyze)            
 
-    if maxSlices>1:
+    if totalSlices>1:
 
-        for slice in xrange(maxSlices): # Zero filling non-existent slices
+        for slc in xrange(maxSlices): # Zero filling non-existent slices
 
-            if slice < maxSlices:
-                avg.append(scipy.stats.nanmean(data_roi[:,:,slice].flatten()))
+            if slc < totalSlices:
+                avg.append(scipy.stats.nanmean(data_roi[:,:,slc].flatten()))
             else:
                 avg.append(numpy.inf)
                 weights.append(0)
@@ -283,7 +305,7 @@ def determine_averages(data_scn_to_analyze,
     avg.append(tumour_volume)
     avgL=[str(e) for e in avg]
 
-    return avgL
+    return avg
            
 if __name__ == '__main__':
 
@@ -310,5 +332,7 @@ if __name__ == '__main__':
     
     
     write_csv(masterlist_name,data_label,adata_label)
-    
-    
+
+#######
+# 
+#######
