@@ -1655,7 +1655,8 @@ def MMCA_model_fit(timecourse, start_fit=0, dt=1):
 def h_fit_ec(scn_to_analyse=None,
             roi_label=None,
             adata_label=None,
-            pdata_num = 0, 
+            pdata_num = 0,
+            bbox=None,
             **kwargs):
     '''Fits a linear model to a time course starting some way through the injection.
     Ostensibly, the jump from baseline to the data just after injection is related to 
