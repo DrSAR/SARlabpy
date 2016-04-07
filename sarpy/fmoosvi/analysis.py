@@ -1024,7 +1024,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
         
-    # Start the fitting process        
+    # Start the fitting process      
+
+    num_slices = 2
 
     for slc in xrange(num_slices):          
         for x in xrange(bbox[0],bbox[1]):
