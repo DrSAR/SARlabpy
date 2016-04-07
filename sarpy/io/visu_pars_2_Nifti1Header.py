@@ -186,7 +186,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
         # for 2D we still need to figure out the 3rd dimension
         if visu_pars.VisuCoreDim == 2:
             # check distance of neigbouring Frames
-            if visu_pars.VisuCoreFrameCount == 1:
+            if visu_pars.VisuCoreFrameCount == 1 or visu_pars.VisuAcqSequenceName == 'cEST_EPI (pvm)':
                 d = visu_pars.VisuCoreFrameThickness
             else:
                 p1 = numpy.array(visu_pars.VisuCorePosition[0])                
