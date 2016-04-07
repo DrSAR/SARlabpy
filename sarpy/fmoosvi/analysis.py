@@ -14,7 +14,6 @@ import scipy.integrate
 import scipy.optimize
 import scipy.fftpack
 import scipy.stats
-import sarpy.fmoosvi.getters as getters
 import sarpy.ImageProcessing.resample_onto
 import sarpy.io
 import math
@@ -26,6 +25,8 @@ import datetime
 import collections
 import random
 import copy
+import sarpy.fmoosvi.getters as getters
+
 
 def h_calculate_AUC(scn_to_analyse=None,
                     adata_label=None,
@@ -670,11 +671,11 @@ def h_residual_T1_FAind(params, y_data, t_data):
         return 1e30
 
 def h_fitpx_T1_LL_FAassumed(scn_to_analyse=None,
-                        y_data=None,
-                        slc=None,
-                        initial_params = None,
-                        fit_algorithm=None,
-                        **kwargs):
+                            y_data=None,
+                            slc=None,
+                            initial_params = None,
+                            fit_algorithm=None,
+                            **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -1117,12 +1118,29 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
         peaks =numpy.int(peaks)
 
     roi_mask = copy.deepcopy(roi_data)
+
+    try:
+        slices = roi_mask.shape[2]
+    except IndexError:
+        slices =1
     
     if peaks == 1:
-        for slc in xrange(roi_mask.shape[2]):
-        
-            curr_slice = roi_mask[:,:,slc]
-            
+
+        if slices >1 :
+            for slc in xrange(slices):
+                curr_slice = roi_mask[:,:,slc]
+                # the most common value will be the background; We assume the ROI 
+                # occupies only a small region in the image (less than 50%). 
+                # By choosin the median we could have a few pixel values higher or 
+                # lower than the very common background pixel intensity.
+                mask_val = scipy.median(curr_slice.flatten())
+                places = numpy.where(curr_slice == mask_val)
+                notplaces = numpy.where(curr_slice != mask_val)
+                curr_slice[places] = background
+                curr_slice[notplaces] = foreground
+            return roi_mask
+        else: #deal with single slice rois
+            curr_slice = roi_mask
             # the most common value will be the background; We assume the ROI 
             # occupies only a small region in the image (less than 50%). 
             # By choosin the median we could have a few pixel values higher or 
@@ -1131,10 +1149,8 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
             places = numpy.where(curr_slice == mask_val)
             notplaces = numpy.where(curr_slice != mask_val)
             curr_slice[places] = background
-            curr_slice[notplaces] = foreground
-
-        return roi_mask    
-                
+            curr_slice[notplaces] = foreground   
+            return roi_mask         
     else:
                           
         for slc in xrange(roi_mask.shape[2]):
@@ -2026,7 +2042,8 @@ def bolus_arrival_time(scn_to_analyse=None,
 
 def h_threshold(data_matrix,
                 min_val = 0,
-                max_val = 100):
+                max_val = 100,
+                mask = False):
 
 
     # Set all points below min_val to be nan
@@ -2034,8 +2051,12 @@ def h_threshold(data_matrix,
 
     # Set all points above max_val to be nan
     data_matrix = numpy.where(data_matrix>max_val,numpy.nan,data_matrix)
-    
-    return data_matrix
+
+    if mask:
+        return numpy.where(numpy.isfinite(data_matrix),1,data_matrix)
+
+    else:
+        return data_matrix
 
 def h_make_binary_mask(data_matrix,
                        min_val = 0,
