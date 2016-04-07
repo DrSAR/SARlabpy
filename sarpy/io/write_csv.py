@@ -208,7 +208,7 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
         avg_data = determine_averages(data_scn_to_analyze,
                                       data_adata,
                                       BATscreened_adata_label,                                        
-                                      roi_scn_to_analyze, 
+                                      roi_scn_to_analyze,
                                       roi_adata,
                                       maxSlices = maxSlices)
         
@@ -260,10 +260,10 @@ def determine_averages(data_scn_to_analyze,
     data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
     
     BAT = sarpy.Scan(data_scn_to_analyze).adata[BAT_adata_label].data
-    BAT_mask = sarpy.fmoosvi.analysis.h_make_binary_mask(BAT,0,150)
+    #BAT_mask = sarpy.fmoosvi.analysis.h_make_binary_mask(BAT,0,BAT_threshold)
     roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
     
-    data_roi = data*roi*BAT_mask
+    data_roi = data*roi*BAT
     weights = sarpy.fmoosvi.getters.get_roi_weights(roi)
     weights = list(weights)
     avg = []
