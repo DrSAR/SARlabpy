@@ -14,7 +14,6 @@ import scipy.integrate
 import scipy.optimize
 import scipy.fftpack
 import scipy.stats
-import sarpy.fmoosvi.getters as getters
 import sarpy.ImageProcessing.resample_onto
 import sarpy.io
 import math
@@ -26,6 +25,8 @@ import datetime
 import collections
 import random
 import copy
+import sarpy.fmoosvi.getters as getters
+
 
 def h_calculate_AUC(scn_to_analyse=None,
                     adata_label=None,
@@ -670,11 +671,11 @@ def h_residual_T1_FAind(params, y_data, t_data):
         return 1e30
 
 def h_fitpx_T1_LL_FAassumed(scn_to_analyse=None,
-                        y_data=None,
-                        slc=None,
-                        initial_params = None,
-                        fit_algorithm=None,
-                        **kwargs):
+                            y_data=None,
+                            slc=None,
+                            initial_params = None,
+                            fit_algorithm=None,
+                            **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -1023,7 +1024,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
         
-    # Start the fitting process        
+    # Start the fitting process      
+
+    num_slices = 2
 
     for slc in xrange(num_slices):          
         for x in xrange(bbox[0],bbox[1]):
@@ -1117,12 +1120,29 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
         peaks =numpy.int(peaks)
 
     roi_mask = copy.deepcopy(roi_data)
+
+    try:
+        slices = roi_mask.shape[2]
+    except IndexError:
+        slices =1
     
     if peaks == 1:
-        for slc in xrange(roi_mask.shape[2]):
-        
-            curr_slice = roi_mask[:,:,slc]
-            
+
+        if slices >1 :
+            for slc in xrange(slices):
+                curr_slice = roi_mask[:,:,slc]
+                # the most common value will be the background; We assume the ROI 
+                # occupies only a small region in the image (less than 50%). 
+                # By choosin the median we could have a few pixel values higher or 
+                # lower than the very common background pixel intensity.
+                mask_val = scipy.median(curr_slice.flatten())
+                places = numpy.where(curr_slice == mask_val)
+                notplaces = numpy.where(curr_slice != mask_val)
+                curr_slice[places] = background
+                curr_slice[notplaces] = foreground
+            return roi_mask
+        else: #deal with single slice rois
+            curr_slice = roi_mask
             # the most common value will be the background; We assume the ROI 
             # occupies only a small region in the image (less than 50%). 
             # By choosin the median we could have a few pixel values higher or 
@@ -1131,10 +1151,8 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
             places = numpy.where(curr_slice == mask_val)
             notplaces = numpy.where(curr_slice != mask_val)
             curr_slice[places] = background
-            curr_slice[notplaces] = foreground
-
-        return roi_mask    
-                
+            curr_slice[notplaces] = foreground   
+            return roi_mask         
     else:
                           
         for slc in xrange(roi_mask.shape[2]):
@@ -1569,7 +1587,137 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
               'mesg':mesg1}
 
     return {'':numpy.squeeze(data_after_fitting),
-            '_fit':result}         
+            '_fit':result}
+
+######################
+###
+###
+### Calculating Bolus Arrival Time (BAT)
+###
+###
+#####################           
+
+def bolus_arrival_time(scn_to_analyse=None,
+                       pdata_num = 0,
+                       bbox = None ):
+    
+    def first4D(a):  # Written by SAR to return the first non-zero entry in a 4D array in the 4th axis
+        di = numpy.zeros(a.shape[0:3])+numpy.Inf
+        for i, j, k, l in zip(*numpy.where(a>0)):
+            if l<di[i,j,k]:
+                di[i,j,k] = l
+        return di
+
+    def runningSum(x, N):
+        output = numpy.empty_like(x)
+        for i in xrange(x.shape[0]):
+            for j in xrange(x.shape[1]):
+                for k in xrange(x.shape[2]):
+                    output[i,j,k,:] = numpy.convolve(x[i,j,k,:],numpy.ones(N))[N-1:]
+        return output
+
+    import sarpy
+    import sarpy.fmoosvi.getters as getters
+    import sarpy.ImageProcessing.resample_onto
+    import copy
+    scan_object = sarpy.Scan(scn_to_analyse)
+    rawdata = scan_object.pdata[0].data
+
+    # Get time from Index
+    # This is moved up here now because I want to limit the size of the array used to determine BAT
+    # It takes far toooo long (and is wasteful) to process all 1200 time points, when you just need to see
+    # the first 50 or so
+    
+    reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )    
+    
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+
+    time_per_rep = numpy.round(numpy.divide(total_time,reps))
+
+    # First, get the injection point determined by averaging the image.
+    # Then below, only use the first inj_point*5 number of data points
+    # otherwise it takes forever to process
+    inj_point =  sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse) + 1
+
+    # Add a third spatial dimension if it's missing.
+    if numpy.size(rawdata.shape) == 3:
+
+        # add an empty dimension to make it 4D, this code appends the exta axis
+        data = sarpy.ImageProcessing.resample_onto.atleast_4d(rawdata.copy()) 
+
+        # Move the appended dimension to position 2 to keep data formats the same
+        data = data.reshape([data.shape[0], data.shape[1],
+                             data.shape[3], data.shape[2]])
+
+        #TODO: this is going to cause a problem one day when reps < 100
+        data = data[:,:,:,0:numpy.max([100,inj_point*5])]
+    else:
+        data = rawdata[:,:,:,0:numpy.max([100,inj_point*5])]
+
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+
+    # Deal with bounding boxes
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])   
+
+    if bbox.shape == 4:            
+
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+
+        # First tile for slice
+        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
+
+    sd = numpy.std(data[:,:,:,0:inj_point],axis=3)*bbox_mask
+    mean = numpy.mean(data[:,:,:,0:inj_point],axis=3)*bbox_mask
+
+    sd = numpy.repeat(sd,data.shape[-1]).reshape(data.shape)
+    mean = numpy.repeat(mean,data.shape[-1]).reshape(data.shape)
+
+    # BAT Code starts here
+
+    # Condition 1
+    cond1 = numpy.where(data >= (mean+3*sd),1,0)
+
+    # Condition 2
+    condaux = numpy.where(data >= mean+2*sd,1,0)
+    cond2 = numpy.where(runningSum(condaux,3)>=2,1,0) 
+
+    # Condition 3
+    condaux = numpy.where(data >= mean+sd,1,0)
+    cond3 = numpy.where(runningSum(condaux,5)>=4,1,0)
+
+    # Condition 4
+    condaux = numpy.where(data >= mean,1,0)
+    cond4 = numpy.where(runningSum(condaux,8)>=8,1,0)
+
+    # Condition 5 - super condition
+    allcond = cond1 + cond2 + cond3 + cond4
+    #cond = numpy.where(runningSum(allcond,3) >=3)
+    cond = numpy.where(runningSum(allcond,3) >=3,runningSum(allcond,3),0)
+
+    BAT = first4D(cond)
+
+    # Condition 6 - compare cond to inj_point
+    BAT = numpy.where(BAT > inj_point+5,numpy.Inf,BAT)
+    BAT = numpy.where(BAT > inj_point+5,numpy.Inf,BAT)
+    BAT = numpy.squeeze(numpy.where(BAT==0,numpy.Inf,BAT))
+   
+    return {'':time_per_rep*(BAT+1)}
 
 def checkSNR(scn_to_analyse=None,
              pdata_num = 0,
@@ -1896,7 +2044,8 @@ def bolus_arrival_time(scn_to_analyse=None,
 
 def h_threshold(data_matrix,
                 min_val = 0,
-                max_val = 100):
+                max_val = 100,
+                mask = False):
 
 
     # Set all points below min_val to be nan
@@ -1904,8 +2053,12 @@ def h_threshold(data_matrix,
 
     # Set all points above max_val to be nan
     data_matrix = numpy.where(data_matrix>max_val,numpy.nan,data_matrix)
-    
-    return data_matrix
+
+    if mask:
+        return numpy.where(numpy.isfinite(data_matrix),1,data_matrix)
+
+    else:
+        return data_matrix
 
 def h_make_binary_mask(data_matrix,
                        min_val = 0,
