@@ -10,23 +10,20 @@ gather all the relevant scans associated with the appropriate labels.
 Copyright: SARlab members, UBC, Vancouver, 2013
 """
 import argparse
-import ConfigParser
+import configparser
 import os
-import collections
-import json
 import matplotlib
 matplotlib.use('Agg',warn=False)# where did I come from !?
 import pylab
 import numpy
-import sarpy
-import sarpy.fmoosvi.getters
+#import sarpy
+#import sarpy.fmoosvi.getters
 import tempfile
 import scipy
 import copy
 import re
-import sarpy
-import sarpy.fmoosvi.analysis
-import sarpy.fmoosvi.colormaps as cmaps
+#import sarpy.fmoosvi.analysis
+#import sarpy.fmoosvi.colormaps as cmaps
 
 
 from matplotlib.backends.backend_pdf import PdfPages
@@ -46,8 +43,8 @@ def generate(**kwargs):
     args.test = kwargs.get('test', False) # default for dry run
 
     if args.conf_file:
-        print("loading config file %s" % args.conf_file)
-        config = ConfigParser.SafeConfigParser()
+        print(("loading config file %s" % args.conf_file))
+        config = configparser.SafeConfigParser()
         base_fname = os.path.join(os.path.expanduser('~'),
                                   'sdata',
                                   args.conf_file)
@@ -76,7 +73,9 @@ def generate(**kwargs):
     sepFiles = False
 
     import sarpy
-    reload(sarpy)
+ #   reload(sarpy) # this looks hacky. Is it?
+    # if we really need this: importlib.reload for Python 3.4 and above
+    # http://stackoverflow.com/questions/961162/reloading-module-giving-nameerror-name-reload-is-not-defined
     exp = sarpy.Experiment.from_masterlist(exp_name+'.config')        
 
     # for every patient we will create the same board
@@ -85,11 +84,11 @@ def generate(**kwargs):
             ref_scan_name = exp.patients[k][ref_lbl]
             ref_scn = sarpy.Scan(ref_scan_name)
         except(AttributeError,IOError,KeyError):
-            print('Ref Scan failed for {0},{1} \n \n'.format(k,ref_lbl))
+            print(('Ref Scan failed for {0},{1} \n \n'.format(k,ref_lbl)))
             continue
         try:
             ref_data = ref_scn.adata[config.get(args.ref_row,'adata')]
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             ref_data = ref_scn.pdata[0]
         ref_filename = tempfile.mktemp(suffix='.nii')
         ref_data.export2nii(ref_filename)
@@ -102,7 +101,7 @@ def generate(**kwargs):
         fig = pylab.figure(figsize=fig_size)
         fig.suptitle(k)
         G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
-        print('\n'+'-'*80+'\n'+title)
+        print(('\n'+'-'*80+'\n'+title))
     
         row_idx = 0
         for row in rows:
@@ -188,7 +187,7 @@ def generate(**kwargs):
                            horizontalalignment='center')
     
                         row_idx += 1
-                        print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
+                        print(('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key)))
                         continue
                         
                     # Set the image limits for adata
@@ -219,7 +218,7 @@ def generate(**kwargs):
                 resample_flag = row_conf.pop('resample', False) 
                 if resample_flag and config.getboolean(row,'resample'):
                     raise NotImplementedError('please fix resampling')
-                    print('resampling {0}\n{1}\n onto {2}'.format(scn,data,ref_data))
+                    print(('resampling {0}\n{1}\n onto {2}'.format(scn,data,ref_data)))
                 #src_filename = tempfile.mktemp(suffix='.nii')
                 #data.export2nii(src_filename)            
                 #xdata, xdata_sitk_image = sarpy.ImageProcessing.resample_onto.resample_onto(src_filename, ref_filename)
@@ -228,7 +227,7 @@ def generate(**kwargs):
                 #find out where the 0 1 etc end up.
                 #print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
     
-                for col_idx in xrange(min(n_cols, xdata_slices)):
+                for col_idx in range(min(n_cols, xdata_slices)):
                     fig.add_subplot(G[row_idx,col_idx])
                     # Get the bbox as an adata 
                     try: 
@@ -270,7 +269,7 @@ def generate(**kwargs):
                 
                 scn = sarpy.Scan(lbl_scan_name)
                 adata_key = row_conf.pop('adata', None)                
-                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
+                print(('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key)))
                 vtc_min = row_conf.pop('vtc_min',None)
                 vtc_max = row_conf.pop('vtc_max',None)
                 
@@ -280,7 +279,7 @@ def generate(**kwargs):
                     pylab.text(0.85,0.5,'Data not available',
                        horizontalalignment='center')     
                     row_idx += 1
-                    print('Something failed in the vtc, cant get adata for scan {0}'.format(scn))
+                    print(('Something failed in the vtc, cant get adata for scan {0}'.format(scn)))
                     continue
 
                 reps = scn.pdata[0].data.shape[-1]
@@ -292,7 +291,7 @@ def generate(**kwargs):
                     vtc_min = numpy.float(vtc_min)
                     vtc_max = numpy.float(vtc_max)
     
-                for col_idx in xrange(min(n_cols, xdata_slices)):
+                for col_idx in range(min(n_cols, xdata_slices)):
 
                     if xdata_slices ==1:
                         dat=scn.pdata[0].data[:,:,col_idx,:]
@@ -319,7 +318,7 @@ def generate(**kwargs):
                     
                     height = box[3] / (bbox[1]-bbox[0])
                    
-                    for i in xrange(bbox[0], bbox[1]):
+                    for i in range(bbox[0], bbox[1]):
                         tmpax = fig.add_axes([box[0], 
                                              box[1]+box[3]-(i-bbox[0]+1)*height, 
                                              box[2], height])
@@ -333,7 +332,7 @@ def generate(**kwargs):
     
                 scn = sarpy.Scan(lbl_scan_name)
                 adata_key = row_conf.pop('adata', None)
-                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
+                print(('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key)))
                 if adata_key is not None:
                     
                     try:
@@ -344,14 +343,14 @@ def generate(**kwargs):
                            horizontalalignment='center')
     
                         row_idx += 1                    
-                        print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
+                        print(('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key)))
                         continue                
                 else:
                     data = scn.pdata[0]
                     
                 xdata = data.data
     
-                for col_idx in xrange(min(n_cols, xdata.shape[0])):
+                for col_idx in range(min(n_cols, xdata.shape[0])):
                     fig.add_subplot(G[row_idx,col_idx])
                     pylab.plot(xdata[col_idx,0,:],xdata[col_idx,1,:])  
     
@@ -385,13 +384,13 @@ def generate(**kwargs):
                 scn = sarpy.Scan(lbl_scan_name)
                 adata_key = row_conf.pop('adata', None)
 
-                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
+                print(('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key)))
                 
                 if adata_key is not None:                
                     try:
                         data = scn.adata[adata_key]
                     except KeyError:
-                        print('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key))
+                        print(('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key)))
                         continue
                 else:
                     raise IOError('No text adata find')
@@ -405,7 +404,7 @@ def generate(**kwargs):
                                  verticalalignment='center',
                                  rotation='vertical')            
     
-                for col_idx in xrange(min(n_cols, xdata.shape[0])):
+                for col_idx in range(min(n_cols, xdata.shape[0])):
                     fig.add_subplot(G[row_idx,col_idx])
                     pylab.axis('off')
                     pylab.text(0.3,0.5,'{0}'.format(numpy.round(xdata[col_idx])))
@@ -423,9 +422,8 @@ def generate(**kwargs):
     testPDF.close()
 
     import time
-    now = time.strftime("%c")
     print('File is opened and ready to use')
-    print time.strftime("%c")
+    print(time.strftime("%c"))
 
     
 if __name__ == "__main__":

@@ -72,10 +72,10 @@ def initiate_logging(module, formatter=None,
         for hdlr in module.logger.handlers:
             if isinstance(hdlr, logging.NullHandler):
                 handlers_to_be_removed.append(hdlr)
-    except AttributeError, exc:
+    except AttributeError as exc:
         # TODO reformat output
-        print('Initiation of logging for module {0} failed'.
-                format(module))
+        print(('Initiation of logging for module {0} failed'.
+                format(module)))
         print('Presumably logging has not been prepared.')
         raise AttributeError(exc)    
     for hdlr in handlers_to_be_removed[:]:

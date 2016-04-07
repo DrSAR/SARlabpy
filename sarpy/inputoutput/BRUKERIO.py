@@ -9,15 +9,14 @@ Handy functions to read BRUKER data and header files.
 The logging is set up so that if the library user does nothing,
 all will be silent. Details in :py:mod: SARlogger
 """
-from __future__ import division
+
 import logging
 logger=logging.getLogger('sarpy.io.BRUKERIO')
 
 import numpy
 import os.path
 import re
-from types import StringType, FileType, UnicodeType
-from itertools import tee, izip
+from itertools import tee
 
 def pairwise(iterable):
     """
@@ -28,7 +27,7 @@ def pairwise(iterable):
     """
     a, b = tee(iterable)
     next(b, None)
-    return izip(a, b)
+    return list(zip(a, b))
 
 def convert_int_float_string(param):
     try:
@@ -152,7 +151,7 @@ def readJCAMP(filename):
             # the LDR
             while not re.match(r'[#\$]{2}', next_line):
                 line=line+' '+ next_line
-                newline, next_line = JCAMPdata_iterator.next()
+                newline, next_line = next(JCAMPdata_iterator)
             # we should keep information about array dimensions in a
             # separate meta storage list
             line = [line]
@@ -175,7 +174,7 @@ def readJCAMP(filename):
     # some parameter values contain = as a sign...
     LDRdict = dict([LDR.split("=", 1) for LDR in LDRlist])
 
-    for k, v in LDRdict.iteritems():
+    for k, v in LDRdict.items():
         # is it an array or struct? (signified by the size indicator)
         if not re.match(r'\(', v):
             # we have an int/float/simple string
@@ -279,7 +278,7 @@ def readfid(fptr=None,
     """
     Returns BRUKER's fid file as a properly dimensioned & rearranged array.
 
-    :param FileType,StringType fptr:
+    :param FileType,str fptr:
         filename of fid file or filehandle to open fid file
     :param dict acqp: dictionary of acqp parameters
         (default None: parameter file will be loaded)
@@ -450,10 +449,12 @@ def readfid(fptr=None,
         >>> fid['data'].shape # interrupted FLASH DCE (NR=7 from formerly 25)
         (133, 105, 5, 7)
     """
-    if isinstance(fptr, FileType):
+    if hasattr(fptr, 'name'):
         fidname = fptr.name
-    if isinstance(fptr, (StringType,UnicodeType)):
+    elif isinstance(fptr, (str)):
         fidname = fptr
+    else:
+        raise TypeError('Fid file or filename inadequately defined')
     dirname = os.path.abspath(os.path.dirname(fidname))
 
     # use parameter files provided by caller or load if needed
@@ -502,7 +503,7 @@ def readfid(fptr=None,
         obj_blocksize = 1024 * ((true_obj_blocksize-1) // 1024 + 1)
         ACQ_size[0] = obj_blocksize//(2*int(datatype[1]))
     else:
-        raise IOError, 'Unexpected value for GO_block_size in acqp'
+        raise IOError('Unexpected value for GO_block_size in acqp')
 
     if acqp['ACQ_dim'] == 2:
         # this is 2D
@@ -546,7 +547,7 @@ def readfid(fptr=None,
                     'trying PVM_EncSteps2 from method')
             try:
                 PVM_EncSteps1 = method['PVM_EncSteps2']
-                print('='*80+'\nsave by PVM_EncSteps2')
+                print(('='*80+'\nsave by PVM_EncSteps2'))
                 # ensure that it runs from 0 to max
                 Enc2Steps = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
             except KeyError:
@@ -725,7 +726,7 @@ def readfidspectro(fptr=None,
 
     if isinstance(fptr, FileType):
         fidname = fptr.name
-    if isinstance(fptr, StringType):
+    if isinstance(fptr, str):
         fidname = fptr
     dirname = os.path.abspath(os.path.dirname(fidname))
     acqp = acqp or readJCAMP(os.path.join(dirname,'acqp'))
@@ -937,7 +938,7 @@ def read2dseq(scandirname,
     #  (b) account for the row-major preference in python and for column
     #      major in paravision -> this equates to an in-plane transpose
     #      (swapping x for y)
-    swp_axis = range(len(matrix_size)-1)
+    swp_axis = list(range(len(matrix_size)-1))
     swp_axis.reverse()
     swp_axis.insert(1,len(matrix_size)-1)
     data = data.transpose(swp_axis)
@@ -972,7 +973,7 @@ def dict2string(d):
                         NAME : 'random name'
     '''
     strlist = []
-    for k, v in d.iteritems():
+    for k, v in d.items():
         strlist.append('{0!s:>20} : {1!s}'.format(k, repr(v)))
     return '\n'.join(strlist)
 
@@ -1147,7 +1148,7 @@ def readRFshape(filename):
 ##XYPOINTS= (XY..XY)
 
     RFshape = {}
-    for tag in RFstringdict.keys():
+    for tag in list(RFstringdict.keys()):
         try:
             RFshape[tag] = float(RFstringdict[tag])
         except ValueError:

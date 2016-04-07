@@ -6,13 +6,13 @@ Class definitions for the analysed data structures
 import os, errno
 import shutil
 import glob
-import cPickle
+import pickle
 import zlib
 import json
 import re
-import BRUKER_classes
-from lazy_property import lazy_property
-from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
+from . import BRUKER_classes
+from .lazy_property import lazy_property
+from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
 import nibabel
 from datetime import datetime
 
@@ -46,7 +46,7 @@ def silentremove(filename):
     '''
     try:
         os.remove(filename)
-    except OSError, e: # this would be "except OSError as e:" in python 3.x
+    except OSError as e: # this would be "except OSError as e:" in python 3.x
         if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
             raise # re-raise exception if a different error occured
 
@@ -136,10 +136,10 @@ class ADataDict(collections.MutableMapping):
         # will be used to populate the nifti header.
         if value.meta['compressed']:
             with open(fileroot+'.zippickle', 'wb') as f:
-                f.write(zlib.compress(cPickle.dumps(value.data)))
+                f.write(zlib.compress(pickle.dumps(value.data)))
         else:
             with open(fileroot+'.pickle', 'w') as f:
-                cPickle.dump(value.data, f)
+                pickle.dump(value.data, f)
 
         with open(fileroot+'.json','w') as paramfile:
             json.dump(value.meta, paramfile, indent=4)
@@ -150,7 +150,7 @@ class ADataDict(collections.MutableMapping):
 
 
     def __delitem__(self, key):
-        print('adata {0} deleted in {1}'.format(key, self[key].parent.visu_pars.VisuSubjectId))
+        print(('adata {0} deleted in {1}'.format(key, self[key].parent.visu_pars.VisuSubjectId)))
         shutil.rmtree(os.path.join(adataroot, 
                                    self.store[key].meta['dirname']))
         del self.store[key]
@@ -231,7 +231,7 @@ class AData(object):
                 pickledata = zlib.decompress(f.read())
             else:
                 pickledata = f.read()
-        data = cPickle.loads(pickledata)
+        data = pickle.loads(pickledata)
                     
         self.__yet_loaded = True
         return data
@@ -351,7 +351,7 @@ class AData(object):
             >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2, force=True)
             >>> scn.adata['times2'].export2nii('/tmp/PhantomOrientation-times2.nii.gz')
         '''
-        from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
+        from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
         import copy
         import sarpy.fmoosvi.getters
         import numpy

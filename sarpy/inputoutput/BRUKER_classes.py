@@ -12,11 +12,11 @@ import collections
 import configobj
 import pandas
 
-import BRUKERIO
-import AData_classes
-from lazy_property import lazy_property
+from . import BRUKERIO
+from . import AData_classes
+from .lazy_property import lazy_property
 
-import JCAMP_comparison
+from . import JCAMP_comparison
 
 ## From http://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 import logging
@@ -68,8 +68,8 @@ def find_all_patients_in_masterlists():
         for config_file_name in config_file_names:
             fname = os.path.join(masterlist_root, config_file_name)
             conf = configobj.ConfigObj(fname)
-            for k in conf.keys():
-                if k <> 'General':
+            for k in list(conf.keys()):
+                if k != 'General':
                     assert masterlist_lookup.get(k) is None, \
                         'Non-unique section name {0} in masterlist {1} (previously in {2})'.format(k, fname, masterlist_lookup[k])
                     masterlist_lookup[k]=fname
@@ -184,7 +184,7 @@ class PDATA_file(object):
             >>> scn.pdata[0].export2nii(fname)
 
         '''
-        from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
+        from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
         import sarpy.fmoosvi.getters
         import numpy
         header = visu_pars_2_Nifti1Header(self.visu_pars)
@@ -497,7 +497,7 @@ class Scan(object):
         '''
         delete adata set
         '''
-        for k in self.adata.keys():
+        for k in list(self.adata.keys()):
             if re.search(key+'$', k) is not None:
                 if self.adata.pop(k, None) is not None:
                     logger.info('adata %s for %s' %(key, self.shortdirname))
@@ -523,7 +523,7 @@ class Scan(object):
                 attr_study = study_dic.get(attr)
                 scanlabels_dic = study_dic.get('scanlabels')
                 if scanlabels_dic is not None:
-                    for k,v in scanlabels_dic.iteritems():
+                    for k,v in scanlabels_dic.items():
                         if v == self.scannumber:
                             scan_dic = study_dic.get(k)
                     if scan_dic is not None:
@@ -681,8 +681,8 @@ class Study(object):
                 if re.match(protocol_name, s.acqp.ACQ_protocol_name):
                     found_scans.append(s)
             except AttributeError:
-                print('Warning: Scan in dir '+
-                      '%s has no acqp attribute' %str(s.shortdirname))
+                print(('Warning: Scan in dir '+
+                      '%s has no acqp attribute' %str(s.shortdirname)))
         return(found_scans)
 
     def scan_finder(self, **kwargs):
@@ -702,7 +702,7 @@ class Study(object):
         '''
         chosen_comparison = {}
         # find comparison type (regex, array comparison or plain vanilla '==')
-        for key in kwargs.keys():
+        for key in list(kwargs.keys()):
                 # remember, the keys here are frozensets
             possible_comp = [k for k in
                              JCAMP_comparison.dictionary
@@ -712,10 +712,10 @@ class Study(object):
         for scn in self.scans:
             if (all(k in scn.acqp.__dict__ and
                     chosen_comparison[k](v, scn.acqp.__dict__[k])
-                                         for k, v in kwargs.items()) or
+                                         for k, v in list(kwargs.items())) or
                 all(k in scn.method.__dict__ and
                     chosen_comparison[k](v, scn.method.__dict__[k])
-                                         for k, v in kwargs.items())):
+                                         for k, v in list(kwargs.items()))):
                 yield scn
 
     def find_adata(self):
@@ -724,7 +724,7 @@ class Study(object):
         '''
         adatas = set()
         for scn in self.scans:
-            for k in scn.adata.keys():
+            for k in list(scn.adata.keys()):
                 adatas.add(k)
         return adatas
 
@@ -740,7 +740,7 @@ class Study(object):
             ad_dict[k] = []
             
         for scn in self.scans:
-            for ke in scn.adata.keys():
+            for ke in list(scn.adata.keys()):
                 ad_dict[ke].append(scn.shortdirname)
 
         return ad_dict
@@ -897,7 +897,7 @@ class StudyCollection(object):
         else:
             ad_dict_flatten = {}
 
-            for k,v in ad_dict.iteritems():
+            for k,v in ad_dict.items():
                 ad_dict_flatten[k] = [item for sublist in ad_dict[k] for item in sublist]
 
             return ad_dict_flatten
@@ -1001,8 +1001,8 @@ class Experiment(StudyCollection):
         bare_experiment.labels = sarpy.helpers.AttrDict()
         if masterlistname is not None:
             conf = configobj.ConfigObj(os.path.join(masterlist_root, masterlistname))
-            for k in conf.keys():
-                if k <> 'General':
+            for k in list(conf.keys()):
+                if k != 'General':
                     bare_experiment.patients[k] = collections.OrderedDict()
                     for stdy_str in conf[k]:
                         short_stdy_str = stdy_str.split()[1]
@@ -1066,7 +1066,7 @@ class Experiment(StudyCollection):
                 if stdy.masterlist_filename is not None:
                     new_study_list.append(stdy)
                 else:
-                    print('WARNING: removing study {0} from Experiment'.format(stdy.shortdirname))
+                    print(('WARNING: removing study {0} from Experiment'.format(stdy.shortdirname)))
             self.studies = new_study_list 
         if self.studies:
             default_masterlistname = self.studies[0].masterlist_filename
@@ -1107,10 +1107,10 @@ class Experiment(StudyCollection):
         Patients. The naming of those patients has to follow *exactly* the naming of BRUKER
         patients. Inside those patient sections there may be subsections title "study xxx"
         where xxx is the BRUKER three-letter study abbreviation.'''
-        pat_iterator = ((k,v) for k,v in self._masterlist.iteritems() if k<>'General')
+        pat_iterator = ((k,v) for k,v in self._masterlist.items() if k!='General')
         df = pandas.DataFrame.from_items(pat_iterator)
         #identify all indices that don't start with "study "
-        indexarr = map(lambda x: re.match('study ',x) is None, df.index)
+        indexarr = [re.match('study ',x) is None for x in df.index]
         return df[indexarr]
     
     @lazy_property
@@ -1123,12 +1123,12 @@ class Experiment(StudyCollection):
         the doc string to masterlist_df.
         '''
         temp_dict = {}
-        for k,v in self._masterlist.iteritems():
-            for ki,vi in v.iteritems():
+        for k,v in self._masterlist.items():
+            for ki,vi in v.items():
                 if re.match('study ', ki):                    
                     temp_dict[re.sub('study ', k+'.', ki)]=vi
                     
-        df = pandas.DataFrame.from_items(temp_dict.iteritems())
+        df = pandas.DataFrame.from_items(iter(temp_dict.items()))
         return df
 
 

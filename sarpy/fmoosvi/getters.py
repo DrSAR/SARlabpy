@@ -28,7 +28,7 @@ def get_roi_weights(roi):
 
     # Multi slice ROIs
     else:
-        for slice in xrange(roi.shape[-1]):    
+        for slice in range(roi.shape[-1]):    
             weights[slice] = numpy.divide(numpy.nansum(roi[:,:,slice].flatten()),ROIpx)
             weights[numpy.isnan(weights)] = 0
 
@@ -105,7 +105,7 @@ def get_patients_from_experiment(Experiment_name, verbose = False,namesOnly=Fals
         Patients.append(curr_patient)        
         
         if verbose:
-            print('Patient {0} has {1} sessions.'.format(subject,len(curr_patient.studies)))
+            print(('Patient {0} has {1} sessions.'.format(subject,len(curr_patient.studies))))
 
     if namesOnly:
         return [a.patient_id for a in Patients]
@@ -154,11 +154,11 @@ def get_goodness_map(data, fit_dict):
     
     # TODO: gahhh can't believe I have to use nested loops here. Fix it!
     
-    for x in xrange(data.shape[0]):
+    for x in range(data.shape[0]):
         
-        for y in xrange(data.shape[1]):
+        for y in range(data.shape[1]):
             
-            for z in xrange(data.shape[2]):
+            for z in range(data.shape[2]):
                 
                 goodness_map[x,y,z] = fit_dict['goodness']
     
@@ -204,7 +204,7 @@ def get_enhancement_curve(scan_object_name, adata_mask=None, pdata_num = 0):
         new_scan_object.pdata[pdata_num].data = norm_data
         data_scan = new_scan_object.pdata[pdata_num]
         
-        print data_scan
+        print(data_scan)
         ## END SKETCHY BIT
         
         roi_image = sarpy.ImageProcessing.resample_onto.resample_onto_pdata(adata_mask,data_scan)   
@@ -245,7 +245,7 @@ def convert_bbox(scan_object_name, bbox, exporttype=None):
     bbox_px = (numpy.array(bbox).reshape(2,2).T*shape[0:2]).T.flatten()
     
     #TODO: this will need to be updated for python 3.x+
-    bbox_px = map(int,bbox_px) # Casts all elements to ints
+    bbox_px = list(map(int,bbox_px)) # Casts all elements to ints
     
     if exporttype is None:
         return numpy.array(bbox_px)
