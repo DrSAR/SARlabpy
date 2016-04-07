@@ -73,13 +73,12 @@ def generate(**kwargs):
 
     sepFiles = False
 
-    import sarpy.io.masterlist_parse
     import sarpy
     reload(sarpy)
     exp = sarpy.Experiment.from_masterlist(exp_name+'.config')        
 
     # for every patient we will create the same board
-    for k in exp.patients.keys():
+    for k in sorted(exp.patients.keys()):
         try:
             ref_scan_name = exp.patients[k][ref_lbl]
             ref_scn = sarpy.Scan(ref_scan_name)
@@ -212,7 +211,10 @@ def generate(**kwargs):
                 for col_idx in xrange(min(n_cols, xdata_slices)):
                     fig.add_subplot(G[row_idx,col_idx])
                     # Get the bbox as an adata 
-                    bbox = scn.adata['bbox'].data
+                    try: 
+                        bbox = scn.adata['bbox'].data
+                    except KeyError:
+                        bbox = [0,scn.pdata[0].data.shape[0],0,scn.pdata[0].data.shape[1]]
 
                     if xdata_slices >1:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],

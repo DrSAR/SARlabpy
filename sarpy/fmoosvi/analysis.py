@@ -81,6 +81,7 @@ def h_calculate_AUC(scn_to_analyse=None,
     # Determine point of injection by averaging one slice in the entire image
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
     
+    # WHY IS THIS HERE!? This makes no sense!
     if adata_label is None:
         # Now calculate the Normalized Intesity voxel by voxel
         norm_data = h_normalize_dce(scn_to_analyse)
@@ -115,7 +116,7 @@ def h_calculate_AUC(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
 
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -172,7 +173,7 @@ def h_normalize_dce(scn_to_analyse=None, pdata_num = 0):
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
 
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -260,21 +261,22 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
 
     import sarpy
     import sarpy.ImageProcessing.resample_onto
-    from collections import Counter  
+    from collections import Counter    
     import copy
+    import sarpy.helpers
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
     # Method params    
-    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
-          
+    num_slices = sarpy.fmoosvi.getters.get_num_slices(scn_to_analyse,pdata_num)
+
      # Data
-    rawdata = scan_object.pdata[pdata_num].data  
+    rawdata = scan_object.pdata[pdata_num].data
 
     if numpy.size(rawdata.shape) == 3:
 
         # add an empty dimension to make it 4D, this code appends the exta axis
-        data = sarpy.ImageProcessing.resample_onto.atleast_4d(rawdata.copy()) 
+        data = sarpy.ImageProcessing.resample_onto.atleast_4d(rawdata.copy())
 
         # Move the appended dimension to position 2 to keep data formats the same
         data = data.reshape([data.shape[0], data.shape[1],
@@ -282,7 +284,7 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
     else:
         data = rawdata
 
-    try:      
+    try:
         # Pool all the data together
 
         dcelimit = 150
@@ -290,37 +292,38 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
         if dcelimit > rawdata.shape[-1]:
             dcelimit = rawdata.shape[-1]
 
-        img_mean = numpy.sum(numpy.sum(data[:,:,:,0:dcelimit],axis=0),axis=0)
+        global_sum = numpy.sum(numpy.sum(data[:,:,:,0:dcelimit],axis=0),axis=0)
 
     except IndexError:
         # If it's only one slice, maybe this will still work
-        img_mean = data[:,:,:].sum(0).sum(0)
-        
+        global_sum = data[:,:,:].sum(0).sum(0)
+
     injection_point = []
 
     for slc in xrange(num_slices):
-        
+
         try:
-            diff_slice = numpy.diff(img_mean[slc,:])
+            filtered_sum = smooth_SG(global_sum[slc,:],11,3)
         except IndexError:
-            diff_slice = numpy.diff(img_mean[:])
+            filtered_sum = smooth_SG(global_sum,11,3)
+
+        diff_slice = numpy.diff(filtered_sum)
         std_slice =  numpy.std(diff_slice)
-        
-        try: 
+
+        try:
             injection_point.append(next(i for i,v in enumerate(diff_slice) if v > 2*std_slice))
         except StopIteration:
             print "Could not find the injection point, possibly okay" + str(slc)
             injection_point.append(0)
-            
+
     # look through the list of elements in injection point and report the most common (mode)
     injection_point_counter = Counter(injection_point)
-    injection_point = injection_point_counter.most_common(1)
-
+    final_injection_point = injection_point_counter.most_common(1)
 
     if scn_to_analyse == 'SARgalbpiB.PG1/6':
-        injection_point[0] = (10,0)
+        final_injection_point[0] = (10,0)
 
-    return injection_point[0][0]+1
+    return final_injection_point[0][0]+1
 
 def h_calculate_AUGC(scn_to_analyse=None, 
                      adata_label=None,
@@ -398,7 +401,7 @@ def h_calculate_AUGC(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
           
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -458,7 +461,7 @@ def h_conc_from_signal(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
 
-    if bbox.shape == 4:            
+    if bbox.shape == (4,):            
     
         bbox_mask = numpy.empty([x_size,y_size])
         bbox_mask[:] = numpy.nan        
@@ -1194,6 +1197,22 @@ def h_generate_VTC(scn_to_analyse=None,
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
+    # Hack for the moment
+
+    ndata = scan_object.pdata[0].data
+
+    #Get useful params        
+    x_size = ndata.shape[0]
+    y_size = ndata.shape[1]
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+    reps = ndata.shape[-1]
+
+    # Deal with bounding boxes
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+
     # Specify VTC data
 
     if vtc_type is None:
@@ -1202,29 +1221,40 @@ def h_generate_VTC(scn_to_analyse=None,
         ndata = numpy.squeeze(sarpy.Scan(scn_to_analyse).adata['gd_KM'].data)
     elif vtc_type =='CEST':
 
-        dat = sarpy.Scan(scn_to_analyse).pdata[0].data
-        sorted_data = numpy.empty_like(dat)        
-        offsets = sorted(scan_object.method.KD_MagTransOffsetList)
-        offset_index = [scan_object.method.KD_MagTransOffsetList.index(i) for i in offsets]
+        import cest.analysis as cest
+        reload(cest)
 
-        # Sort the offset frequencies from smallest to largest so the spectrum 
-        # is put together properly.
-        
-        for i,offsets in enumerate(offset_index):   
-            sorted_data[:,:,i] = dat[:,:,offsets]
+        # Get the ndata to figure out the shape of the array (since some data gets thrown out)
+        # make it nan
+        throwaway, ndata = cest.cest_spectrum(scn_to_analyse,
+                                    bbox[0],bbox[2],
+                                    shift_water_peak = True,
+                                    normalize=True,
+                                    normalize_to_ppm = 200,
+                                    ppm_limit_min = -5,
+                                    ppm_limit_max = 5,
+                                    exclude_ppm = 66.6,
+                                    pdata_num = 0)
 
-        ndata = sorted_data
-    #Get useful params        
-    x_size = ndata.shape[0]
-    y_size = ndata.shape[1]
-    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
-    reps = ndata.shape[-1]
-    
-    # Deal with bounding boxes
-    try:
-        bbox = scan_object.adata['bbox'].data
-    except KeyError:       
-        bbox = numpy.array([0,x_size-1,0,y_size-1])
+        reps = len(ndata)
+
+        ndata = numpy.empty(shape=[x_size,y_size,reps]) + numpy.nan
+
+        for xx in xrange(bbox[0],bbox[1]):
+            for yy in xrange(bbox[2],bbox[3]):
+
+                xvals, res = cest.cest_spectrum(scn_to_analyse,
+                                                            xx,yy,
+                                                            shift_water_peak = True,
+                                                            normalize=True,
+                                                            normalize_to_ppm = 200,
+                                                            ppm_limit_min = -5,
+                                                            ppm_limit_max = 5,
+                                                            exclude_ppm = 66.6,
+                                                            pdata_num = 0)
+
+                # Flip the x-axis to deal with stupid spectroscopy convention of + then -
+                ndata[xx,yy,:] = res[::-1]
 
     if roi_label is None:
         mask = numpy.squeeze(numpy.empty([x_size,y_size,num_slices,reps]) + numpy.nan)
@@ -1264,7 +1294,8 @@ def h_generate_VTC(scn_to_analyse=None,
         # Incomprehensible list comprehenshion
         # Sets the last point of each enhancement curve to numpy.nan 
         tmp = ndata.flatten()
-        tmp[::reps] = numpy.nan               
+        tmp[::reps] = numpy.nan   
+
         nrdata = tmp.reshape([x_size,y_size*reps])
     return {'':nrdata}
 
@@ -1538,137 +1569,7 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
               'mesg':mesg1}
 
     return {'':numpy.squeeze(data_after_fitting),
-            '_fit':result}
-
-######################
-###
-###
-### Calculating Bolus Arrival Time (BAT)
-###
-###
-#####################           
-
-def bolus_arrival_time(scn_to_analyse=None,
-                       pdata_num = 0,
-                       bbox = None ):
-    
-    def first4D(a):  # Written by SAR to return the first non-zero entry in a 4D array in the 4th axis
-        di = numpy.zeros(a.shape[0:3])+numpy.Inf
-        for i, j, k, l in zip(*numpy.where(a>0)):
-            if l<di[i,j,k]:
-                di[i,j,k] = l
-        return di
-
-    def runningSum(x, N):
-        output = numpy.empty_like(x)
-        for i in xrange(x.shape[0]):
-            for j in xrange(x.shape[1]):
-                for k in xrange(x.shape[2]):
-                    output[i,j,k,:] = numpy.convolve(x[i,j,k,:],numpy.ones(N))[N-1:]
-        return output
-
-    import sarpy
-    import sarpy.fmoosvi.getters as getters
-    import sarpy.ImageProcessing.resample_onto
-    import copy
-    scan_object = sarpy.Scan(scn_to_analyse)
-    rawdata = scan_object.pdata[0].data
-
-    # Get time from Index
-    # This is moved up here now because I want to limit the size of the array used to determine BAT
-    # It takes far toooo long (and is wasteful) to process all 1200 time points, when you just need to see
-    # the first 50 or so
-    
-    reps =  scan_object.method.PVM_NRepetitions
-    
-    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
-        reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )    
-    
-    # there are problems with using phase encodes for certain cases (maybe 3D)
-    # so now I have to use the tuid time
-    total_time = scan_object.method.PVM_ScanTimeStr
-    format = "%Hh%Mm%Ss%fms"
-    t=datetime.datetime.strptime(total_time,format)
-    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
-
-    time_per_rep = numpy.round(numpy.divide(total_time,reps))
-
-    # First, get the injection point determined by averaging the image.
-    # Then below, only use the first inj_point*5 number of data points
-    # otherwise it takes forever to process
-    inj_point =  sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse) + 1
-
-    # Add a third spatial dimension if it's missing.
-    if numpy.size(rawdata.shape) == 3:
-
-        # add an empty dimension to make it 4D, this code appends the exta axis
-        data = sarpy.ImageProcessing.resample_onto.atleast_4d(rawdata.copy()) 
-
-        # Move the appended dimension to position 2 to keep data formats the same
-        data = data.reshape([data.shape[0], data.shape[1],
-                             data.shape[3], data.shape[2]])
-
-        #TODO: this is going to cause a problem one day when reps < 100
-        data = data[:,:,:,0:numpy.max([100,inj_point*5])]
-    else:
-        data = rawdata[:,:,:,0:numpy.max([100,inj_point*5])]
-
-    x_size = data.shape[0]
-    y_size = data.shape[1]
-    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
-
-    # Deal with bounding boxes
-    try:
-        bbox = scan_object.adata['bbox'].data
-    except KeyError:       
-        bbox = numpy.array([0,x_size-1,0,y_size-1])   
-
-    if bbox.shape == 4:            
-
-        bbox_mask = numpy.empty([x_size,y_size])
-        bbox_mask[:] = numpy.nan        
-        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
-
-        # First tile for slice
-        bbox_mask = numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices)
-
-    sd = numpy.std(data[:,:,:,0:inj_point],axis=3)*bbox_mask
-    mean = numpy.mean(data[:,:,:,0:inj_point],axis=3)*bbox_mask
-
-    sd = numpy.repeat(sd,data.shape[-1]).reshape(data.shape)
-    mean = numpy.repeat(mean,data.shape[-1]).reshape(data.shape)
-
-    # BAT Code starts here
-
-    # Condition 1
-    cond1 = numpy.where(data >= (mean+3*sd),1,0)
-
-    # Condition 2
-    condaux = numpy.where(data >= mean+2*sd,1,0)
-    cond2 = numpy.where(runningSum(condaux,3)>=2,1,0) 
-
-    # Condition 3
-    condaux = numpy.where(data >= mean+sd,1,0)
-    cond3 = numpy.where(runningSum(condaux,5)>=4,1,0)
-
-    # Condition 4
-    condaux = numpy.where(data >= mean,1,0)
-    cond4 = numpy.where(runningSum(condaux,8)>=8,1,0)
-
-    # Condition 5 - super condition
-    allcond = cond1 + cond2 + cond3 + cond4
-    #cond = numpy.where(runningSum(allcond,3) >=3)
-    cond = numpy.where(runningSum(allcond,3) >=3,runningSum(allcond,3),0)
-
-    BAT = first4D(cond)
-
-    # Condition 6 - compare cond to inj_point
-    BAT = numpy.where(BAT > inj_point+5,numpy.Inf,BAT)
-    BAT = numpy.where(BAT > inj_point+5,numpy.Inf,BAT)
-    BAT = numpy.squeeze(numpy.where(BAT==0,numpy.Inf,BAT))
-   
-    return {'':time_per_rep*(BAT+1)}
+            '_fit':result}         
 
 def checkSNR(scn_to_analyse=None,
              pdata_num = 0,
@@ -1754,7 +1655,8 @@ def MMCA_model_fit(timecourse, start_fit=0, dt=1):
 def h_fit_ec(scn_to_analyse=None,
             roi_label=None,
             adata_label=None,
-            pdata_num = 0, 
+            pdata_num = 0,
+            bbox=None,
             **kwargs):
     '''Fits a linear model to a time course starting some way through the injection.
     Ostensibly, the jump from baseline to the data just after injection is related to 
@@ -1807,10 +1709,11 @@ def h_fit_ec(scn_to_analyse=None,
 
     print inj_point
     # Deal with bounding boxes
-    if bbox is None:        
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:    
         bbox = numpy.array([0,x_size,0,y_size])
-    else:      
-        bbox = bbox               
+        
 
     # Now calculate the actual Blood Volume & Leakage Param
     bloodvolume_data = numpy.squeeze(numpy.empty([x_size,y_size,num_slices])+numpy.nan)
@@ -1836,3 +1739,208 @@ def h_fit_ec(scn_to_analyse=None,
 
     return {'bloodvolume':bloodvolume_data, 
             'leakage': leakage_data}
+
+######################
+###
+###
+### Calculating Bolus Arrival Time (BAT)
+###
+###
+#####################  
+
+def bolus_arrival_time(scn_to_analyse=None,
+                       pdata_num = 0,
+                       bbox = None,
+                       verbose=False,
+                       **kwargs):
+    
+    def runningSum(x, N):
+        output = numpy.empty_like(x)
+        
+        if len(x.shape)>3: #Multi Slice
+            for i in xrange(x.shape[0]):
+                for j in xrange(x.shape[1]):
+                    for k in xrange(x.shape[2]):
+                        output[i,j,k,:] = numpy.convolve(x[i,j,k,:],numpy.ones(N))[N-1:]
+        elif len(x.shape) ==3: #Single Slice
+            for i in xrange(x.shape[0]):
+                for j in xrange(x.shape[1]):
+                        output[i,j,:] = numpy.convolve(x[i,j,:],numpy.ones(N))[N-1:]            
+            
+        return output
+
+    def first4D(a):  # Written by SAR to return the first non-zero entry in a 4D array in the 4th axis
+        
+        if len(a.shape)>3:
+            di = numpy.zeros(a.shape[0:3])+numpy.Inf
+            for i, j, k, l in zip(*numpy.where(a>0)):
+                if l<di[i,j,k]:
+                    di[i,j,k] = l
+                    
+        elif len(a.shape)==3:
+            
+            di = numpy.zeros(a.shape[0:2])+numpy.Inf
+            for i, j, l in zip(*numpy.where(a>0)):
+                if l<di[i,j]:
+                    di[i,j] = l            
+        return di
+
+    import sarpy
+    import sarpy.fmoosvi.getters as getters
+    import datetime
+    
+    ## Get the data and various sizes
+    
+    scan_object = sarpy.Scan(scn_to_analyse)
+    num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)
+    data = scan_object.pdata[0].data
+    x_size = data.shape[0]
+    y_size = data.shape[1]
+    
+    ## Deal with bounding boxes
+    if bbox is None:        
+        bbox = numpy.array([0,x_size-1,0,y_size-1])    
+    else:      
+        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+
+    if bbox.shape == (4,):            
+
+        bbox_mask = numpy.empty([x_size,y_size])
+        bbox_mask[:] = numpy.nan        
+        bbox_mask[bbox[0]:bbox[1],bbox[2]:bbox[3]] = 1
+
+        # First tile for slice
+        bbox_mask = numpy.squeeze(numpy.tile(bbox_mask.reshape(x_size,y_size,1),num_slices))
+        
+    ############################################################   
+    #
+    # Begin BAT Code here
+    #
+    ############################################################
+    
+    ## Determine the injection point using Firas' function
+    # This averages and flattens the entire DCE-MRI dataset to a single 
+    # Time course and determines the point of injection in a 
+    # very simple way (using the largest change)
+    
+    #inj_point =  sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse) + 1
+    inj_point =  h_inj_point(scn_to_analyse) + 1
+
+    # Check for number of slices; this could be made more efficient, 
+    # there is a lot of repeated code here
+    
+    # only consider means and std for data at baseline but exclude
+    # 1st point (that one is always wonky (TM))
+    if num_slices >1:
+        sd = numpy.std(data[:,:,:,1:inj_point],axis=-1)*bbox_mask
+        mean = numpy.mean(data[:,:,:,1:inj_point],axis=-1)*bbox_mask
+        
+    elif num_slices ==1:
+        sd = numpy.std(data[:,:,1:inj_point],axis=-1)*bbox_mask
+        mean = numpy.mean(data[:,:,1:inj_point],axis=-1)*bbox_mask        
+        
+    ## Compute the SD and Mean to be used for Analysis
+    sd = numpy.repeat(sd,data.shape[-1]).reshape(data.shape)
+    mean = numpy.repeat(mean,data.shape[-1]).reshape(data.shape)
+    
+    ## Setting Conditions
+    cond1 = numpy.where(data >= (mean+3*sd),1,0)
+
+    # Condition 2
+    condaux = numpy.where(data >= mean+2*sd,1,0)
+    cond2 = numpy.where(runningSum(condaux,3)>=2,1,0) 
+
+    # Condition 3
+    condaux = numpy.where(data >= mean+sd,1,0)
+    cond3 = numpy.where(runningSum(condaux,5)>=4,1,0)
+
+    # Condition 4
+    condaux = numpy.where(data >= mean,1,0)
+    cond4 = numpy.where(runningSum(condaux,8)>=8,1,0)
+
+    # Condition 5 - super condition
+    allcond = cond1 + cond2 + cond3 + cond4
+    #cond = numpy.where(runningSum(allcond,3) >=3)
+    cond = numpy.where(runningSum(allcond,3) >=3,runningSum(allcond,3),0)
+
+    # Find the first finite entry in the array
+    BAT = first4D(cond)
+
+    # Condition 6 - compare cond to inj_point 
+    # (throws away if it's more than 10 points away from inj_point)
+    #BAT = numpy.where(BAT > inj_point+30,numpy.Inf,BAT)
+    BAT = numpy.where(BAT==0,numpy.Inf,BAT)
+    
+    # Switch from Index to a time in seconds
+    
+    reps =  scan_object.method.PVM_NRepetitions
+    
+    if reps != scan_object.pdata[pdata_num].data.shape[-1]:
+        reps = scan_object.pdata[pdata_num].data.shape[-1]
+        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )    
+    
+    # there are problems with using phase encodes for certain cases (maybe 3D)
+    # so now I have to use the tuid time
+    total_time = scan_object.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"                                            
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+
+    time_per_rep = numpy.divide(total_time,reps)
+    
+    if verbose: 
+        return {'':[time_per_rep*(BAT+1-inj_point), (cond1,cond2,cond3,cond4,1.*cond/4)]}
+    else:
+        return {'':time_per_rep*(BAT+1-inj_point)}
+
+
+def h_threshold(data_matrix,
+                min_val = 0,
+                max_val = 100):
+
+
+    # Set all points below min_val to be nan
+    data_matrix = numpy.where(data_matrix<min_val,numpy.nan,data_matrix)
+
+    # Set all points above max_val to be nan
+    data_matrix = numpy.where(data_matrix>max_val,numpy.nan,data_matrix)
+    
+    return data_matrix
+
+def h_make_binary_mask(data_matrix,
+                       min_val = 0,
+                       max_val = 100):
+
+    new_data_matrix = h_threshold(data_matrix,min_val,max_val)
+
+    return numpy.where(numpy.isfinite(new_data_matrix),1,new_data_matrix)
+
+def smooth_SG(y, window_size, order, deriv=0, rate=1):
+
+    # Implementation of a Savitzky-Golay filter
+    # Acquired from: 
+    # http://stackoverflow.com/questions/22988882/how-to-smooth-a-curve-in-python
+
+    import numpy as np
+    from math import factorial
+
+    try:
+        window_size = np.abs(np.int(window_size))
+        order = np.abs(np.int(order))
+    except ValueError, msg:
+        raise ValueError("window_size and order have to be of type int")
+    if window_size % 2 != 1 or window_size < 1:
+        raise TypeError("window_size size must be a positive odd number")
+    if window_size < order + 2:
+        raise TypeError("window_size is too small for the polynomials order")
+    order_range = range(order+1)
+    half_window = (window_size -1) // 2
+    # precompute coefficients
+    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
+    m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
+    # pad the signal at the extremes with
+    # values taken from the signal itself
+    firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
+    lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
+    y = np.concatenate((firstvals, y, lastvals))
+    return np.convolve( m[::-1], y, mode='valid')        
