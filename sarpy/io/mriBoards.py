@@ -25,7 +25,9 @@ import scipy
 import copy
 import re
 import sarpy
-import sarpy.fmoosvi.getters
+import sarpy.fmoosvi.analysis
+import sarpy.fmoosvi.colormaps as cmaps
+
 
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -106,7 +108,11 @@ def generate(**kwargs):
         for row in rows:
             row_conf = dict(config.items(row))
             lbl =row_conf.pop('label')
-            lbl_scan_name = exp.patients[k][lbl]
+
+            try:
+                lbl_scan_name = exp.patients[k][lbl]
+            except KeyError:
+                lbl_scan_name = ''
 
             subtitle = row_conf.pop('subtitle','')
 
@@ -154,6 +160,12 @@ def generate(**kwargs):
     
                 scn = sarpy.Scan(lbl_scan_name)
                 adata_key = row_conf.pop('adata', None)
+
+                ## Add an option to mask out the background 
+                roi_mask = row_conf.pop('roi_adata', None)
+                bat_adata = row_conf.pop('bat_adata', None)
+                bat_threshold = row_conf.pop('bat_threshold', None)
+
                 print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
 
                 if adata_key is not None:
@@ -161,7 +173,16 @@ def generate(**kwargs):
                     if re.search('roi',adata_key):
                         colormapFlip = True                
                     try:
-                        data = scn.adata[adata_key]
+                        if roi_mask is None:
+                            data = scn.adata[adata_key].data
+                        else:
+                            if bat_threshold is None:
+                                data = scn.adata[adata_key].data * scn.adata[roi_mask].data
+                            else:
+                                BAT = scn.adata[bat_adata].data
+                                bat_threshold = float(bat_threshold)
+                                masked_threshold = sarpy.fmoosvi.analysis.h_make_binary_mask(BAT,0,bat_threshold)
+                                data = scn.adata[adata_key].data * scn.adata[roi_mask].data * masked_threshold
                     except KeyError:
                         pylab.text(0.85,0.5,'Data not available',
                            horizontalalignment='center')
@@ -172,8 +193,7 @@ def generate(**kwargs):
                         
                     # Set the image limits for adata
                     if (clim_min is None) and (clim_max is None):
-                        (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(
-                                                    data.data)
+                        (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(data)
                     else: #TODO This else statement (maybe) does NOTHING, get rid of it?
                         (clim_min, clim_max) = (clim_min,clim_max)
 
@@ -187,9 +207,9 @@ def generate(**kwargs):
                     #    cm = cm + '_r'
 
                 else:
-                    data = scn.pdata[0]
+                    data = scn.pdata[0].data
                                     
-                xdata = data.data
+                xdata = data
                 xdata_slices = sarpy.fmoosvi.getters.get_num_slices(scn.shortdirname)
     
                 # Used masked arrays to show nan values as black
