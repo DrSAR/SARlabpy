@@ -83,7 +83,7 @@ def get_num_slices(scan_object_name, pdata_num = 0):
         num_slices = scan_object.pdata[pdata_num].visu_pars.VisuCoreSize[2]
     try:
         VisuFGOrderDesc = scan_object.pdata[pdata_num].visu_pars.VisuFGOrderDesc
-    except KeyError:
+    except AttributeError:
         # data missing, we should have all we need anyway
         pass
     else:
@@ -308,7 +308,6 @@ def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',exporttype=None):
     if a_high > roi.shape[1]:
         a_high = roi.shape[1]
     
-   
     bbox = [b_low, b_high, a_low, a_high]    
 
     # Add code segment to convert the bbox into percent as well as pixels
