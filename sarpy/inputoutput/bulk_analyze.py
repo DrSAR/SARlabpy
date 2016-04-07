@@ -19,10 +19,8 @@ import collections
 import json
 import re
 import numpy
-import IPython.parallel
+import ipyparallel
 import sarpy
-import sys
-import traceback
 
 
 class BulkAnalyzer(object):
@@ -51,7 +49,7 @@ class BulkAnalyzer(object):
         try:
             master_file = open(fname,'r')
         except IOError:
-            print('Could not open masterlist file %s' % fname)
+            print(('Could not open masterlist file %s' % fname))
             raise
       
         with master_file:
@@ -75,7 +73,7 @@ class BulkAnalyzer(object):
         if scn_fname and re.search(self.scan_label, scn_lbl):
             # now check whether adata has alredy previously been saved
             if not self.force_overwrite:
-                adata_lbls = sarpy.Scan(scn_fname).adata.keys()
+                adata_lbls = list(sarpy.Scan(scn_fname).adata.keys())
                 if any([re.match(self.adata_save_label, i) for i in adata_lbls]):
                     # we found the root already exists!
                     return None
@@ -87,8 +85,8 @@ class BulkAnalyzer(object):
     def process_params(self, scn_name):
         ''' Placeholder method to calculate all the parameters required
         for processing'''
-        for pat,scans in self.masterlist.iteritems():
-            for lbl,dbl_list in scans.iteritems():
+        for pat,scans in self.masterlist.items():
+            for lbl,dbl_list in scans.items():
                 if dbl_list[0] == scn_name:
                     bbox = numpy.array(dbl_list[1]).astype(float)
         return {'bbox':bbox}
@@ -108,8 +106,8 @@ class BulkAnalyzer(object):
         Currently there is no parallelization involved'''
 
         start1 = time.time()
-        for pat_lbl, pat in self.masterlist.iteritems():
-            for scn_lbl, scn_details in pat.iteritems():
+        for pat_lbl, pat in self.masterlist.items():
+            for scn_lbl, scn_details in pat.items():
                 scn_to_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_to_analyse is not None:
                     # this is a scan we should analyze!
@@ -119,14 +117,14 @@ class BulkAnalyzer(object):
                     try:
                         self.store_result(result, scn_to_analyse)
                         if self.force_overwrite:
-                            print('{0} overwritten in {1}'.format(self.adata_save_label,scn_to_analyse))
+                            print(('{0} overwritten in {1}'.format(self.adata_save_label,scn_to_analyse)))
                         else:
-                            print('{0} saved in {1}'.format(self.adata_save_label,scn_to_analyse))
+                            print(('{0} saved in {1}'.format(self.adata_save_label,scn_to_analyse)))
                     except AttributeError as e:
                         print(scn_to_analyse)
                         print(e)                        
         end1 = time.time()
-        print 'Serial code : {0} s \n'.format(end1 - start1)   
+        print('Serial code : {0} s \n'.format(end1 - start1))   
 
 
 # below are example function that achieve the minimum for a run of analysis
@@ -146,8 +144,8 @@ class T1map_from_LL(BulkAnalyzer):
     def analysis_func(self, scn, **kwargs):
         ''' Placeholder method to perform analysis on a scan '''
 
-        print('analysing (%s): %s' % (scn.shortdirname,
-                                       scn.acqp.ACQ_protocol_name))
+        print(('analysing (%s): %s' % (scn.shortdirname,
+                                       scn.acqp.ACQ_protocol_name)))
         
         T1map, fit_dict = sarpy.fmoosvi.analysis.h_fit_T1_LL_FAind(scn.shortdirname)
         return T1map, fit_dict
@@ -164,9 +162,9 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
         super(ParallelBulkAnalyzer, self).__init__(masterlist_fname=masterlist_fname,
                                                    adata_save_label='testing',
                                                    force_overwrite=force_overwrite)
-        self.clients = IPython.parallel.Client(profile=ipython_profile)
+        self.clients = ipyparallel.Client(profile=ipython_profile)
         self.dview = self.clients[:]
-        print('Currently, there are {0} clients running'.format(len(self.clients.ids)))
+        print(('Currently, there are {0} clients running'.format(len(self.clients.ids))))
       
         self.dview.execute("sys.path.append(os.path.join("+
                            "os.path.expanduser('~'),'sarpy'))")        
@@ -188,8 +186,8 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 
         list_of_scans = []
         list_of_scan_names = []
-        for pat_lbl, pat in self.masterlist.iteritems():
-            for scn_lbl, scn_details in pat.iteritems():
+        for pat_lbl, pat in self.masterlist.items():
+            for scn_lbl, scn_details in pat.items():
                 scn_to_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_to_analyse is not None:
                     list_of_scans.append(sarpy.Scan(scn_to_analyse))
@@ -199,7 +197,7 @@ class ParallelBulkAnalyzer(BulkAnalyzer):
 
         results = self.balanced.map_async(func, list_of_scan_names, ordered=False)
         end1 = time.time()
-        print 'Serial code: {0} s'.format(end1 - start1)    
+        print('Serial code: {0} s'.format(end1 - start1))    
 
         for res, scn in zip(results, list_of_scans):
             try:
@@ -217,11 +215,11 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                  other_scan_label=None,
                  **kwargs):
         super(ParallelBulkAnalyzerFactory, self).__init__(**kwargs)
-        self.clients = IPython.parallel.Client(profile=ipython_profile)
+        self.clients = ipyparallel.Client(profile=ipython_profile)
         self.dview = self.clients[:]
 
         print('###########')
-        print('Currently, there are {0} clients running'.format(len(self.clients.ids)))
+        print(('Currently, there are {0} clients running'.format(len(self.clients.ids))))
 
         self.dview.execute('import sys,os')
         
@@ -257,8 +255,8 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
         if self.other_scan_label is None:
              return other_params   
         else:
-            for pat,scans in self.masterlist.iteritems():
-                for lbl,dbl_list in scans.iteritems():
+            for pat,scans in self.masterlist.items():
+                for lbl,dbl_list in scans.items():
                     if dbl_list[0] == scn_name:
                         # bingo we have found the scn_name
                         # check whether the other_scan_label exists
@@ -267,7 +265,7 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                         except KeyError:
                             other_scan_name = ''
             if other_scan_name:
-                return dict(other_params.items() + {'other_scan_name':other_scan_name}.items())
+                return dict(list(other_params.items()) + list({'other_scan_name':other_scan_name}.items()))
             else:
                 return None
 
@@ -278,17 +276,17 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
 
         list_of_scans = []
         list_of_dict_of_params = []
-        for pat_lbl, pat in self.masterlist.iteritems():
-            for scn_lbl, scn_details in pat.iteritems():
+        for pat_lbl, pat in self.masterlist.items():
+            for scn_lbl, scn_details in pat.items():
                 scn_to_analyse = self.scan_criterion(pat_lbl, scn_lbl)
                 if scn_to_analyse is not None:
                     process_params = self.process_params(scn_to_analyse)
                     if process_params is not None:
                         list_of_scans.append(sarpy.Scan(scn_to_analyse))
                         list_of_dict_of_params.append(dict(
-                            {'scn_to_analyse':scn_to_analyse}.items() + 
-                             process_params.items()+
-                             self.scan_independent_pparams.items()))
+                            list({'scn_to_analyse':scn_to_analyse}.items()) + 
+                             list(process_params.items())+
+                             list(self.scan_independent_pparams.items())))
 
         # the approch for asynchronous processing taking below is discussed
         # on http://stackoverflow.com/questions/19509059/processing-results-from-asyncmap-as-they-come-in
@@ -299,17 +297,17 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                                    ordered=False)
 
             #create original mapping of msg_ids to parameters
-            msg_ids_to_parameters = dict(zip(asyncmap.msg_ids, 
-                                             list_of_dict_of_params))
-            msg_ids_to_scans = dict(zip(asyncmap.msg_ids, 
-                                             list_of_scans))
+            msg_ids_to_parameters = dict(list(zip(asyncmap.msg_ids, 
+                                             list_of_dict_of_params)))
+            msg_ids_to_scans = dict(list(zip(asyncmap.msg_ids, 
+                                             list_of_scans)))
 
             
             pending = set(asyncmap.msg_ids) # all queued jobs are pending
             while pending:
                 try:
                     self.clients.wait(pending, 1e-3)
-                except IPython.parallel.TimeoutError:
+                except ipyparallel.TimeoutError:
                     pass # ignore timeouterrors,  it means at least one isn't done
 
                 # finished is the set of msg_ids that are complete
@@ -327,8 +325,8 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
 
                     except Exception as e:
 
-                        print('%s for %s ' % (e, 
-                                              msg_ids_to_parameters[msg_id]['scn_to_analyse']))   
+                        print(('%s for %s ' % (e, 
+                                              msg_ids_to_parameters[msg_id]['scn_to_analyse'])))   
 
                         #print('\t {0}'.format(traceback.print_exc(sys.exc_info()[2])))
 
@@ -340,7 +338,7 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                         # since we need the one-to-one map of scan to result,
                         # we don't want chunks bigger than 1
                         for resdict in ar.result:
-                            for k,v in resdict.iteritems():                               
+                            for k,v in resdict.items():                               
                                 lbl = self.adata_save_label+k
                                 msg_ids_to_scans[msg_id].store_adata(
                                     key=lbl, 
@@ -348,10 +346,10 @@ class ParallelBulkAnalyzerFactory(BulkAnalyzer):
                                             force=self.force_overwrite)  
                                 jobInfo = ", job id ...%s done on E %i " % (msg_id[-5:], ar.engine_id)
                                 if self.force_overwrite:
-                                    print('{0} overwritten in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname+jobInfo))
+                                    print(('{0} overwritten in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname+jobInfo)))
                                 else:
-                                    print('{0} saved in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname+jobInfo))
+                                    print(('{0} saved in {1}'.format(self.adata_save_label,msg_ids_to_scans[msg_id].shortdirname+jobInfo)))
         else:
             print('no scans fit the criterion so nothing was processed')
         end1 = time.time()
-        print '###### Parallelized Code: {0} s \n'.format(end1 - start1)
+        print('###### Parallelized Code: {0} s \n'.format(end1 - start1))

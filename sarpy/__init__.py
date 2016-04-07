@@ -7,21 +7,21 @@ import logging
 logger=logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-from io.BRUKERIO import (readJCAMP, readfid, readfidspectro, read2dseq,
+from inputoutput.BRUKERIO import (readJCAMP, readfid, readfidspectro, read2dseq,
                         dict2string, fftbruker, readRFshape)
 
-from io.BRUKER_classes import (Scan, Study, StudyCollection,
+from inputoutput.BRUKER_classes import (Scan, Study, StudyCollection,
                                Patient, Experiment,
                                dataroot)
 
-from io.AData_classes import (adataroot, AData)
+from inputoutput.AData_classes import (adataroot, AData)
 
-from io import (rois, write_csv, bulk_analyze, mriBoards)
+from inputoutput import (rois, write_csv, bulk_analyze, mriBoards)
 
-from io.visu_pars_2_Nifti1Header import (visu_pars_2_Nifti1Header,
+from inputoutput.visu_pars_2_Nifti1Header import (visu_pars_2_Nifti1Header,
                                       visu_pars_2_matrix_size)
                                       
-from io.SARlogger import initiate_logging
+from inputoutput.SARlogger import initiate_logging
 
 from helpers import natural_sort, generate_summary, smooth_SG
 

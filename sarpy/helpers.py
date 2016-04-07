@@ -51,7 +51,7 @@ def git_repo_state():
                                 ' describe --dirty',
                                stdout=subprocess.PIPE, shell=True)
     (describe, err) = proc.communicate()
-    dirty = re.search('-dirty$', describe) is not None 
+    dirty = re.search('-dirty$', describe.decode("utf-8")) is not None 
     proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
                             ' status --porcelain', 
                             stdout=subprocess.PIPE, shell=True)
@@ -61,16 +61,16 @@ def git_repo_state():
                             stdout=subprocess.PIPE, shell=True)
     (sha1, err) = proc.communicate()
     proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
-                            ' log -1 --format="%ci" '+sha1,
+                            ' log -1 --format="%ci" '+sha1.decode('utf-8'),
                             stdout=subprocess.PIPE, shell=True)
     (date, err) = proc.communicate()
     if dirty:
-        date = date.strip() + ' +++'
+        date = date.decode('utf-8').strip() + ' +++'
     return {'describe': describe.strip(),
             'dirty':dirty,
             'date':date.strip(),
-            'status':status.strip(),
-            'sha1':sha1.strip()}
+            'status':status.decode('utf-8').strip(),
+            'sha1':sha1.decode('utf-8').strip()}
 
 def generate_summary(masterlist_name):
 
@@ -147,7 +147,7 @@ def generate_summary(masterlist_name):
                ('BACKGROUND',(1,1),(-1,-1),colors.lightgreen)
             ]
     
-    for cols in xrange(checks_size[0]):
+    for cols in range(checks_size[0]):
     
         indexes = [i for i,x in enumerate(checks[cols]) if x == 'No']
         
@@ -312,8 +312,8 @@ def smooth_SG(y, window_size, order, deriv=0, rate=1):
     try:
         window_size = np.abs(np.int(window_size))
         order = np.abs(np.int(order))
-    except ValueError, msg:
-        raise ValueError("window_size and order have to be of type int")
+    except ValueError as msg:
+        raise ValueError("window_size and order have to be of type int (%s)" % msg)
     if window_size % 2 != 1 or window_size < 1:
         raise TypeError("window_size size must be a positive odd number")
     if window_size < order + 2:
