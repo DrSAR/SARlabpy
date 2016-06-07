@@ -62,7 +62,7 @@ def git_repo_state():
     (date, err) = proc.communicate()
     if dirty:
         date = date.decode('utf-8').strip() + ' +++'
-    return {'describe': describe.strip(),
+    return {'describe': describe.decode('utf-8').strip(),
             'dirty':dirty,
             'date':date.strip(),
             'status':status.decode('utf-8').strip(),

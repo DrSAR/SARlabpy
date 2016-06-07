@@ -1,7 +1,7 @@
 version = '4.0'
 release = version + 'beta'
 from .helpers import natural_sort, smooth_SG, git_repo_state
-repo_state = helpers.git_repo_state()
+repo_state = git_repo_state()
 
 import logging
 logger=logging.getLogger(__name__)
