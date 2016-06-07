@@ -11,7 +11,7 @@ logger.addHandler(logging.NullHandler())
 from .BRUKERIO.BRUKER_classes import (Scan, Study, StudyCollection,
                             Patient, Experiment, dataroot)
 
-#from AData_classes import (adataroot, AData)
+from .BRUKERIO.AData_classes import (adataroot, AData)
 
 #from inputoutput import (rois, write_csv, bulk_analyze, mriBoards)
 
