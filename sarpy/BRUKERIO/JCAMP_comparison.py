@@ -4,6 +4,7 @@ Copyright: SARlab members, UBC, Vancouver, 2013
 """
 
 import re
+from ..helpers import natural_sort
 
 # these are the different methods to compare JCAMP parameters by
 def regex_comp(a,b): return re.match(a,b) # useful for strings
@@ -53,11 +54,11 @@ def list_param_by_type(type_=str, exp_names=['NecS3'], fname = None):
     if fname:
         with open(fname, 'w') as f:
             print('{frozenset([', file=f)
-            for a in sarpy.natural_sort(set_dict[str]):
+            for a in natural_sort(set_dict[str]):
                 print("'%s', " % a, file=f, end='')
             print("]): regex_comp,", file=f)
             print('frozenset([', file=f)
-            for a in sarpy.natural_sort(set_dict[numpy.ndarray]):
+            for a in natural_sort(set_dict[numpy.ndarray]):
                 print("'%s', " % a, file=f, end='')
             print("]): arr_comp,", file=f)
             print("default_param: int_comp}", file=f)
