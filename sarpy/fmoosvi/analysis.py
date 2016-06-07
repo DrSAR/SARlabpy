@@ -1798,6 +1798,10 @@ def MMCA_model_fit(timecourse, start_fit=0, dt=1):
         rel_bloodvol = numpy.nan
         leakage_param = numpy.nan   
 
+    # Check to eliminate negative leakage values. # Decision arrived in May 2015 with JB and SAR. Model does not account for negative sloping data
+    if leakage_param < 0:
+        leakage_param = numpy.nan
+
     return (rel_bloodvol,leakage_param)
 
 def h_fit_ec(scn_to_analyse=None,
