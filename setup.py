@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 import os
 
 #import sarpy
@@ -15,8 +15,7 @@ if __name__ == '__main__':
     setup(name='sarpy',
       version=version,
       author='Stefan A Reinsberg and other SARlab members',
-      url='http://pfeifer.phas.ubc.ca/sarpy',
-      download_url='http://pfeifer.phas.ubc.ca/sarpy/files',
+      url='https://github.com/DrSAR/SARlabpy',
       description='Data Analysis of MR data acquired on BRUKER and other systems',
       long_description=long_description, 
       package_dir={'': 'sarpy'},

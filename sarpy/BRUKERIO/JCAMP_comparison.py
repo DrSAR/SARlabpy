@@ -2,11 +2,8 @@
 """
 Copyright: SARlab members, UBC, Vancouver, 2013
 """
-from __future__ import print_function
 
 import re
-import numpy
-import sarpy
 
 # these are the different methods to compare JCAMP parameters by
 def regex_comp(a,b): return re.match(a,b) # useful for strings

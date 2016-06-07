@@ -20,7 +20,7 @@ import logging
 logger=logging.getLogger('sarpy.io.Adata_classes')
 logger.setLevel(level=40)
 
-import sarpy.helpers
+from ..helpers import git_repo_state
 
 #this is where datagoes that is secondary to acquired data.
 # for this to make any sense, there needs to be som mechanism by which the
@@ -101,7 +101,7 @@ class ADataDict(collections.MutableMapping):
         value.meta['key'] = key
         value.meta['username'] = getpass.getuser()
         # freeze the repository state for future use
-        repo_state = sarpy.helpers.git_repo_state()
+        repo_state = git_repo_state()
         value.meta['commit_sha1'] = repo_state['sha1']
         value.meta['commit_date'] = repo_state['date']
 
