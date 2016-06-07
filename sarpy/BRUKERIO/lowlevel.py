@@ -27,7 +27,7 @@ def pairwise(iterable):
     """
     a, b = tee(iterable)
     next(b, None)
-    return list(zip(a, b))
+    return iter(list(zip(a, b)))
 
 def convert_int_float_string(param):
     try:

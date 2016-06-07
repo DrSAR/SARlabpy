@@ -12,8 +12,10 @@ import collections
 import configobj
 import pandas
 
-from . import BRUKERIO
-from . import AData_classes
+
+from .lowlevel import (readJCAMP, readfid, readfidspectro, read2dseq, 
+        dict2string, fftbruker, readRFshape)
+#from . import AData_classes
 from .lazy_property import lazy_property
 
 from . import JCAMP_comparison
@@ -26,7 +28,33 @@ logger.setLevel(level=40)
 dataroot = os.path.expanduser(os.path.join('~','bdata'))
 masterlist_root = os.path.expanduser('~/sdata/masterlists')
 
-import sarpy # make natural_sort in helpers.py available
+class AttrDict(object):
+    '''a class that behaves like a dict but gives you access to its attributes
+    directly'''
+   
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+    def __getitem__(self, key):
+        return self.__dict__[key]
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
+    def __delitem__(self, key):
+        del self.__dict__[key]
+    def __contains__(self, key):
+        return key in self.__dict__
+    def __len__(self):
+        return len(self.__dict__)
+    def __repr__(self):
+        args = ['{}={}'.format(k, repr(v)) for (k,v) in vars(self).items()]
+        name_str = self.__class__.__name__+'(\n{}\n)'
+        return name_str.format(',\n'.join(args))
+    def keys(self):
+        return self.__dict__.keys()
+    def iteritems(self):
+        return self.__dict__.iteritems()
+    def values(self):
+        return self.__dict__.values()
+
 
 def strip_all_but_classname(obj, class_str):
     '''
@@ -78,7 +106,7 @@ def find_all_patients_in_masterlists():
 
 # ===========================================================
 
-class JCAMP_file(sarpy.helpers.AttrDict):
+class JCAMP_file(AttrDict):
     '''
     Represents a JCAMP encoded parameter file.
 
@@ -90,7 +118,7 @@ class JCAMP_file(sarpy.helpers.AttrDict):
         if not os.path.isfile(filename):
             raise IOError('File "%s" not found' % filename)
         self.filename = filename
-        super(JCAMP_file, self).__init__(**BRUKERIO.readJCAMP(self.filename))
+        super(JCAMP_file, self).__init__(**readJCAMP(self.filename))
 
 class PDATA_file(object):
     '''
@@ -127,7 +155,7 @@ class PDATA_file(object):
 
     @lazy_property
     def data(self):
-        dta = BRUKERIO.read2dseq(os.path.join(self.filename),
+        dta = read2dseq(os.path.join(self.filename),
                                  visu_pars=self.visu_pars.__dict__)
         setattr(self, 'dimdesc', dta['dimdesc'])
         setattr(self, 'dimcomment', dta['dimcomment'])
@@ -262,18 +290,18 @@ class Scan(object):
     @lazy_property
     def fid(self):
         try:
-            kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
+            kspace = readfid(os.path.join(self.dirname,'fid'),
                                       squeezed=False,
                                       acqp=self.acqp.__dict__,
                                       method=self.method.__dict__)['data']
         except TypeError:
             try:
-                kspace = BRUKERIO.readfidspectro(os.path.join(self.dirname,'fid'),
+                kspace = readfidspectro(os.path.join(self.dirname,'fid'),
                                       acqp=self.acqp.__dict__,
                                       method=self.method.__dict__)['data']
             except IOError:
                 # is there a ser instead o fid file?
-                kspace = BRUKERIO.readfidspectro(os.path.join(self.dirname,'ser'),
+                kspace = readfidspectro(os.path.join(self.dirname,'ser'),
                                           acqp=self.acqp.__dict__,
                                           method=self.method.__dict__)['data']
         return kspace
@@ -282,7 +310,7 @@ class Scan(object):
     def fftfid(self):
         readfidresult = {'data': self.fid,
                          'header':{'method':self.method.__dict__}}
-        return BRUKERIO.fftfid(os.path.join(self.dirname,'fid'),
+        return fftfid(os.path.join(self.dirname,'fid'),
                                readfidresult=readfidresult)
 
     @lazy_property
@@ -296,7 +324,7 @@ class Scan(object):
     @lazy_property
     def pdata(self):
         pdata_list = []
-        for f in sarpy.natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
+        for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
             try:
                 pdata = PDATA_file(f)
                 pdata_list.append(pdata)
@@ -997,8 +1025,8 @@ class Experiment(StudyCollection):
     @classmethod
     def from_masterlist(cls, masterlistname):
         bare_experiment = cls(root=None, absolute_root=None)
-        bare_experiment.patients = sarpy.helpers.AttrDict()
-        bare_experiment.labels = sarpy.helpers.AttrDict()
+        bare_experiment.patients = AttrDict()
+        bare_experiment.labels = AttrDict()
         if masterlistname is not None:
             conf = configobj.ConfigObj(os.path.join(masterlist_root, masterlistname))
             for k in list(conf.keys()):
