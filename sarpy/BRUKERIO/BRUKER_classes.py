@@ -15,7 +15,8 @@ import pandas
 from ..helpers import natural_sort
 from .lowlevel import (readJCAMP, readfid, readfidspectro, read2dseq, 
         dict2string, fftbruker, readRFshape)
-#from . import AData_classes
+from .AData_classes import AData, load_AData
+
 from .lazy_property import lazy_property
 
 from . import JCAMP_comparison
@@ -191,7 +192,7 @@ class PDATA_file(object):
         '''
         raise NotImplementedError('Deprecated - should not be confused with\n'+
                                   'Scan.store_adata()')
-        return AData_classes.AData.fromdata(self, *args, **kwargs)
+        return AData.fromdata(self, *args, **kwargs)
 
     def export2nii(self,filename,rescale = None, std_mod=None):
         '''
@@ -315,7 +316,7 @@ class Scan(object):
 
     @lazy_property
     def adata(self):
-        adata_dict = AData_classes.load_AData(self.pdata, self.dirname)
+        adata_dict = load_AData(self.pdata, self.dirname)
         if len(adata_dict) == 0:
             logger.info('No analysis data in directory "{0}"'.
                          format(self.dirname))
@@ -518,7 +519,7 @@ class Scan(object):
                             (kwargs['key'], owner))
             elif force:
                 self.adata.pop(kwargs['key'], None)
-        self.adata[kwargs['key']] = AData_classes.AData.fromdata(
+        self.adata[kwargs['key']] = AData.fromdata(
                     self.pdata[pdata_idx], **kwargs)
 
     def rm_adata(self, key):
