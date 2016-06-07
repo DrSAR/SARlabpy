@@ -12,7 +12,7 @@ import collections
 import configobj
 import pandas
 
-
+from ..helpers import natural_sort
 from .lowlevel import (readJCAMP, readfid, readfidspectro, read2dseq, 
         dict2string, fftbruker, readRFshape)
 #from . import AData_classes
@@ -639,7 +639,7 @@ class Study(object):
     @lazy_property
     def scans(self):
         scans = []
-        eligible_dirs = sarpy.natural_sort(os.listdir(self.dirname))
+        eligible_dirs = natural_sort(os.listdir(self.dirname))
         for fname in eligible_dirs:
             filename = os.path.join(self.dirname, fname)
             if (os.path.isdir(filename) and
@@ -947,7 +947,7 @@ class Patient(StudyCollection):
         self.patient_id = None
 
         searchdir = os.path.join(dataroot, '*', 'nmr', patient_name) + '*'
-        directories = sarpy.natural_sort(glob.glob(searchdir))
+        directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
             study = Study(dirname)
             if not self.patient_id:
@@ -1119,7 +1119,7 @@ class Experiment(StudyCollection):
             searchdir = os.path.join(dataroot, '*', 'nmr', root) + '*'
 
         self.root = root
-        directories = sarpy.natural_sort(glob.glob(searchdir))
+        directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
             study = Study(dirname)
             self.add_study(study)

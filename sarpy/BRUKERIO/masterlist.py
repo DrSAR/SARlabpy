@@ -14,8 +14,8 @@ import ConfigParser
 import re
 import json
 import pprint
-import sarpy
 import sarpy.fmoosvi.getters
+from ..helpers import natural_sort
 
 def generate(roi_suffix=None,
              bbox_override=False,
@@ -71,7 +71,7 @@ def generate(roi_suffix=None,
         
     # get unique name of patients
     expt = sarpy.Experiment(args.experimentname)
-    patname_list=sarpy.natural_sort(list(set(expt.get_SUBJECT_id())))
+    patname_list=natural_sort(list(set(expt.get_SUBJECT_id())))
     
     master_list = collections.OrderedDict()
     
