@@ -13,8 +13,8 @@ import configobj
 import pandas
 
 from ..helpers import natural_sort
-from .lowlevel import (readJCAMP, readfid, readfidspectro, read2dseq, 
-        dict2string, fftbruker, readRFshape)
+from .lowlevel import (readJCAMP, readfid, readfidspectro, read2dseq,
+                       fftfid)
 from .AData_classes import AData, load_AData
 
 from .lazy_property import lazy_property
@@ -215,7 +215,6 @@ class PDATA_file(object):
         '''
         from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
         import sarpy.fmoosvi.getters
-        import numpy
         header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()
 

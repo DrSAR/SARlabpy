@@ -724,10 +724,12 @@ def readfidspectro(fptr=None,
              misunderstandings of how the data is to be interpreted.
     """
 
-    if isinstance(fptr, FileType):
+    if hasattr(fptr, 'name'):
         fidname = fptr.name
-    if isinstance(fptr, str):
+    elif isinstance(fptr, (str)):
         fidname = fptr
+    else:
+        raise TypeError('Fid file or filename inadequately defined')
     dirname = os.path.abspath(os.path.dirname(fidname))
     acqp = acqp or readJCAMP(os.path.join(dirname,'acqp'))
     method = method or readJCAMP(os.path.join(dirname,'method'))
