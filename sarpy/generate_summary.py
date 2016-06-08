@@ -31,7 +31,7 @@ def generate_summary(masterlist_name):
     
     setvals = set()
     pats = []
-    for k,v in master_list.iteritems():
+    for k,v in master_list.items():
         pats.append(k)
         for val in v:
             setvals.add(val)
@@ -114,7 +114,7 @@ def generate_summary(masterlist_name):
         scanParams = set()
         adata = set()
 
-        for k,v in master_list.iteritems():
+        for k,v in master_list.items():
 
             if master_list[k][stype][0] != "":
                 scn = sarpy.Scan(master_list[k][stype][0])
@@ -124,7 +124,7 @@ def generate_summary(masterlist_name):
                 fov.add(str(scn.method.PVM_FovCm+pack_extent).strip('[,]'))
                 px_size.add(str(scn.method.PVM_SpatResol+[scn.method.PVM_SliceThick]).strip('[,]'))
                 scanParams.add(str([scn.method.PVM_RepetitionTime,scn.method.PVM_EchoTime1]).strip('[,]'))
-                adata.add(str(scn.adata.keys()).strip('[,]'))
+                adata.add(str(list(scn.adata.keys())).strip('[,]'))
 
         if len(fov) != 1:
             fov = [str(len(fov)) + ' diff']

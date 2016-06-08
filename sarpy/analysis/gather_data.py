@@ -57,7 +57,7 @@ def df_from_masterlist(masterlist_name, treatment_dict=None):
    
    
     patient_df = pandas.DataFrame(columns=('studyname', 'patientnumber'))
-    for patname in master_list.keys():
+    for patname in list(master_list.keys()):
         #print patname
         parsed_data = patientname.parseString(patname)
         row = pandas.DataFrame([{'studyname':''.join(parsed_data['studyname']),
@@ -86,7 +86,7 @@ def df_from_masterlist(masterlist_name, treatment_dict=None):
         #easy inclusion into the dataframe
 
         tx_condition = {}
-        for condition, pat_list in treatment_dict.iteritems():
+        for condition, pat_list in treatment_dict.items():
             for pat in pat_list:
                 tx_condition[pat]=condition
 

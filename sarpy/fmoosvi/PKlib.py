@@ -7,8 +7,8 @@ Created on Thu Sep 12 16:56:41 2013
 @author: tammo
 """
 
-from __future__ import print_function
-from __future__ import division
+
+
 import numpy as np
 from scipy import optimize
 import math
@@ -183,7 +183,7 @@ def within_bounds(params, bounds):
     if bounds is None:
         return True
     else:
-        for i in xrange(len(params)):
+        for i in range(len(params)):
             if params[i] < bounds[i][0] or params[i] > bounds[i][1]:
                 #print('PARAMETER OUT OF BOUDNS')
                 return False
@@ -216,7 +216,7 @@ def PKmodel(params, time, aif, model='tofts', vasc=2):
         
         irf = np.zeros(len(time))
         
-        for i in xrange(len(time)):
+        for i in range(len(time)):
             if time[i] > t_c:
                 irf[i] = E*F_p * np.exp( ( - (time[i] - t_c) * E*F_p) / v_e )
             elif time[i] <= t_c and time[i] > 0:
@@ -314,7 +314,7 @@ def PKmodel(params, time, aif, model='tofts', vasc=2):
         irf = np.zeros(len(time))
         
                 
-        for i in xrange(len(time)):
+        for i in range(len(time)):
             
             if time[i] > t_c:
                 
@@ -354,7 +354,7 @@ def PKmodel(params, time, aif, model='tofts', vasc=2):
         
         irf = np.zeros(len(time))
         
-        for i in xrange(len(time)):
+        for i in range(len(time)):
           
           if V/F_p > time[i]:
                 irf[i] = F_p

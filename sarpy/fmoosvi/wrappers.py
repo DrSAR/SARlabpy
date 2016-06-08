@@ -32,25 +32,25 @@ def store_deltaT1(masterlist_name=None,
     if adata_label2 is None:
         adata_label2 = adata_label1
 
-    for k in exp.patients.keys():
+    for k in list(exp.patients.keys()):
 
         try:
             scan1 = exp.patients[k][T1map_1]
             scan2 = exp.patients[k][T1map_2]
 
     	except IOError:
-    	    print('{0}: Not found adata {1} or {2} in patient {3}'.format(
-    	          adata_save_label,adata_label1,adata_label2,k) )
+    	    print(('{0}: Not found adata {1} or {2} in patient {3}'.format(
+    	          adata_save_label,adata_label1,adata_label2,k) ))
     	    continue
 
-        if (not adata_save_label in scan2.adata.keys()) or force_overwrite is True:
+        if (not adata_save_label in list(scan2.adata.keys())) or force_overwrite is True:
 
             if 'R1' in adata_save_label and 'multiday_' not in adata_save_label:
 
                 deltaR1 = (1/scan2.adata[adata_label2].data - 1/scan1.adata[adata_label1].data)
                 scan2.store_adata(key=adata_save_label, data = deltaR1, force = force_overwrite)
-                print('{0}: Saved {1}'.format(adata_save_label,
-                      scan2.shortdirname))
+                print(('{0}: Saved {1}'.format(adata_save_label,
+                      scan2.shortdirname)))
 
             # This is the part of the code to subtract T1 voxel by voxel with a baseline T1 from the day before            
 
@@ -71,20 +71,20 @@ def store_deltaT1(masterlist_name=None,
 
                 scan2.store_adata(key=adata_save_label, data = dat, force = force_overwrite)
 
-                print('{0}: Saved {1}'.format(adata_save_label,
-                                      scan2.shortdirname))
+                print(('{0}: Saved {1}'.format(adata_save_label,
+                                      scan2.shortdirname)))
 
             else:
                 
                 deltaT1 = scan2.adata[adata_label2].data - scan1.adata[adata_label1].data
                 scan2.store_adata(key=adata_save_label, data = deltaT1, force = force_overwrite)
 
-                print('{0}: Saved {1}'.format(adata_save_label,
-                                      scan2.shortdirname))
+                print(('{0}: Saved {1}'.format(adata_save_label,
+                                      scan2.shortdirname)))
                                   
         else:
-            print('{0}: adata already exists {1} '.format(
-            adata_save_label,scan2.shortdirname))
+            print(('{0}: adata already exists {1} '.format(
+            adata_save_label,scan2.shortdirname)))
             pass
 
 ### ROI based code
@@ -101,7 +101,7 @@ def roi_average(masterlist_name,
 
     exp = sarpy.Experiment.from_masterlist(masterlist_name + '.config')
 
-    for k in exp.patients.keys():
+    for k in list(exp.patients.keys()):
         try:
             scn_name = exp.patients[k][data_label]
             scan = sarpy.Scan(scn_name)
@@ -110,8 +110,8 @@ def roi_average(masterlist_name,
             roi_name = exp.patients[k][roi_label]
             roi = sarpy.Scan(roi_name).adata[roi_label].data            
         except(KeyError, IOError):
-            print('{0}: Not found adata {1} or {2} in patient {3}'.format(
-                                    analysis_label,adata_label,roi_label,k) )
+            print(('{0}: Not found adata {1} or {2} in patient {3}'.format(
+                                    analysis_label,adata_label,roi_label,k) ))
             continue        
                
         roi_data = data * roi
@@ -125,11 +125,11 @@ def roi_average(masterlist_name,
         avg_T1 = []
         weights = []
        
-        for slice in xrange(roi_data.shape[-1]):
+        for slice in range(roi_data.shape[-1]):
             avg_T1.append(scipy.stats.nanmean(roi_data[:,:,slice].flatten()))
             weights.append(numpy.nansum(roi[:,:,slice]))
             
-        if (not analysis_label in scan.adata.keys()) or forceVal is True:
+        if (not analysis_label in list(scan.adata.keys())) or forceVal is True:
             
             return roi_data,avg_T1
             # scan.store_adata(key=analysis_label, 
@@ -140,12 +140,12 @@ def roi_average(masterlist_name,
             #                  data = numpy.array(weights), 
             #                  force = forceVal)                             
 
-            print('{0}: Success. Saved {1}'.format(analysis_label,
-                                  scan.shortdirname))
+            print(('{0}: Success. Saved {1}'.format(analysis_label,
+                                  scan.shortdirname)))
                                   
         else:
-            print('{0}: adata already exists {1} '.format(
-            analysis_label,scan.shortdirname))
+            print(('{0}: adata already exists {1} '.format(
+            analysis_label,scan.shortdirname)))
             pass
 
 def bulk_transfer_roi(masterlist_name,
@@ -171,7 +171,7 @@ def bulk_transfer_roi(masterlist_name,
 
     roi_scan_labels = []
 
-    for scl in master_list[master_list.keys()[0]].keys():
+    for scl in list(master_list[list(master_list.keys())[0]].keys()):
         if 'roi' in scl:
             roi_scan_labels.append(scl) #.split('-',1)[-1]
 
@@ -180,7 +180,7 @@ def bulk_transfer_roi(masterlist_name,
     slist = sarpy.Experiment(masterlist_name).find_adata_scans(flatten=True)[dest_adata_label]
 
     if not slist:
-        print('No scans found for adata {0}'.format(dest_adata_label))
+        print(('No scans found for adata {0}'.format(dest_adata_label)))
         return None
 
     # Step 4: iterate over the search strings
@@ -196,13 +196,13 @@ def bulk_transfer_roi(masterlist_name,
                 src_roi = sarpy.Scan(master_list[patname][search_string][0]).adata[roi_src_adata_label]
 
             except(AttributeError, IOError):
-                print 'adata or scan data not found for {0}'.format(scn,roi_src_adata_label)
+                print(('adata or scan data not found for {0}'.format(scn,roi_src_adata_label)))
                 continue
             except KeyError:
-                print 'adata or scan data not found for {0}'.format(scn,roi_src_adata_label)
+                print(('adata or scan data not found for {0}'.format(scn,roi_src_adata_label)))
                 continue
                 
-            for v in master_list[patname].keys():
+            for v in list(master_list[patname].keys()):
                 if master_list[patname][v][0] == scn and search_string.split('-',1)[-1] in v:
 
                     dest_pd = sarpy.Scan(scn).pdata[0]
@@ -223,7 +223,7 @@ def bulk_transfer_roi(masterlist_name,
                     sarpy.Scan(scn).store_adata(key = adata_save_label, data = resampled_roi, 
                                      force = forceVal)   
                                      
-                    print('\t Saved {0} in {1}'.format(adata_save_label,scn))   
+                    print(('\t Saved {0} in {1}'.format(adata_save_label,scn)))   
 
 # def plotVTC(masterlist_name, 
 #             key, 
