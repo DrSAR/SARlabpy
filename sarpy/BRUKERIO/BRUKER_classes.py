@@ -746,7 +746,7 @@ class Study(object):
                                          for k, v in list(kwargs.items()))):
                 yield scn
 
-    def find_adata(self):
+    def _find_adata(self):
         '''
         All keys of adata sets attached to scans in this study
         '''
@@ -761,7 +761,7 @@ class Study(object):
         All keys *AND SCANS* of adata sets attached to scans in this study
         '''
         
-        klist = self.find_adata()
+        klist = self._find_adata()
         ad_dict = collections.OrderedDict()
         
         for k in klist: # Populate the ad_dict with the existing keys
@@ -899,16 +899,16 @@ class StudyCollection(object):
         '''
         return list(self.xscan_finder(**kwargs))
 
-    def find_adata(self):
+    def _find_adata(self):
         adatas=set()
         for stdy in self.studies:
-            ret = stdy.find_adata()
+            ret = stdy._find_adata()
             adatas = adatas.union(ret)
         return adatas
         
     def find_adata_scans(self, flatten = False):
         
-        klist = self.find_adata()
+        klist = self._find_adata()
         
         ad_dict = {}
         for k in klist:
@@ -916,7 +916,7 @@ class StudyCollection(object):
             
         for stdy in self.studies:
             c_dict = stdy.find_adata_scans()
-            for k in stdy.find_adata():
+            for k in stdy._find_adata():
                 ad_dict[k].append(c_dict[k])
 
         if flatten is False:

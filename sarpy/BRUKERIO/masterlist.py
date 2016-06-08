@@ -13,7 +13,6 @@ import collections
 import ConfigParser
 import re
 import json
-import pprint
 import sarpy.fmoosvi.getters
 from ..helpers import natural_sort
 
@@ -83,7 +82,7 @@ def generate(roi_suffix=None,
     #    scan=0
     
     for patname in (x for x in patname_list if x not in patient_exclude):
-        print patname
+        print(patname)
         pat = sarpy.Patient(patname)
         master_list[patname]={}
     
@@ -128,7 +127,7 @@ def generate(roi_suffix=None,
 
     if bbox_override is False:
 
-        check_list = expt.find_adata()
+        check_list = expt._find_adata()
         if roi_key_name in check_list:
             ###### Updating bboxes #####
             for patname,v in master_list.iteritems():  
