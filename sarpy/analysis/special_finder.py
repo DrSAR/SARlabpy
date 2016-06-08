@@ -34,10 +34,10 @@ def special_finder(masterlist_name,
 
     scan_list = []
 
-    for k,v in master_list.iteritems():
+    for k,v in master_list.items():
 
         if k in excludePatients:
-            print('Excluded {0}'.format(k))
+            print(('Excluded {0}'.format(k)))
             continue
         try:        
             data = sarpy.Scan(v[data_label][0]).adata[adata_label].data
