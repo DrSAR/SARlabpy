@@ -249,12 +249,13 @@ class AData(object):
         More elaborate representation
         '''
         return ("Analysed data ('{3}') based on PDATA (uid={0})\n"+
-                '  created on {1}\n'+
+                '  created on {1} by {4}\n'+
                 '  parent: {2}'+
                 '').format(self.parent_uid,
                           self.meta['created_datetime'],
                           self.meta['parent_filename'],
-                          self.key)
+                          self.key,
+                          self.meta['username'])
 
     @classmethod
     def fromfile(cls, filename, parent=None, lazy=True):
