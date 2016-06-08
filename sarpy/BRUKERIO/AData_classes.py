@@ -12,7 +12,6 @@ import json
 import re
 from . import BRUKER_classes
 from .lazy_property import lazy_property
-from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
 import nibabel
 from datetime import datetime
 
@@ -352,9 +351,6 @@ class AData(object):
             >>> scn.adata['times2'].export2nii('/tmp/PhantomOrientation-times2.nii.gz')
         '''
         from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
-        import copy
-        import sarpy.fmoosvi.getters
-        import numpy
         
         header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()
