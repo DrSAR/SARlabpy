@@ -230,7 +230,7 @@ class AData(object):
                 pickledata = zlib.decompress(f.read())
             else:
                 pickledata = f.read()
-        data = pickle.loads(pickledata)
+        data = pickle.loads(pickledata, encoding='latin1')
                     
         self.__yet_loaded = True
         return data
