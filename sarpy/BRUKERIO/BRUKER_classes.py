@@ -5,6 +5,7 @@ Class Definitions for BRUKER data
 import os
 import re
 import glob
+from datetime import datetime
 
 import nibabel
 import collections
@@ -316,6 +317,27 @@ class Scan(object):
     @lazy_property
     def adata(self):
         adata_dict = load_AData(self.pdata, self.dirname)
+        #check whether dependent adata is outdated
+        for ad in adata_dict.items():
+            if  ad[1].meta['depends_on'] != 'UNKNOWN':
+                for dep in ad[1].meta['depends_on']:
+                    scn_name, adata_lbl = dep.split(';')
+                    t1 = datetime.strptime(ad[1].meta['created_datetime'],'%c')
+                    try:
+                        t2str = Scan(scn_name).adata[adata_lbl].meta['created_datetime']
+                    except KeyError:
+                        print(('WARNING: adate["{2}"] depends on "{0}" which '+
+                               'is missing adata "{1}"'
+                               ).format(scn_name, adata_lbl,ad[1].key))
+                    except OSError:
+                        print(('WARNING: adate["{1}"] depends on "{0}" which '+
+                               'is missing?'
+                               ).format(scn_name, ad[1].key))
+                    else:
+                        t2 = datetime.strptime(t2str,'%c')
+                        if t2>t1:
+                            print(('WARNING: dependency "{0};{1}" is younger than '+
+                                  'it should be').format(scn_name, adata_lbl))
         if len(adata_dict) == 0:
             logger.info('No analysis data in directory "{0}"'.
                          format(self.dirname))

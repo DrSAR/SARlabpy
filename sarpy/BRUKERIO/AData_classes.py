@@ -97,6 +97,8 @@ class ADataDict(collections.MutableMapping):
 
         # here we receive the key from the dictionary access
         # hence, we should store it in the meta-data
+        if ';' in key:
+            raise AttributeError('key may not contain ";"')
         value.meta['key'] = key
         value.meta['username'] = getpass.getuser()
         # freeze the repository state for future use
@@ -291,6 +293,10 @@ class AData(object):
                             format(datafilename))
         with open(paramfilename[0], 'r') as paramfile:
             meta = json.load(paramfile)
+        # backwards compatibility for adata that didn't store the 
+        # depends_on attribute in the meta data
+        if 'depends_on' not in meta:
+            meta['depends_on']='UNKNOWN'
 
         return cls(meta=meta,
                    key=meta['key'],
@@ -311,7 +317,7 @@ class AData(object):
             sourcedata
         :param dict(optional) meta:
             meta information in the form of a dictionary. The following keys
-            will be added to it: paret_uid, created_datetime, parent_filename,
+            will be added to it: parent_uid, created_datetime, parent_filename,
             compressed.
         '''
         if 'meta' in kwargs:
@@ -321,6 +327,11 @@ class AData(object):
             meta['parent_uid'] = parent.uid()
             meta['created_datetime'] = datetime.now().strftime('%c')            
             meta['compressed'] = kwargs.get('compressed',True)
+        
+        if 'depends_on' in kwargs:
+            meta['depends_on'] = kwargs['depends_on']
+        else:
+            meta['depends_on'] = 'UNKNOWN'
 
         if parent is None:
             raise ValueError('analysed data has to be based on a parent')
