@@ -321,29 +321,30 @@ class Scan(object):
         for ad in adata_dict.items():
             if  ad[1].meta['depends_on'] != 'UNKNOWN':
                 for dep in ad[1].meta['depends_on']:
-                    scn_name, adata_lbl = dep.split(';')
-                    t1 = datetime.strptime(ad[1].meta['created_datetime'],'%c')
-                    try:
-                        t2str = Scan(scn_name).adata[adata_lbl].meta['created_datetime']
-                    except KeyError:
-                        msg = ('adate["{2}"] depends on "{0}" which '+
-                               'is missing adata "{1}"'
-                               ).format(scn_name, adata_lbl,ad[1].key)
-                        print('WARNING: ' + msg)
-                        logger.warning(msg)
-                    except OSError:
-                        msg = ('adate["{1}"] depends on "{0}" which '+
-                               'is missing?'
-                               ).format(scn_name, ad[1].key)
-                        print('WARNING: ' + msg)
-                        logger.warning(msg)
-                    else:
-                        t2 = datetime.strptime(t2str,'%c')
-                        if t2>t1:
-                            msg = ('dependency "{0};{1}" is younger than '+
-                                  'it should be').format(scn_name, adata_lbl)
+                    if dep != '':
+                        scn_name, adata_lbl = dep.split(';')
+                        t1 = datetime.strptime(ad[1].meta['created_datetime'],'%c')
+                        try:
+                            t2str = Scan(scn_name).adata[adata_lbl].meta['created_datetime']
+                        except KeyError:
+                            msg = ('adate["{2}"] depends on "{0}" which '+
+                                   'is missing adata "{1}"'
+                                   ).format(scn_name, adata_lbl,ad[1].key)
                             print('WARNING: ' + msg)
                             logger.warning(msg)
+                        except OSError:
+                            msg = ('adate["{1}"] depends on "{0}" which '+
+                                   'is missing?'
+                                   ).format(scn_name, ad[1].key)
+                            print('WARNING: ' + msg)
+                            logger.warning(msg)
+                        else:
+                            t2 = datetime.strptime(t2str,'%c')
+                            if t2>t1:
+                                msg = ('dependency "{0};{1}" is younger than '+
+                                      'it should be').format(scn_name, adata_lbl)
+                                print('WARNING: ' + msg)
+                                logger.warning(msg)
                                   
         if len(adata_dict) == 0:
             logger.info('No analysis data in directory "{0}"'.
