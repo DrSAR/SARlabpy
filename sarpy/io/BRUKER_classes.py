@@ -298,18 +298,25 @@ class Scan(object):
                     try:
                         t2str = Scan(scn_name).adata[adata_lbl].meta['created_datetime']
                     except KeyError:
-                        print(('WARNING: adate["{2}"] depends on "{0}" which '+
+                        msg = ('adate["{2}"] depends on "{0}" which '+
                                'is missing adata "{1}"'
-                               ).format(scn_name, adata_lbl,ad[1].key))
+                               ).format(scn_name, adata_lbl,ad[1].key)
+                        print('WARNING: ' + msg)
+                        logger.warning(msg)
                     except OSError:
-                        print(('WARNING: adate["{1}"] depends on "{0}" which '+
+                        msg = ('adate["{1}"] depends on "{0}" which '+
                                'is missing?'
-                               ).format(scn_name, ad[1].key))
+                               ).format(scn_name, ad[1].key)
+                        print('WARNING: ' + msg)
+                        logger.warning(msg)
                     else:
                         t2 = datetime.strptime(t2str,'%c')
                         if t2>t1:
-                            print(('WARNING: dependency "{0};{1}" is younger than '+
-                                  'it should be').format(scn_name, adata_lbl))
+                            msg = ('dependency "{0};{1}" is younger than '+
+                                  'it should be').format(scn_name, adata_lbl)
+                            print('WARNING: ' + msg)
+                            logger.warning(msg)
+                                  
         if len(adata_dict) == 0:
             logger.info('No analysis data in directory "{0}"'.
                          format(self.dirname))
