@@ -6,7 +6,7 @@ test
 
 """
 
-from __future__ import division
+
 
 import numpy
 import sarpy
@@ -26,6 +26,7 @@ import collections
 import random
 import copy
 import sarpy.fmoosvi.getters as getters
+import imp
 
 
 def h_calculate_AUC(scn_to_analyse=None,
@@ -55,7 +56,7 @@ def h_calculate_AUC(scn_to_analyse=None,
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+        print(('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) ))
     
     # there are problems with using phase encodes for certain cases (maybe 3D)
     # so now I have to use the tuid time
@@ -72,7 +73,7 @@ def h_calculate_AUC(scn_to_analyse=None,
         if auc_reps == 0:
             raise ZeroDivisionError      
     except ZeroDivisionError:
-        print('h_calculate_auc: Insufficient data for AUC (0 reps) in scan {0}'.format(scan_object.shortdirname))
+        print(('h_calculate_auc: Insufficient data for AUC (0 reps) in scan {0}'.format(scan_object.shortdirname)))
         raise ZeroDivisionError
         
     time_points = numpy.arange(time_per_rep,time_per_rep*auc_reps + time_per_rep,time_per_rep)
@@ -152,7 +153,7 @@ def h_normalize_dce(scn_to_analyse=None, pdata_num = 0):
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) )
+        print(('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) ))
 
     # Add a third spatial dimension if it's missing.
     if numpy.size(rdata.shape) == 3:
@@ -224,7 +225,7 @@ def h_enhancement_curve(scn_to_analyse=None,
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )
+        print(('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) ))
 
     # there are problems with using phase encodes for certain cases (maybe 3D)
     # so now I have to use the tuid time
@@ -301,7 +302,7 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
 
     injection_point = []
 
-    for slc in xrange(num_slices):
+    for slc in range(num_slices):
 
         try:
             filtered_sum = smooth_SG(global_sum[slc,:],11,3)
@@ -314,7 +315,7 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
         try:
             injection_point.append(next(i for i,v in enumerate(diff_slice) if v > 2*std_slice))
         except StopIteration:
-            print "Could not find the injection point, possibly okay" + str(slc)
+            print(("Could not find the injection point, possibly okay" + str(slc)))
             injection_point.append(0)
 
     # look through the list of elements in injection point and report the most common (mode)
@@ -348,7 +349,7 @@ def h_calculate_AUGC(scn_to_analyse=None,
     try:
         data = scan_object.adata[adata_label].data
     except KeyError:
-        print('h_caculate_AUGC: Source data {0} does not exist yet.'.format(adata_label))
+        print(('h_caculate_AUGC: Source data {0} does not exist yet.'.format(adata_label)))
         raise KeyError
     
     ########### Getting and defining parameters
@@ -364,7 +365,7 @@ def h_calculate_AUGC(scn_to_analyse=None,
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n '.format(scan_object.shortdirname) )
+        print(('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n '.format(scan_object.shortdirname) ))
     
     # there are problems with using phase encodes for certain cases (maybe 3D)
     # so now I have to use the tuid time
@@ -446,7 +447,7 @@ def h_conc_from_signal(scn_to_analyse=None,
 
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) )
+        print(('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0} \n \n'.format(scan_object.shortdirname) ))
     
     total_time = scan_object.pdata[pdata_num].visu_pars.VisuAcqScanTime / 1000.
     time_per_rep = numpy.round(numpy.divide(total_time,reps))
@@ -492,9 +493,9 @@ def h_conc_from_signal(scn_to_analyse=None,
 
     T1 = numpy.empty_like(source_data) + numpy.nan
     
-    for x in xrange(bbox[0],bbox[1]):
-        for y in xrange(bbox[2],bbox[3]):
-            for slc in xrange(num_slices):
+    for x in range(bbox[0],bbox[1]):
+        for y in range(bbox[2],bbox[3]):
+            for slc in range(num_slices):
 
                 baseline_s = numpy.mean(source_data[x,y,slc,0:inj_point])
                 E1 = numpy.exp(-TR/data_t1map[x,y,slc])
@@ -506,7 +507,7 @@ def h_conc_from_signal(scn_to_analyse=None,
                 # (1-E1)*(1-E0*cos) / ((1-E0) * (1-E1*cos)). use wolfram alpha to solve this:
                 # http://www.wolframalpha.com/input/?i=solve+%28%281-x%29*%281-b*c%29%29+%2F+%28%281-b%29*%281-x*c%29%29+%3D+r+for+x
 
-                for rep in xrange(inj_point,source_data.shape[-1]):                    
+                for rep in range(inj_point,source_data.shape[-1]):                    
                     s = source_data[x,y,slc,rep] / baseline_s
                     E2 = (-E1*c + E1*s - s + 1) / (E1*s*c - E1*c - s*c +1)
                     T1[x,y,slc,rep] = -TR / numpy.log(E2)
@@ -588,9 +589,9 @@ def h_stitch_dce_scans(masterlist_name,
 
     idx = numpy.hstack((numpy.arange(0,repsA),numpy.arange(repsA+added_reps,repsA+added_reps+repsB)))
 
-    for x in xrange(bbox[0],bbox[1]):
-        for y in xrange(bbox[2],bbox[3]):
-            for slc in xrange(dataShape[2]):
+    for x in range(bbox[0],bbox[1]):
+        for y in range(bbox[2],bbox[3]):
+            for slc in range(dataShape[2]):
 
                 dA = scanA.pdata[pdata_num].data[x,y,slc,:]
                 dB = scanB.pdata[pdata_num].data[x,y,slc,:]
@@ -612,7 +613,7 @@ def h_stitch_dce_scans(masterlist_name,
 
 def h_within_bounds(params,bounds):
 
-    for p in xrange(len(params)):
+    for p in range(len(params)):
         if params[p] >= bounds[p,0] or params[p] <= bounds[p,1] :
             return True
     return False
@@ -732,7 +733,7 @@ def h_fitpx_T1_LL_FAassumed(scn_to_analyse=None,
             #print x,y,slc
             raise
     else:
-        print('fit type {0} not implemented yet'.format(fit_algorithm))
+        print(('fit type {0} not implemented yet'.format(fit_algorithm)))
 
     [a,b,T1_eff,phi] = fit_params
 
@@ -799,9 +800,9 @@ def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
         
     # Start the fitting process        
 
-    for slc in xrange(num_slices):          
-        for x in xrange(bbox[0],bbox[1]):
-            for y in xrange(bbox[2],bbox[3]):
+    for slc in range(num_slices):          
+        for x in range(bbox[0],bbox[1]):
+            for y in range(bbox[2],bbox[3]):
 
                 # Deal with scans that have only one slice
                 if num_slices > 1:
@@ -925,7 +926,7 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
             #print x,y,slc
             raise
     else:
-        print('fit type {0} not implemented yet'.format(fit_algorithm))
+        print(('fit type {0} not implemented yet'.format(fit_algorithm)))
 
     [a,b,T1_eff,phi] = fit_params
 
@@ -1028,9 +1029,9 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
 
     num_slices = 2
 
-    for slc in xrange(num_slices):          
-        for x in xrange(bbox[0],bbox[1]):
-            for y in xrange(bbox[2],bbox[3]):
+    for slc in range(num_slices):          
+        for x in range(bbox[0],bbox[1]):
+            for y in range(bbox[2],bbox[3]):
 
                 # Deal with scans that have only one slice
                 if num_slices > 1:
@@ -1129,7 +1130,7 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
     if peaks == 1:
 
         if slices >1 :
-            for slc in xrange(slices):
+            for slc in range(slices):
                 curr_slice = roi_mask[:,:,slc]
                 # the most common value will be the background; We assume the ROI 
                 # occupies only a small region in the image (less than 50%). 
@@ -1155,9 +1156,9 @@ def h_image_to_mask(roi_data, background=None, foreground=None,  peaks = None):
             return roi_mask         
     else:
                           
-        for slc in xrange(roi_mask.shape[2]):
+        for slc in range(roi_mask.shape[2]):
             
-            for x in xrange(peaks):
+            for x in range(peaks):
         
                 curr_slice = roi_mask[:,:,slc]
               
@@ -1240,7 +1241,7 @@ def h_generate_VTC(scn_to_analyse=None,
     elif vtc_type =='CEST':
 
         import cest.analysis as cest
-        reload(cest)
+        imp.reload(cest)
 
         # Get the ndata to figure out the shape of the array (since some data gets thrown out)
         # make it nan
@@ -1258,8 +1259,8 @@ def h_generate_VTC(scn_to_analyse=None,
 
         ndata = numpy.empty(shape=[x_size,y_size,reps]) + numpy.nan
 
-        for xx in xrange(bbox[0],bbox[1]):
-            for yy in xrange(bbox[2],bbox[3]):
+        for xx in range(bbox[0],bbox[1]):
+            for yy in range(bbox[2],bbox[3]):
 
                 xvals, res = cest.cest_spectrum(scn_to_analyse,
                                                             xx,yy,
@@ -1293,7 +1294,7 @@ def h_generate_VTC(scn_to_analyse=None,
 
         # Reshape it  to stitch together all the data
         nrdata = numpy.empty([x_size,y_size*reps,num_slices]).astype(float)  
-        for s in xrange(num_slices):
+        for s in range(num_slices):
             tmp = ndata[:,:,s,:].flatten()
             tmp[::reps] = numpy.nan
             # Sets the last point of each enhancement curve to numpy.nan
@@ -1366,7 +1367,7 @@ def createSaveVTC(scn_to_analyse=None,
     box = axs.get_position().bounds
     height = box[3] / (bbox[1]-bbox[0])
 
-    for ht,i in enumerate(xrange(bbox[0], bbox[1])):
+    for ht,i in enumerate(range(bbox[0], bbox[1])):
 
         #, simply use the add_axes() method which takes a list of 
         # [left, bottom, width, height] values in 0-1 relative figure coordinates
@@ -1510,9 +1511,9 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
     else:
         hack_shape = data_shape[2]
 
-    for x in xrange(data_shape[0]):
-        for y in xrange(data_shape[1]):
-            for slc in xrange(hack_shape):
+    for x in range(data_shape[0]):
+        for y in range(data_shape[1]):
+            for slc in range(hack_shape):
 
                 # Collect the data
                 if hack_shape> 2:
@@ -1610,9 +1611,9 @@ def bolus_arrival_time(scn_to_analyse=None,
 
     def runningSum(x, N):
         output = numpy.empty_like(x)
-        for i in xrange(x.shape[0]):
-            for j in xrange(x.shape[1]):
-                for k in xrange(x.shape[2]):
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                for k in range(x.shape[2]):
                     output[i,j,k,:] = numpy.convolve(x[i,j,k,:],numpy.ones(N))[N-1:]
         return output
 
@@ -1632,7 +1633,7 @@ def bolus_arrival_time(scn_to_analyse=None,
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )    
+        print(('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) ))    
     
     # there are problems with using phase encodes for certain cases (maybe 3D)
     # so now I have to use the tuid time
@@ -1736,7 +1737,7 @@ def checkSNR(scn_to_analyse=None,
 
     if  inj_point > 1:
         snrcheck_data = dcedata[:,...,1:inj_point]
-        print('Injection, points before {0} used'.format(inj_point))
+        print(('Injection, points before {0} used'.format(inj_point)))
 
     else:
         snrcheck_data = dcedata[:,:,:,1:]
@@ -1760,7 +1761,7 @@ def checkSNR(scn_to_analyse=None,
 
 
     if len(dcedata.shape)>3:
-        for s in xrange(dcedata.shape[-2]):
+        for s in range(dcedata.shape[-2]):
             pylab.subplot(gridSize,gridSize,s+1)
             pylab.imshow(snrMap[:,:,s],vmin=limits[0],vmax=limits[1])
             pylab.title('Slice {0}'.format(s))
@@ -1859,7 +1860,7 @@ def h_fit_ec(scn_to_analyse=None,
     time_per_rep = numpy.round(numpy.divide(total_time,reps))
     inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
 
-    print inj_point
+    print(inj_point)
     # Deal with bounding boxes
     try:
         bbox = scan_object.adata['bbox'].data
@@ -1872,9 +1873,9 @@ def h_fit_ec(scn_to_analyse=None,
     leakage_data = numpy.nan*numpy.squeeze(numpy.empty([x_size,y_size,num_slices])+numpy.nan)
     
     # Start the fitting process        
-    for slc in xrange(num_slices):          
-        for x in xrange(bbox[0],bbox[1]):
-            for y in xrange(bbox[2],bbox[3]):
+    for slc in range(num_slices):          
+        for x in range(bbox[0],bbox[1]):
+            for y in range(bbox[2],bbox[3]):
 
                 if num_slices > 2:
                     bloodvolume, leakage = MMCA_model_fit(norm_data[x,y,slc,:],
@@ -1910,13 +1911,13 @@ def bolus_arrival_time(scn_to_analyse=None,
         output = numpy.empty_like(x)
         
         if len(x.shape)>3: #Multi Slice
-            for i in xrange(x.shape[0]):
-                for j in xrange(x.shape[1]):
-                    for k in xrange(x.shape[2]):
+            for i in range(x.shape[0]):
+                for j in range(x.shape[1]):
+                    for k in range(x.shape[2]):
                         output[i,j,k,:] = numpy.convolve(x[i,j,k,:],numpy.ones(N))[N-1:]
         elif len(x.shape) ==3: #Single Slice
-            for i in xrange(x.shape[0]):
-                for j in xrange(x.shape[1]):
+            for i in range(x.shape[0]):
+                for j in range(x.shape[1]):
                         output[i,j,:] = numpy.convolve(x[i,j,:],numpy.ones(N))[N-1:]            
             
         return output
@@ -2029,7 +2030,7 @@ def bolus_arrival_time(scn_to_analyse=None,
     
     if reps != scan_object.pdata[pdata_num].data.shape[-1]:
         reps = scan_object.pdata[pdata_num].data.shape[-1]
-        print('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) )    
+        print(('\n \n ***** Warning **** \n \n !!! Incomplete dce data for {0}'.format(scan_object.shortdirname) ))    
     
     # there are problems with using phase encodes for certain cases (maybe 3D)
     # so now I have to use the tuid time
@@ -2084,13 +2085,13 @@ def smooth_SG(y, window_size, order, deriv=0, rate=1):
     try:
         window_size = np.abs(np.int(window_size))
         order = np.abs(np.int(order))
-    except ValueError, msg:
+    except ValueError as msg:
         raise ValueError("window_size and order have to be of type int")
     if window_size % 2 != 1 or window_size < 1:
         raise TypeError("window_size size must be a positive odd number")
     if window_size < order + 2:
         raise TypeError("window_size is too small for the polynomials order")
-    order_range = range(order+1)
+    order_range = list(range(order+1))
     half_window = (window_size -1) // 2
     # precompute coefficients
     b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])

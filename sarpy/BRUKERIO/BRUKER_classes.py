@@ -5,6 +5,7 @@ Class Definitions for BRUKER data
 import os
 import re
 import glob
+from datetime import datetime
 
 import nibabel
 import collections
@@ -12,11 +13,14 @@ import collections
 import configobj
 import pandas
 
-import BRUKERIO
-import AData_classes
-from lazy_property import lazy_property
+from ..helpers import natural_sort
+from .lowlevel import (readJCAMP, readfid, readfidspectro, read2dseq,
+                       fftfid)
+from .AData_classes import AData, load_AData
 
-import JCAMP_comparison
+from .lazy_property import lazy_property
+
+from . import JCAMP_comparison
 
 ## From http://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 import logging
@@ -26,7 +30,33 @@ logger.setLevel(level=40)
 dataroot = os.path.expanduser(os.path.join('~','bdata'))
 masterlist_root = os.path.expanduser('~/sdata/masterlists')
 
-import sarpy # make natural_sort in helpers.py available
+class AttrDict(object):
+    '''a class that behaves like a dict but gives you access to its attributes
+    directly'''
+   
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+    def __getitem__(self, key):
+        return self.__dict__[key]
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
+    def __delitem__(self, key):
+        del self.__dict__[key]
+    def __contains__(self, key):
+        return key in self.__dict__
+    def __len__(self):
+        return len(self.__dict__)
+    def __repr__(self):
+        args = ['{}={}'.format(k, repr(v)) for (k,v) in vars(self).items()]
+        name_str = self.__class__.__name__+'(\n{}\n)'
+        return name_str.format(',\n'.join(args))
+    def keys(self):
+        return self.__dict__.keys()
+    def iteritems(self):
+        return self.__dict__.iteritems()
+    def values(self):
+        return self.__dict__.values()
+
 
 def strip_all_but_classname(obj, class_str):
     '''
@@ -68,8 +98,8 @@ def find_all_patients_in_masterlists():
         for config_file_name in config_file_names:
             fname = os.path.join(masterlist_root, config_file_name)
             conf = configobj.ConfigObj(fname)
-            for k in conf.keys():
-                if k <> 'General':
+            for k in list(conf.keys()):
+                if k != 'General':
                     assert masterlist_lookup.get(k) is None, \
                         'Non-unique section name {0} in masterlist {1} (previously in {2})'.format(k, fname, masterlist_lookup[k])
                     masterlist_lookup[k]=fname
@@ -78,7 +108,7 @@ def find_all_patients_in_masterlists():
 
 # ===========================================================
 
-class JCAMP_file(sarpy.helpers.AttrDict):
+class JCAMP_file(AttrDict):
     '''
     Represents a JCAMP encoded parameter file.
 
@@ -90,7 +120,7 @@ class JCAMP_file(sarpy.helpers.AttrDict):
         if not os.path.isfile(filename):
             raise IOError('File "%s" not found' % filename)
         self.filename = filename
-        super(JCAMP_file, self).__init__(**BRUKERIO.readJCAMP(self.filename))
+        super(JCAMP_file, self).__init__(**readJCAMP(self.filename))
 
 class PDATA_file(object):
     '''
@@ -127,7 +157,7 @@ class PDATA_file(object):
 
     @lazy_property
     def data(self):
-        dta = BRUKERIO.read2dseq(os.path.join(self.filename),
+        dta = read2dseq(os.path.join(self.filename),
                                  visu_pars=self.visu_pars.__dict__)
         setattr(self, 'dimdesc', dta['dimdesc'])
         setattr(self, 'dimcomment', dta['dimcomment'])
@@ -163,7 +193,7 @@ class PDATA_file(object):
         '''
         raise NotImplementedError('Deprecated - should not be confused with\n'+
                                   'Scan.store_adata()')
-        return AData_classes.AData.fromdata(self, *args, **kwargs)
+        return AData.fromdata(self, *args, **kwargs)
 
     def export2nii(self,filename,rescale = None, std_mod=None):
         '''
@@ -184,9 +214,8 @@ class PDATA_file(object):
             >>> scn.pdata[0].export2nii(fname)
 
         '''
-        from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
+        from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
         import sarpy.fmoosvi.getters
-        import numpy
         header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()
 
@@ -262,18 +291,18 @@ class Scan(object):
     @lazy_property
     def fid(self):
         try:
-            kspace = BRUKERIO.readfid(os.path.join(self.dirname,'fid'),
+            kspace = readfid(os.path.join(self.dirname,'fid'),
                                       squeezed=False,
                                       acqp=self.acqp.__dict__,
                                       method=self.method.__dict__)['data']
         except TypeError:
             try:
-                kspace = BRUKERIO.readfidspectro(os.path.join(self.dirname,'fid'),
+                kspace = readfidspectro(os.path.join(self.dirname,'fid'),
                                       acqp=self.acqp.__dict__,
                                       method=self.method.__dict__)['data']
             except IOError:
                 # is there a ser instead o fid file?
-                kspace = BRUKERIO.readfidspectro(os.path.join(self.dirname,'ser'),
+                kspace = readfidspectro(os.path.join(self.dirname,'ser'),
                                           acqp=self.acqp.__dict__,
                                           method=self.method.__dict__)['data']
         return kspace
@@ -282,12 +311,41 @@ class Scan(object):
     def fftfid(self):
         readfidresult = {'data': self.fid,
                          'header':{'method':self.method.__dict__}}
-        return BRUKERIO.fftfid(os.path.join(self.dirname,'fid'),
+        return fftfid(os.path.join(self.dirname,'fid'),
                                readfidresult=readfidresult)
 
     @lazy_property
     def adata(self):
-        adata_dict = AData_classes.load_AData(self.pdata, self.dirname)
+        adata_dict = load_AData(self.pdata, self.dirname)
+        #check whether dependent adata is outdated
+        for ad in adata_dict.items():
+            if  ad[1].meta['depends_on'] != 'UNKNOWN':
+                for dep in ad[1].meta['depends_on']:
+                    if dep != '':
+                        scn_name, adata_lbl = dep.split(';')
+                        t1 = datetime.strptime(ad[1].meta['created_datetime'],'%c')
+                        try:
+                            t2str = Scan(scn_name).adata[adata_lbl].meta['created_datetime']
+                        except KeyError:
+                            msg = ('adate["{2}"] depends on "{0}" which '+
+                                   'is missing adata "{1}"'
+                                   ).format(scn_name, adata_lbl,ad[1].key)
+                            print('WARNING: ' + msg)
+                            logger.warning(msg)
+                        except OSError:
+                            msg = ('adate["{1}"] depends on "{0}" which '+
+                                   'is missing?'
+                                   ).format(scn_name, ad[1].key)
+                            print('WARNING: ' + msg)
+                            logger.warning(msg)
+                        else:
+                            t2 = datetime.strptime(t2str,'%c')
+                            if t2>t1:
+                                msg = ('dependency "{0};{1}" is younger than '+
+                                      'it should be').format(scn_name, adata_lbl)
+                                print('WARNING: ' + msg)
+                                logger.warning(msg)
+                                  
         if len(adata_dict) == 0:
             logger.info('No analysis data in directory "{0}"'.
                          format(self.dirname))
@@ -296,7 +354,7 @@ class Scan(object):
     @lazy_property
     def pdata(self):
         pdata_list = []
-        for f in sarpy.natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
+        for f in natural_sort(glob.glob(os.path.join(self.dirname,'pdata','*'))):
             try:
                 pdata = PDATA_file(f)
                 pdata_list.append(pdata)
@@ -490,14 +548,14 @@ class Scan(object):
                             (kwargs['key'], owner))
             elif force:
                 self.adata.pop(kwargs['key'], None)
-        self.adata[kwargs['key']] = AData_classes.AData.fromdata(
+        self.adata[kwargs['key']] = AData.fromdata(
                     self.pdata[pdata_idx], **kwargs)
 
     def rm_adata(self, key):
         '''
         delete adata set
         '''
-        for k in self.adata.keys():
+        for k in list(self.adata.keys()):
             if re.search(key+'$', k) is not None:
                 if self.adata.pop(k, None) is not None:
                     logger.info('adata %s for %s' %(key, self.shortdirname))
@@ -523,7 +581,7 @@ class Scan(object):
                 attr_study = study_dic.get(attr)
                 scanlabels_dic = study_dic.get('scanlabels')
                 if scanlabels_dic is not None:
-                    for k,v in scanlabels_dic.iteritems():
+                    for k,v in scanlabels_dic.items():
                         if v == self.scannumber:
                             scan_dic = study_dic.get(k)
                     if scan_dic is not None:
@@ -611,7 +669,7 @@ class Study(object):
     @lazy_property
     def scans(self):
         scans = []
-        eligible_dirs = sarpy.natural_sort(os.listdir(self.dirname))
+        eligible_dirs = natural_sort(os.listdir(self.dirname))
         for fname in eligible_dirs:
             filename = os.path.join(self.dirname, fname)
             if (os.path.isdir(filename) and
@@ -681,8 +739,8 @@ class Study(object):
                 if re.match(protocol_name, s.acqp.ACQ_protocol_name):
                     found_scans.append(s)
             except AttributeError:
-                print('Warning: Scan in dir '+
-                      '%s has no acqp attribute' %str(s.shortdirname))
+                print(('Warning: Scan in dir '+
+                      '%s has no acqp attribute' %str(s.shortdirname)))
         return(found_scans)
 
     def scan_finder(self, **kwargs):
@@ -702,7 +760,7 @@ class Study(object):
         '''
         chosen_comparison = {}
         # find comparison type (regex, array comparison or plain vanilla '==')
-        for key in kwargs.keys():
+        for key in list(kwargs.keys()):
                 # remember, the keys here are frozensets
             possible_comp = [k for k in
                              JCAMP_comparison.dictionary
@@ -712,19 +770,19 @@ class Study(object):
         for scn in self.scans:
             if (all(k in scn.acqp.__dict__ and
                     chosen_comparison[k](v, scn.acqp.__dict__[k])
-                                         for k, v in kwargs.items()) or
+                                         for k, v in list(kwargs.items())) or
                 all(k in scn.method.__dict__ and
                     chosen_comparison[k](v, scn.method.__dict__[k])
-                                         for k, v in kwargs.items())):
+                                         for k, v in list(kwargs.items()))):
                 yield scn
 
-    def find_adata(self):
+    def _find_adata(self):
         '''
         All keys of adata sets attached to scans in this study
         '''
         adatas = set()
         for scn in self.scans:
-            for k in scn.adata.keys():
+            for k in list(scn.adata.keys()):
                 adatas.add(k)
         return adatas
 
@@ -733,14 +791,14 @@ class Study(object):
         All keys *AND SCANS* of adata sets attached to scans in this study
         '''
         
-        klist = self.find_adata()
+        klist = self._find_adata()
         ad_dict = collections.OrderedDict()
         
         for k in klist: # Populate the ad_dict with the existing keys
             ad_dict[k] = []
             
         for scn in self.scans:
-            for ke in scn.adata.keys():
+            for ke in list(scn.adata.keys()):
                 ad_dict[ke].append(scn.shortdirname)
 
         return ad_dict
@@ -871,16 +929,16 @@ class StudyCollection(object):
         '''
         return list(self.xscan_finder(**kwargs))
 
-    def find_adata(self):
+    def _find_adata(self):
         adatas=set()
         for stdy in self.studies:
-            ret = stdy.find_adata()
+            ret = stdy._find_adata()
             adatas = adatas.union(ret)
         return adatas
         
     def find_adata_scans(self, flatten = False):
         
-        klist = self.find_adata()
+        klist = self._find_adata()
         
         ad_dict = {}
         for k in klist:
@@ -888,7 +946,7 @@ class StudyCollection(object):
             
         for stdy in self.studies:
             c_dict = stdy.find_adata_scans()
-            for k in stdy.find_adata():
+            for k in stdy._find_adata():
                 ad_dict[k].append(c_dict[k])
 
         if flatten is False:
@@ -897,7 +955,7 @@ class StudyCollection(object):
         else:
             ad_dict_flatten = {}
 
-            for k,v in ad_dict.iteritems():
+            for k,v in ad_dict.items():
                 ad_dict_flatten[k] = [item for sublist in ad_dict[k] for item in sublist]
 
             return ad_dict_flatten
@@ -919,7 +977,7 @@ class Patient(StudyCollection):
         self.patient_id = None
 
         searchdir = os.path.join(dataroot, '*', 'nmr', patient_name) + '*'
-        directories = sarpy.natural_sort(glob.glob(searchdir))
+        directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
             study = Study(dirname)
             if not self.patient_id:
@@ -997,12 +1055,12 @@ class Experiment(StudyCollection):
     @classmethod
     def from_masterlist(cls, masterlistname):
         bare_experiment = cls(root=None, absolute_root=None)
-        bare_experiment.patients = sarpy.helpers.AttrDict()
-        bare_experiment.labels = sarpy.helpers.AttrDict()
+        bare_experiment.patients = AttrDict()
+        bare_experiment.labels = AttrDict()
         if masterlistname is not None:
             conf = configobj.ConfigObj(os.path.join(masterlist_root, masterlistname))
-            for k in conf.keys():
-                if k <> 'General':
+            for k in list(conf.keys()):
+                if k != 'General':
                     bare_experiment.patients[k] = collections.OrderedDict()
                     for stdy_str in conf[k]:
                         short_stdy_str = stdy_str.split()[1]
@@ -1066,7 +1124,7 @@ class Experiment(StudyCollection):
                 if stdy.masterlist_filename is not None:
                     new_study_list.append(stdy)
                 else:
-                    print('WARNING: removing study {0} from Experiment'.format(stdy.shortdirname))
+                    print(('WARNING: removing study {0} from Experiment'.format(stdy.shortdirname)))
             self.studies = new_study_list 
         if self.studies:
             default_masterlistname = self.studies[0].masterlist_filename
@@ -1091,7 +1149,7 @@ class Experiment(StudyCollection):
             searchdir = os.path.join(dataroot, '*', 'nmr', root) + '*'
 
         self.root = root
-        directories = sarpy.natural_sort(glob.glob(searchdir))
+        directories = natural_sort(glob.glob(searchdir))
         for dirname in directories:
             study = Study(dirname)
             self.add_study(study)
@@ -1107,10 +1165,10 @@ class Experiment(StudyCollection):
         Patients. The naming of those patients has to follow *exactly* the naming of BRUKER
         patients. Inside those patient sections there may be subsections title "study xxx"
         where xxx is the BRUKER three-letter study abbreviation.'''
-        pat_iterator = ((k,v) for k,v in self._masterlist.iteritems() if k<>'General')
+        pat_iterator = ((k,v) for k,v in self._masterlist.items() if k!='General')
         df = pandas.DataFrame.from_items(pat_iterator)
         #identify all indices that don't start with "study "
-        indexarr = map(lambda x: re.match('study ',x) is None, df.index)
+        indexarr = [re.match('study ',x) is None for x in df.index]
         return df[indexarr]
     
     @lazy_property
@@ -1123,12 +1181,12 @@ class Experiment(StudyCollection):
         the doc string to masterlist_df.
         '''
         temp_dict = {}
-        for k,v in self._masterlist.iteritems():
-            for ki,vi in v.iteritems():
+        for k,v in self._masterlist.items():
+            for ki,vi in v.items():
                 if re.match('study ', ki):                    
                     temp_dict[re.sub('study ', k+'.', ki)]=vi
                     
-        df = pandas.DataFrame.from_items(temp_dict.iteritems())
+        df = pandas.DataFrame.from_items(iter(temp_dict.items()))
         return df
 
 

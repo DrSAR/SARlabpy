@@ -6,13 +6,12 @@ Class definitions for the analysed data structures
 import os, errno
 import shutil
 import glob
-import cPickle
+import pickle
 import zlib
 import json
 import re
-import BRUKER_classes
-from lazy_property import lazy_property
-from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
+from . import BRUKER_classes
+from .lazy_property import lazy_property
 import nibabel
 from datetime import datetime
 
@@ -20,7 +19,7 @@ import logging
 logger=logging.getLogger('sarpy.io.Adata_classes')
 logger.setLevel(level=40)
 
-import sarpy.helpers
+from ..helpers import git_repo_state
 
 #this is where datagoes that is secondary to acquired data.
 # for this to make any sense, there needs to be som mechanism by which the
@@ -46,7 +45,7 @@ def silentremove(filename):
     '''
     try:
         os.remove(filename)
-    except OSError, e: # this would be "except OSError as e:" in python 3.x
+    except OSError as e: # this would be "except OSError as e:" in python 3.x
         if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
             raise # re-raise exception if a different error occured
 
@@ -98,10 +97,12 @@ class ADataDict(collections.MutableMapping):
 
         # here we receive the key from the dictionary access
         # hence, we should store it in the meta-data
+        if ';' in key:
+            raise AttributeError('key may not contain ";"')
         value.meta['key'] = key
         value.meta['username'] = getpass.getuser()
         # freeze the repository state for future use
-        repo_state = sarpy.helpers.git_repo_state()
+        repo_state = git_repo_state()
         value.meta['commit_sha1'] = repo_state['sha1']
         value.meta['commit_date'] = repo_state['date']
 
@@ -136,10 +137,10 @@ class ADataDict(collections.MutableMapping):
         # will be used to populate the nifti header.
         if value.meta['compressed']:
             with open(fileroot+'.zippickle', 'wb') as f:
-                f.write(zlib.compress(cPickle.dumps(value.data)))
+                f.write(zlib.compress(pickle.dumps(value.data)))
         else:
             with open(fileroot+'.pickle', 'w') as f:
-                cPickle.dump(value.data, f)
+                pickle.dump(value.data, f)
 
         with open(fileroot+'.json','w') as paramfile:
             json.dump(value.meta, paramfile, indent=4)
@@ -150,7 +151,7 @@ class ADataDict(collections.MutableMapping):
 
 
     def __delitem__(self, key):
-        print('adata {0} deleted in {1}'.format(key, self[key].parent.visu_pars.VisuSubjectId))
+        print(('adata {0} deleted in {1}'.format(key, self[key].parent.visu_pars.VisuSubjectId)))
         shutil.rmtree(os.path.join(adataroot, 
                                    self.store[key].meta['dirname']))
         del self.store[key]
@@ -231,7 +232,7 @@ class AData(object):
                 pickledata = zlib.decompress(f.read())
             else:
                 pickledata = f.read()
-        data = cPickle.loads(pickledata)
+        data = pickle.loads(pickledata, encoding='latin1')
                     
         self.__yet_loaded = True
         return data
@@ -250,12 +251,13 @@ class AData(object):
         More elaborate representation
         '''
         return ("Analysed data ('{3}') based on PDATA (uid={0})\n"+
-                '  created on {1}\n'+
+                '  created on {1} by {4}\n'+
                 '  parent: {2}'+
                 '').format(self.parent_uid,
                           self.meta['created_datetime'],
                           self.meta['parent_filename'],
-                          self.key)
+                          self.key,
+                          self.meta['username'])
 
     @classmethod
     def fromfile(cls, filename, parent=None, lazy=True):
@@ -291,6 +293,10 @@ class AData(object):
                             format(datafilename))
         with open(paramfilename[0], 'r') as paramfile:
             meta = json.load(paramfile)
+        # backwards compatibility for adata that didn't store the 
+        # depends_on attribute in the meta data
+        if 'depends_on' not in meta:
+            meta['depends_on']='UNKNOWN'
 
         return cls(meta=meta,
                    key=meta['key'],
@@ -311,7 +317,7 @@ class AData(object):
             sourcedata
         :param dict(optional) meta:
             meta information in the form of a dictionary. The following keys
-            will be added to it: paret_uid, created_datetime, parent_filename,
+            will be added to it: parent_uid, created_datetime, parent_filename,
             compressed.
         '''
         if 'meta' in kwargs:
@@ -321,6 +327,11 @@ class AData(object):
             meta['parent_uid'] = parent.uid()
             meta['created_datetime'] = datetime.now().strftime('%c')            
             meta['compressed'] = kwargs.get('compressed',True)
+        
+        if 'depends_on' in kwargs:
+            meta['depends_on'] = kwargs['depends_on']
+        else:
+            meta['depends_on'] = 'UNKNOWN'
 
         if parent is None:
             raise ValueError('analysed data has to be based on a parent')
@@ -351,10 +362,7 @@ class AData(object):
             >>> scn.store_adata(key='times2',data=scn.pdata[0].data*2, force=True)
             >>> scn.adata['times2'].export2nii('/tmp/PhantomOrientation-times2.nii.gz')
         '''
-        from visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
-        import copy
-        import sarpy.fmoosvi.getters
-        import numpy
+        from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
         
         header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()

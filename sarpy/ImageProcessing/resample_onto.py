@@ -92,7 +92,7 @@ def resample_onto(source_fname, target_fname):
     output=resample_filter.Execute(img_input)
     # make a numpy array from that image
     # NB: this appears to return the thing in reverse order of dimensions
-    dims = range(output.GetDimension())
+    dims = list(range(output.GetDimension()))
     dims.reverse()
     return (sitk.GetArrayFromImage(output).transpose(dims), output)
 
@@ -185,7 +185,7 @@ def resample_onto_pdata(source_pdata, target_pdata, use_source_dims=False,
     mixed_dims.reverse() # ITK reverse spatial dimensions
     mixed_dims.append(extra_dims)
     output = numpy.empty(mixed_dims)
-    for i in xrange(extra_dims):
+    for i in range(extra_dims):
         tobetrfx = flat_input_img[:,:,:,i]
         if replace_nan is not None:
             tobetrfx[numpy.where(numpy.isnan(tobetrfx))] = replace_nan
