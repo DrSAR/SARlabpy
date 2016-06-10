@@ -3,9 +3,7 @@
 Copyright: SARlab members, UBC, Vancouver
 """
 import numpy
-from sarpy.io.visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
-from sarpy.io.visu_pars_2_Nifti1Header import visu_pars_2_matrix_size
-import copy
+from ..BRUKERIO.visu_pars_2_Nifti1Header import visu_pars_2_matrix_size
 
 def atleast_4d(arr):
     '''

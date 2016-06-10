@@ -34,4 +34,6 @@ if __name__ == '__main__':
                    'Topic :: Scientific/Engineering :: Physics',
                    'Topic :: Scientific/Engineering :: Medical Science Apps.',
                   ],
+      setup_requires=['pytest-runner'],
+      tests_require=['pytest'],
      )

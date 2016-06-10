@@ -5,41 +5,17 @@ Created on Wed May 15 14:30:17 2013
 @author: fmoosvi
 """
 
-import sarpy
-import sarpy.fmoosvi.wrappers
-
+#from . import sarpy
+from . import wrappers
 
 masterlist_name = 'HerP2'
 data_label = '24h-DCE'
 
-
 try:
     #sarpy.fmoosvi.wrappers.generate_VTC(masterlist_name, data_label)
-    sarpy.fmoosvi.wrappers.plotVTC(masterlist_name,'HerP2Bs05', data_label)
-
-except AttributeError:
-    
+    wrappers.plotVTC(masterlist_name,'HerP2Bs05', data_label)
+except AttributeError:    
     pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #bounding_box,box_size = create_bounding_box(data,top_left)

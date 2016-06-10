@@ -14,17 +14,11 @@ import scipy.integrate
 import scipy.optimize
 import scipy.fftpack
 import scipy.stats
-import sarpy.ImageProcessing.resample_onto
-import sarpy.io
-import math
 import copy
 import os
 import json
-import nibabel
 import datetime
 import collections
-import random
-import copy
 import sarpy.fmoosvi.getters as getters
 import imp
 
@@ -1533,8 +1527,8 @@ def h_fit_T1_IR(scan_name_list,parallelExperiment = False):
                         y_data = numpy.array([sc.fftfid[x,y] for sc in scan_list])
 
                 y_data = numpy.real(y_data)
-
-            	fit_params,cov,infodict,mesg,ier = h_fitpx_T1_IR(numpy.squeeze(y_data),
+                
+                fit_params,cov,infodict,mesg,ier = h_fitpx_T1_IR(numpy.squeeze(y_data),
                                                                  TI,
                                                                  parallelExperiment=parallelExperiment)
 

@@ -9,9 +9,9 @@ import os
 import glob
 
 #make the SARlogger features available
-from sarpy import SARlogger
+from .sarpy import SARlogger
 #test logging for BRUKERIO
-from sarpy.io import BRUKER_classes
+from .sarpy.BRUKERIO import BRUKER_classes
 SARlogger.initiate_logging(BRUKER_classes, handler_level=SARlogger.DEBUG)
 
 print('testing: %s' % __name__)

@@ -6,8 +6,8 @@ Created on Wed Mar 13 14:11:03 2013
 """
 
 import sarpy
-import sarpy.fmoosvi.analysis
-import sarpy.fmoosvi.getters
+from . import analysis
+from . import getters
 import pylab
 import numpy
 import os
@@ -38,10 +38,10 @@ def store_deltaT1(masterlist_name=None,
             scan1 = exp.patients[k][T1map_1]
             scan2 = exp.patients[k][T1map_2]
 
-    	except IOError:
-    	    print(('{0}: Not found adata {1} or {2} in patient {3}'.format(
-    	          adata_save_label,adata_label1,adata_label2,k) ))
-    	    continue
+        except IOError:
+            print('{0}: Not found adata {1} or {2} in patient {3}'.format(
+	            adata_save_label,adata_label1,adata_label2,k))
+            continue
 
         if (not adata_save_label in list(scan2.adata.keys())) or force_overwrite is True:
 
