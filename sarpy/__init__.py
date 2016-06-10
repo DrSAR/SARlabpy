@@ -1,4 +1,4 @@
-version = '4.0'
+version = '5.0'
 release = version + 'beta'
 from .helpers import natural_sort, smooth_SG, git_repo_state
 repo_state = git_repo_state()
