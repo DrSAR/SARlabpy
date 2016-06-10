@@ -8,7 +8,7 @@ Created on Wed Mar 13 00:49:44 2013
 import sarpy
 
 exp = sarpy.Experiment('*')
-print exp.__repr__()
+print(exp.__repr__())
 for study in exp.studies:
     for scan in study.scans:
         for pdata in scan.pdata:

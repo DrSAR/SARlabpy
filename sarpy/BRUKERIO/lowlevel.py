@@ -398,7 +398,7 @@ def readfid(fptr=None,
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/9/fid')) # doctest:+ELLIPSIS
         Traceback (most recent call last):
         ...
-        OSError: ...
+        FileNotFoundError: ...
         >>> # fid file 9 was missing due to incomplete scans
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/10/fid'))
         >>> fid['data'].shape # FLASH 2D (MATRIX 32 X 32)
@@ -413,13 +413,13 @@ def readfid(fptr=None,
         ... # this should be an easy 64x64x5slice single shot EPI...
         Traceback (most recent call last):
         ...
-        ValueError: ...
+        IndexError: ...
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/13/fid'))
         ... # doctest: +ELLIPSIS
         ... # 16 segment EPI - FIXME
         Traceback (most recent call last):
         ...
-        ValueError: ...
+        IndexError: ...
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/14/fid'))
         >>> fid['data'].shape # DTI Standard
         (133, 105, 5, 2)
@@ -444,7 +444,7 @@ def readfid(fptr=None,
         ... # this is desired (and expected) behaviour
         Traceback (most recent call last):
         ...
-        IOError: ...
+        ValueError: ...
         >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/99/fid'), resetNR=True)
         >>> fid['data'].shape # interrupted FLASH DCE (NR=7 from formerly 25)
         (133, 105, 5, 7)
@@ -588,7 +588,7 @@ def readfid(fptr=None,
 
             data = numpy.fromfile(fptr, dtype = dtype)[0:(2*n_stored_datapoints)]
         else:
-            raise IOError('filesize (%i) < expected size of fid (%i)' % 
+            raise ValueError('filesize (%i) < expected size of fid (%i)' % 
                           (file_size, fid_size))
     else:
         data = numpy.fromfile(fptr, dtype = dtype)
@@ -968,11 +968,9 @@ def dict2string(d):
     This might be useful when turning the JCAMP-style dictionaries
     into something that goes into a text display. Example use would be::
 
-        >>> d={'TE':2.3, 'TR':5, 'NAME':'random name'}
+        >>> d={'TE':2.3}
         >>> print(dict2string(d))
                           TE : 2.3
-                          TR : 5
-                        NAME : 'random name'
     '''
     strlist = []
     for k, v in d.items():
@@ -1167,4 +1165,3 @@ def readRFshape(filename):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-#    doctest.run_docstring_examples(readfid,globals())

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Test Routines for BRUKERIO
+Test Routines for lowlevel
 """
 import unittest
 import doctest
@@ -10,12 +10,12 @@ import os
 #import pylab
 import numpy
 
-#make the SARlogger features available
-from sarpy import initiate_logging, dataroot
-from sarpy.io import BRUKERIO
-initiate_logging(BRUKERIO, handler_level=30)
+#make the SARlogger features available ??
+from .BRUKER_classes import dataroot
+from . import lowlevel
+#initiate_logging(lowlevel, handler_level=30)
 
-print('test_BRUKERIO run: %s' % __name__)
+print('test_lowlevel run: %s' % __name__)
 
 fnameroot = os.path.join(dataroot,'stefan','nmr','readfidTest.ix1')
 
@@ -66,12 +66,12 @@ class Test(unittest.TestCase):
     
     def test_doctests(self):
         '''Run the doctests'''
-        doctest.testmod(BRUKERIO)
+        doctest.testmod(lowlevel)
         
     def test_readfid(self):
-        '''BRUKERIO.io.readfid()'''
+        '''lowlevel.io.readfid()'''
 #        fname = os.path.expanduser('~/data/readfidTest.ix1/3/fid')   
-#        data = BRUKERIO.readfid(fname)
+#        data = lowlevel.readfid(fname)
 #        kspace = data['data']
 #        self.assertEqual(kspace.shape, (256,105,1,1))
 #        # reshape array by stacking them together
@@ -86,38 +86,39 @@ class Test(unittest.TestCase):
         Test readJCAMP for exceptions by reading variety of acqp 
         and method files
         '''
-        logger.info('test_readJCAMP started')
+#        logger.info('test_readJCAMP started')
         skip = [] # default 
      
-        for k in [keys for keys in scan_labels.keys() if keys not in skip]:
-            BRUKERIO.logger.info('opening scan {0} which is "{1}"'.
-                         format(k,scan_labels[k]))
+        for k in [keys for keys in list(scan_labels.keys()) if keys not in skip]:
+#            lowlevel.logger.info('opening scan {0} which is "{1}"'.
+#                         format(k,scan_labels[k]))
             fname_acqp = fnameroot+str(k)+'/acqp'
             fname_method = fnameroot+str(k)+'/method'
     
-            acqp = BRUKERIO.readJCAMP(fname_acqp)
-            BRUKERIO.logger.info('ACQ_size = {0}'.format(acqp['ACQ_size']))
+            acqp = lowlevel.readJCAMP(fname_acqp)
+#            lowlevel.logger.info('ACQ_size = {0}'.format(acqp['ACQ_size']))
             self.assertEqual(acqp['ACQ_O2_list'], [0])
             ACQ_size = acqp['ACQ_size']
             self.assertEqual(ACQ_size, ACQ_size_dict[k])
 
-            meth = BRUKERIO.readJCAMP(fname_method)
+            meth = lowlevel.readJCAMP(fname_method)
             try:
                PVM_EncMatrix = meth['PVM_EncMatrix']
                PVM_EncMatrix[0] = 2*PVM_EncMatrix[0]
                if k not in (12,13,16,17,18):
                    self.assertEqual(ACQ_size, PVM_EncMatrix)
             except KeyError:
-                BRUKERIO.logger.info('scan {0} has no PVM_EncMatrix'.format(k))
+                pass
+#                lowlevel.logger.info('scan {0} has no PVM_EncMatrix'.format(k))
 
     def test_read2dseq(self):
         skip = [9, 15, 99]
-        for k in [keys for keys in scan_labels.keys() if keys not in skip]:
-            BRUKERIO.logger.warn('opening procno for scan {0} which is "{1}"'.
-                                format(k,scan_labels[k]))
+        for k in [keys for keys in list(scan_labels.keys()) if keys not in skip]:
+#            lowlevel.logger.warn('opening procno for scan {0} which is "{1}"'.
+#                                format(k,scan_labels[k]))
             fname_pdata = fnameroot+str(k)+'/pdata/1'
-            d = BRUKERIO.read2dseq(fname_pdata)
-            print d['data'].shape
+            d = lowlevel.read2dseq(fname_pdata)
+            print(d['data'].shape)
             self.assertEqual(len(d['dimdesc']), len(d['dimcomment']))
             
 
@@ -125,41 +126,41 @@ def stresstest_readJCAMP(*path_filter):
     import glob
     file_list = glob.glob(os.path.join(dataroot,'stefan',*path_filter))
     for JCAMPname in file_list:
-        JCAMPfile=BRUKERIO.readJCAMP(JCAMPname)
-        print JCAMPname
+        JCAMPfile=lowlevel.readJCAMP(JCAMPname)
+        print(JCAMPname)
 
 def stresstest_read2dseq(*path_filter):
     import glob
     file_list = glob.glob(os.path.join(dataroot,*path_filter))
     for fname in file_list:
         if os.path.isfile(fname+'/visu_pars'):
-            print fname, BRUKERIO.read2dseq(fname)['data'].shape
+            print(fname, lowlevel.read2dseq(fname)['data'].shape)
         
         
         
 def stresstest_readfid(skip=None):
     '''
-    test.test_BRUKERIO.stresstest_readfid(skip=[9,13,15])
+    test.test_lowlevel.stresstest_readfid(skip=[9,13,15])
     '''
     skip = skip or [] # default if sentry is None
  
-    for k in [keys for keys in scan_labels.keys() if keys not in skip]:
-        BRUKERIO.logger.info('opening scan {0} which is "{1}"'.
-                     format(k,scan_labels[k]))
+    for k in [keys for keys in list(scan_labels.keys()) if keys not in skip]:
+#        lowlevel.logger.info('opening scan {0} which is "{1}"'.
+#                     format(k,scan_labels[k]))
         fname = fnameroot+str(k)+'/fid'
 
         try:
-            data = BRUKERIO.readfid(fname)
+            data = lowlevel.readfid(fname)
             filesize = os.stat(fname).st_size
         except IOError:
             print('File NOT found: '+fname)
         else:            
             kspace = data['data']
-            imgspace = BRUKERIO.fftbruker(kspace, 
+            imgspace = lowlevel.fftbruker(kspace, 
                                           encoding=data['header']['encoding'])
             acqp = data['header']['acqp']
-            BRUKERIO.logger.debug('filesize={0}\ndata shape={1}\nACQ_size = {2}'.
-                         format(filesize, kspace.shape,acqp['ACQ_size']))
+#            lowlevel.logger.debug('filesize={0}\ndata shape={1}\nACQ_size = {2}'.
+#                         format(filesize, kspace.shape,acqp['ACQ_size']))
                          
             # reshape array by stacking them together
             nslices = kspace.shape[2]
