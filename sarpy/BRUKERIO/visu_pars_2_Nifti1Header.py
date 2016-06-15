@@ -167,7 +167,7 @@ def visu_pars_2_Nifti1Header(visu_pars):
     # Let's figure out the rotation matrix. You ready? Here we go ...
     try:
         rot_mat = visu_pars.VisuCoreOrientation.flatten()
-        for i in xrange(9):
+        for i in range(9):
             if len(set(rot_mat[i::9])) > 1:
                 raise ValueError("Different slicepacks with different " +
                             "orientations!")

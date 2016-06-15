@@ -214,7 +214,7 @@ class PDATA_file(object):
 
         '''
         from .visu_pars_2_Nifti1Header import visu_pars_2_Nifti1Header
-        import sarpy.fmoosvi.getters
+        import sarpy.analysis.getters
         header = visu_pars_2_Nifti1Header(self.visu_pars)
         aff = header.get_qform()
 
@@ -227,7 +227,7 @@ class PDATA_file(object):
 
             h = img_pair.get_header()
             
-            minVal, maxVal = sarpy.fmoosvi.getters.get_image_clims(self.data, std_mod)
+            minVal, maxVal = sarpy.analysis.getters.get_image_clims(self.data, std_mod)
             h['cal_min'] = minVal
             h['cal_max'] = maxVal
             

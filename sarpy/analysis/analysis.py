@@ -19,7 +19,7 @@ import os
 import json
 import datetime
 import collections
-import sarpy.fmoosvi.getters as getters
+import sarpy.analysis.getters as getters
 import imp
 
 

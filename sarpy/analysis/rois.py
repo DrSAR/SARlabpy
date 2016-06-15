@@ -7,7 +7,7 @@ Created on Thu May 30 17:49:35 2013
 @author: fmoosvi
 """
 
-import sarpy.fmoosvi.getters
+import sarpy.analysis.getters
 
 def export_roi(masterlist_name,
                roi_scan_label = None,
@@ -23,7 +23,7 @@ def export_roi(masterlist_name,
     import json
     import nibabel
     import collections
-    import sarpy.fmoosvi.analysis
+    import sarpy.analysis.analysis
     import os
     import scipy
     import numpy
@@ -92,7 +92,7 @@ def import_roi(masterlist_name,
     import json
     import nibabel
     import collections
-    import sarpy.fmoosvi.analysis
+    import sarpy.analysis.analysis
     import os
     import scipy
     import numpy
@@ -153,13 +153,13 @@ def import_roi(masterlist_name,
             # This line takes just the first slice where the tumour is drawn. If multislice CEST ever becomes a 
             # TODO: reality, that will need to be taken care of.
 
-            if sarpy.fmoosvi.getters.get_num_slices(scn_name) ==1 and len(roi.shape) > 2:
+            if sarpy.analysis.getters.get_num_slices(scn_name) ==1 and len(roi.shape) > 2:
                 roi = roi[:,:,0]
 
             # the default foreground and background in h_image_to_mask
             # will result in a roi_m that has NaN and 1 only (aka
             # 'proper mask')
-            roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi,peaks=peaks)
+            roi_m = sarpy.analysis.analysis.h_image_to_mask(roi,peaks=peaks)
 
             # Calculate the weights for each slice
             weights = numpy.zeros(shape=roi_m.shape[-1])
@@ -177,7 +177,7 @@ def import_roi(masterlist_name,
 
 
                 # get the bbox for this roi and scan
-                bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,
+                bbox = sarpy.analysis.getters.get_roi_bbox(scn_name,
                                                       roi_adata_label=roi_key_name)
                 scan.store_adata(key='bbox',data=bbox,force=forceVal)
 
@@ -197,7 +197,7 @@ def import_roi(masterlist_name,
             roi_scan_label = 'roi'
         try:
             #bbox = sarpy.Scan(pat[roi_scan_label]).adata['bbox'].data
-            bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,roi_scan_label)
+            bbox = sarpy.analysis.getters.get_roi_bbox(scn,roi_scan_label)
 
             for lbl,scn in pat.iteritems():
 
