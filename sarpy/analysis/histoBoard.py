@@ -8,7 +8,7 @@ A config file is used to describe the construction of histo boards.
 Copyright: SARlab members, UBC, Vancouver, 2013
 """
 import argparse
-import ConfigParser
+import configparser
 import os
 import glob
 import re
@@ -48,8 +48,8 @@ def generate(**kwargs):
 
 
     if args.conf_file:
-        print("loading config file %s" % args.conf_file)
-        config = ConfigParser.SafeConfigParser()
+        print(("loading config file %s" % args.conf_file))
+        config = configparser.SafeConfigParser()
         base_fname = os.path.join(os.path.expanduser('~'),
                                   'hdata',
                                   args.conf_file)
@@ -74,8 +74,8 @@ def generate(**kwargs):
     root = os.path.join(os.path.expanduser('~/hdata'), args.experimentname)
     
     patient_slice_ID = set()
-    for k,v in markers.iteritems():
-        print('checking files in "%s"' % v)
+    for k,v in list(markers.items()):
+        print(('checking files in "%s"' % v))
         image_files = (glob.glob(os.path.join(root, v, '*jpg')) +
                        glob.glob(os.path.join(root, v, '*jpeg')) + 
                        glob.glob(os.path.join(root, v, '*tif')) + 
@@ -88,27 +88,27 @@ def generate(**kwargs):
                 to_join = ''.join(regmatch.groups()[0:3])
                 patient_slice_ID.add(to_join)
             else:
-                print 'did not match'+x
+                print(('did not match'+x))
     
     patients=set()
-    print patient_slice_ID
+    print(patient_slice_ID)
     violation = False
     for img_ID in patient_slice_ID:
 #        img_ID_parsed = re.match('([0-9]+)([a-z])([0-9]+)([ab]*)', img_ID)
         img_ID_parsed = re.match('([0-9]+-)([0-9]+\.{0,1}[0-9]*)([ab]*)(.*)', img_ID)
         if img_ID_parsed is None:
-            print('convention violation (type I): %s' % img_ID)
+            print(('convention violation (type I): %s' % img_ID))
             violation = True
         else:
             # since the img_ID is kosher we need to now check whether it exists
             # in all marker sub directories
-            for k,v in markers.iteritems():
+            for k,v in list(markers.items()):
                 files_for_img_ID = glob.glob(os.path.join(root, v, img_ID+'*'))
                 if len(files_for_img_ID) == 0:
-                    print('convention violation (type II): %s not found in %s ' %
-                            (img_ID, v))
+                    print(('convention violation (type II): %s not found in %s ' %
+                            (img_ID, v)))
                 elif len(files_for_img_ID) > 1:
-                    print('convention violation (type III): found {0} in {1}'.format(img_ID, v))
+                    print(('convention violation (type III): found {0} in {1}'.format(img_ID, v)))
                 else: # no violation found -> proceed to assemble names                
                     patnr = img_ID_parsed.group(1)
                     patients.add(patnr)
@@ -127,15 +127,15 @@ def generate(**kwargs):
         imges = [x for x in patient_ID_sorted 
                  if re.match(patient+'.*', x) is not None]                
         histo_row_files = []
-        for k,v in markers.iteritems():
+        for k,v in list(markers.items()):
             img_fnames = [glob.glob(os.path.join(root, v, x+'*'))[0] for x in imges]
-            print patient, v
+            print((patient, v))
 
             histo_row_files.append(os.path.expanduser(os.path.join('~/hdata',args.output, patient+k+'.jpg')))
             
             # check whether file exists and don't bother recreating if it present
             if os.path.exists(histo_row_files[-1]) and not args.overwrite:
-                print('previously created file found: %s' % histo_row_files[-1])
+                print(('previously created file found: %s' % histo_row_files[-1]))
             else:
                 # annotate file
                 labelled_img_fnames=[]
@@ -144,7 +144,7 @@ def generate(**kwargs):
                     regmatch = re.match('([0-9]+-)([0-9]+\.{0,1}[0-9]*)([ab]*)(.*)',
                                         os.path.basename(image_file))
                     lbl = ''.join(regmatch.groups()[0:3])
-                    print image_file
+                    print(image_file)
 
                     #cmd = 'convert -size 100x14 xc:none -gravity center '+ \
                     #      '-stroke black -strokewidth 2 -annotate 0 "%s"' % lbl + \
@@ -158,15 +158,15 @@ def generate(**kwargs):
                           "label:'%s' +swap -gravity Center " % lbl+ \
                           "-append %s" %  helpers.shellquote(labelled_outfile)
                     labelled_img_fnames.append(labelled_outfile)
-                    print cmd
+                    print(cmd)
                     os.system(cmd)      
                 cmd = 'convert +append {0} {1}'.format(
                             ' '.join([helpers.shellquote(x) for x in labelled_img_fnames]),
                             histo_row_files[-1])
-                print('running: %s' % cmd)
+                print(('running: %s' % cmd))
                 if not args.test: os.system(cmd)
                 for f in labelled_img_fnames:
-                    print('removing %s' % f)
+                    print(('removing %s' % f))
                     os.remove(f)
                     
         largeoutfile = os.path.expanduser(os.path.join('~/hdata',args.output, patient+'large.jpg'))
@@ -174,9 +174,9 @@ def generate(**kwargs):
                           ' '.join([helpers.shellquote(x) for x in histo_row_files]), 
                           largeoutfile)
         if os.path.exists(largeoutfile) and not args.overwrite:
-            print('not running: %s' % cmd)
+            print(('not running: %s' % cmd))
         else:
-            print('running: %s' % cmd)
+            print(('running: %s' % cmd))
             if not args.test: os.system(cmd)
             
         if args.scale:
@@ -184,9 +184,9 @@ def generate(**kwargs):
             cmd = 'convert -scale {0} {1} {2}'.format(
                                 args.factor, largeoutfile, outfile)
             if os.path.exists(outfile) and not args.overwrite:
-                print('not running: %s' % cmd)
+                print(('not running: %s' % cmd))
             else:
-                print('running: %s' % cmd)
+                print(('running: %s' % cmd))
                 if not args.test: os.system(cmd)
                     
 if __name__ == "__main__":

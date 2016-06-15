@@ -34,7 +34,7 @@ def special_finder(masterlist_name,
 
     scan_list = []
 
-    for k,v in master_list.items():
+    for k,v in list(master_list.items()):
 
         if k in excludePatients:
             print(('Excluded {0}'.format(k)))

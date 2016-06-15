@@ -165,7 +165,7 @@ def generate(**kwargs):
                 bat_adata = row_conf.pop('bat_adata', None)
                 bat_threshold = row_conf.pop('bat_threshold', None)
 
-                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
+                print(('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key)))
 
                 if adata_key is not None:
     
@@ -423,7 +423,7 @@ def generate(**kwargs):
 
     import time
     print('File is opened and ready to use')
-    print(time.strftime("%c"))
+    print((time.strftime("%c")))
 
     
 if __name__ == "__main__":

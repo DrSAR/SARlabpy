@@ -44,7 +44,7 @@ def write_csv(masterlist_name,
     # and so slice averages get zero-filled
 
     numSlices = []
-    for k,v in master_list.iteritems():
+    for k,v in list(master_list.items()):
 
         try:        
             data = sarpy.Scan(v[data_label][0]).adata[adata_label].data
@@ -63,7 +63,7 @@ def write_csv(masterlist_name,
     #if numSlices:
     #    maxSlices = numpy.max(numSlices)
     
-    for k,v in master_list.iteritems():
+    for k,v in list(master_list.items()):
 
         scn_to_analyze = v[data_label][0]
 
@@ -74,7 +74,7 @@ def write_csv(masterlist_name,
         export_data.append([k] + avgL)
 
     time = time.strftime("%Y-%m-%d %H:%M")       				       
-    header =['Animal ID'] + ['Slice '+str(x+1) for x in xrange(
+    header =['Animal ID'] + ['Slice '+str(x+1) for x in range(
                                         len(max(export_data,key=len))-3)] + ['Average'] + ['Volume']
 
     footers = []
@@ -116,7 +116,7 @@ def adata_roi_average(scn_to_analyze,
         roi = sarpy.Scan(scn_to_analyze).adata[roi_override].data
 
     except(KeyError,IOError):
-        print('adata_roi_average: Not found {0} and {1}'.format(scn_to_analyze,adata_label) )
+        print(('adata_roi_average: Not found {0} and {1}'.format(scn_to_analyze,adata_label) ))
         data = numpy.empty([1])*numpy.nan
         weights= numpy.empty([1])*numpy.nan
         avgL = ['AnalysisErr']
@@ -137,7 +137,7 @@ def adata_roi_average(scn_to_analyze,
 
         if maxSlices>1:
 
-            for slice in xrange(maxSlices): # Zero filling non-existent slices
+            for slice in range(maxSlices): # Zero filling non-existent slices
 
                 if slice < maxSlices:
                     avg.append(scipy.stats.nanmean(data_roi[:,:,slice].flatten()))
@@ -217,7 +217,7 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
         export_data.append(avg_data)
 
     timer = time.strftime("%Y-%m-%d %H:%M")   
-    header =['Animal ID'] + ['Slice '+str(x+1) for x in xrange(
+    header =['Animal ID'] + ['Slice '+str(x+1) for x in range(
                                         len(max(export_data,key=len))-3)] + ['Weighted Average'] + ['Volume']
 
     footers = []
@@ -277,7 +277,7 @@ def determine_averages(data_scn_to_analyze,
 
     if totalSlices>1:
 
-        for slc in xrange(maxSlices): # Zero filling non-existent slices
+        for slc in range(maxSlices): # Zero filling non-existent slices
 
             if slc < totalSlices:
                 avg.append(scipy.stats.nanmean(data_roi[:,:,slc].flatten()))
