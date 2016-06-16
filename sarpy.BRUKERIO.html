@@ -1,0 +1,1381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BRUKERIO Package &mdash; sarpy 5.0beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '5.0beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="sarpy 5.0beta documentation" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="brukerio-package">
+<h1>BRUKERIO Package<a class="headerlink" href="#brukerio-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sarpy.BRUKERIO.AData_classes">
+<span id="adata-classes-module"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">AData_classes</span></code> Module<a class="headerlink" href="#module-sarpy.BRUKERIO.AData_classes" title="Permalink to this headline">¶</a></h2>
+<p>Class definitions for the analysed data structures</p>
+<dl class="class">
+<dt id="sarpy.BRUKERIO.AData_classes.AData">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.AData_classes.</code><code class="descname">AData</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.AData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.AData_classes.AData.data">
+<code class="descname">data</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.AData.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.AData_classes.AData.export2nii">
+<code class="descname">export2nii</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.AData.export2nii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export AData content to a named Nifti1 file using the visu_pars-defined
+geometry of the associated parent processed data (PData)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) &#8211; where to write the file, what did you think?</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Example:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sarpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span> <span class="o">=</span> <span class="n">sarpy</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="s1">&#39;PhantomOrientation.iY1/2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">store_adata</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;times2&#39;</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">scn</span><span class="o">.</span><span class="n">pdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">adata</span><span class="p">[</span><span class="s1">&#39;times2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">export2nii</span><span class="p">(</span><span class="s1">&#39;/tmp/PhantomOrientation-times2.nii.gz&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sarpy.BRUKERIO.AData_classes.AData.fromdata">
+<em class="property">classmethod </em><code class="descname">fromdata</code><span class="sig-paren">(</span><em>parent=None</em>, <em>data=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.AData.fromdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>This creates an AData object from an array (maybe somehing else later)
+It does not store it on disk. This would typically be done by the
+ADataDict on assignment to a key.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>parent</strong> (<a class="reference internal" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file" title="sarpy.BRUKERIO.BRUKER_classes.PDATA_file"><em>BRUKER_classes.PDATA_file</em></a>) &#8211; A parent has to be an object that provides a UID and has a
+visu_pars attribute. Typically a PDATA_file</li>
+<li><strong>data</strong> (<em>array</em>) &#8211; sourcedata</li>
+<li><strong>meta</strong> (<em>dict(optional)</em>) &#8211; meta information in the form of a dictionary. The following keys
+will be added to it: parent_uid, created_datetime, parent_filename,
+compressed.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sarpy.BRUKERIO.AData_classes.AData.fromfile">
+<em class="property">classmethod </em><code class="descname">fromfile</code><span class="sig-paren">(</span><em>filename</em>, <em>parent=None</em>, <em>lazy=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.AData.fromfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>classmethod that can be used to initiatlize the AData object
+by reading the content from file. To use, issue:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">glob</span><span class="o">,</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adata_dir</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">adataroot</span><span class="o">+</span><span class="s1">&#39;/*/*&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># take the first dir</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adata_dir_short</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">adataroot</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">adata_dir</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AData</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">adata_dir_short</span><span class="p">)</span>  
+<span class="go">Analysed data (&#39;...&#39;) based on PDATA (uid=...)</span>
+<span class="go">  created on ...</span>
+<span class="go">  parent: ...</span>
+</pre></div>
+</div>
+<p>Admittedly this will rarely be required and most likely be done from
+some other constructor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) &#8211; points to the adataroot/uid/uid.*/ directory</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.AData_classes.AData.visu_pars">
+<code class="descname">visu_pars</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.AData.visu_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.AData_classes.ADataDict">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.AData_classes.</code><code class="descname">ADataDict</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.ADataDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">collections.abc.MutableMapping</span></code></p>
+<p>A dictionary which perfoms some magic on value-by-key assignment</p>
+<p>Pre-existing keys are bein checked against the new key.
+This is inspired by an
+<a class="reference external" href="http://stackoverflow.com/a/3387975/607562">answer on stackoverflow</a>
+to the question of how to perfectly override  a dict.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.AData_classes.load_AData">
+<code class="descclassname">sarpy.BRUKERIO.AData_classes.</code><code class="descname">load_AData</code><span class="sig-paren">(</span><em>pdatas</em>, <em>dirname</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.load_AData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.AData_classes.mkdir_p">
+<code class="descclassname">sarpy.BRUKERIO.AData_classes.</code><code class="descname">mkdir_p</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.mkdir_p" title="Permalink to this definition">¶</a></dt>
+<dd><p>feature that allows the creation of the intermediate directories.
+it mimics the system call of mkdir -p</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.AData_classes.silentremove">
+<code class="descclassname">sarpy.BRUKERIO.AData_classes.</code><code class="descname">silentremove</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/AData_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.AData_classes.silentremove" title="Permalink to this definition">¶</a></dt>
+<dd><p>remove files and don&#8217;t get upset if they don&#8217;t exist</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.BRUKERIO.lowlevel">
+<span id="lowlevel-module"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">lowlevel</span></code> Module<a class="headerlink" href="#module-sarpy.BRUKERIO.lowlevel" title="Permalink to this headline">¶</a></h2>
+<p>Collection of BRUKER input routines</p>
+<p>Handy functions to read BRUKER data and header files.</p>
+<p>The logging is set up so that if the library user does nothing,
+all will be silent. Details in :py:mod: SARlogger</p>
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.convert_int_float_string">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">convert_int_float_string</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.convert_int_float_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.dict2string">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">dict2string</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.dict2string" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert dictionary to nicely looking multi-line string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> (<em>dict</em>) &#8211; input dictionary</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of strings</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+<p>This might be useful when turning the JCAMP-style dictionaries
+into something that goes into a text display. Example use would be:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;TE&#39;</span><span class="p">:</span><span class="mf">2.3</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">dict2string</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+<span class="go">                  TE : 2.3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.fftbruker">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">fftbruker</code><span class="sig-paren">(</span><em>array</em>, <em>encoding=None</em>, <em>DCoffset=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.fftbruker" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrapper to fft bruker FIDs</p>
+<p>returns the fft of a multi-dimensional BRUKER FID. It uses the
+parameter &#8216;encoding&#8217; to decide over which dimensions to Fourier transform.
+Typically, a 2D only needs FFT over 1st and 2nd dimension
+(encoding = [1, 1, 0, 0]) whereas 3D files get a FT over three dimensions
+(encoding = [1, 1, 1, 0]). The 4th dimension (repetitions) doesn&#8217;t
+usually get FTed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.fftfid">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">fftfid</code><span class="sig-paren">(</span><em>fptr=None</em>, <em>readfidresult=None</em>, <em>AxisFlip=True</em>, <em>PEshift=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.fftfid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take filename, retrieve fid and FT as best as you can</p>
+<p>This relies on the FT-able axis to be in he 1st three positions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fptr</strong> &#8211; input fid file (handed through to readfid)</li>
+<li><strong>AxisFlip</strong> &#8211; Flip axis to achieve display in agreement with radiological
+convention (default: True)</li>
+<li><strong>PEshift</strong> &#8211; find out shifts of slice packs and apply in the 
+PE directions (default: True)</li>
+<li><strong>squeezed</strong> &#8211; squeeze FT array before returning (default: true)</li>
+<li><strong>kwargs</strong> &#8211; handed through to readfid (only squeezed is handled 
+internally)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">complex-valued array from FT of fid</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Remarks: It does not account for the possibility of several slice packs
+with different orientations etc. As a result, tripilot scans are not 
+treated properly.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.inner_value">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">inner_value</code><span class="sig-paren">(</span><em>somelist</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.inner_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return somelist[0] a one-element list or the whole list otherwise</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>somelist</strong> (<em>list</em>) &#8211; list that might contain only one element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">element of somelist or somelist</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="mi">42</span><span class="p">])</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="mi">42</span><span class="p">,</span><span class="mi">43</span><span class="p">])</span>
+<span class="go">[42, 43]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([[</span><span class="mi">42</span><span class="p">]])</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([[</span><span class="mi">42</span><span class="p">,</span><span class="mi">43</span><span class="p">]])</span>
+<span class="go">[42, 43]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">(</span><span class="s1">&#39;spam&#39;</span><span class="p">)</span>
+<span class="go">&#39;spam&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="s1">&#39;spam&#39;</span><span class="p">])</span>
+<span class="go">&#39;spam&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="s1">&#39;s&#39;</span><span class="p">])</span>
+<span class="go">&#39;s&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_value</span><span class="p">([</span><span class="s1">&#39;spam&#39;</span><span class="p">,</span><span class="s1">&#39;eggs&#39;</span><span class="p">,</span><span class="s1">&#39;bacon&#39;</span><span class="p">])</span>
+<span class="go">[&#39;spam&#39;, &#39;eggs&#39;, &#39;bacon&#39;]</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This method does not work for dictionaries (KeyError)</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.pairwise">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">pairwise</code><span class="sig-paren">(</span><em>iterable</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.pairwise" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a solution to the problem of looking ahead in a for loop
+mentioned in on <a class="reference external" href="http://stackoverflow.com/questions/4197805/python-for-loop-look-ahead">stackoverflow:</a></p>
+<p>&#8220;s -&gt; (s0,s1), (s1,s2), (s2, s3), ...&#8221;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.read2dseq">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">read2dseq</code><span class="sig-paren">(</span><em>scandirname</em>, <em>visu_pars=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.read2dseq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns BRUKER&#8217;s 2dseq file as a properly dimensioned array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scandirname</strong> (<em>string</em>) &#8211; filename of the scan directory</li>
+<li><strong>reco, d3proc, visu_pars</strong> (<em>dict</em>) &#8211; parameter files (as dict) that can be provided by caller
+default: None which means they will be loaded by this function</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dictionary with data, and header information. The data is
+an array of BRUKER-reconstructed image data in the respecive proc
+directory.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict with &#8216;data&#8217;:numpy array &#8216;header&#8217;:dict{&#8216;recpo&#8217;:..., &#8216;d3proc&#8217;:...}</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">IOERROR if directory non-existent</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This relies on numpy&#8217;s array functionality</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.readJCAMP">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">readJCAMP</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.readJCAMP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse text file in JCAMP format</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) &#8211; filename of fid file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary of labelled data records (LDR) with LDR-names as keys
+and their content as values.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">IOERROR if opening file fails or passes on any other error</td>
+</tr>
+</tbody>
+</table>
+<p>The <em>JCAMP format</em> is a self-documenting, ASCII text file format
+that is maintained by IUPAC (<a class="reference external" href="http://iupac.org/publications/pac/78/3/0613/">see a report
+here</a>).
+It consists of labelled data records (LDR) that start with a ##
+and end when the next record begins.
+They can span several lines. The data label is
+enclosed between &#8216;##&#8217; and &#8216;=&#8217;. If it starts with a $, we are
+dealing with a private LDR.</p>
+<p>The issue of reading these is complicated due to the various
+types of data (integers, floats, strings, arrays and nested
+structures) that can be present.</p>
+<p>~/bdata/readfidTest.ix1/subject:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>##$SUBJECT_name_string=( 64 )
+&lt;Moosvi, readfidTest&gt;
+##$SUBJECT_name=(&lt;Moosvi&gt;, &lt;readfidTest&gt;)
+
+&gt;&gt;&gt; import os
+&gt;&gt;&gt; a=readJCAMP(os.path.expanduser(&#39;~/bdata/stefan/nmr/readfidTest.ix1/subject&#39;))
+&gt;&gt;&gt; a[&#39;SUBJECT_name&#39;]
+[&#39;&lt;Moosvi&gt;&#39;, &#39;&lt;readfidTest&gt;&#39;]
+&gt;&gt;&gt; a[&#39;SUBJECT_name_string&#39;]
+&#39;Moosvi, readfidTest&#39;
+</pre></div>
+</div>
+<p>~/bdata/readfidTest.ix1/1/acqp:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>##$ACQ_user_filter=No
+##$ACQ_dim_desc=( 2 )
+Spatial Spatial
+##$NR=1
+##$D=( 64 )
+0.00502257333333333 0 0.00066296 0.000114 0.000114 0 0.001886 0 2.5e-05 0
+0.000886 0.000886 0.000368 0 0 0 0 0 0 0 1e-05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+##$TPQQ=( 16 )
+(&lt;hermite.exc&gt;, 17.9862515696541, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;,
+30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0)
+ (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0) (&lt;&gt;, 30, 0)
+##$ACQ_grad_matrix=( 15, 3, 3 )
+1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 -0 0 1 -0 1 -0 1
+0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0
+0 1 -0 1 0 -0 0 1 0 0 -0 1 1 0 -0 0 1 0 0 -0 1 -0 0 1 -0 1 -0 1 0 0 -0 0 1 -0
+1 -0 1 0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0
+
+&gt;&gt;&gt; import os
+&gt;&gt;&gt; a=readJCAMP(os.path.expanduser(&#39;~/bdata/stefan/nmr/readfidTest.ix1/1/acqp&#39;))
+&gt;&gt;&gt; a[&#39;ACQ_user_filter&#39;]
+&#39;No&#39;
+&gt;&gt;&gt; a[&#39;ACQ_dim_desc&#39;]
+[&#39;Spatial&#39;, &#39;Spatial&#39;]
+&gt;&gt;&gt; a[&#39;NR&#39;]
+1
+&gt;&gt;&gt; a[&#39;D&#39;][0:4]
+[0.00502257333333333, 0, 0.00066296, 0.000114]
+&gt;&gt;&gt; a[&#39;TPQQ&#39;][0:4]
+[[&#39;&lt;hermite.exc&gt;&#39;, 17.9862515696541, 0], [&#39;&lt;&gt;&#39;, 30, 0], [&#39;&lt;&gt;&#39;, 30, 0], [&#39;&lt;&gt;&#39;, 30, 0]]
+&gt;&gt;&gt; a[&#39;TPQQ&#39;][0]
+[&#39;&lt;hermite.exc&gt;&#39;, 17.9862515696541, 0]
+&gt;&gt;&gt; a[&#39;TPQQ&#39;][0][1]
+17.9862515696541
+&gt;&gt;&gt; a[&#39;ACQ_grad_matrix&#39;][0]
+array([[1, 0, 0],
+       [0, 1, 0],
+       [0, 0, 1]])
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.readRFshape">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">readRFshape</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.readRFshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>reads BRUKERS RF shape files spnam0 etc that are stored with experiments</p>
+<p>returns a dictionary with ready-to-use attributes for amplitude,
+phase, bandwidth etc.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.readfid">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">readfid</code><span class="sig-paren">(</span><em>fptr=None</em>, <em>acqp=None</em>, <em>method=None</em>, <em>untouched=False</em>, <em>squeezed=True</em>, <em>resetNR=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.readfid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns BRUKER&#8217;s fid file as a properly dimensioned &amp; rearranged array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fptr</strong> (<em>FileType,str</em>) &#8211; filename of fid file or filehandle to open fid file</li>
+<li><strong>acqp</strong> (<em>dict</em>) &#8211; dictionary of acqp parameters
+(default None: parameter file will be loaded)</li>
+<li><strong>method</strong> (<em>dict</em>) &#8211; dictionary of method parameters
+(default None: parameter file will be loaded)</li>
+<li><strong>untouched</strong> (<em>boolean</em>) &#8211; do not rearrange/reshape data (default: False)</li>
+<li><strong>squeezed</strong> (<em>boolean</em>) &#8211; squeeze dimension of length 1 (default: True)</li>
+<li><strong>resetNR</strong> (<em>boolean</em>) &#8211; for incomplete scans, reset NR if needed (default: False)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Flat (untouched = True) or Rearranged and assembled array of the acquire k-space</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">numpy array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">IOERROR if filesize and matrix description appear to be inconsistent</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>BRUKER manual D.14 File Formats (Raw data files)</strong></p>
+<blockquote>
+<div><p>The reconstruction assumes that the raw data to be reconstructed will
+be located in a file named either fid or ser in the EXPNO directory.
+Any averaging of the raw data must be done before the data is written
+to the file, no post-acquisition averag- ing is done by the
+reconstruction.</p>
+<dl class="docutils">
+<dt>K-format</dt>
+<dd>The raw data file must be written in K-format to be processed by the TOPSPIN
+processing software.  This means that every profile must be written
+to the file at a posi- tion which is a multiple of 1K-bytes (1024 bytes).
+Datasets which are imported may need to be reformatted. Both little-endian
+and big-endian word formats are sup- ported, the BYTORDA parameter in the
+acqp parameter file is assumed to correctly specify the format of the
+raw data file. Finally, the raw data file is assumed to contain data only,
+without any headers.</dd>
+<dt>Packed format</dt>
+<dd>Data to be processed with ParaVision can also be stored in packed format.
+For this purpose the parameter GO_block_size must be set to continuous.</dd>
+<dt>Integer formats</dt>
+<dd>By default, raw data is stored in 32-bit signed integer format, real and
+imaginary points of the complex signal interleaved. For applications where
+the data range may not exceed 16-bit, e.g. when accumulation and oversampling
+are disabled in analog mode, data can be stored as 16-bit short integers,
+setting the parameter GO_raw_data_format to GO_16BIT_SGN_INT. A warning
+message is displayed if an overflow occurs during data acquisition.</dd>
+<dt>Floating point format</dt>
+<dd>Alternatively, data can be stored in floating point format:
+GO_raw_data_format = GO_32BIT_FLOAT. Note, that data not acquired in the
+default 32-bit signed integer format cannot be processed with TOPSPIN but
+only by the ParaVision reconstruction.</dd>
+<dt>Order of data storage</dt>
+<dd><p class="first">The raw data file usually contains the data in the order of acquisition.
+There is only one exception: in case a pipeline filter (AU) is used to
+process the raw data, the order of data storage is defined by the output
+order of the filter.</p>
+<p>For raw datasets acquired by ParaVision methods, ordering and size of the
+data are described by the ACQP parameters contained in the file acqp:</p>
+<blockquote class="last">
+<div><ul>
+<li><p class="first">ACQ_dim - Spatial/spectroscopic dimension of the experiment.</p>
+</li>
+<li><p class="first">ACQ_size[ ] - Array of length ACQ_dim with length of the given dimensions.
+ACQ_size[0] counts real valued data and for this it must be an even number.
+Real and imaginary data is stored shuffled. For experiments acquired with
+multiple receivers (ACQ_experiment_mode == ParallelExperiment) the scans
+from different receivers are appended. The number of active receivers is
+derived from the number of selected receivers in the parameter array
+GO_ReceiverSelect.</p>
+</li>
+<li><p class="first">NI - Number of objects.
+e.g. slices, but not purely!, could be slices*echoes</p>
+</li>
+<li><p class="first">ACQ_obj_order - Permutation of the order of the acquired objects.</p>
+</li>
+<li><p class="first">ACQ_phase_factor - Number of subsequent scans in the raw dataset belonging
+to the same Object. Typically, this parameter is set to 1 which will keep
+the cod- ing constant within a Multiplex step. If ACQ_phase_factor &gt; 1,
+this parameter will give the number of consecutively acquired phase encoding
+steps that belong to a single Object. Concerning phase increment:
+see ACQ_rare_factor.</p>
+</li>
+<li><p class="first">ACQ_phase_enc_mode[ ] - Ordering scheme for scans within the k-space.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">parameter seems to be renamed to ACQ_phase_encoding_mode</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">ACQ_phase_enc_start[ ] - For positioning of first scan in phase encoding
+scheme.</p>
+</li>
+<li><p class="first">ACQ_rare_factor - For positioning of the ACQ_phase_factor scans within the
+k-space. In the case of ACQ_phase_factor &gt; 1 the phase encoding increment
+is determined by ACQ_size[1] / ACQ_rare_factor.
+ACQ_rare_factor = ACQ_phase_factor is used for RARE experiments.</p>
+</li>
+<li><p class="first">NR - Number of repeated experiments within the dataset.</p>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+<p>These salient parameters are printed using the following code:
+[&#8216;%s: %s&#8217; % (k,acqp[k]) for k in [&#8216;ACQ_dim&#8217;,&#8217;ACQ_size&#8217;,&#8217;GO_block_size&#8217;,&#8217;NI&#8217;,&#8217;ACQ_obj_order&#8217;,&#8217;ACQ_phase_factor&#8217;,&#8217;ACQ_phase_encoding_mode&#8217;,&#8217;ACQ_phase_enc_start&#8217;,&#8217;ACQ_rare_factor&#8217;,&#8217;NR&#8217;,&#8217;NSLICES&#8217;,&#8217;ACQ_spatial_phase_1&#8217;,&#8217;ACQ_spatial_size_1&#8217;]]</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/1/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c1"># TriPilot multi</span>
+<span class="go">(128, 128, 15)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/2/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c1"># FLASH 2D</span>
+<span class="go">(133, 105, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/3/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c1"># FLASH 3D</span>
+<span class="go">(133, 105, 25)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/4/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c1"># MSME 2D</span>
+<span class="go">(133, 105, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/5/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c1"># MSME 3D</span>
+<span class="go">(133, 105, 25)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/6/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>   <span class="c1"># MSME 2D-TURBO</span>
+<span class="go">(256, 256, 5, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/7/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># FLASH 2D (NR=25, NI=5, NSLICES=5)</span>
+<span class="go">(133, 105, 5, 25)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/8/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># FLASH 2D, partial acq. NR auto reset to 5</span>
+<span class="go">(133, 105, 5, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/9/fid&#39;</span><span class="p">))</span> 
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">FileNotFoundError</span>: <span class="n">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># fid file 9 was missing due to incomplete scans</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/10/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># FLASH 2D (MATRIX 32 X 32)</span>
+<span class="go">(32, 32, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/11/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># FLASH 3D (MATRIX 32 X 32)</span>
+<span class="go">(32, 32, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/12/fid&#39;</span><span class="p">))</span>
+<span class="gp">... </span>
+<span class="gp">... </span><span class="c1"># 1-segment EPI - FIXME, this should be easy but somehow ACQ_size=(8192,1) </span>
+<span class="gp">... </span><span class="c1"># and ACQ_scan_size=ACQ_phase_factor_scans (instead of One_Scan)</span>
+<span class="gp">... </span><span class="c1"># this should be an easy 64x64x5slice single shot EPI...</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">IndexError</span>: <span class="n">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/13/fid&#39;</span><span class="p">))</span>
+<span class="gp">... </span>
+<span class="gp">... </span><span class="c1"># 16 segment EPI - FIXME</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">IndexError</span>: <span class="n">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/14/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># DTI Standard</span>
+<span class="go">(133, 105, 5, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/15/fid&#39;</span><span class="p">))</span>
+<span class="gp">... </span>
+<span class="gp">... </span><span class="c1"># DTI SPIRAL - FIXME</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/16/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># UTE 2D</span>
+<span class="go">(64, 402, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/17/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># UTE 3D</span>
+<span class="go">(64, 51360)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/18/fid&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># ZTE 3D</span>
+<span class="go">(512, 51896)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/99/fid&#39;</span><span class="p">))</span>
+<span class="gp">... </span>
+<span class="gp">... </span><span class="c1"># interrupted FLASH DCE, mismatch in filesize causes IOError</span>
+<span class="gp">... </span><span class="c1"># this is desired (and expected) behaviour</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span> <span class="o">=</span> <span class="n">readfid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/99/fid&#39;</span><span class="p">),</span> <span class="n">resetNR</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fid</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># interrupted FLASH DCE (NR=7 from formerly 25)</span>
+<span class="go">(133, 105, 5, 7)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.lowlevel.readfidspectro">
+<code class="descclassname">sarpy.BRUKERIO.lowlevel.</code><code class="descname">readfidspectro</code><span class="sig-paren">(</span><em>fptr=None</em>, <em>acqp=None</em>, <em>method=None</em>, <em>untouched=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/lowlevel.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.lowlevel.readfidspectro" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns BRUKER&#8217;s fid file as a properly dimensioned &amp; rearranged array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fptr</strong> (<em>string or FileType</em>) &#8211; filename of fid file or filehandle to open fid file</li>
+<li><strong>untouched</strong> (<em>boolean</em>) &#8211; Do not rearrange lines into slices and echos and such
+in the fid in its form as found on disk</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">array of kspace data</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">numpy.array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">AssertError for various inconsistencies in data size or simply
+misunderstandings of how the data is to be interpreted.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.BRUKERIO.BRUKER_classes">
+<span id="bruker-classes-module"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">BRUKER_classes</span></code> Module<a class="headerlink" href="#module-sarpy.BRUKERIO.BRUKER_classes" title="Permalink to this headline">¶</a></h2>
+<p>Class Definitions for BRUKER data</p>
+<dl class="class">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.AttrDict">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">AttrDict</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.AttrDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>a class that behaves like a dict but gives you access to its attributes
+directly</p>
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.AttrDict.iteritems">
+<code class="descname">iteritems</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.AttrDict.iteritems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.AttrDict.keys">
+<code class="descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.AttrDict.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.AttrDict.values">
+<code class="descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.AttrDict.values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Experiment">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">Experiment</code><span class="sig-paren">(</span><em>root=None</em>, <em>absolute_root=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection" title="sarpy.BRUKERIO.BRUKER_classes.StudyCollection"><code class="xref py py-class docutils literal"><span class="pre">sarpy.BRUKERIO.BRUKER_classes.StudyCollection</span></code></a></p>
+<p>An Experiment is not BRUKER terminology. It is a grouping of several
+studies (that have scans themselves) by various criteria.
+Typically, the patient name contains a root pointing to a common goal
+of the performed scans. It is a bit like a patient with the relaxation
+of the requirement of having identical SUBJECT_ids.</p>
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Experiment.find_studies">
+<code class="descname">find_studies</code><span class="sig-paren">(</span><em>root=None</em>, <em>absolute_root=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Experiment.find_studies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Experiment.from_filter">
+<em class="property">classmethod </em><code class="descname">from_filter</code><span class="sig-paren">(</span><em>filterstring</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Experiment.from_filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Experiment.from_masterlist">
+<em class="property">classmethod </em><code class="descname">from_masterlist</code><span class="sig-paren">(</span><em>masterlistname</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Experiment.from_masterlist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Experiment.masterlist_df">
+<code class="descname">masterlist_df</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Experiment.masterlist_df" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Experiment.masterlist_filename">
+<code class="descname">masterlist_filename</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Experiment.masterlist_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Experiment.study_masterlist_df">
+<code class="descname">study_masterlist_df</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Experiment.study_masterlist_df" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.JCAMP_file">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">JCAMP_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.JCAMP_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sarpy.BRUKERIO.BRUKER_classes.AttrDict" title="sarpy.BRUKERIO.BRUKER_classes.AttrDict"><code class="xref py py-class docutils literal"><span class="pre">sarpy.BRUKERIO.BRUKER_classes.AttrDict</span></code></a></p>
+<p>Represents a JCAMP encoded parameter file.</p>
+<p>Parameters become attributes in this class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">PDATA_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Initialize a processed data set that usually sits in <cite>*/pdata/[1-9]</cite>.</p>
+<p>constructor expects a directory name (filename). It will look
+for the 2dseq file, the d3proc and th reco file.</p>
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.d3proc">
+<code class="descname">d3proc</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.d3proc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.data">
+<code class="descname">data</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.dimcomment">
+<code class="descname">dimcomment</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.dimcomment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.dimdesc">
+<code class="descname">dimdesc</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.dimdesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.export2nii">
+<code class="descname">export2nii</code><span class="sig-paren">(</span><em>filename</em>, <em>rescale=None</em>, <em>std_mod=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.export2nii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export the data originating from a 2dseq (BRUKER) reconstruction to
+a Nifti file format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) &#8211; where to write the file</td>
+</tr>
+</tbody>
+</table>
+<p>A lot of the magic happens in visu_pars_2_Nift1Header in order to
+figure out geometry.</p>
+<dl class="docutils">
+<dt>Examples:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;readfidTest.ix1&#39;</span><span class="p">,</span><span class="s1">&#39;3&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span><span class="s1">&#39;readfid.nii&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s1">&#39;writing tempfile </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span> 
+<span class="go">writing tempfile ...readfid.nii</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scn</span><span class="o">.</span><span class="n">pdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">export2nii</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.reco">
+<code class="descname">reco</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.reco" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.store_adata">
+<code class="descname">store_adata</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.store_adata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store some secondary data for this PData scan.</p>
+<p>See call signature of AData_classes.AData.fromdata</p>
+<p>This triggers an update in the adata dictionary of the
+parent object (Scan).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.uid">
+<code class="descname">uid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.uid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.PDATA_file.visu_pars">
+<code class="descname">visu_pars</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.PDATA_file.visu_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Patient">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">Patient</code><span class="sig-paren">(</span><em>patient_name</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Patient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection" title="sarpy.BRUKERIO.BRUKER_classes.StudyCollection"><code class="xref py py-class docutils literal"><span class="pre">sarpy.BRUKERIO.BRUKER_classes.StudyCollection</span></code></a></p>
+<p>A Patient is a special Collection of studies in that the subject_id
+has to agree from one study to the next</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">Scan</code><span class="sig-paren">(</span><em>root</em>, <em>absolute_root=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Object to represent a BRUKER scan consisting, typically, of FID_file
+and PDATA_file(s).</p>
+<p>The __init__() method expects the filename to be a directory. It will
+try around a bit (filenames inside the directory) before throwing an
+exception. It will also give up if it can&#8217;t find any of the
+acqp, method, fid or one 2dseq file.</p>
+<p>Simple Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="s1">&#39;readfidTest.ix1/3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dir</span><span class="p">(</span><span class="n">exp3</span><span class="p">)</span>    
+<span class="go">[&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__doc__&#39;, &#39;__format__&#39;,</span>
+<span class="go"> &#39;__getattribute__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__module__&#39;, &#39;__new__&#39;,</span>
+<span class="go"> &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;,</span>
+<span class="go"> &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;acqp&#39;,</span>
+<span class="go"> &#39;adata&#39;, &#39;dirname&#39;, &#39;fid&#39;, &#39;method&#39;, &#39;pdata&#39;, &#39;pdata_uids&#39;,</span>
+<span class="go"> &#39;shortdirname&#39;, &#39;store_adata&#39;]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span><span class="o">.</span><span class="n">acqp</span><span class="o">.</span><span class="n">ACQ_protocol_name</span>
+<span class="go">&#39;FLASH_bas(modified)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span><span class="o">.</span><span class="n">acqp</span><span class="o">.</span><span class="n">ORIGIN</span>
+<span class="go">&#39;Bruker BioSpin MRI GmbH&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp3</span><span class="o">.</span><span class="n">acqp</span><span class="o">.</span><span class="n">DATE</span>
+<span class="go">&#39;Thu Feb 21 19:01:26 2013 PST (UT-8h)&#39;</span>
+</pre></div>
+</div>
+<p>Also, Scan has a pretty way of falling over when no fid file is detected:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>&gt;&gt;&gt; Scan(&#39;readfidTest.ix1/9&#39;) 
+Traceback (most recent call last):
+    ...
+IOError:...
+</pre></div>
+</div>
+<p>Scan should be able to read spectro scans:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Scan</span><span class="p">(</span><span class="s1">&#39;VFAT1phant1.mo1/8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fid</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2048, 30)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Scan</span><span class="p">(</span><span class="s1">&#39;VFAT1phant1.mo1/9&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fid</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2048, 30)</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.acqp">
+<code class="descname">acqp</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.acqp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.adata">
+<code class="descname">adata</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.adata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.fftfid">
+<code class="descname">fftfid</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.fftfid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.fid">
+<code class="descname">fid</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.fid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.masterlist_attr">
+<code class="descname">masterlist_attr</code><span class="sig-paren">(</span><em>attr</em>, <em>level=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.masterlist_attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>look up attr in the hierarchy of dictionaries of the masterlist
+config file. As a rule, the attribute stored at the more specific
+(deeper) level takes precedence.</p>
+<p>level = &#8216;Experiment&#8217;, &#8216;Patient&#8217;, &#8216;Study&#8217;, &#8216;Scan&#8217;, None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.method">
+<code class="descname">method</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.method" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.pdata">
+<code class="descname">pdata</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.pdata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.pdata_uids">
+<code class="descname">pdata_uids</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.pdata_uids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.rm_adata">
+<code class="descname">rm_adata</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.rm_adata" title="Permalink to this definition">¶</a></dt>
+<dd><p>delete adata set</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Scan.store_adata">
+<code class="descname">store_adata</code><span class="sig-paren">(</span><em>pdata_idx=0</em>, <em>force=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Scan.store_adata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store an AData set for one of the processed children of this scan.
+Typically the first one (pdata_idx=0)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>force</strong> (<em>boolean</em>) &#8211; overwrite pre-existing AData sets, (default  False)</li>
+<li><strong>compressed</strong> (<em>boolean</em>) &#8211; compress adata files on write to disk, (default  True)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Study">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">Study</code><span class="sig-paren">(</span><em>root</em>, <em>absolute_root=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Study" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A study in BRUKER parlance is a collection of scans performed on
+on subject (typically within a day, without interruption). A study
+directory is expected to contain a JCAMP file &#8216;subject&#8217; and have one
+or more subdirectories which are scans.</p>
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Study.find_adata_scans">
+<code class="descname">find_adata_scans</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Study.find_adata_scans" title="Permalink to this definition">¶</a></dt>
+<dd><p>All keys <em>AND SCANS</em> of adata sets attached to scans in this study</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Study.find_scan_by_protocol">
+<code class="descname">find_scan_by_protocol</code><span class="sig-paren">(</span><em>protocol_name</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Study.find_scan_by_protocol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Study.masterlist_filename">
+<code class="descname">masterlist_filename</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Study.masterlist_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Study.rm_adata">
+<code class="descname">rm_adata</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Study.rm_adata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove adata with given <em>key</em> by iterating over the lot</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Study.scan_finder">
+<code class="descname">scan_finder</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Study.scan_finder" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the non-generator version and is provided for convenience.
+See difference between range and xrange</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Study.scans">
+<code class="descname">scans</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Study.scans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.Study.xscan_finder">
+<code class="descname">xscan_finder</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.Study.xscan_finder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator of all scans in urrent study that fit the criteria as
+given by kwargs.</p>
+<p>All possible keys are listed and associated to a comparison function
+in the submodule JCAMP_comparison.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.StudyCollection">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">StudyCollection</code><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A StudyCollection can have multiple studies (in BRUKER speak) which can in
+turn have multiple scans. It can be initialised by pointing it
+to a scan or study. This should be a superclass too (?), e.g. the Patient and
+the Experiment class.</p>
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.StudyCollection.add_study">
+<code class="descname">add_study</code><span class="sig-paren">(</span><em>study=None</em>, <em>by_name=None</em>, <em>by_uid=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection.add_study" title="Permalink to this definition">¶</a></dt>
+<dd><p>search through database to find anything that matches root</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>study</strong> (<a class="reference internal" href="#sarpy.BRUKERIO.BRUKER_classes.Study" title="sarpy.BRUKERIO.BRUKER_classes.Study"><em>Study</em></a>) &#8211; add the indicated study</li>
+<li><strong>by_name</strong> (<em>string</em>) &#8211; search through database with the indicated string</li>
+<li><strong>by_uid</strong> (<em>string</em>) &#8211; search through database by UID. This is potentially very slow</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.StudyCollection.find_adata_scans">
+<code class="descname">find_adata_scans</code><span class="sig-paren">(</span><em>flatten=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection.find_adata_scans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.StudyCollection.find_scan_by_protocol">
+<code class="descname">find_scan_by_protocol</code><span class="sig-paren">(</span><em>protocol_name</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection.find_scan_by_protocol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.StudyCollection.get_SUBJECT_id">
+<code class="descname">get_SUBJECT_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection.get_SUBJECT_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.StudyCollection.rm_adata">
+<code class="descname">rm_adata</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection.rm_adata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove adata with given <em>key</em> by iterating over all studies</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.StudyCollection.scan_finder">
+<code class="descname">scan_finder</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection.scan_finder" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the non-generator version and is provided for convenience.
+See difference between range and xrange</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.StudyCollection.xscan_finder">
+<code class="descname">xscan_finder</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.StudyCollection.xscan_finder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator to yield all scans that match te criteria given in kwargs.</p>
+<p>The meat of the code is in Study.xscan_finder()</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.find_all_patients_in_masterlists">
+<code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">find_all_patients_in_masterlists</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.find_all_patients_in_masterlists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.last_path_components">
+<code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">last_path_components</code><span class="sig-paren">(</span><em>absdirname</em>, <em>depth=1</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.last_path_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the last two parts of a path. Should be platform independent and
+fairly immune to trailing &#8216;/&#8217; and other irregularities. Used to determine
+the shortdirname in Scan and Study.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">last_path_components</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/9&#39;</span><span class="p">)</span>
+<span class="go">&#39;9&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">last_path_components</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/9/&#39;</span><span class="p">)</span>
+<span class="go">&#39;9&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">last_path_components</span><span class="p">(</span><span class="s1">&#39;~/bdata/stefan/nmr/readfidTest.ix1/9/&#39;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">&#39;readfidTest.ix1/9&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.BRUKER_classes.strip_all_but_classname">
+<code class="descclassname">sarpy.BRUKERIO.BRUKER_classes.</code><code class="descname">strip_all_but_classname</code><span class="sig-paren">(</span><em>obj</em>, <em>class_str</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/BRUKER_classes.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.BRUKER_classes.strip_all_but_classname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nicely format the class_str that is used in some of the __str__ calls</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.BRUKERIO.SARlogger">
+<span id="sarlogger-module"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">SARlogger</span></code> Module<a class="headerlink" href="#module-sarpy.BRUKERIO.SARlogger" title="Permalink to this headline">¶</a></h2>
+<p>Custom Logger to be used across modules</p>
+<p>To setup logging in your code. Your module needs to initiate logging using
+the custom SARlogger.Good info to be found at the 
+<a class="reference external" href="http://docs.python.org/2/howto/logging.html#logging-basic-tutorial">Logging Tutorial</a>.</p>
+<div class="highlight-py"><div class="highlight"><pre><span></span><span class="c1">#make the SARlogger features available</span>
+<span class="kn">from</span> <span class="nn">sarpy</span> <span class="kn">import</span> <span class="n">SARlogger</span>
+<span class="c1">#test logging for BRUKERIO</span>
+<span class="kn">import</span> <span class="nn">BRUKERIO</span>
+<span class="n">SARlogger</span><span class="o">.</span><span class="n">initiate_logging</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>At this point, a console handler that issues anything that&#8217;s a WARNING or 
+more severe (higher level) will be written to to the console. 
+If you  also desire output to 
+a file, another convenience function in SARlogger can be used
+to attach another handler (with another log level and formatter):</p>
+<div class="highlight-py"><div class="highlight"><pre><span></span><span class="n">SARlogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="sarpy.BRUKERIO.SARlogger.add_file_handler">
+<code class="descclassname">sarpy.BRUKERIO.SARlogger.</code><code class="descname">add_file_handler</code><span class="sig-paren">(</span><em>module</em>, <em>formatter=None</em>, <em>handler=None</em>, <em>level=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.SARlogger.add_file_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add handler for logging to file. typically with lower level and timestamps</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> (<em>module</em>) &#8211; module whose logger to add the handler to</li>
+<li><strong>level</strong> (<em>int</em>) &#8211; log level for the entire logger, default logging.DEBUG(=10)
+This is equivalent to handler_level option in
+<a class="reference internal" href="#sarpy.BRUKERIO.SARlogger.initiate_logging" title="sarpy.BRUKERIO.SARlogger.initiate_logging"><code class="xref py py-func docutils literal"><span class="pre">initiate_logging()</span></code></a></li>
+<li><strong>formatter</strong> &#8211; default provides date, time, level, module and message</li>
+<li><strong>handler</strong> &#8211; default provides a FileHandler (that prints to /tmp/sarpy.log)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.SARlogger.change_logger_level">
+<code class="descclassname">sarpy.BRUKERIO.SARlogger.</code><code class="descname">change_logger_level</code><span class="sig-paren">(</span><em>module</em>, <em>level=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.SARlogger.change_logger_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>This changes the overall logger level. Above in :py:func: initiate_logging,
+the level for the individual handler was being set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> (<em>module</em>) &#8211; module whose logger to change the logger level for</li>
+<li><strong>level</strong> (<em>int</em>) &#8211; log level for the entire logger, default logging.DEBUG(=10)
+This is equivalent to logger_level option in
+<a class="reference internal" href="#sarpy.BRUKERIO.SARlogger.initiate_logging" title="sarpy.BRUKERIO.SARlogger.initiate_logging"><code class="xref py py-func docutils literal"><span class="pre">initiate_logging()</span></code></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.SARlogger.initiate_logging">
+<code class="descclassname">sarpy.BRUKERIO.SARlogger.</code><code class="descname">initiate_logging</code><span class="sig-paren">(</span><em>module</em>, <em>formatter=None</em>, <em>handler=None</em>, <em>handler_level=None</em>, <em>logger_level=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/SARlogger.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.SARlogger.initiate_logging" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initiate logging for a module (in the sarpy package). This assumes 
+a module has been imported.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> (<em>module</em>) &#8211; Module object that points to module in the sarpy package 
+framework (collection of libraries? modules?).</li>
+<li><strong>handler_level</strong> (<em>int</em>) &#8211; log level for the handler, default logging.WARNING(=30)</li>
+<li><strong>logger_level</strong> (<em>int</em>) &#8211; log level for the entire logger, default logging.DEBUG(=10)
+Use <a class="reference internal" href="#sarpy.BRUKERIO.SARlogger.change_logger_level" title="sarpy.BRUKERIO.SARlogger.change_logger_level"><code class="xref py py-meth docutils literal"><span class="pre">change_logger_level()</span></code></a> to change the overall level</li>
+<li><strong>formatter</strong> &#8211; default provides time, level, module and message</li>
+<li><strong>handler</strong> &#8211; default provides a StreamHandler (that prints to the console)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The module in question will have set up minimal logging. A NullHandler 
+has been set so the default logging (methods in the libraries should
+emit appropriate log message at opportune times) is swallowed. If this
+handlers is overwritten, logging can commence.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.BRUKERIO.check_fid_acqp_method">
+<span id="check-fid-acqp-method-module"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">check_fid_acqp_method</span></code> Module<a class="headerlink" href="#module-sarpy.BRUKERIO.check_fid_acqp_method" title="Permalink to this headline">¶</a></h2>
+<p>Quick check for the presence of all sorts of BRUKER files in the 
+entire dataroot. A fully stocked scan should have
+acqp, method, fid, 2dseq. This results in a score of
+1 +   2 +     4 +  8 = 15. If one is missing, the score is less.</p>
+</div>
+<div class="section" id="module-sarpy.BRUKERIO.congrid">
+<span id="congrid-module"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">congrid</span></code> Module<a class="headerlink" href="#module-sarpy.BRUKERIO.congrid" title="Permalink to this headline">¶</a></h2>
+<p>Rebinning example from he SciPy.org Cookbook</p>
+<dl class="function">
+<dt id="sarpy.BRUKERIO.congrid.congrid">
+<code class="descclassname">sarpy.BRUKERIO.congrid.</code><code class="descname">congrid</code><span class="sig-paren">(</span><em>a</em>, <em>newdims</em>, <em>method='linear'</em>, <em>centre=False</em>, <em>minusone=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/congrid.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.congrid.congrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arbitrary resampling of source array to new dimension sizes.
+Currently only supports maintaining the same number of dimensions.
+To use 1-D arrays, first promote them to shape (x,1).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>a</strong> (<em>numpy.ndarray</em>) &#8211; input array</li>
+<li><strong>newdims</strong> (<em>list</em>) &#8211; new dimensions</li>
+<li><strong>method</strong> (<em>string</em>) &#8211; <cite>neighbour</cite> - closest value from original data
+<cite>nearest</cite> and <cite>linear</cite> - uses n x 1-D interpolations using 
+scipy.interpolate.interp1d
+(see Numerical Recipes for validity of use of n 1-D interpolations)
+<cite>spline</cite> - uses ndimage.map_coordinates</li>
+<li><strong>centre</strong> (<em>boolean</em>) &#8211; True - interpolation points are at the centres of the bins
+False - points are at the front edge of the bin</li>
+<li><strong>minusone</strong> (<em>boolean</em>) &#8211; For example- inarray.shape = (i,j) &amp; new dimensions = (x,y)
+False - inarray is resampled by factors of (i/x) * (j/y)
+True - inarray is resampled by(i-1)/(x-1) * (j-1)/(y-1)
+This prevents extrapolation one element beyond bounds of input array.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Uses the same parameters and creates the same co-ordinate lookup points
+as IDL&#8217;&#8217;s congrid routine, which apparently originally came from a VAX/VMS
+routine of the same name.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.BRUKERIO.descriptortest">
+<span id="descriptortest-module"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">descriptortest</span></code> Module<a class="headerlink" href="#module-sarpy.BRUKERIO.descriptortest" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Feb 28 13:19:35 2013</p>
+<p>&#64;author: stefan</p>
+<dl class="class">
+<dt id="sarpy.BRUKERIO.descriptortest.C">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.descriptortest.</code><code class="descname">C</code><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.C" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.descriptortest.C.a">
+<code class="descname">a</code><em class="property"> = 'forty two'</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.C.a" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.descriptortest.Cnew">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.descriptortest.</code><code class="descname">Cnew</code><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.Cnew" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.descriptortest.Cnew.data">
+<code class="descname">data</code><em class="property"> = [42, 42, 42]</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.Cnew.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.descriptortest.D">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.descriptortest.</code><code class="descname">D</code><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.descriptortest.Dnew">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.descriptortest.</code><code class="descname">Dnew</code><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.Dnew" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.descriptortest.dict_plus">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.descriptortest.</code><code class="descname">dict_plus</code><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.dict_plus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">dict</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.descriptortest.lazy_property_desc">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.descriptortest.</code><code class="descname">lazy_property_desc</code><span class="sig-paren">(</span><em>fget</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.lazy_property_desc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sarpy.BRUKERIO.descriptortest.tryout">
+<em class="property">class </em><code class="descclassname">sarpy.BRUKERIO.descriptortest.</code><code class="descname">tryout</code><span class="sig-paren">(</span><em>someval</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.tryout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.descriptortest.tryout.adata">
+<code class="descname">adata</code><em class="property"> = None</em><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.tryout.adata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.descriptortest.tryout.getname">
+<code class="descname">getname</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.tryout.getname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sarpy.BRUKERIO.descriptortest.tryout.name">
+<code class="descname">name</code><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.tryout.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sarpy.BRUKERIO.descriptortest.tryout.setname">
+<code class="descname">setname</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/descriptortest.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.descriptortest.tryout.setname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sarpy.BRUKERIO.obj2dict">
+<span id="obj2dict-module"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">obj2dict</span></code> Module<a class="headerlink" href="#module-sarpy.BRUKERIO.obj2dict" title="Permalink to this headline">¶</a></h2>
+<p>Created on Sat Mar 16 22:28:37 2013</p>
+<p>&#64;author: stefan</p>
+<dl class="function">
+<dt id="sarpy.BRUKERIO.obj2dict.obj2dict">
+<code class="descclassname">sarpy.BRUKERIO.obj2dict.</code><code class="descname">obj2dict</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/obj2dict.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.obj2dict.obj2dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sarpy.BRUKERIO.obj2dict.show_tree">
+<code class="descclassname">sarpy.BRUKERIO.obj2dict.</code><code class="descname">show_tree</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/BRUKERIO/obj2dict.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sarpy.BRUKERIO.obj2dict.show_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">BRUKERIO Package</a><ul>
+<li><a class="reference internal" href="#module-sarpy.BRUKERIO.AData_classes"><code class="docutils literal"><span class="pre">AData_classes</span></code> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.BRUKERIO.lowlevel"><code class="docutils literal"><span class="pre">lowlevel</span></code> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.BRUKERIO.BRUKER_classes"><code class="docutils literal"><span class="pre">BRUKER_classes</span></code> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.BRUKERIO.SARlogger"><code class="docutils literal"><span class="pre">SARlogger</span></code> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.BRUKERIO.check_fid_acqp_method"><code class="docutils literal"><span class="pre">check_fid_acqp_method</span></code> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.BRUKERIO.congrid"><code class="docutils literal"><span class="pre">congrid</span></code> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.BRUKERIO.descriptortest"><code class="docutils literal"><span class="pre">descriptortest</span></code> Module</a></li>
+<li><a class="reference internal" href="#module-sarpy.BRUKERIO.obj2dict"><code class="docutils literal"><span class="pre">obj2dict</span></code> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/sarpy.BRUKERIO.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<h4><a href="https://github.com/DrSAR/SARlabpy">Link to Github repository</a></h4>
+<h4><a href="https://github.com/DrSAR/SARlabpy/issues">Issues, Milestones, Bugs</a></h4>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2013, SARlab members.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

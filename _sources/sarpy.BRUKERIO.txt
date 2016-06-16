@@ -1,18 +1,18 @@
-io Package
-==========
+BRUKERIO Package
+================
 
 :mod:`AData_classes` Module
 ---------------------------
 
-.. automodule:: sarpyBRUKERIOAData_classes
+.. automodule:: sarpy.BRUKERIO.AData_classes
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`BRUKERIO` Module
-----------------------
+:mod:`lowlevel` Module
+------------------------
 
-.. automodule:: sarpyBRUKERIOBRUKERIO
+.. automodule:: sarpy.BRUKERIO.lowlevel
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ io Package
 :mod:`BRUKER_classes` Module
 ----------------------------
 
-.. automodule:: sarpyBRUKERIOBRUKER_classes
+.. automodule:: sarpy.BRUKERIO.BRUKER_classes
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,7 +28,7 @@ io Package
 :mod:`SARlogger` Module
 -----------------------
 
-.. automodule:: sarpyBRUKERIOSARlogger
+.. automodule:: sarpy.BRUKERIO.SARlogger
     :members:
     :undoc-members:
     :show-inheritance:
@@ -36,7 +36,7 @@ io Package
 :mod:`check_fid_acqp_method` Module
 -----------------------------------
 
-.. automodule:: sarpyBRUKERIOcheck_fid_acqp_method
+.. automodule:: sarpy.BRUKERIO.check_fid_acqp_method
     :members:
     :undoc-members:
     :show-inheritance:
@@ -44,7 +44,7 @@ io Package
 :mod:`congrid` Module
 ---------------------
 
-.. automodule:: sarpyBRUKERIOcongrid
+.. automodule:: sarpy.BRUKERIO.congrid
     :members:
     :undoc-members:
     :show-inheritance:
@@ -52,7 +52,7 @@ io Package
 :mod:`descriptortest` Module
 ----------------------------
 
-.. automodule:: sarpyBRUKERIOdescriptortest
+.. automodule:: sarpy.BRUKERIO.descriptortest
     :members:
     :undoc-members:
     :show-inheritance:
@@ -60,15 +60,7 @@ io Package
 :mod:`obj2dict` Module
 ----------------------
 
-.. automodule:: sarpyBRUKERIOobj2dict
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`obj2dict` Module
-----------------------
-
-.. automodule:: sarpyBRUKERIOobj2dict
+.. automodule:: sarpy.BRUKERIO.obj2dict
     :members:
     :undoc-members:
     :show-inheritance:

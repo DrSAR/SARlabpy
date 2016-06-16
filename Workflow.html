@@ -6,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Suggested Workflow for the Code Repository &mdash; sarpy 0.1alpha documentation</title>
+    <title>Suggested Workflow for the Code Repository &mdash; sarpy 5.0beta documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1alpha',
+        VERSION:     '5.0beta',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,12 +23,12 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="sarpy 0.1alpha documentation" href="index.html" />
+    <link rel="top" title="sarpy 5.0beta documentation" href="index.html" />
     <link rel="next" title="Documenting and Testing sarpy" href="Documenting-Testing.html" />
     <link rel="prev" title="Package Organization for sarpy" href="sarpy-layout.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -43,14 +43,14 @@
         <li class="right" >
           <a href="sarpy-layout.html" title="Package Organization for sarpy"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="suggested-workflow-for-the-code-repository">
 <h1>Suggested Workflow for the Code Repository<a class="headerlink" href="#suggested-workflow-for-the-code-repository" title="Permalink to this headline">¶</a></h1>
@@ -61,22 +61,22 @@
 <li><p class="first">Branch master is a branch that should in most situations have (almost) fully functional code. This branch can have tags attached so that you can go back and reproduce your work. &#8211; Currently only the central integrator (SAR) can push to it.</p>
 </li>
 <li><p class="first">Any given feature, bugfix, enhancement should be worked on in a (local) branch. Feel free to push them to the central repo (as that branch) but nobody has any right to expect to find workable code in there.</p>
-<div class="highlight-bash"><div class="highlight"><pre>git checkout master
-git checkout -b mynewfeature <span class="c"># same as git branch mynewfeature ; git checkout mynewfeature</span>
-<span class="c"># do work ...</span>
-git commit <span class="c"># maybe even a few times</span>
-git push origin mynewfeature  <span class="c"># if you want a backup</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git checkout master
+git checkout -b mynewfeature <span class="c1"># same as git branch mynewfeature ; git checkout mynewfeature</span>
+<span class="c1"># do work ...</span>
+git commit <span class="c1"># maybe even a few times</span>
+git push origin mynewfeature  <span class="c1"># if you want a backup</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first">The objective here is that your code will at somepoint work with the rest of the code (which, of course, is also evolving). Hence to effect that merge at some future date, you need to stay on top of things. You do this by &#8216;rebasing&#8217; all your as yet unmerged changes on the most recent version of master.</p>
-<div class="highlight-bash"><div class="highlight"><pre>git fetch
-git rebase origin/master <span class="c"># you do this while still checked out on mynewfeature</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git fetch
+git rebase origin/master <span class="c1"># you do this while still checked out on mynewfeature</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first">If time comes to make the feature, bugfix, whatever available, <strong>tell me</strong>. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:</p>
-<div class="highlight-bash"><div class="highlight"><pre>git checkout master
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git checkout master
 git merge --no-ff mynewfeature
 git push
 </pre></div>
@@ -96,7 +96,7 @@ git push
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="sarpy-layout.html"
@@ -104,11 +104,13 @@ git push
   <h4>Next topic</h4>
   <p class="topless"><a href="Documenting-Testing.html"
                         title="next chapter">Documenting and Testing sarpy</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/Workflow.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Workflow.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -128,7 +130,7 @@ git push
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -143,12 +145,12 @@ git push
         <li class="right" >
           <a href="sarpy-layout.html" title="Package Organization for sarpy"
              >previous</a> |</li>
-        <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2013, SARlab members.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>

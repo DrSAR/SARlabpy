@@ -6,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>How to use Module Logging &mdash; sarpy 0.1alpha documentation</title>
+    <title>How to use Module Logging &mdash; sarpy 5.0beta documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1alpha',
+        VERSION:     '5.0beta',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,12 +23,12 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="sarpy 0.1alpha documentation" href="index.html" />
+    <link rel="top" title="sarpy 5.0beta documentation" href="index.html" />
     <link rel="next" title="sarpy Documentation" href="modules.html" />
     <link rel="prev" title="Examples for BRUKERIO" href="BRUKERIOexamples.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -43,14 +43,14 @@
         <li class="right" >
           <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="how-to-use-module-logging">
 <h1>How to use Module Logging<a class="headerlink" href="#how-to-use-module-logging" title="Permalink to this headline">¶</a></h1>
@@ -60,14 +60,14 @@ let the user of said library decide on whether they want to see it.</p>
 <div class="section" id="module-setup">
 <h2>Module setup<a class="headerlink" href="#module-setup" title="Permalink to this headline">¶</a></h2>
 <p>Any module interested in logging should include the following header:</p>
-<div class="highlight-py"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">logging</span>
+<div class="highlight-py"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="n">logger</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
 </pre></div>
 </div>
 <p>Inside the module being watch, statements of the kind:</p>
-<div class="highlight-py"><div class="highlight"><pre><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Variable x={0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;File not found, using random data instead. Good luck&#39;</span><span class="p">)</span>
+<div class="highlight-py"><div class="highlight"><pre><span></span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Variable x={0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;File not found, using random data instead. Good luck&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>will lead to debug messages. With the default setting the first will be swallowed
@@ -78,19 +78,19 @@ be visible.</p>
 <h2>Configuration by the Module User<a class="headerlink" href="#configuration-by-the-module-user" title="Permalink to this headline">¶</a></h2>
 <p>The importer of the module (e.g. BRUKERIO) needs to issue the following
 statement in addition to the actual import statement:</p>
-<div class="highlight-py"><div class="highlight"><pre><span class="c">#make the SARlogger features available</span>
+<div class="highlight-py"><div class="highlight"><pre><span></span><span class="c1">#make the SARlogger features available</span>
 <span class="kn">from</span> <span class="nn">sarpy</span> <span class="kn">import</span> <span class="n">SARlogger</span>
-<span class="c">#test logging for BRUKERIO</span>
+<span class="c1">#test logging for BRUKERIO</span>
 <span class="kn">import</span> <span class="nn">BRUKERIO</span>
 <span class="n">SARlogger</span><span class="o">.</span><span class="n">initiate_logging</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>At this point, a console handler that issues anything that&#8217;s a WARNING or
 more sever will be written to to the console.
-Without the call to <a class="reference internal" href="sarpy.io.html#sarpy.io.SARlogger.initiate_logging" title="sarpy.io.SARlogger.initiate_logging"><tt class="xref py py-meth docutils literal"><span class="pre">sarpy.io.SARlogger.initiate_logging()</span></tt></a>, logging messages will be ignored alltogether.</p>
+Without the call to <a class="reference internal" href="sarpy.BRUKERIO.html#sarpy.BRUKERIO.SARlogger.initiate_logging" title="sarpy.BRUKERIO.SARlogger.initiate_logging"><code class="xref py py-meth docutils literal"><span class="pre">sarpy.BRUKERIO.SARlogger.initiate_logging()</span></code></a>, logging messages will be ignored alltogether.</p>
 <p>If you desire output to a file, another convenience function in SARlogger can be used
 to attach another handler (with another log level and formatter):</p>
-<div class="highlight-py"><div class="highlight"><pre><span class="n">SARlogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
+<div class="highlight-py"><div class="highlight"><pre><span></span><span class="n">SARlogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By default, this will lead to logging at the DEBUG level to file /tmp/SARlabpy.log.</p>
@@ -116,7 +116,7 @@ as you desire....</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
@@ -135,11 +135,13 @@ as you desire....</p>
   <h4>Next topic</h4>
   <p class="topless"><a href="modules.html"
                         title="next chapter">sarpy Documentation</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/SARloggerexamples.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/SARloggerexamples.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -159,7 +161,7 @@ as you desire....</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -174,12 +176,12 @@ as you desire....</p>
         <li class="right" >
           <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
              >previous</a> |</li>
-        <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2013, SARlab members.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>

@@ -41,7 +41,7 @@ statement in addition to the actual import statement:
 
 At this point, a console handler that issues anything that's a WARNING or 
 more sever will be written to to the console. 
-Without the call to :py:meth:`sarpy.io.SARlogger.initiate_logging`, logging messages will be ignored alltogether. 
+Without the call to :py:meth:`sarpy.BRUKERIO.SARlogger.initiate_logging`, logging messages will be ignored alltogether. 
 
 If you desire output to a file, another convenience function in SARlogger can be used
 to attach another handler (with another log level and formatter): 

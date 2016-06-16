@@ -1,5 +1,0 @@
-SARlogger documentation
-----------------------
-
-.. automodule:: SARlabpy.io.SARlogger
-   :members:

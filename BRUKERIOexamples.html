@@ -6,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Examples for BRUKERIO &mdash; sarpy 0.1alpha documentation</title>
+    <title>Examples for BRUKERIO &mdash; sarpy 5.0beta documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1alpha',
+        VERSION:     '5.0beta',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,12 +23,12 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="sarpy 0.1alpha documentation" href="index.html" />
+    <link rel="top" title="sarpy 5.0beta documentation" href="index.html" />
     <link rel="next" title="How to use Module Logging" href="SARloggerexamples.html" />
     <link rel="prev" title="Documenting and Testing sarpy" href="Documenting-Testing.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -43,38 +43,38 @@
         <li class="right" >
           <a href="Documenting-Testing.html" title="Documenting and Testing sarpy"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="examples-for-brukerio">
 <h1>Examples for BRUKERIO<a class="headerlink" href="#examples-for-brukerio" title="Permalink to this headline">¶</a></h1>
 <p>Reading Bruker headers and data shouldn&#8217;t be all that complicated. Here are
 some examples on how to do this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sarpy</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;sarpy/test/test-data/Moosvi.ii1/2/acqp&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sarpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;sarpy/test/test-data/Moosvi.ii1/2/acqp&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">header</span> <span class="o">=</span> <span class="n">sarpy</span><span class="o">.</span><span class="n">readJCAMP</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The header is a dictionary with parameter names as the keys:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 <span class="go">&lt;type &#39;dict&#39;&gt;</span>
 </pre></div>
 </div>
 <p>All of the BRUKER header files are in this JCAMP format. So the <em>method</em> parameter file can be loaded as well:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;sarpy/test/test-data/Moosvi.ii1/2/method&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;sarpy/test/test-data/Moosvi.ii1/2/method&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">header</span> <span class="o">=</span> <span class="n">sarpy</span><span class="o">.</span><span class="n">readJCAMP</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">header</span><span class="p">[</span><span class="s">&#39;ExcPulse&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;ExcPulse&#39;</span><span class="p">]</span>
 <span class="go">&#39;(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, &lt; hermite.exc&gt;, 5400, 0.1794, 50, 0.1024, conventional)&#39;</span>
 </pre></div>
 </div>
 <p>Loading k-space data (BRUKER calls the file fid) is also doable:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;sarpy/test/test-data/Moosvi.ii1/2/fid&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;sarpy/test/test-data/Moosvi.ii1/2/fid&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">sarpy</span><span class="o">.</span><span class="n">readfid</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
 <span class="go">/tmp/sarpy/sarpy/test/test-data/Moosvi.ii1/2</span>
 <span class="go">opening /tmp/sarpy/sarpy/test/test-data/Moosvi.ii1/2/acqp</span>
@@ -92,21 +92,21 @@ some examples on how to do this:</p>
 </pre></div>
 </div>
 <p>Function readfid returns another dictionary that bundles the actual data and header information:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
 <span class="go">[&#39;isImage&#39;, &#39;header&#39;, &#39;data&#39;]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(128, 128, 15, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s">&#39;isImage&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;isImage&#39;</span><span class="p">]</span>
 <span class="go">False</span>
 </pre></div>
 </div>
 <p>Because we are now dealing with these dictionaries nested in dictionaries, there is no need to load header data separately before the fid data (unless you don&#8217;t need the actual data and would rather avoid filling your memory).</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s">&#39;header&#39;</span><span class="p">][</span><span class="s">&#39;method&#39;</span><span class="p">][</span><span class="s">&#39;ExcPulse&#39;</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">][</span><span class="s1">&#39;method&#39;</span><span class="p">][</span><span class="s1">&#39;ExcPulse&#39;</span><span class="p">]</span>
 <span class="go">&#39;(1, 5400, 30, 9.02336512447152, 100, 0, 100, LIB_EXCITATION, &lt; hermite.exc&gt;, 5400, 0.1794, 50, 0.1024, conventional)&#39;</span>
 </pre></div>
 </div>
 <p>Here is a little python string kung-fu to turn this structure into a list of strings for further processing:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s">&#39;header&#39;</span><span class="p">][</span><span class="s">&#39;method&#39;</span><span class="p">][</span><span class="s">&#39;ExcPulse&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;()&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">][</span><span class="s1">&#39;method&#39;</span><span class="p">][</span><span class="s1">&#39;ExcPulse&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;()&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
 <span class="go">[&#39;1&#39;, &#39; 5400&#39;, &#39; 30&#39;, &#39; 9.02336512447152&#39;, &#39; 100&#39;, &#39; 0&#39;, &#39; 100&#39;, &#39; LIB_EXCITATION&#39;, &#39; &lt; hermite.exc&gt;&#39;, &#39; 5400&#39;, &#39; 0.1794&#39;, &#39; 50&#39;, &#39; 0.1024&#39;, &#39; conventional&#39;]</span>
 </pre></div>
 </div>
@@ -116,7 +116,7 @@ some examples on how to do this:</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="Documenting-Testing.html"
@@ -124,11 +124,13 @@ some examples on how to do this:</p>
   <h4>Next topic</h4>
   <p class="topless"><a href="SARloggerexamples.html"
                         title="next chapter">How to use Module Logging</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/BRUKERIOexamples.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/BRUKERIOexamples.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -148,7 +150,7 @@ some examples on how to do this:</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -163,12 +165,12 @@ some examples on how to do this:</p>
         <li class="right" >
           <a href="Documenting-Testing.html" title="Documenting and Testing sarpy"
              >previous</a> |</li>
-        <li><a href="index.html">sarpy 0.1alpha documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2013, SARlab members.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>
