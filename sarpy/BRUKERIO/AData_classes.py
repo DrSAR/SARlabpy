@@ -179,8 +179,9 @@ def load_AData(pdatas, dirname):
                 logger.info('loading adata from %s' % dirname)
                 try:
                     adata_candidate = AData.fromfile(dirname, parent=pdata)
-                except IOError:
-                    logger.warning('Could not load AData')
+                except json.JSONDecodeError as err:
+                    print(err.msg)
+                    logger.warning(err.msg)
                 else:
                     special_dict.store[adata_candidate.key]=adata_candidate
     return special_dict
@@ -292,7 +293,13 @@ class AData(object):
             logger.warn('Need precisely one data file *pickle, found: {0}'.
                             format(datafilename))
         with open(paramfilename[0], 'r') as paramfile:
-            meta = json.load(paramfile)
+            try:
+                meta = json.load(paramfile)
+            except json.JSONDecodeError as err:
+                raise json.JSONDecodeError(
+                   ('Error loading json file for adata in {0}\n'+
+                   'specifically: {1}').format(paramfilename[0], err),
+                    err.doc, err.pos)
         # backwards compatibility for adata that didn't store the 
         # depends_on attribute in the meta data
         if 'depends_on' not in meta:

@@ -555,10 +555,15 @@ class Scan(object):
         '''
         delete adata set
         '''
+        deleted = False
         for k in list(self.adata.keys()):
             if re.search(key+'$', k) is not None:
                 if self.adata.pop(k, None) is not None:
-                    logger.info('adata %s for %s' %(key, self.shortdirname))
+                    logger.info('adata %s deleted for %s' %(key, self.shortdirname))
+                    deleted = True
+        if not deleted:
+            print('adata %s NOT found in %s' %(key, self.shortdirname))
+            logger.warning('adata %s NOT found in %s' %(key, self.shortdirname))
                     
     def masterlist_attr(self, attr, level=None):
         '''look up attr in the hierarchy of dictionaries of the masterlist

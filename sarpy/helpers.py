@@ -60,16 +60,17 @@ def git_repo_state():
                             ' log -1 --format="%ci" '+sha1.decode('utf-8'),
                             stdout=subprocess.PIPE, shell=True)
     (date, err) = proc.communicate()
+    date = date.decode('utf-8').strip()
     proc = subprocess.Popen('git --git-dir='+gitdir+' --work-tree='+worktree+
                             ' rev-parse --abbrev-ref HEAD',
                             stdout=subprocess.PIPE, shell=True)
     (branch, err) = proc.communicate()
 
     if dirty:
-        date = date.decode('utf-8').strip() + ' +++'
+        date = date + ' +++'
     return {'describe': describe.decode('utf-8').strip(),
             'dirty':dirty,
-            'date':date.strip(),
+            'date':date,
             'status':status.decode('utf-8').strip(),
             'sha1':sha1.decode('utf-8').strip(),
             'branch':branch.decode('utf-8').strip()}
