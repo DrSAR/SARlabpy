@@ -11,7 +11,7 @@ all will be silent. Details in :py:mod: SARlogger
 """
 
 import logging
-logger=logging.getLogger('sarpy.io.BRUKERIO')
+logger=logging.getLogger(__name__)
 
 import numpy
 import os.path
@@ -547,7 +547,7 @@ def readfid(fptr=None,
                     'trying PVM_EncSteps2 from method')
             try:
                 PVM_EncSteps1 = method['PVM_EncSteps2']
-                print(('='*80+'\nsave by PVM_EncSteps2'))
+                logger.info(('='*80+'\nsave by PVM_EncSteps2'))
                 # ensure that it runs from 0 to max
                 Enc2Steps = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
             except KeyError:
