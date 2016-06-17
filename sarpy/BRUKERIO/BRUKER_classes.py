@@ -24,8 +24,7 @@ from . import JCAMP_comparison
 
 ## From http://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 import logging
-logger=logging.getLogger('sarpy.io.BRUKER_classes')
-logger.setLevel(level=40)
+logger=logging.getLogger(__name__)
 
 dataroot = os.path.expanduser(os.path.join('~','bdata'))
 masterlist_root = os.path.expanduser('~/sdata/masterlists')
@@ -330,20 +329,17 @@ class Scan(object):
                             msg = ('adate["{2}"] depends on "{0}" which '+
                                    'is missing adata "{1}"'
                                    ).format(scn_name, adata_lbl,ad[1].key)
-                            print('WARNING: ' + msg)
                             logger.warning(msg)
                         except OSError:
                             msg = ('adate["{1}"] depends on "{0}" which '+
                                    'is missing?'
                                    ).format(scn_name, ad[1].key)
-                            print('WARNING: ' + msg)
                             logger.warning(msg)
                         else:
                             t2 = datetime.strptime(t2str,'%c')
                             if t2>t1:
                                 msg = ('dependency "{0};{1}" is younger than '+
                                       'it should be').format(scn_name, adata_lbl)
-                                print('WARNING: ' + msg)
                                 logger.warning(msg)
                                   
         if len(adata_dict) == 0:
@@ -562,7 +558,6 @@ class Scan(object):
                     logger.info('adata %s deleted for %s' %(key, self.shortdirname))
                     deleted = True
         if not deleted:
-            print('adata %s NOT found in %s' %(key, self.shortdirname))
             logger.warning('adata %s NOT found in %s' %(key, self.shortdirname))
                     
     def masterlist_attr(self, attr, level=None):
@@ -743,9 +738,9 @@ class Study(object):
             try:
                 if re.match(protocol_name, s.acqp.ACQ_protocol_name):
                     found_scans.append(s)
-            except AttributeError:
-                print(('Warning: Scan in dir '+
-                      '%s has no acqp attribute' %str(s.shortdirname)))
+            except AttributeError as exc:
+                logger.warning('Scan in dir {0} has no acqp attribute'.format(
+                                s.shortdirname), exc_info=True)
         return(found_scans)
 
     def scan_finder(self, **kwargs):
@@ -1129,7 +1124,8 @@ class Experiment(StudyCollection):
                 if stdy.masterlist_filename is not None:
                     new_study_list.append(stdy)
                 else:
-                    print(('WARNING: removing study {0} from Experiment'.format(stdy.shortdirname)))
+                    logger.warning('removing study {0} from Experiment'.format(
+                                   stdy.shortdirname))
             self.studies = new_study_list 
         if self.studies:
             default_masterlistname = self.studies[0].masterlist_filename
