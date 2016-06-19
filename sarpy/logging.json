@@ -22,7 +22,7 @@
             "class": "logging.handlers.RotatingFileHandler",
             "level": "INFO",
             "formatter": "simple",
-            "filename": "sarpy.info.log",
+            "filename": "/tmp/sarpy.info.log",
             "maxBytes": 10485760,
             "backupCount": 20,
             "encoding": "utf8"
@@ -32,7 +32,7 @@
             "class": "logging.handlers.RotatingFileHandler",
             "level": "ERROR",
             "formatter": "simple",
-            "filename": "sarpy.errors.log",
+            "filename": "/tmp/sarpy.errors.log",
             "maxBytes": 10485760,
             "backupCount": 20,
             "encoding": "utf8"
