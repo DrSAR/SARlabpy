@@ -7,6 +7,12 @@ Test routines of lowlevel BRUKERIO functions
 import pytest
 from . import lowlevel
 
+#for the purposes of testing, point dataroot to testmodule
+import os
+curdir = os.path.dirname(__file__)
+# was: dataroot = os.path.expanduser(os.path.join('~','bdata'))
+lowlevel.dataroot = os.path.join(curdir,'testdata')
+
 class Test_minors:
     def test_pairwise(self):
         it = [1, 2, 3]

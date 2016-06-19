@@ -15,7 +15,8 @@ import pandas
 
 from ..helpers import natural_sort
 from .lowlevel import (readJCAMP, readfid, readfidspectro, read2dseq,
-                       fftfid)
+                       fftfid,
+                       dataroot)
 from .AData_classes import AData, load_AData
 
 from .lazy_property import lazy_property
@@ -26,7 +27,6 @@ from . import JCAMP_comparison
 import logging
 logger=logging.getLogger(__name__)
 
-dataroot = os.path.expanduser(os.path.join('~','bdata'))
 masterlist_root = os.path.expanduser('~/sdata/masterlists')
 
 class AttrDict(object):
