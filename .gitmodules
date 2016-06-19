@@ -1,0 +1,3 @@
+[submodule "sarpy/testdata"]
+	path = sarpy/testdata
+	url = git@gitlab.com:DrSAR/sarpy-testdata.git
