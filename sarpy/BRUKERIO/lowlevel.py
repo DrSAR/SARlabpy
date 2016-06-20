@@ -412,7 +412,8 @@ def readfid(fptr=None,
         (32, 32, 5)
         >>> fid = readfid(os.path.join(datapath,'12','fid'))
         ... # doctest: +ELLIPSIS
-        ... # 1-segment EPI - FIXME, this should be easy but somehow ACQ_size=(8192,1) 
+        ... # FIXME:
+        ... # 1-segment EPI - this should be easy but somehow ACQ_size=(8192,1) 
         ... # and ACQ_scan_size=ACQ_phase_factor_scans (instead of One_Scan)
         ... # this should be an easy 64x64x5slice single shot EPI...
         Traceback (most recent call last):
@@ -495,7 +496,8 @@ def readfid(fptr=None,
     # only the following parameters are retrieved for easier access AND
     # modification from their value in the acqp parameter file
     #ACQ_size[0] should be even (real valued counts)
-    ACQ_size = acqp['ACQ_size'][:]
+    #ACQ_size = acqp['ACQ_size'][:]
+    ACQ_size = method['PVM_EncMatrix'][:]
     NR = acqp['NR']
     logger.debug('ACQ_size={0}'.format(ACQ_size))
 #    assert acqp['ACQ_experiment_mode'] == 'SingleExperiment',(
@@ -503,13 +505,12 @@ def readfid(fptr=None,
     assert acqp['ACQ_dim'] == len(ACQ_size),(
             'ACQ_dim = {0} != len(ACQ_size={1}) ??'.format(
             acqp['ACQ_dim'], ACQ_size))
-
     # There is the possibility of 'zero filling' since objects (aka kspace
     # lines) are written n 1Kb blocks if GO_block_size != continuous
     logger.debug('GO_block_size={0}'.format(acqp['GO_block_size']))
     if acqp['GO_block_size'] == 'continuous':
         # we acquire complex data which requires numbers in the read direction
-        ACQ_size[0] /= 2
+        ACQ_size[0] /= 1
     elif acqp['GO_block_size'] == 'Standard_KBlock_Format':
         true_obj_blocksize = (int(datatype[1])*ACQ_size[0])
         obj_blocksize = 1024 * ((true_obj_blocksize-1) // 1024 + 1)
@@ -571,7 +572,7 @@ def readfid(fptr=None,
     n_stored_datapoints = numpy.array(ACQ_size).prod() * (
                 acqp['NSLICES']*acqp['ACQ_n_echo_images']*
                 acqp['ACQ_n_movie_frames'] * NR )
-    n_datapoints = numpy.array(acqp['ACQ_size']).prod() * (
+    n_datapoints = numpy.array(ACQ_size).prod() * (
                 acqp['NSLICES']*acqp['ACQ_n_echo_images']*
                 acqp['ACQ_n_movie_frames'] * NR )
 
@@ -594,7 +595,7 @@ def readfid(fptr=None,
             n_stored_datapoints = numpy.array(ACQ_size).prod() * (
                 acqp['NSLICES']*acqp['ACQ_n_echo_images']*
                 acqp['ACQ_n_movie_frames'] * NR )
-            n_datapoints = numpy.array(acqp['ACQ_size']).prod() * (
+            n_datapoints = numpy.array(ACQ_size).prod() * (
                 acqp['NSLICES']*acqp['ACQ_n_echo_images']*
                 acqp['ACQ_n_movie_frames'] * NR )
 
@@ -641,14 +642,15 @@ def readfid(fptr=None,
         # due to  parameter acqp['GO_block_size'] == 'Standard_KBlock_Format'
         # If this is set, blocks of 1k bytes make up the read lines (and might
         # be zerofilled if not long enough...)
-        tempfid = fid[:,0:(acqp['ACQ_size'][0]/2)]
+        #tempfid = fid[:,0:(ACQ_size[0]/2)]
+        tempfid = fid[:,0:ACQ_size[0]]
 
         # ACQ_size - might 1, 2, or thre elements depnding on ACQ_dim
         # append 1 to make it 3D
-        ACQ_size = numpy.hstack([acqp['ACQ_size'], 
+        ACQ_size = numpy.hstack([ACQ_size, 
                                  numpy.tile(1,3-acqp['ACQ_dim'])])
         
-        fid_reorder = numpy.ndarray((ACQ_size[0]/2, 
+        fid_reorder = numpy.ndarray((ACQ_size[0], 
                         ACQ_size[1], 
                         ACQ_size[2], 
                         acqp['NSLICES'], # caveat: in 3D this is usually =1
