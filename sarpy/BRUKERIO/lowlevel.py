@@ -11,12 +11,14 @@ all will be silent. Details in :py:mod: SARlogger
 """
 
 import logging
-logger=logging.getLogger('sarpy.io.BRUKERIO')
+logger=logging.getLogger(__name__)
 
 import numpy
 import os.path
 import re
 from itertools import tee
+
+dataroot = os.path.expanduser(os.path.join('~','bdata'))
 
 def pairwise(iterable):
     """
@@ -71,7 +73,8 @@ def readJCAMP(filename):
         ##$SUBJECT_name=(<Moosvi>, <readfidTest>)
 
         >>> import os
-        >>> a=readJCAMP(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/subject'))
+        >>> datapath = os.path.join(os.path.expanduser(dataroot),'stefan','nmr','readfidTest.ix1')
+        >>> a=readJCAMP(os.path.join(datapath,'subject'))
         >>> a['SUBJECT_name']
         ['<Moosvi>', '<readfidTest>']
         >>> a['SUBJECT_name_string']
@@ -99,7 +102,7 @@ def readJCAMP(filename):
         1 -0 1 0 0 -0 0 1 -0 1 -0 1 0 0 0 0 1 1 -0 0 0 1 -0 0 0 1 1 -0 0 0 1 -0
 
         >>> import os
-        >>> a=readJCAMP(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/1/acqp'))
+        >>> a=readJCAMP(os.path.join(datapath,'1','acqp'))
         >>> a['ACQ_user_filter']
         'No'
         >>> a['ACQ_dim_desc']
@@ -371,42 +374,43 @@ def readfid(fptr=None,
     Examples:
 
         >>> import os
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/1/fid'))
+        >>> datapath = os.path.join(os.path.expanduser(dataroot),'stefan','nmr','readfidTest.ix1')
+        >>> fid = readfid(os.path.join(datapath,'1','fid'))
         >>> fid['data'].shape   # TriPilot multi
         (128, 128, 15)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/2/fid'))
+        >>> fid = readfid(os.path.join(datapath,'2','fid'))
         >>> fid['data'].shape   # FLASH 2D
         (133, 105, 5)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/3/fid'))
+        >>> fid = readfid(os.path.join(datapath,'3','fid'))
         >>> fid['data'].shape   # FLASH 3D
         (133, 105, 25)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/4/fid'))
+        >>> fid = readfid(os.path.join(datapath,'4','fid'))
         >>> fid['data'].shape   # MSME 2D
         (133, 105, 5)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/5/fid'))
+        >>> fid = readfid(os.path.join(datapath,'5','fid'))
         >>> fid['data'].shape   # MSME 3D
         (133, 105, 25)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/6/fid'))
+        >>> fid = readfid(os.path.join(datapath,'6','fid'))
         >>> fid['data'].shape   # MSME 2D-TURBO
         (256, 256, 5, 3)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/7/fid'))
+        >>> fid = readfid(os.path.join(datapath,'7','fid'))
         >>> fid['data'].shape  # FLASH 2D (NR=25, NI=5, NSLICES=5)
         (133, 105, 5, 25)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/8/fid'))
+        >>> fid = readfid(os.path.join(datapath,'8','fid'))
         >>> fid['data'].shape  # FLASH 2D, partial acq. NR auto reset to 5
         (133, 105, 5, 5)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/9/fid')) # doctest:+ELLIPSIS
+        >>> fid = readfid(os.path.join(datapath,'9','fid')) # doctest:+ELLIPSIS
         Traceback (most recent call last):
         ...
         FileNotFoundError: ...
         >>> # fid file 9 was missing due to incomplete scans
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/10/fid'))
+        >>> fid = readfid(os.path.join(datapath,'10','fid'))
         >>> fid['data'].shape # FLASH 2D (MATRIX 32 X 32)
         (32, 32, 5)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/11/fid'))
+        >>> fid = readfid(os.path.join(datapath,'11','fid'))
         >>> fid['data'].shape # FLASH 3D (MATRIX 32 X 32)
         (32, 32, 5)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/12/fid'))
+        >>> fid = readfid(os.path.join(datapath,'12','fid'))
         ... # doctest: +ELLIPSIS
         ... # 1-segment EPI - FIXME, this should be easy but somehow ACQ_size=(8192,1) 
         ... # and ACQ_scan_size=ACQ_phase_factor_scans (instead of One_Scan)
@@ -414,38 +418,46 @@ def readfid(fptr=None,
         Traceback (most recent call last):
         ...
         IndexError: ...
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/13/fid'))
+        >>> fid = readfid(os.path.join(datapath,'13','fid'))
         ... # doctest: +ELLIPSIS
         ... # 16 segment EPI - FIXME
         Traceback (most recent call last):
         ...
         IndexError: ...
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/14/fid'))
+        >>> fid = readfid(os.path.join(datapath,'14','fid'))
         >>> fid['data'].shape # DTI Standard
         (133, 105, 5, 2)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/15/fid'))
+        >>> fid = readfid(os.path.join(datapath,'15','fid'))
         ... # doctest: +ELLIPSIS
         ... # DTI SPIRAL - FIXME
         Traceback (most recent call last):
         ...
         TypeError: ...
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/16/fid'))
+        >>> fid = readfid(os.path.join(datapath,'16','fid'))
         >>> fid['data'].shape # UTE 2D
         (64, 402, 5)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/17/fid'))
-        >>> fid['data'].shape # UTE 3D
-        (64, 51360)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/18/fid'))
-        >>> fid['data'].shape # ZTE 3D
-        (512, 51896)
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/99/fid'))
+        >>> fid = readfid(os.path.join(datapath,'17','fid')) # UTE 3D
+        ... # doctest: +ELLIPSIS
+        ... # FIXME: once we know how to read this data it should be added to
+        ... #        the testdata submodule
+        Traceback (most recent call last):
+        ...
+        FileNotFoundError: ...
+        >>> fid = readfid(os.path.join(datapath,'18','fid')) # ZTE 3D
+        ... # doctest: +ELLIPSIS
+        ... #FIXME: once we know how to read this data it should be added to
+        ... #       the testdata submodule
+        Traceback (most recent call last):
+        ...
+        FileNotFoundError: ...
+        >>> fid = readfid(os.path.join(datapath,'99','fid'))
         ... # doctest: +ELLIPSIS
         ... # interrupted FLASH DCE, mismatch in filesize causes IOError
         ... # this is desired (and expected) behaviour
         Traceback (most recent call last):
         ...
         ValueError: ...
-        >>> fid = readfid(os.path.expanduser('~/bdata/stefan/nmr/readfidTest.ix1/99/fid'), resetNR=True)
+        >>> fid = readfid(os.path.join(datapath,'99','fid'), resetNR=True)
         >>> fid['data'].shape # interrupted FLASH DCE (NR=7 from formerly 25)
         (133, 105, 5, 7)
     """
@@ -547,7 +559,7 @@ def readfid(fptr=None,
                     'trying PVM_EncSteps2 from method')
             try:
                 PVM_EncSteps1 = method['PVM_EncSteps2']
-                print(('='*80+'\nsave by PVM_EncSteps2'))
+                logger.info(('='*80+'\nsave by PVM_EncSteps2'))
                 # ensure that it runs from 0 to max
                 Enc2Steps = numpy.array(PVM_EncSteps1)-min(PVM_EncSteps1)
             except KeyError:

@@ -16,8 +16,7 @@ import nibabel
 from datetime import datetime
 
 import logging
-logger=logging.getLogger('sarpy.io.Adata_classes')
-logger.setLevel(level=40)
+logger=logging.getLogger(__name__)
 
 from ..helpers import git_repo_state
 
@@ -151,7 +150,8 @@ class ADataDict(collections.MutableMapping):
 
 
     def __delitem__(self, key):
-        print(('adata {0} deleted in {1}'.format(key, self[key].parent.visu_pars.VisuSubjectId)))
+        logger.warning('adata {0} deleted in {1}'.format(
+                       key, self[key].parent.visu_pars.VisuSubjectId))
         shutil.rmtree(os.path.join(adataroot, 
                                    self.store[key].meta['dirname']))
         del self.store[key]
@@ -180,8 +180,7 @@ def load_AData(pdatas, dirname):
                 try:
                     adata_candidate = AData.fromfile(dirname, parent=pdata)
                 except json.JSONDecodeError as err:
-                    print(err.msg)
-                    logger.warning(err.msg)
+                    logger.error(err.msg, exc_info=True)
                 else:
                     special_dict.store[adata_candidate.key]=adata_candidate
     return special_dict

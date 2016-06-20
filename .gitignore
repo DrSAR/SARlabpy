@@ -1,5 +1,4 @@
 *~
-.DS_Store
 # Compiled source #
 ###################
 *.com
@@ -43,3 +42,6 @@ Thumbs.db
 *.png
 *.nii
 *.nii.gz
+
+# directory due to py.test #
+.cache

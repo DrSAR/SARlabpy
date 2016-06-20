@@ -7,6 +7,21 @@ Test routines of lowlevel BRUKERIO functions
 import pytest
 from . import lowlevel
 
+#for the purposes of testing, point dataroot to testmodule
+import os
+curdir = os.path.dirname(__file__)
+# was: dataroot = os.path.expanduser(os.path.join('~','bdata'))
+lowlevel.dataroot = os.path.join(curdir,'testdata')
+README_file_inside_submodule = os.path.join(lowlevel.dataroot,'README.md')
+assert os.path.exists(README_file_inside_submodule),'''
+For testing, the submodule gitlab.com:DrSAR/sarpy-testdata.git must be 
+present and pulled down into the sarpy/BRUKERIO/testdata directory
+On initial cloning of the repo you can achieve this by recursive cloning:
+git clone --recursive git@pfeifer.phas.ubc.ca:SARlabpy.git
+Later, you can still issue inside the repo:
+git submodule update --init --recursive
+'''
+
 class Test_minors:
     def test_pairwise(self):
         it = [1, 2, 3]
@@ -24,7 +39,6 @@ class Test_minors:
 def test_doctests():
     '''Run the doctests'''
     import doctest
-    doctest.testmod(m=lowlevel)
     failure_count, test_count = doctest.testmod(m=lowlevel)
     assert failure_count == 0
     assert test_count == 60

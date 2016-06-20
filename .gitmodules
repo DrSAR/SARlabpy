@@ -1,0 +1,3 @@
+[submodule "sarpy/testdata"]
+	path = sarpy/BRUKERIO/testdata
+	url = git@gitlab.com:DrSAR/sarpy-testdata.git
