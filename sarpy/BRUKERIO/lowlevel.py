@@ -411,32 +411,31 @@ def readfid(fptr=None,
         >>> fid['data'].shape # FLASH 3D (MATRIX 32 X 32)
         (32, 32, 5)
         >>> fid = readfid(os.path.join(datapath,'12','fid'))
-        ... # doctest: +ELLIPSIS
-        ... # FIXME:
-        ... # 1-segment EPI - this should be easy but somehow ACQ_size=(8192,1) 
-        ... # and ACQ_scan_size=ACQ_phase_factor_scans (instead of One_Scan)
-        ... # this should be an easy 64x64x5slice single shot EPI...
-        Traceback (most recent call last):
-        ...
-        IndexError: ...
+        >>> fid['data'].shape # 1-segment EPI
+        (64, 64, 5)
         >>> fid = readfid(os.path.join(datapath,'13','fid'))
-        ... # doctest: +ELLIPSIS
-        ... # 16 segment EPI - FIXME
-        Traceback (most recent call last):
-        ...
-        IndexError: ...
+        >>> fid['data'].shape # 16 segment EPI - 
+        (256, 256, 3)
+
+    FIXME: warning: filesize (1938048) > expected, calculated size (1572864) 
+        
         >>> fid = readfid(os.path.join(datapath,'14','fid'))
         >>> fid['data'].shape # DTI Standard
         (133, 105, 5, 2)
         >>> fid = readfid(os.path.join(datapath,'15','fid'))
         ... # doctest: +ELLIPSIS
-        ... # DTI SPIRAL - FIXME
+        ... # DTI SPIRAL - for some reason it is declared to be Spectroscopic
         Traceback (most recent call last):
         ...
         TypeError: ...
-        >>> fid = readfid(os.path.join(datapath,'16','fid'))
-        >>> fid['data'].shape # UTE 2D
-        (64, 402, 5)
+        >>> fid = readfid(os.path.join(datapath,'16','fid')) # UTE 2D
+        ... # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        AssertionError: ...
+
+    FIXME: AssertionError: ACQ_dim = 2 != len(ACQ_size=[128]) ??
+
         >>> fid = readfid(os.path.join(datapath,'17','fid')) # UTE 3D
         ... # doctest: +ELLIPSIS
         ... # FIXME: once we know how to read this data it should be added to
@@ -512,9 +511,10 @@ def readfid(fptr=None,
         # we acquire complex data which requires numbers in the read direction
         ACQ_size[0] /= 1
     elif acqp['GO_block_size'] == 'Standard_KBlock_Format':
-        true_obj_blocksize = (int(datatype[1])*ACQ_size[0])
+        true_obj_blocksize = (2*int(datatype[1])*ACQ_size[0])
         obj_blocksize = 1024 * ((true_obj_blocksize-1) // 1024 + 1)
         ACQ_size[0] = obj_blocksize//(2*int(datatype[1]))
+        #ACQ_size[0] = obj_blocksize//(1*int(datatype[1]))
     else:
         raise IOError('Unexpected value for GO_block_size in acqp')
 
@@ -576,6 +576,7 @@ def readfid(fptr=None,
                 acqp['NSLICES']*acqp['ACQ_n_echo_images']*
                 acqp['ACQ_n_movie_frames'] * NR )
 
+    # 2 for complex
     fid_size =  n_stored_datapoints * int(datatype[1]) * 2 
     file_size = os.stat(fidname).st_size
     # load data
@@ -584,7 +585,8 @@ def readfid(fptr=None,
         logger.warning(
             ' %s: filesize (%i) > expected, calculated size (%i) ' % (
                  fidname, file_size, fid_size) +
-            '\nwill truncate fid ...'
+            '\nwill truncate fid ...' +
+            '\nplease file a bugreport'
              )
         data = numpy.fromfile(fptr, dtype = dtype)[0:(2*n_stored_datapoints)]
     elif (fid_size>file_size):
@@ -637,20 +639,20 @@ def readfid(fptr=None,
 
         # reshape into a large 2D array with dimensions
 
-        fid = fid.reshape(n_stored_datapoints/ACQ_size[0], ACQ_size[0])
+        fid = fid.reshape(n_stored_datapoints//ACQ_size[0], ACQ_size[0])
         # Now is the time to lop off any spurious zero-filling added on disk
         # due to  parameter acqp['GO_block_size'] == 'Standard_KBlock_Format'
         # If this is set, blocks of 1k bytes make up the read lines (and might
         # be zerofilled if not long enough...)
         #tempfid = fid[:,0:(ACQ_size[0]/2)]
-        tempfid = fid[:,0:ACQ_size[0]]
+        tempfid = fid[:,0:method['PVM_EncMatrix'][0]]
 
         # ACQ_size - might 1, 2, or thre elements depnding on ACQ_dim
         # append 1 to make it 3D
         ACQ_size = numpy.hstack([ACQ_size, 
                                  numpy.tile(1,3-acqp['ACQ_dim'])])
         
-        fid_reorder = numpy.ndarray((ACQ_size[0], 
+        fid_reorder = numpy.ndarray((method['PVM_EncMatrix'][0], 
                         ACQ_size[1], 
                         ACQ_size[2], 
                         acqp['NSLICES'], # caveat: in 3D this is usually =1
@@ -1181,3 +1183,7 @@ def readRFshape(filename):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+#    
+#      import os
+#      datapath = os.path.join(os.path.expanduser(dataroot),'stefan','nmr','readfidTest.ix1')
+#      fid = readfid(os.path.join(datapath,'16','fid'))

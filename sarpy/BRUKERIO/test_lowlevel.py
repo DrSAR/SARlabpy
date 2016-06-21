@@ -41,4 +41,4 @@ def test_doctests():
     import doctest
     failure_count, test_count = doctest.testmod(m=lowlevel)
     assert failure_count == 0
-    assert test_count == 60
+    assert test_count == 61
