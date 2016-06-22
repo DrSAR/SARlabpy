@@ -399,6 +399,11 @@ def readfid(fptr=None,
         >>> fid = readfid(os.path.join(datapath,'8','fid'))
         >>> fid['data'].shape  # FLASH 2D, partial acq. NR auto reset to 5
         (133, 105, 5, 5)
+        
+    FIXME: sarpy.BRUKERIO.lowlevel - WARNING -  /.../readfidTest.ix1/8/fid: 
+    filesize (5539840) > expected, calculated size (5376000) 
+    will truncate fid ... please file a bugreport
+
         >>> fid = readfid(os.path.join(datapath,'9','fid')) # doctest:+ELLIPSIS
         Traceback (most recent call last):
         ...
@@ -590,6 +595,7 @@ def readfid(fptr=None,
              )
         data = numpy.fromfile(fptr, dtype = dtype)[0:(2*n_stored_datapoints)]
     elif (fid_size>file_size):
+        assert acqp['ACQ_completed'] != 'Yes'
         if resetNR: 
             NR = int(file_size//(int(datatype[1])*2*numpy.array(ACQ_size).prod() *
                                acqp['NSLICES']*acqp['ACQ_n_echo_images']*
@@ -1186,4 +1192,4 @@ if __name__ == "__main__":
 #    
 #      import os
 #      datapath = os.path.join(os.path.expanduser(dataroot),'stefan','nmr','readfidTest.ix1')
-#      fid = readfid(os.path.join(datapath,'16','fid'))
+#      fid = readfid(os.path.join(datapath,'8','fid'))
