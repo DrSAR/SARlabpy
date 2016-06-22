@@ -1,0 +1,6 @@
+image: continuumio/anaconda3
+
+test_app:
+  type: test
+  script: py.test
+
