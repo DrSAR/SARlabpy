@@ -127,10 +127,14 @@ def import_roi(masterlist_name,
                   
             try:
                 scn_name = exp.patients[k][r_lbl]
-                scan = sarpy.Scan(scn_name)
-                
-            except(IOError,KeyError):    
-                print(('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,r_lbl) ))
+                scan = sarpy.Scan(scn_name)                
+            except KeyError:    
+                logger.error('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,r_lbl),
+                             exc_info=True)
+                continue
+            except IOError:    
+                logger.error('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,r_lbl),
+                             exc_info=True)
                 continue
 
             sdir = scn_name.replace('/','_')  
@@ -197,14 +201,15 @@ def import_roi(masterlist_name,
             roi_scan_label = 'roi'
         try:
             #bbox = sarpy.Scan(pat[roi_scan_label]).adata['bbox'].data
-            bbox = sarpy.analysis.getters.get_roi_bbox(scn,roi_scan_label)
+            bbox = sarpy.analysis.getters.get_roi_bbox(scan.shortdirname,roi_scan_label)
 
             for lbl,scn in list(pat.items()):
 
                 scn = sarpy.Scan(scn)
                 scn.store_adata(key='bbox', data = bbox,force=True)
         except:
-            print(('No ROI exists for: {0}'.format(k)))
+            raise
+            #print(('No ROI exists for: {0}'.format(k)))
 
     print(('Nifti images were processed in {0}'.format(path)))
 
