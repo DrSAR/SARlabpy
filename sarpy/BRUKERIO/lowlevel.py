@@ -1188,6 +1188,6 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
 #    
-#      import os
-#      datapath = os.path.join(os.path.expanduser(dataroot),'stefan','nmr','readfidTest.ix1')
-#      fid = readfid(os.path.join(datapath,'8','fid'))
+#    import os
+#    datapath = os.path.join(os.path.expanduser(dataroot),'stefan','nmr','readfidTest.ix1')
+#    fid = readfid(os.path.join(datapath,'8','fid'))
