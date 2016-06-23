@@ -2,5 +2,7 @@ image: drsar/anaconda3
 
 test_app:
   type: test
-  script: py.test
+  script:
+  - git submodule update --init --recursive 
+  - py.test
 
