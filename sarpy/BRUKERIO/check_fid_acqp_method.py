@@ -9,7 +9,7 @@ acqp, method, fid, 2dseq. This results in a score of
 """
 import os
 import glob
-from BRUKER_classes import dataroot
+from sarpy.BRUKERIO.lowlevel import dataroot
 
 if __name__ == '__main__':
     print(__doc__)

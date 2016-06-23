@@ -6,3 +6,15 @@ test_app:
   - git submodule update --init --recursive 
   - py.test
 
+pages:
+  script:
+  - cd doc
+  - sphinx-build -b html -d _build/doctrees . _build/html
+  - rm -rf ../.public ../public
+  - mkdir ../.public
+  - cp -r _build/html/* ../.public
+  - mv ../.public ../public
+  artifacts:
+    paths:
+    - public
+

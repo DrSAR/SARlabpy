@@ -6,7 +6,7 @@
 SARpy's documentation!
 ==========================
 
-The code is hosted in the `private repository by github <https://github.com/DrSAR/SARlabpy.git>`_.
+The code is hosted in the `private repository by github <https://github.com/DrSAR/SARlabpy.git>`_ and `by gitlab <https://gitlab.com/DrSAR/SARlabpy>`_.
 If you are stuck with branches and commits, try this quickstart: (assuming you have no uncommitted local changes or local commits not pushed to the central repo that you care about):
 
 .. code-block:: bash
