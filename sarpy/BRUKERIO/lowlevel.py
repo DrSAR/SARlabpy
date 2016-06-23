@@ -1034,7 +1034,8 @@ def fftfid(fptr=None,
            AxisFlip=True, 
            PEshift=True,
            **kwargs):
-    ''' Take filename, retrieve fid and FT as best as you can
+    '''
+    Take filename, retrieve fid and FT as best as you can
     
     This relies on the FT-able axis to be in he 1st three positions.
     
@@ -1051,7 +1052,8 @@ def fftfid(fptr=None,
     
     Remarks: It does not account for the possibility of several slice packs
     with different orientations etc. As a result, tripilot scans are not 
-    treated properly.'''
+    treated properly.
+    '''
     if kwargs.pop('squeezed',True):
         # squeezed was set!
         squeezed=True

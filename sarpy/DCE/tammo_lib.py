@@ -10,10 +10,16 @@ import sys
 import csv
 from scipy import optimize
 import matplotlib.pyplot as plt
-from movingaverage import movingaverage
 #import time
 import math
 
+def movingaverage(x, N):
+    '''
+    this replaces movingaverage from movingaverage to cut down on external
+    dependencies
+    '''
+    cumsum = np.cumsum(np.insert(x, 0, 0)) 
+    return (cumsum[N:] - cumsum[:-N]) / N
 
 def AIF_from_TDM( injection, time, parms ):
     '''Calculates AIF from a injection curve and a Tracer distribution
@@ -153,12 +159,15 @@ def import_AIF(path, aif_time_min = 0, aif_time_spacing = 1, aif_dump = 0):
 
 def T1_from_FLASH (signal, T1_0, TR, alpha, r = 4.3e-3):
     ''' Derive (DELTA) T1 values from FLASH signal.
-        Input:  signal - array with (relative) signal values
-                T1_0 - baseline T1 values, same dimension as signal
-                TR - Repetition time
-                alpha - Flip angle in grade
-                r - Factor (here for Gd)
-        Output: T1 array, with same dimensions as signal array.'''
+        Input:  
+            signal - array with (relative) signal values
+            T1_0 - baseline T1 values, same dimension as signal
+            TR - Repetition time
+            alpha - Flip angle in grade
+            r - Factor (here for Gd)
+        Output: 
+            T1 array, with same dimensions as signal array.
+    '''
 
     deg_to_rad = 2*np.pi/360
     alpha *= deg_to_rad
