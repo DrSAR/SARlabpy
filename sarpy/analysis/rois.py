@@ -7,7 +7,7 @@ Created on Thu May 30 17:49:35 2013
 @author: fmoosvi
 """
 
-import sarpy.fmoosvi.getters
+import sarpy.analysis.getters
 
 def export_roi(masterlist_name,
                roi_scan_label = None,
@@ -23,7 +23,7 @@ def export_roi(masterlist_name,
     import json
     import nibabel
     import collections
-    import sarpy.fmoosvi.analysis
+    import sarpy.analysis.analysis
     import os
     import scipy
     import numpy
@@ -45,11 +45,11 @@ def export_roi(masterlist_name,
     # Create the experiment
     exp = sarpy.Experiment.from_masterlist(masterlist_name+'.config')
 
-    for k in exp.patients.keys():
+    for k in list(exp.patients.keys()):
 
         if roi_scan_label is None:
             # Search for all the labels that have roi and create a scan label list of rois
-            roi_labels = [r for r in exp.labels.keys() if 'roi' in r]
+            roi_labels = [r for r in list(exp.labels.keys()) if 'roi' in r]
         else:
             # This overrides in case there wasn't an explict roi_scan acquired.
             roi_labels = [roi_scan_label]
@@ -74,7 +74,7 @@ def export_roi(masterlist_name,
                 scan.pdata[0].export2nii(fname,rescale,std_modifier)                
                 
             except(IOError,KeyError):    
-                print('\n \n ** WARNING ** \n \n Not found (check permissions): {0} and {1} \n'.format(k,r_lbl) )
+                print(('\n \n ** WARNING ** \n \n Not found (check permissions): {0} and {1} \n'.format(k,r_lbl) ))
                 pass
 
 def import_roi(masterlist_name,
@@ -92,7 +92,7 @@ def import_roi(masterlist_name,
     import json
     import nibabel
     import collections
-    import sarpy.fmoosvi.analysis
+    import sarpy.analysis.analysis
     import os
     import scipy
     import numpy
@@ -114,10 +114,10 @@ def import_roi(masterlist_name,
     # Create the experiment
     exp = sarpy.Experiment.from_masterlist(masterlist_name+'.config')
 
-    for k in exp.patients.keys():
+    for k in list(exp.patients.keys()):
         if roi_scan_label is None:
             # Search for all the labels that have roi and create a scan label list of rois
-            roi_labels = [r for r in exp.labels.keys() if 'roi' in r]
+            roi_labels = [r for r in list(exp.labels.keys()) if 'roi' in r]
         else:
             # This overrides in case there wasn't an explict roi_scan acquired.
             roi_labels = [roi_scan_label]
@@ -127,10 +127,14 @@ def import_roi(masterlist_name,
                   
             try:
                 scn_name = exp.patients[k][r_lbl]
-                scan = sarpy.Scan(scn_name)
-                
-            except(IOError,KeyError):    
-                print('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,r_lbl) )
+                scan = sarpy.Scan(scn_name)                
+            except KeyError:    
+                logger.error('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,r_lbl),
+                             exc_info=True)
+                continue
+            except IOError:    
+                logger.error('\n \n ** WARNING ** \n \n Not found: {0} and {1} \n'.format(k,r_lbl),
+                             exc_info=True)
                 continue
 
             sdir = scn_name.replace('/','_')  
@@ -153,13 +157,13 @@ def import_roi(masterlist_name,
             # This line takes just the first slice where the tumour is drawn. If multislice CEST ever becomes a 
             # TODO: reality, that will need to be taken care of.
 
-            if sarpy.fmoosvi.getters.get_num_slices(scn_name) ==1 and len(roi.shape) > 2:
+            if sarpy.analysis.getters.get_num_slices(scn_name) ==1 and len(roi.shape) > 2:
                 roi = roi[:,:,0]
 
             # the default foreground and background in h_image_to_mask
             # will result in a roi_m that has NaN and 1 only (aka
             # 'proper mask')
-            roi_m = sarpy.fmoosvi.analysis.h_image_to_mask(roi,peaks=peaks)
+            roi_m = sarpy.analysis.analysis.h_image_to_mask(roi,peaks=peaks)
 
             # Calculate the weights for each slice
             weights = numpy.zeros(shape=roi_m.shape[-1])
@@ -168,7 +172,7 @@ def import_roi(masterlist_name,
             if len(roi_m.shape) < 3:
                 weights = [1.0]
             else:
-                for sl in xrange(roi_m.shape[-1]):
+                for sl in range(roi_m.shape[-1]):
                     weights[sl] = numpy.divide(numpy.nansum(roi_m[:,:,sl].flatten()),ROIpx)
 
             try:
@@ -177,16 +181,16 @@ def import_roi(masterlist_name,
 
 
                 # get the bbox for this roi and scan
-                bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn_name,
+                bbox = sarpy.analysis.getters.get_roi_bbox(scn_name,
                                                       roi_adata_label=roi_key_name)
                 scan.store_adata(key='bbox',data=bbox,force=forceVal)
 
-                print('h_generate_roi: saved {0} roi label as {1}'.format(scan.shortdirname,roi_key_name))
+                print(('h_generate_roi: saved {0} roi label as {1}'.format(scan.shortdirname,roi_key_name)))
             except AttributeError:
-                print('h_generate_roi: force save of scan {0} is required'.format(scan.shortdirname))
+                print(('h_generate_roi: force save of scan {0} is required'.format(scan.shortdirname)))
 
     # Save adata in all scans 
-    for k in exp.patients.keys():
+    for k in list(exp.patients.keys()):
 
         pat = exp.patients[k]
 
@@ -197,16 +201,17 @@ def import_roi(masterlist_name,
             roi_scan_label = 'roi'
         try:
             #bbox = sarpy.Scan(pat[roi_scan_label]).adata['bbox'].data
-            bbox = sarpy.fmoosvi.getters.get_roi_bbox(scn,roi_scan_label)
+            bbox = sarpy.analysis.getters.get_roi_bbox(scan.shortdirname,roi_scan_label)
 
-            for lbl,scn in pat.iteritems():
+            for lbl,scn in list(pat.items()):
 
                 scn = sarpy.Scan(scn)
                 scn.store_adata(key='bbox', data = bbox,force=True)
         except:
-            print('No ROI exists for: {0}'.format(k))
+            raise
+            #print(('No ROI exists for: {0}'.format(k)))
 
-    print('Nifti images were processed in {0}'.format(path))
+    print(('Nifti images were processed in {0}'.format(path)))
 
 def transfer_roi(masterlist_name,
                  roi_lbl, 
@@ -232,7 +237,7 @@ def transfer_roi(masterlist_name,
             
             scn.store_adata(key=adata_save_lbl,data = roi,forceVal=forceVal) 
 
-            print('Successfully transferred roi from {0} to {1}'.format(roi.shortdirname, scn.shortdirname))
+            print(('Successfully transferred roi from {0} to {1}'.format(roi.shortdirname, scn.shortdirname)))
         except:
-            print('FAILED to transfer roi from {0} to {1}'.format(scn, roi_scn))
+            print(('FAILED to transfer roi from {0} to {1}'.format(scn, roi_scn)))
             pass

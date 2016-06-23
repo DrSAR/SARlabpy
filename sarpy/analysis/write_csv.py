@@ -3,7 +3,7 @@
 """
 Created on Thu Aug  1 13:53:03 2013
 
-@author: fmoosvi
+@author: analysis
 """
 
 import json
@@ -15,7 +15,7 @@ import sarpy
 import time
 import getpass # used to get the current username
 import numpy
-import sarpy.fmoosvi.getters
+import sarpy.analysis.getters
 
 
 def write_csv(masterlist_name, 
@@ -44,7 +44,7 @@ def write_csv(masterlist_name,
     # and so slice averages get zero-filled
 
     numSlices = []
-    for k,v in master_list.iteritems():
+    for k,v in list(master_list.items()):
 
         try:        
             data = sarpy.Scan(v[data_label][0]).adata[adata_label].data
@@ -63,7 +63,7 @@ def write_csv(masterlist_name,
     #if numSlices:
     #    maxSlices = numpy.max(numSlices)
     
-    for k,v in master_list.iteritems():
+    for k,v in list(master_list.items()):
 
         scn_to_analyze = v[data_label][0]
 
@@ -74,7 +74,7 @@ def write_csv(masterlist_name,
         export_data.append([k] + avgL)
 
     time = time.strftime("%Y-%m-%d %H:%M")       				       
-    header =['Animal ID'] + ['Slice '+str(x+1) for x in xrange(
+    header =['Animal ID'] + ['Slice '+str(x+1) for x in range(
                                         len(max(export_data,key=len))-3)] + ['Average'] + ['Volume']
 
     footers = []
@@ -93,10 +93,10 @@ def write_csv(masterlist_name,
                                           data_label+'_'+adata_label+'.csv'))
    
     # open output file
-    outfile = open(filename, "wb" )
+    outfile = open(filename, "w" )
     
     # get a csv writer
-    writer = csv.writer( outfile )
+    writer = csv.writer(outfile)
     
     # write header
     writer.writerow(header)
@@ -116,7 +116,7 @@ def adata_roi_average(scn_to_analyze,
         roi = sarpy.Scan(scn_to_analyze).adata[roi_override].data
 
     except(KeyError,IOError):
-        print('adata_roi_average: Not found {0} and {1}'.format(scn_to_analyze,adata_label) )
+        print(('adata_roi_average: Not found {0} and {1}'.format(scn_to_analyze,adata_label) ))
         data = numpy.empty([1])*numpy.nan
         weights= numpy.empty([1])*numpy.nan
         avgL = ['AnalysisErr']
@@ -124,20 +124,20 @@ def adata_roi_average(scn_to_analyze,
     else:
         data_roi = data*roi
         #data[numpy.isnan(data)] = 0
-        weights = sarpy.fmoosvi.getters.get_roi_weights(roi)
+        weights = sarpy.analysis.getters.get_roi_weights(roi)
         weights = list(weights)
         avg = []
 
         try:
-            tumour_volume = sarpy.fmoosvi.getters.get_tumour_volume(scn_to_analyze,roi_override)
+            tumour_volume = sarpy.analysis.getters.get_tumour_volume(scn_to_analyze,roi_override)
         except AssertionError:
             tumour_volume = numpy.nan
 
-        maxSlices = sarpy.fmoosvi.getters.get_num_slices(scn_to_analyze)            
+        maxSlices = sarpy.analysis.getters.get_num_slices(scn_to_analyze)            
 
         if maxSlices>1:
 
-            for slice in xrange(maxSlices): # Zero filling non-existent slices
+            for slice in range(maxSlices): # Zero filling non-existent slices
 
                 if slice < maxSlices:
                     avg.append(scipy.stats.nanmean(data_roi[:,:,slice].flatten()))
@@ -190,7 +190,7 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
     
     for scn in sorted(allExperiment.labels[data_scan_label]):
                 
-        maxSlicesList.append(sarpy.fmoosvi.getters.get_num_slices(scn))
+        maxSlicesList.append(sarpy.analysis.getters.get_num_slices(scn))
 
     maxSlices = numpy.max(maxSlicesList)
     
@@ -217,7 +217,7 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
         export_data.append(avg_data)
 
     timer = time.strftime("%Y-%m-%d %H:%M")   
-    header =['Animal ID'] + ['Slice '+str(x+1) for x in xrange(
+    header =['Animal ID'] + ['Slice '+str(x+1) for x in range(
                                         len(max(export_data,key=len))-3)] + ['Weighted Average'] + ['Volume']
 
     footers = []
@@ -236,7 +236,7 @@ def create_export_csv(exp_abbreviation = 'HPGP4',
                                           day_label+'_'+data_adata+'.csv'))
 
     # open output file
-    outfile = open(filename, "wb" )
+    outfile = open(filename, "w" )
 
     # get a csv writer
     writer = csv.writer( outfile )
@@ -260,24 +260,24 @@ def determine_averages(data_scn_to_analyze,
     data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
     
     BAT = sarpy.Scan(data_scn_to_analyze).adata[BAT_adata_label].data
-    #BAT_mask = sarpy.fmoosvi.analysis.h_make_binary_mask(BAT,0,BAT_threshold)
+    #BAT_mask = sarpy.analysis.analysis.h_make_binary_mask(BAT,0,BAT_threshold)
     roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
     
     data_roi = data*roi*BAT
-    weights = sarpy.fmoosvi.getters.get_roi_weights(roi)
+    weights = sarpy.analysis.getters.get_roi_weights(roi)
     weights = list(weights)
     avg = []
 
     try:
-        tumour_volume = sarpy.fmoosvi.getters.get_tumour_volume(roi_scn_to_analyze,roi_label)
+        tumour_volume = sarpy.analysis.getters.get_tumour_volume(roi_scn_to_analyze,roi_label)
     except AssertionError:
         tumour_volume = numpy.nan
 
-    totalSlices = sarpy.fmoosvi.getters.get_num_slices(data_scn_to_analyze)            
+    totalSlices = sarpy.analysis.getters.get_num_slices(data_scn_to_analyze)            
 
     if totalSlices>1:
 
-        for slc in xrange(maxSlices): # Zero filling non-existent slices
+        for slc in range(maxSlices): # Zero filling non-existent slices
 
             if slc < totalSlices:
                 avg.append(scipy.stats.nanmean(data_roi[:,:,slc].flatten()))

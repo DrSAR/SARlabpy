@@ -17,13 +17,13 @@ matplotlib.use('Agg',warn=False)# where did I come from !?
 import pylab
 import numpy
 #import sarpy
-#import sarpy.fmoosvi.getters
+#import sarpy.analysis.getters
 import tempfile
 import scipy
 import copy
 import re
-#import sarpy.fmoosvi.analysis
-#import sarpy.fmoosvi.colormaps as cmaps
+#import sarpy.analysis.analysis
+#import sarpy.analysis.colormaps as cmaps
 
 
 from matplotlib.backends.backend_pdf import PdfPages
@@ -165,7 +165,7 @@ def generate(**kwargs):
                 bat_adata = row_conf.pop('bat_adata', None)
                 bat_threshold = row_conf.pop('bat_threshold', None)
 
-                print('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key))
+                print(('\t {0}, {1}, {2}'.format(lbl, lbl_scan_name,adata_key)))
 
                 if adata_key is not None:
     
@@ -180,7 +180,7 @@ def generate(**kwargs):
                             else:
                                 BAT = scn.adata[bat_adata].data
                                 bat_threshold = float(bat_threshold)
-                                masked_threshold = sarpy.fmoosvi.analysis.h_make_binary_mask(BAT,0,bat_threshold)
+                                masked_threshold = sarpy.analysis.analysis.h_make_binary_mask(BAT,0,bat_threshold)
                                 data = scn.adata[adata_key].data * scn.adata[roi_mask].data * masked_threshold
                     except KeyError:
                         pylab.text(0.85,0.5,'Data not available',
@@ -192,7 +192,7 @@ def generate(**kwargs):
                         
                     # Set the image limits for adata
                     if (clim_min is None) and (clim_max is None):
-                        (clim_min, clim_max) = sarpy.fmoosvi.getters.get_image_clims(data)
+                        (clim_min, clim_max) = sarpy.analysis.getters.get_image_clims(data)
                     else: #TODO This else statement (maybe) does NOTHING, get rid of it?
                         (clim_min, clim_max) = (clim_min,clim_max)
 
@@ -209,7 +209,7 @@ def generate(**kwargs):
                     data = scn.pdata[0].data
                                     
                 xdata = data
-                xdata_slices = sarpy.fmoosvi.getters.get_num_slices(scn.shortdirname)
+                xdata_slices = sarpy.analysis.getters.get_num_slices(scn.shortdirname)
     
                 # Used masked arrays to show nan values as black
     
@@ -423,7 +423,7 @@ def generate(**kwargs):
 
     import time
     print('File is opened and ready to use')
-    print(time.strftime("%c"))
+    print((time.strftime("%c")))
 
     
 if __name__ == "__main__":

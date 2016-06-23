@@ -19,7 +19,7 @@ import os
 import json
 import datetime
 import collections
-import sarpy.fmoosvi.getters as getters
+import sarpy.analysis.getters as getters
 import imp
 
 
@@ -37,7 +37,7 @@ def h_calculate_AUC(scn_to_analyse=None,
             default reconstruction is pdata_num = 0.
     :return: array with auc data
     """ 
-    import sarpy.fmoosvi.analysis            
+    import sarpy.analysis.analysis            
     
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -75,7 +75,7 @@ def h_calculate_AUC(scn_to_analyse=None,
     ########### Start AUC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
+    inj_point = sarpy.analysis.analysis.h_inj_point(scn_to_analyse)
     
     # WHY IS THIS HERE!? This makes no sense!
     if adata_label is None:
@@ -188,7 +188,7 @@ def h_normalize_dce(scn_to_analyse=None, pdata_num = 0):
 
 
     # Calculated params      
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
+    inj_point = sarpy.analysis.analysis.h_inj_point(scn_to_analyse)
 
     if num_slices > 1:
         norm_data = numpy.empty([x_size,y_size,num_slices,reps])
@@ -213,7 +213,7 @@ def h_enhancement_curve(scn_to_analyse=None,
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
-    norm_data = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
+    norm_data = sarpy.analysis.analysis.h_normalize_dce(scn_to_analyse)
     num_slices = norm_data.shape[-2]
     reps = norm_data.shape[-1]
     
@@ -264,7 +264,7 @@ def h_inj_point(scn_to_analyse=None, pdata_num = 0):
     scan_object = sarpy.Scan(scn_to_analyse)
 
     # Method params    
-    num_slices = sarpy.fmoosvi.getters.get_num_slices(scn_to_analyse,pdata_num)
+    num_slices = sarpy.analysis.getters.get_num_slices(scn_to_analyse,pdata_num)
 
      # Data
     rawdata = scan_object.pdata[pdata_num].data
@@ -377,7 +377,7 @@ def h_calculate_AUGC(scn_to_analyse=None,
     ########### Start AUGC code
       
     # Determine point of injection by averaging one slice in the entire image
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
+    inj_point = sarpy.analysis.analysis.h_inj_point(scn_to_analyse)
     
     # Size info
     x_size = data.shape[0]
@@ -449,7 +449,7 @@ def h_conc_from_signal(scn_to_analyse=None,
     TR = scan_object.method.PVM_RepetitionTime
     FA = scan_object.acqp.ACQ_flip_angle
     
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse, pdata_num = 0)    
+    inj_point = sarpy.analysis.analysis.h_inj_point(scn_to_analyse, pdata_num = 0)    
     
     # Deal with bounding boxes
     try:
@@ -1229,7 +1229,7 @@ def h_generate_VTC(scn_to_analyse=None,
     # Specify VTC data
 
     if vtc_type is None:
-        ndata = sarpy.fmoosvi.analysis.h_normalize_dce(scn_to_analyse)
+        ndata = sarpy.analysis.analysis.h_normalize_dce(scn_to_analyse)
     elif vtc_type == 'gd_KM':
         ndata = numpy.squeeze(sarpy.Scan(scn_to_analyse).adata['gd_KM'].data)
     elif vtc_type =='CEST':
@@ -1612,7 +1612,7 @@ def bolus_arrival_time(scn_to_analyse=None,
         return output
 
     import sarpy
-    import sarpy.fmoosvi.getters as getters
+    import sarpy.analysis.getters as getters
     import sarpy.ImageProcessing.resample_onto
     import copy
     scan_object = sarpy.Scan(scn_to_analyse)
@@ -1641,7 +1641,7 @@ def bolus_arrival_time(scn_to_analyse=None,
     # First, get the injection point determined by averaging the image.
     # Then below, only use the first inj_point*5 number of data points
     # otherwise it takes forever to process
-    inj_point =  sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse) + 1
+    inj_point =  sarpy.analysis.analysis.h_inj_point(scn_to_analyse) + 1
 
     # Add a third spatial dimension if it's missing.
     if numpy.size(rawdata.shape) == 3:
@@ -1852,7 +1852,7 @@ def h_fit_ec(scn_to_analyse=None,
     total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
     
     time_per_rep = numpy.round(numpy.divide(total_time,reps))
-    inj_point = sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse)
+    inj_point = sarpy.analysis.analysis.h_inj_point(scn_to_analyse)
 
     print(inj_point)
     # Deal with bounding boxes
@@ -1933,7 +1933,7 @@ def bolus_arrival_time(scn_to_analyse=None,
         return di
 
     import sarpy
-    import sarpy.fmoosvi.getters as getters
+    import sarpy.analysis.getters as getters
     import datetime
     
     ## Get the data and various sizes
@@ -1948,7 +1948,7 @@ def bolus_arrival_time(scn_to_analyse=None,
     if bbox is None:        
         bbox = numpy.array([0,x_size-1,0,y_size-1])    
     else:      
-        bbox = sarpy.fmoosvi.getters.convert_bbox(scn_to_analyse,bbox) 
+        bbox = sarpy.analysis.getters.convert_bbox(scn_to_analyse,bbox) 
 
     if bbox.shape == (4,):            
 
@@ -1970,7 +1970,7 @@ def bolus_arrival_time(scn_to_analyse=None,
     # Time course and determines the point of injection in a 
     # very simple way (using the largest change)
     
-    #inj_point =  sarpy.fmoosvi.analysis.h_inj_point(scn_to_analyse) + 1
+    #inj_point =  sarpy.analysis.analysis.h_inj_point(scn_to_analyse) + 1
     inj_point =  h_inj_point(scn_to_analyse) + 1
 
     # Check for number of slices; this could be made more efficient, 

@@ -86,7 +86,7 @@ def df_from_masterlist(masterlist_name, treatment_dict=None):
         #easy inclusion into the dataframe
 
         tx_condition = {}
-        for condition, pat_list in treatment_dict.items():
+        for condition, pat_list in list(treatment_dict.items()):
             for pat in pat_list:
                 tx_condition[pat]=condition
 
