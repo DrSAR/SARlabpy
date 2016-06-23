@@ -1,8 +1,10 @@
 version = '5.0'
 release = version + 'beta'
 import os
-import json
+# This change is to make sure that files created from jupyter can be edited and changed pfeifer.
+os.umask(2) 
 
+import json
 from .helpers import natural_sort, smooth_SG, git_repo_state
 repo_state = git_repo_state()
 
