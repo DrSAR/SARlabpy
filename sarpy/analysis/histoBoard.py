@@ -49,7 +49,7 @@ def generate(**kwargs):
 
     if args.conf_file:
         print(("loading config file %s" % args.conf_file))
-        config = configparser.SafeConfigParser()
+        config = configparser.configparser()
         base_fname = os.path.join(os.path.expanduser('~'),
                                   'hdata',
                                   args.conf_file)

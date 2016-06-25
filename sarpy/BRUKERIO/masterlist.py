@@ -10,7 +10,7 @@ Copyright: SARlab members, UBC, Vancouver, 2013
 import os
 import argparse
 import collections
-import ConfigParser
+import configparser
 import re
 import json
 import sarpy.fmoosvi.getters
@@ -35,7 +35,7 @@ def generate(roi_suffix=None,
 
     if args.conf_file:
         print("loading config file %s" % args.conf_file)
-        config = ConfigParser.SafeConfigParser()
+        config = configparser.configparser()
         base_fname = os.path.join(os.path.expanduser('~'),  
                                   'sdata',
                                   args.conf_file)
@@ -65,7 +65,7 @@ def generate(roi_suffix=None,
     try:
         patient_exclude = [x.strip() for x in 
                        config.get('MasterList','patient_exclude').split(',')]
-    except ConfigParser.NoOptionError:
+    except configparser.NoOptionError:
         patient_exclude = []
         
     # get unique name of patients
