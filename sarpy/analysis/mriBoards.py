@@ -102,7 +102,7 @@ def generate(**kwargs):
         title = k
         fig = pylab.figure(figsize=fig_size)
         fig.suptitle(k)
-        G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
+        G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols+1, wspace=0.0, hspace=0.0)   
         print(('\n'+'-'*80+'\n'+title))
     
         row_idx = 0
@@ -230,7 +230,7 @@ def generate(**kwargs):
                 #print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
     
                 for col_idx in range(min(n_cols, xdata_slices)):
-                    fig.add_subplot(G[row_idx,col_idx])
+                    fig.add_subplot(G[row_idx,col_idx+1])
                     # Get the bbox as an adata 
                     try: 
                         bbox = scn.adata['bbox'].data
