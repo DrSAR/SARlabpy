@@ -22,6 +22,9 @@ import tempfile
 import scipy
 import copy
 import re
+import scipy
+from scipy import ndimage
+print(scipy.__version__)
 #import sarpy.analysis.analysis
 #import sarpy.analysis.colormaps as cmaps
 
@@ -44,7 +47,7 @@ def generate(**kwargs):
 
     if args.conf_file:
         print(("loading config file %s" % args.conf_file))
-        config = configparser.configparser()
+        config = configparser.ConfigParser()
         base_fname = os.path.join(os.path.expanduser('~'),
                                   'sdata',
                                   args.conf_file)
@@ -71,7 +74,6 @@ def generate(**kwargs):
     testPDF = PdfPages(pdfPath)
 
     sepFiles = False
-
     import sarpy
  #   reload(sarpy) # this looks hacky. Is it?
     # if we really need this: importlib.reload for Python 3.4 and above
@@ -233,17 +235,51 @@ def generate(**kwargs):
                     try: 
                         bbox = scn.adata['bbox'].data
                     except KeyError:
+                        print('bbox import failed')
                         bbox = [0,scn.pdata[0].data.shape[0],0,scn.pdata[0].data.shape[1]]
 
-                    if xdata_slices >1:
-                        t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
-                                         bbox[2]:bbox[3],col_idx],
-                                         **row_conf)
+                    if xdata_slices >1:     
+                        if adata_key is not None and re.search('roi',adata_key):
+                            # This image is to impose an ROI on top of an image
+                            roi2 = scn.adata[adata_key].data
+                            xdata_mask = scn.pdata[0].data
 
+                            # Stefan's Method
+
+                            sx = ndimage.sobel(numpy.nan_to_num(roi2), axis=0, mode='constant')
+                            sy = ndimage.sobel(numpy.nan_to_num(roi2), axis=1, mode='constant')
+
+                            sob = numpy.hypot(sx, sy)
+                            sob = numpy.where(sob<1,numpy.nan,1)
+
+                            pylab.imshow(-xdata_mask[bbox[0]:bbox[1],
+                                             bbox[2]:bbox[3],col_idx],
+                                             **row_conf, cmap='Greys')
+                            pylab.hold
+                            pylab.imshow(sob[bbox[0]:bbox[1],
+                                             bbox[2]:bbox[3],col_idx],
+                                             **row_conf,alpha=0.6, cmap='Reds' )
+                            #cb = pylab.colorbar()
+                            #cb.remove()     
+                            
+                            # Firas' Method
+                            roi2 = numpy.where(numpy.isfinite(roi2),numpy.nan,1)[:,:]
+
+                            # pylab.imshow(xdata_mask[bbox[0]:bbox[1],
+                            #                  bbox[2]:bbox[3],col_idx],
+                            #                  **row_conf,cmap='Greys')
+                            # pylab.hold
+                            # pylab.imshow(roi2[bbox[0]:bbox[1],
+                            #                  bbox[2]:bbox[3],col_idx],alpha=.1, cmap='autumn') 
+                        else:
+                            t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
+                                             bbox[2]:bbox[3],col_idx],
+                                             **row_conf)                                             
+    
                     else:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                          bbox[2]:bbox[3]],
-                                         **row_conf)                        
+                                         **row_conf)            
     
                     # Use black to show nan values
                     # Source: http://stackoverflow.com/questions/2578752/how-can-i-plot-nan-values-as-a-special-color-with-imshow-in-matplotlib
@@ -438,7 +474,7 @@ if __name__ == "__main__":
 
     #parse_known_args does not produce an error for unknown args
     args = conf_parser.parse_args()
-
+    
     # at this point args is a 'Namespace' which is defined in the argparse module
     # to get access to its attributes you can simply say, e.g., args.conf_file
     # to treat it like a dictionary you have to use d=vars(args). Then you can

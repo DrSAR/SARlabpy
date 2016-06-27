@@ -257,7 +257,7 @@ def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',exporttype=None):
     
     scan_object = sarpy.Scan(scan_object_name)
     roi = scan_object.adata[roi_adata_label].data  
-    
+
     # First check to see if the roi is filled with 0s and 1s or nans and 1s,
     # otherwise assume it's in 1s and 0s format already
 
