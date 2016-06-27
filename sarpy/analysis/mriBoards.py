@@ -244,33 +244,22 @@ def generate(**kwargs):
                             roi2 = scn.adata[adata_key].data
                             xdata_mask = scn.pdata[0].data
 
-                            # Stefan's Method
+                            # Stefan's NEW method
+                            sx = ndimage.sobel(numpy.nan_to_num(roi2[:,:,col_idx]), axis=0, mode='constant')
+                            sy = ndimage.sobel(numpy.nan_to_num(roi2[:,:,col_idx]), axis=1, mode='constant')
 
-                            sx = ndimage.sobel(numpy.nan_to_num(roi2), axis=0, mode='constant')
-                            sy = ndimage.sobel(numpy.nan_to_num(roi2), axis=1, mode='constant')
+                            sob = (numpy.hypot(sx, sy))[bbox[0]:bbox[1],bbox[2]:bbox[3]]
 
-                            sob = numpy.hypot(sx, sy)
-                            sob = numpy.where(sob<1,numpy.nan,1)
+                            img_bgd = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],col_idx]
+                            img_norm = (img_bgd - numpy.min(img_bgd)) / (numpy.max(img_bgd)-numpy.min(img_bgd))
+                            img_bgd_RGB = numpy.repeat(img_norm.reshape(img_norm.shape+(1,)), 3, axis=2)
 
-                            pylab.imshow(-xdata_mask[bbox[0]:bbox[1],
-                                             bbox[2]:bbox[3],col_idx],
-                                             **row_conf, cmap='Greys')
-                            pylab.hold
-                            pylab.imshow(sob[bbox[0]:bbox[1],
-                                             bbox[2]:bbox[3],col_idx],
-                                             **row_conf,alpha=0.6, cmap='Reds' )
-                            #cb = pylab.colorbar()
-                            #cb.remove()     
-                            
-                            # Firas' Method
-                            roi2 = numpy.where(numpy.isfinite(roi2),numpy.nan,1)[:,:]
+                            red_channel = img_bgd_RGB[:,:,0]
+                            red_channel[numpy.where(sob>2)] =1
+                            img_bgd_RGB[:,:,0] = red_channel
 
-                            # pylab.imshow(xdata_mask[bbox[0]:bbox[1],
-                            #                  bbox[2]:bbox[3],col_idx],
-                            #                  **row_conf,cmap='Greys')
-                            # pylab.hold
-                            # pylab.imshow(roi2[bbox[0]:bbox[1],
-                            #                  bbox[2]:bbox[3],col_idx],alpha=.1, cmap='autumn') 
+                            t = pylab.imshow(img_bgd_RGB)                            
+
                         else:
                             t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                              bbox[2]:bbox[3],col_idx],
@@ -474,7 +463,7 @@ if __name__ == "__main__":
 
     #parse_known_args does not produce an error for unknown args
     args = conf_parser.parse_args()
-    
+
     # at this point args is a 'Namespace' which is defined in the argparse module
     # to get access to its attributes you can simply say, e.g., args.conf_file
     # to treat it like a dictionary you have to use d=vars(args). Then you can
