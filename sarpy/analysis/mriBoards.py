@@ -258,18 +258,15 @@ def generate(**kwargs):
                             red_channel[numpy.where(sob>2)] =1
                             img_bgd_RGB[:,:,0] = red_channel
 
-                            t = pylab.imshow(img_bgd_RGB)                            
-
+                            t = pylab.imshow(img_bgd_RGB)    
                         else:
                             t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                              bbox[2]:bbox[3],col_idx],
-                                             **row_conf)                                             
-    
+                                             **row_conf)           
                     else:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                          bbox[2]:bbox[3]],
-                                         **row_conf)            
-    
+                                         **row_conf)                
                     # Use black to show nan values
                     # Source: http://stackoverflow.com/questions/2578752/how-can-i-plot-nan-values-as-a-special-color-with-imshow-in-matplotlib
                     newcmap = copy.copy(t.get_cmap())
@@ -330,7 +327,7 @@ def generate(**kwargs):
                     bbox = scn.adata['bbox'].data
 
                     imgdata = numpy.mean(dat,axis=2)
-                    axs=fig.add_subplot(G[row_idx,col_idx])
+                    axs=fig.add_subplot(G[row_idx,col_idx+1])
 
                                     
                     axs.imshow(imgdata[bbox[0]:bbox[1],\
@@ -376,7 +373,7 @@ def generate(**kwargs):
                 xdata = data.data
     
                 for col_idx in range(min(n_cols, xdata.shape[0])):
-                    fig.add_subplot(G[row_idx,col_idx])
+                    fig.add_subplot(G[row_idx,col_idx+1])
                     pylab.plot(xdata[col_idx,0,:],xdata[col_idx,1,:])  
     
                     pylab.xlim(0,numpy.nanmax(xdata[:,0,:]))
@@ -430,7 +427,7 @@ def generate(**kwargs):
                                  rotation='vertical')            
     
                 for col_idx in range(min(n_cols, xdata.shape[0])):
-                    fig.add_subplot(G[row_idx,col_idx])
+                    fig.add_subplot(G[row_idx,col_idx+1])
                     pylab.axis('off')
                     pylab.text(0.3,0.5,'{0}'.format(numpy.round(xdata[col_idx])))
                         
