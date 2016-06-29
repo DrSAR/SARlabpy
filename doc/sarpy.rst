@@ -14,7 +14,7 @@ Subpackages
 
 .. toctree::
 
+    sarpy.BRUKERIO
     sarpy.DCE
     sarpy.fmoosvi
-    sarpy.io
 

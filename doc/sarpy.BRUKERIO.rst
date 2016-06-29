@@ -1,10 +1,18 @@
-io Package
-==========
+BRUKERIO Package
+================
+
+:mod:`lowlevel` Module
+----------------------
+
+.. automodule:: sarpy.BRUKERIO.lowlevel
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 :mod:`AData_classes` Module
 ---------------------------
 
-.. automodule:: sarpy.io.AData_classes
+.. automodule:: sarpy.BRUKERIO.AData_classes
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +20,7 @@ io Package
 :mod:`BRUKERIO` Module
 ----------------------
 
-.. automodule:: sarpy.io.BRUKERIO
+.. automodule:: sarpy.BRUKERIO
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,15 +28,7 @@ io Package
 :mod:`BRUKER_classes` Module
 ----------------------------
 
-.. automodule:: sarpy.io.BRUKER_classes
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`SARlogger` Module
------------------------
-
-.. automodule:: sarpy.io.SARlogger
+.. automodule:: sarpy.BRUKERIO.BRUKER_classes
     :members:
     :undoc-members:
     :show-inheritance:
@@ -36,7 +36,7 @@ io Package
 :mod:`check_fid_acqp_method` Module
 -----------------------------------
 
-.. automodule:: sarpy.io.check_fid_acqp_method
+.. automodule:: sarpy.BRUKERIO.check_fid_acqp_method
     :members:
     :undoc-members:
     :show-inheritance:
@@ -44,7 +44,7 @@ io Package
 :mod:`congrid` Module
 ---------------------
 
-.. automodule:: sarpy.io.congrid
+.. automodule:: sarpy.BRUKERIO.congrid
     :members:
     :undoc-members:
     :show-inheritance:
@@ -52,7 +52,7 @@ io Package
 :mod:`descriptortest` Module
 ----------------------------
 
-.. automodule:: sarpy.io.descriptortest
+.. automodule:: sarpy.BRUKERIO.descriptortest
     :members:
     :undoc-members:
     :show-inheritance:
@@ -60,15 +60,7 @@ io Package
 :mod:`obj2dict` Module
 ----------------------
 
-.. automodule:: sarpy.io.obj2dict
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`obj2dict` Module
-----------------------
-
-.. automodule:: sarpy.io.obj2dict
+.. automodule:: sarpy.BRUKERIO.obj2dict
     :members:
     :undoc-members:
     :show-inheritance:

@@ -44,4 +44,10 @@ Thumbs.db
 *.nii.gz
 
 # directory due to py.test #
+############################ 
 .cache
+
+# directory due to sphinx build process #
+#########################################
+_build
+
