@@ -6,7 +6,7 @@ Created on Wed May 15 14:30:17 2013
 """
 
 #from . import sarpy
-from . import wrappers
+from sarpy.fmoosvi import wrappers
 
 masterlist_name = 'HerP2'
 data_label = '24h-DCE'

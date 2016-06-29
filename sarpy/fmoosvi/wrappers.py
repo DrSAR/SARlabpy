@@ -6,8 +6,8 @@ Created on Wed Mar 13 14:11:03 2013
 """
 
 import sarpy
-from . import analysis
-from . import getters
+from sarpy.analysis import analysis
+from sarpy.analysis import getters
 import pylab
 import numpy
 import os
