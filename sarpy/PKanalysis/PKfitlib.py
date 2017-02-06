@@ -359,8 +359,8 @@ def TwoCXM_factory(time_axis, t0, AIFmodel=None):
     # function res
     # conc = Fp * numpy.convolve(res, AIF, mode='valid')
 
-    TwoCXM = lambda (Em, Kp, Km, Fp), time: Fp * numpy.convolve(
-        exp(-time_axis*Kp)+Em*(exp(-time_axis*Km)-exp(-time_axis*Kp)),
+    TwoCXM = lambda EmKpKmFp, time: Fp * numpy.convolve(
+        exp(-time_axis*EmKpKmFp[1])+EmKpKmFp[0]*(exp(-time_axis*EmKpKmFp[2])-exp(-time_axis*EmKpKmFp[3])),
         AIF,
         mode='valid')
                                     
