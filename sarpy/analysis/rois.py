@@ -114,7 +114,7 @@ def import_roi(masterlist_name,
     # Create the experiment
     exp = sarpy.Experiment.from_masterlist(masterlist_name+'.config')
 
-    for k in list(exp.patients.keys()):
+    for k in sorted(list(exp.patients.keys())):
         if roi_scan_label is None:
             # Search for all the labels that have roi and create a scan label list of rois
             roi_labels = [r for r in list(exp.labels.keys()) if 'roi' in r]
@@ -179,7 +179,6 @@ def import_roi(masterlist_name,
                 scan.store_adata(key=roi_key_name, data = roi_m, force = forceVal)
                 scan.store_adata(key=roi_key_name+'_weights', data = weights, force = forceVal)
 
-
                 # get the bbox for this roi and scan
                 bbox = sarpy.analysis.getters.get_roi_bbox(scn_name,
                                                       roi_adata_label=roi_key_name)
@@ -188,28 +187,6 @@ def import_roi(masterlist_name,
                 print(('h_generate_roi: saved {0} roi label as {1}'.format(scan.shortdirname,roi_key_name)))
             except AttributeError:
                 print(('h_generate_roi: force save of scan {0} is required'.format(scan.shortdirname)))
-
-    # Save adata in all scans 
-    for k in list(exp.patients.keys()):
-
-        pat = exp.patients[k]
-
-        # The code assumes that there is a scanlabel called roi, fixed so that it can be overridden
-        # Still need to fix this !
-
-        if roi_scan_label is None:
-            roi_scan_label = 'roi'
-        try:
-            #bbox = sarpy.Scan(pat[roi_scan_label]).adata['bbox'].data
-            bbox = sarpy.analysis.getters.get_roi_bbox(scan.shortdirname,roi_scan_label)
-
-            for lbl,scn in list(pat.items()):
-
-                scn = sarpy.Scan(scn)
-                scn.store_adata(key='bbox', data = bbox,force=True)
-        except:
-            raise
-            #print(('No ROI exists for: {0}'.format(k)))
 
     print(('Nifti images were processed in {0}'.format(path)))
 
