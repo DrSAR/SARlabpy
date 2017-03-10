@@ -22,6 +22,9 @@ import tempfile
 import scipy
 import copy
 import re
+import scipy
+from scipy import ndimage
+print(scipy.__version__)
 #import sarpy.analysis.analysis
 #import sarpy.analysis.colormaps as cmaps
 
@@ -44,7 +47,7 @@ def generate(**kwargs):
 
     if args.conf_file:
         print(("loading config file %s" % args.conf_file))
-        config = configparser.configparser()
+        config = configparser.ConfigParser()
         base_fname = os.path.join(os.path.expanduser('~'),
                                   'sdata',
                                   args.conf_file)
@@ -71,7 +74,6 @@ def generate(**kwargs):
     testPDF = PdfPages(pdfPath)
 
     sepFiles = False
-
     import sarpy
  #   reload(sarpy) # this looks hacky. Is it?
     # if we really need this: importlib.reload for Python 3.4 and above
@@ -100,7 +102,7 @@ def generate(**kwargs):
         title = k
         fig = pylab.figure(figsize=fig_size)
         fig.suptitle(k)
-        G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols, wspace=0.0, hspace=0.0)   
+        G = pylab.matplotlib.gridspec.GridSpec(n_rows, n_cols+1, wspace=0.0, hspace=0.0)   
         print(('\n'+'-'*80+'\n'+title))
     
         row_idx = 0
@@ -228,23 +230,43 @@ def generate(**kwargs):
                 #print(numpy.mean(numpy.mean(xdata, axis=0),axis=0))
     
                 for col_idx in range(min(n_cols, xdata_slices)):
-                    fig.add_subplot(G[row_idx,col_idx])
+                    fig.add_subplot(G[row_idx,col_idx+1])
                     # Get the bbox as an adata 
                     try: 
                         bbox = scn.adata['bbox'].data
                     except KeyError:
+                        print('bbox import failed')
                         bbox = [0,scn.pdata[0].data.shape[0],0,scn.pdata[0].data.shape[1]]
 
-                    if xdata_slices >1:
-                        t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
-                                         bbox[2]:bbox[3],col_idx],
-                                         **row_conf)
+                    if xdata_slices >1:     
+                        if adata_key is not None and re.search('roi',adata_key):
+                            # This image is to impose an ROI on top of an image
+                            roi2 = scn.adata[adata_key].data
+                            xdata_mask = scn.pdata[0].data
 
+                            # Stefan's NEW method
+                            sx = ndimage.sobel(numpy.nan_to_num(roi2[:,:,col_idx]), axis=0, mode='constant')
+                            sy = ndimage.sobel(numpy.nan_to_num(roi2[:,:,col_idx]), axis=1, mode='constant')
+
+                            sob = (numpy.hypot(sx, sy))[bbox[0]:bbox[1],bbox[2]:bbox[3]]
+
+                            img_bgd = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],col_idx]
+                            img_norm = (img_bgd - numpy.min(img_bgd)) / (numpy.max(img_bgd)-numpy.min(img_bgd))
+                            img_bgd_RGB = numpy.repeat(img_norm.reshape(img_norm.shape+(1,)), 3, axis=2)
+
+                            red_channel = img_bgd_RGB[:,:,0]
+                            red_channel[numpy.where(sob>2)] =1
+                            img_bgd_RGB[:,:,0] = red_channel
+
+                            t = pylab.imshow(img_bgd_RGB)    
+                        else:
+                            t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
+                                             bbox[2]:bbox[3],col_idx],
+                                             **row_conf)           
                     else:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                          bbox[2]:bbox[3]],
-                                         **row_conf)                        
-    
+                                         **row_conf)                
                     # Use black to show nan values
                     # Source: http://stackoverflow.com/questions/2578752/how-can-i-plot-nan-values-as-a-special-color-with-imshow-in-matplotlib
                     newcmap = copy.copy(t.get_cmap())
@@ -305,7 +327,7 @@ def generate(**kwargs):
                     bbox = scn.adata['bbox'].data
 
                     imgdata = numpy.mean(dat,axis=2)
-                    axs=fig.add_subplot(G[row_idx,col_idx])
+                    axs=fig.add_subplot(G[row_idx,col_idx+1])
 
                                     
                     axs.imshow(imgdata[bbox[0]:bbox[1],\
@@ -351,7 +373,7 @@ def generate(**kwargs):
                 xdata = data.data
     
                 for col_idx in range(min(n_cols, xdata.shape[0])):
-                    fig.add_subplot(G[row_idx,col_idx])
+                    fig.add_subplot(G[row_idx,col_idx+1])
                     pylab.plot(xdata[col_idx,0,:],xdata[col_idx,1,:])  
     
                     pylab.xlim(0,numpy.nanmax(xdata[:,0,:]))
@@ -405,7 +427,7 @@ def generate(**kwargs):
                                  rotation='vertical')            
     
                 for col_idx in range(min(n_cols, xdata.shape[0])):
-                    fig.add_subplot(G[row_idx,col_idx])
+                    fig.add_subplot(G[row_idx,col_idx+1])
                     pylab.axis('off')
                     pylab.text(0.3,0.5,'{0}'.format(numpy.round(xdata[col_idx])))
                         

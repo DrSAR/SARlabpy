@@ -1019,43 +1019,40 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     except KeyError:       
         bbox = numpy.array([0,x_size-1,0,y_size-1])   
         
-    # Start the fitting process      
-
-    num_slices = 2
+    # Start the fitting process
 
     for slc in range(num_slices):          
-        for x in range(bbox[0],bbox[1]):
-            for y in range(bbox[2],bbox[3]):
+	    for x in range(bbox[0],bbox[1]):
+	        for y in range(bbox[2],bbox[3]):
+	            # Deal with scans that have only one slice
+	            if num_slices > 1:
+	                y_data = data[x,y,slc,:]
+	            else:
+	                y_data = data[x,y,:]
 
-                # Deal with scans that have only one slice
-                if num_slices > 1:
-                    y_data = data[x,y,slc,:]
-                else:
-                    y_data = data[x,y,:]
+	            [infodict,mesg,ier,res_fit_params,T1,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
+	                                                                               y_data=y_data,
+	                                                                               slc=slc,
+	                                                                               fit_algorithm=fit_algorithm)
 
-                [infodict,mesg,ier,res_fit_params,T1,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
-                                                                                   y_data=y_data,
-                                                                                   slc=slc,
-                                                                                   fit_algorithm=fit_algorithm)
+	            [a,b,T1_eff,phi] = res_fit_params
 
-                [a,b,T1_eff,phi] = res_fit_params
+	            a_arr[x,y,slc] = a
+	            b_arr[x,y,slc] = b
+	            T1_eff_arr[x,y,slc] = T1_eff
+	            phi_arr[x,y,slc] = phi
+	            T1_arr[x,y,slc] = T1
+	            t_data_arr[x,y,slc] = t_data
+	            test = numpy.ndarray([10,10,10],dtype='object')
 
-                a_arr[x,y,slc] = a
-                b_arr[x,y,slc] = b
-                T1_eff_arr[x,y,slc] = T1_eff
-                phi_arr[x,y,slc] = phi
-                T1_arr[x,y,slc] = T1
-                t_data_arr[x,y,slc] = t_data
-                test = numpy.ndarray([10,10,10],dtype='object')
+	            data_after_fitting[x,y,slc] = T1
 
-                data_after_fitting[x,y,slc] = T1
+	            if fit_algorithm == 'leastsq':   
+	                infodict1[x,y,slc] = infodict
+	                mesg1[x,y,slc] = mesg
+	                goodness_of_fit1[x,y,slc] = h_goodness_of_fit(y_data,infodict)  
 
-                if fit_algorithm == 'leastsq':   
-                    infodict1[x,y,slc] = infodict
-                    mesg1[x,y,slc] = mesg
-                    goodness_of_fit1[x,y,slc] = h_goodness_of_fit(y_data,infodict)  
-
-                ier1[x,y,slc] = ier
+	            ier1[x,y,slc] = ier
 
 ## Moved the entire T1 fitting process into a separate function
 

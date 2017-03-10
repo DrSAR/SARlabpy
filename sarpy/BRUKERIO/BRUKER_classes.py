@@ -8,6 +8,7 @@ import glob
 from datetime import datetime
 
 import nibabel
+import sys
 import collections
 
 import configobj

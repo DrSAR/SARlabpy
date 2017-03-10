@@ -173,7 +173,7 @@ def get_fid_enhancement(scan_string):
         
     fiddir = os.path.join(scan.dirname,'fid')
     
-    data = numpy.abs(sarpy.io.BRUKERIO.readfid(fiddir,resetNR=True)['data'])
+    data = numpy.abs(sarpy.BRUKERIO.lowlevel.readfid(fiddir,resetNR=True)['data'])
     
     x = data.shape[0]
     y = data.shape[1]
@@ -257,7 +257,7 @@ def get_roi_bbox(scan_object_name, roi_adata_label = 'roi',exporttype=None):
     
     scan_object = sarpy.Scan(scan_object_name)
     roi = scan_object.adata[roi_adata_label].data  
-    
+
     # First check to see if the roi is filled with 0s and 1s or nans and 1s,
     # otherwise assume it's in 1s and 0s format already
 

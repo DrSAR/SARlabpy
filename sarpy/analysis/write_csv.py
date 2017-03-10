@@ -260,7 +260,6 @@ def determine_averages(data_scn_to_analyze,
     data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
     
     BAT = sarpy.Scan(data_scn_to_analyze).adata[BAT_adata_label].data
-    #BAT_mask = sarpy.analysis.analysis.h_make_binary_mask(BAT,0,BAT_threshold)
     roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
     
     data_roi = data*roi*BAT
