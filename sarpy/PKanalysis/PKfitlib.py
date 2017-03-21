@@ -98,7 +98,7 @@ def aif(t, t0=0, aifchoice=None, zeropad=False):
     aifchoice : String
         'Lyng'          ... from Lyng 1998 - mice, same Gd
         
-        'Checkley'      ... from Checkley ???
+        'Checkley'      ... from Checkley D et al "Use of dynamic contrast-enhanced MRI to evaluate acute treatment with ZD6474, a VEGF signalling inhibitor, in PC-3 prostate tumours. Br J Cancer, 89(10), 1889–1895. Retrieved from http://dx.doi.org/10.1038/sj.bjc.6601386
         
         'Pickup'        ... from Pickup 2004 - mice
         
