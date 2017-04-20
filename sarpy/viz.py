@@ -3,12 +3,11 @@
 import ipywidgets
 from ipywidgets import interact
 import sarpy
+import sarpy.analysis.cest
 import pylab
 import numpy
 import sys
-sys.path.append('/home/fmoosvi/Desktop/Dropbox/code/python-cest')
-import cest
-import cest.analysis
+
 ####### Visualization Functions #######
 
 def browse_MRimages(data):
@@ -36,11 +35,10 @@ def browse_MRimages(data):
                          y=ipywidgets.IntSlider(description='Y-axis:',min=0,max=datashape[0]-1,step=1),
                          i=ipywidgets.IntSlider(description='Slice:',min=0,max=datashape[2]-1,step=1))
 
-def browse_CEST(scn_to_view,adata_label):
+def browse_CEST(scn_to_view,adata_label,doFit = False, displayFit = False):
     
     scn = sarpy.Scan(scn_to_view)
-    cestParams = scn.adata[adata_label].data
-    dataShape = cestParams.shape
+    dataShape = scn.pdata[0].data.shape
         
     try:
         bbox = scn.adata['bbox'].data
@@ -62,35 +60,23 @@ def browse_CEST(scn_to_view,adata_label):
         #### Plot the CEST Spectrum
         pylab.subplot(122)
         # Raw Data
-        freqdata,zdata = cest.analysis.cest_spectrum(scn.shortdirname,
-                                                      x,
-                                                      y,
-                                                      shift_water_peak = True,
-                                                      normalize=True,
-                                                      normalize_to_ppm = 66.6,
-                                                      ppm_limit_min = -50,
-                                                      ppm_limit_max = 50,
-                                                      exclude_ppm = 66.6,
-                                                      pdata_num = 0)
+        freqdata,zdata = sarpy.analysis.cest.process_cest(scn.shortdirname,x,y)
         
         
         pylab.plot(freqdata,zdata,'--',label='raw')
-        pylab.xlim(10,-10)
+        pylab.xlim(5,-5)
         pylab.title('Curve', fontsize=18)
-        pylab.axvline(2.2,ymin=0.6,label='2.2 amine',color='y', alpha=0.4)
-        pylab.axvline(3.5,ymin=0.6,label='3.5 amide',color='r', alpha=0.4)
-        pylab.axvline(1.5,ymin=0.6,label='1.5 OH',color='b', alpha=0.4)
-        pylab.axvline(-3.25,ymin=0.6,label='-3.25 aliphatic',color='g', alpha=0.4)
-        #pylab.axvline(-3.0,label='-3.0 ppm-amine')
+
         pylab.legend()
         # Fit Data
-        w = numpy.arange(-20.,20.,0.01) # Sample frequencies
         
-        fitteddata = cest.analysis.h_zspectrum_New(cestParams[x,y],w)
-        pylab.plot(w,fitteddata,label='Fit')
-        pylab.xlim(15,-15)
-        
-        
-        
+        if displayFit is True:
+
+            if doFit is True: 
+                cestParams, acqfreqs, data = sarpy.analysis.cest.fit_px_cest(scn_to_view,x,y)
+            else:
+                cestParams = scn.adata[adata_label].data
+            sarpy.analysis.cest.plotCestPeaks(cestParams,x,y)
+          
     interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=bbox[0],max=bbox[1],step=1),
                          y=ipywidgets.IntSlider(description='Y-axis:',min=bbox[2],max=bbox[3],step=1))	
