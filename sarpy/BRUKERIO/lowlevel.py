@@ -892,6 +892,9 @@ def read2dseq(scandirname,
     if len(matrix_size)==3:
         dimdesc.append('PE2')
         dimcomment.append('')
+        size3D = matrix_size[2]
+    else:
+        size3D = 1
 
     # Determine size and descriptors of frame groups (RECO_size, dimdesc and
     # dimcomment).  VisuFGOrderDesc is a  struct which describes the number of
@@ -921,10 +924,13 @@ def read2dseq(scandirname,
     # extract binary data from 2dseq. For now, format the data shape so all
     # the image frames are lumped together in the 3rd dimension.
     reco_offset = numpy.asarray(visu_pars['VisuCoreDataOffs'])
-    #assert len(set(reco_offset)) == 1, 'Cannot deal with multiple VisuCoreDataOffs'
     reco_slope = numpy.asarray(visu_pars['VisuCoreDataSlope'])
-    #assert len(set(reco_slope)) == 1, 'Cannot deal with multiple VisuCoreDataSlope'
+    if (len(set(reco_offset)) != 1) or (len(set(reco_slope)) != 1):
+        logger.warning('values in VisuCoreDataOffs or VisuCoreDataSlope differ from frame to frame (UNTESTED!)')
 
+    # if data is acquired 3d, we need to multiply the 
+    reco_offset = numpy.repeat(reco_offset, size3D)
+    reco_slope = numpy.repeat(reco_slope, size3D)
 
     n_frames = numpy.asarray(matrix_size)[2:].prod()
     logger.info('Guessing we have {0} when VisuCoreFrameCount = {1}'.format(
