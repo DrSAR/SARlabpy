@@ -5,9 +5,6 @@
 test
 
 """
-
-
-
 import numpy
 import sarpy
 import scipy.integrate
@@ -21,7 +18,7 @@ import datetime
 import collections
 import sarpy.analysis.getters as getters
 import imp
-
+import pylab
 
 def h_calculate_AUC(scn_to_analyse=None,
                     adata_label=None,
@@ -2093,3 +2090,122 @@ def smooth_SG(y, window_size, order, deriv=0, rate=1):
     lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
     y = np.concatenate((firstvals, y, lastvals))
     return np.convolve( m[::-1], y, mode='valid')        
+
+######################
+###
+###
+### OE-MRI Analysis
+###
+###
+##################### 
+
+def analyse_ica(scn_to_analyse,ext_bbox,Ncomponents,viz=True):
+
+    import pylab
+
+    scn = sarpy.Scan(scn_to_analyse)
+    ## This bit of code calculates the time_per_rep
+    import datetime
+    datashape = scn.pdata[0].data[:,:,:,0,:].shape
+    reps = datashape[-1]
+    assert scn.method.PVM_NRepetitions==reps
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(scn.method.PVM_ScanTimeStr,format)
+    total_time =  (t - datetime.datetime(1900,1,1)).total_seconds()
+
+    time_per_rep = numpy.divide(total_time,reps)
+
+    # Constrain the data being analysed
+
+    if ext_bbox is None:
+        try:
+            ext_bbox = scn.adata['bbox'].data
+        except:
+            ext_bbox=numpy.array([30,60,50,95])
+
+    # Show an image of the area being considered
+    sl = 7 # Choose slice number for display
+    echoNumber = 2 # Choose echo for display
+    pylab.figure(figsize=(4,4))
+    pylab.imshow(scn.pdata[0].data[:,:,sl,echoNumber,0])
+    pylab.xlim(ext_bbox[2],ext_bbox[3])
+    pylab.ylim(ext_bbox[1],ext_bbox[0])
+
+    # Create roi of interest (bbox)
+    tmp = numpy.zeros(shape=datashape)*numpy.nan
+    tmp[ext_bbox[0]:ext_bbox[1],ext_bbox[3]:ext_bbox[2],:,:] = 1
+    tmp[ext_bbox[0]:ext_bbox[1],ext_bbox[2]:ext_bbox[3]]=1
+    origroi = tmp[:,:,:,0]
+
+    # get me a flat index
+    nonNaNidx = numpy.where(numpy.isfinite(origroi.flatten())) # tumour roi
+
+    # create an empy array to accept the 2D array which has time in 1st D and all locations in 2nd D
+    flatter_array = numpy.zeros(shape=(datashape[-1], numpy.size(nonNaNidx)))
+    # step through time in a loop - not elegant but fits my brain.
+    for i in range(datashape[-1]):
+        #flatter_array[i, :] = scn.pdata[0].data[:,:,:,echoNumber,i].flatten()[nonNaNidx]
+        tmp = numpy.mean(scn.pdata[0].data[:,:,:,0:3,i],axis=3)
+        #tmp = scn.pdata[0].data[:,:,:,echoNumber,i]
+        flatter_array[i, :] = tmp.flatten()[nonNaNidx]
+
+    ####
+    # Set up the ICA analysis
+    ####
+    from scipy import signal
+    from sklearn.decomposition import FastICA, PCA
+
+    n_samples = flatter_array.shape[0]
+    X = flatter_array
+    ncpts = Ncomponents
+    ica = FastICA(n_components=ncpts, algorithm='deflation', random_state=3141,max_iter=1000,tol=1E-3)
+    S_ = ica.fit_transform(X)  # Reconstruct signals
+    A_ = ica.mixing_  # Get estimated mixing matrix
+
+    ####
+    # Recover the maps
+    ####
+    A_reshaped_prime = numpy.zeros(shape=(numpy.prod(datashape[0:3]), ncpts))+numpy.nan
+
+    # we still have nonNaNidx to fill the array as needed
+    for i in range(ncpts):
+        A_reshaped_one_component = numpy.zeros(shape=(numpy.prod(datashape[0:3])))+numpy.nan
+        A_reshaped_one_component[nonNaNidx] = A_[:,i]
+        A_reshaped_prime[:,i] = A_reshaped_one_component
+
+    A_reshaped = A_reshaped_prime.reshape(list(datashape[0:3])+[ncpts])
+
+    if viz:
+        pylab.figure(figsize=(15,20))
+        for ii in range(ncpts):
+            pylab.subplot(ncpts,2,2*ii+1)
+            pylab.plot(numpy.arange(0,datashape[-1])*time_per_rep,S_[:,ii],'o-')
+            pylab.xlabel('time (s)')
+            pylab.text(10,-0.15,ii,fontsize=20)
+            mins, maxs = min(S_[:,ii]), max(S_[:,ii])
+            pylab.subplot(ncpts,2,2*ii+2)
+            pylab.imshow(A_reshaped[:,:,sl,ii],vmin=0,vmax=2E5)
+            pylab.xlim(ext_bbox[2],ext_bbox[3])
+            pylab.ylim(ext_bbox[1],ext_bbox[0])
+            pylab.colorbar()
+
+    return S_, A_reshaped
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
