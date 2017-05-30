@@ -2184,7 +2184,7 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
     # Show an image of the area being considered if asked for
 
     if viz:
-
+        
         import pylab
         pylab.figure(figsize=(16,4))
 
@@ -2250,9 +2250,9 @@ def choose_OE_component(scn_to_analyse,S,A,switchArray,bbox=None,viz=False):
             bbox = numpy.array([0,datashape[0],0,datashape[1]])
 
     if viz:
-        pylab.figure(figsize=(16,12))
+        pylab.figure(figsize=(30,5))
         for slc in range(num_slices):            
-            pylab.subplot(4,3,slc+1)
+            pylab.subplot(1,num_slices+1,slc+1)
             pylab.imshow(A[:,:,slc,OEcomponent],vmin=-limit,vmax=limit,cmap='RdGy_r')
             #pylab.colorbar()
             pylab.xlim(bbox[2],bbox[3])
@@ -2260,14 +2260,14 @@ def choose_OE_component(scn_to_analyse,S,A,switchArray,bbox=None,viz=False):
             pylab.axis('off')
             pylab.title('Slice {0}'.format(slc+1))
 
-        pylab.subplot(4,3,11)
+        pylab.subplot(1,num_slices+1,num_slices+1)
         pylab.plot(S[:,OEcomponent],'o--')
         pylab.title('Oxygen Enhancing Component')
 
-    pylab.suptitle('Animal {0}'.format(scn_to_analyse))
+        pylab.suptitle('Animal {0}'.format(scn_to_analyse))
 
-    fname = scn_to_analyse.replace('/','_') + ' OEmaps.pdf'
-    pylab.savefig(fname)
+        fname = scn_to_analyse.replace('/','_') + ' OEmaps.pdf'
+        pylab.savefig(fname)
 
     return OEcomponent, limit
 
