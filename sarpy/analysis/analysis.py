@@ -19,6 +19,7 @@ import collections
 import sarpy.analysis.getters as getters
 import imp
 import pylab
+import lmfit
 
 def h_calculate_AUC(scn_to_analyse=None,
                     adata_label=None,
@@ -748,10 +749,10 @@ def h_fitpx_T1_LL_FAassumed(scn_to_analyse=None,
     return infodict,mesg,ier,fit_params, T1,t_data
 
 def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
-                      pdata_num = 0, 
-                      params = [],
-                      fit_algorithm = None,
-                      **kwargs):
+                          pdata_num = 0, 
+                          params = [],
+                          fit_algorithm = None,
+                          **kwargs):
 
     scan_object = sarpy.Scan(scn_to_analyse)
    
@@ -2091,6 +2092,64 @@ def smooth_SG(y, window_size, order, deriv=0, rate=1):
     y = np.concatenate((firstvals, y, lastvals))
     return np.convolve( m[::-1], y, mode='valid')        
 
+
+######################
+###
+###
+### T2* Fitting
+###
+###
+##################### 
+
+def h_fitpx_T2star(xdata,ydata):
+
+    def T2(t, A, T2star):
+        return A*numpy.exp(-t/T2star)
+
+    mod = lmfit.Model(T2)
+
+    params = lmfit.Parameters()
+    params.add('A', value=ydata[0], vary=True)
+    params.add('T2star', value = xdata[7], min=2, max=1000)
+
+    # fitting
+    result = mod.fit(ydata, t=xdata, params = params)
+
+    return result.best_values.get('T2star'), result.redchi
+
+def h_fit_T2star(scn_to_analyse=None,
+                 bbox = None,
+                 pdata_num = 0):
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+    datashape = scan_object.pdata[0].data.shape
+    num_slices = scan_object.pdata[0].data.shape[2]
+    reps = scan_object.pdata[0].data.shape[-1]
+
+    # Constrain the data being analysed
+    if bbox is None:
+        try:
+            bbox = scan_object.adata['bbox'].data
+        except KeyError:       
+            bbox = numpy.array([0,datashape[0],0,datashape[1]])
+
+    T2star = numpy.empty_like(scan_object.pdata[0].data[:,:,:,0,:]) + numpy.nan
+    fitgoodness = numpy.empty_like(scan_object.pdata[0].data[:,:,:,0,:]) + numpy.nan
+    xdata = scan_object.acqp.ACQ_echo_time
+
+    for x in range(bbox[0],bbox[1]):
+        for y in range(bbox[2],bbox[3]):
+            for slc in range(num_slices):
+                for rep in range(reps):
+                    ydata = scan_object.pdata[0].data[x,y,slc,:,rep]
+
+                    t2star,redchi = h_fitpx_T2star(xdata,ydata)
+
+                    T2star[x,y,slc,rep] = t2star
+                    fitgoodness[x,y,slc,rep] = redchi
+    return {'T2star': T2star, 
+            'RedChi': redchi}
+
 ######################
 ###
 ###
@@ -2124,7 +2183,6 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
             bbox = numpy.array([0,datashape[0],0,datashape[1]])
 
     # ROI or bbox
-
     if roi_label:
         roi = scan_object.adata[roi_label].data
     else: # bbox
@@ -2180,7 +2238,6 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
     switchArray = 0.4*h_get_switchArray(scn_to_analyse,[0, 3, 6, 9, 12]) - 0.2
     OEcomponent, limit = choose_OE_component(scn_to_analyse,S_,A_reshaped,switchArray,viz=False)
 
-
     # Show an image of the area being considered if asked for
 
     if viz:
@@ -2191,7 +2248,7 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
         for sl in range(datashape[-2]):
 
             pylab.subplot(2,5,sl+1)
-            pylab.imshow(data[:,:,sl,0])
+            pylab.imshow(data[:,:,sl,0],vmin=1200,vmax=3000)
             pylab.title('Slice {0}'.format(sl))
             pylab.xlim(bbox[2],bbox[3])
             pylab.ylim(bbox[1],bbox[0])
@@ -2225,7 +2282,7 @@ def h_invertICA(s,a):
 def choose_OE_component(scn_to_analyse,S,A,switchArray,bbox=None,viz=False):
 
     scan_object = sarpy.Scan(scn_to_analyse)
-    switchArray = 0.4*h_get_switchArray(scn_to_analyse) - 0.2
+    switchArray = 0.4*sarpy.analysis.analysis.h_get_switchArray(scn_to_analyse) - 0.2
 
     # Choose component to correlate with
     res = []
@@ -2250,10 +2307,10 @@ def choose_OE_component(scn_to_analyse,S,A,switchArray,bbox=None,viz=False):
             bbox = numpy.array([0,datashape[0],0,datashape[1]])
 
     if viz:
-        pylab.figure(figsize=(30,5))
+        pylab.figure(figsize=(50,5))
         for slc in range(num_slices):            
             pylab.subplot(1,num_slices+1,slc+1)
-            pylab.imshow(A[:,:,slc,OEcomponent],vmin=-limit,vmax=limit,cmap='RdGy_r')
+            pylab.imshow(A[:,:,slc,OEcomponent],vmin=0,vmax=limit,cmap='Reds')
             #pylab.colorbar()
             pylab.xlim(bbox[2],bbox[3])
             pylab.ylim(bbox[1],bbox[0])
@@ -2266,8 +2323,9 @@ def choose_OE_component(scn_to_analyse,S,A,switchArray,bbox=None,viz=False):
 
         pylab.suptitle('Animal {0}'.format(scn_to_analyse))
 
-        fname = scn_to_analyse.replace('/','_') + ' OEmaps.pdf'
-        pylab.savefig(fname)
+        #pylab.tight_layout()
+        #fname = scn_to_analyse.replace('/','_') + ' OEmaps.pdf'
+        #pylab.savefig(fname,dpi=1000)
 
     return OEcomponent, limit
 
@@ -2295,15 +2353,3 @@ def h_get_switchArray(scn_to_analyse, switchTimes = [0, 3, 6, 9, 12]):
         O2 = 1 if O2==0 else 0
 
     return 0.4*switchArray - 0.2
-
-
-
-
-
-
-
-
-
-
-
-
