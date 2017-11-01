@@ -8,6 +8,43 @@ import ipywidgets
 import ipywidgets.widgets
 from IPython.display import display
 
+class CompoundDropdownWidgetClass(ipywidgets.widgets.Dropdown):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.TextInput = ipywidgets.widgets.Text(description='New ROI',
+                                        continuous_update=False,
+                                        value='',
+                                        placeholder='Type ROI label to be created',)
+        self.ROI2Delete=False
+        self.DeleteButton = ipywidgets.widgets.Button(description='Delete',
+                                            tooltip='Delete current ROI label')
+        def on_DeleteButton_clicked(b):
+            self.ROI2Delete = self.value # remember what to delete
+            self.options = tuple([a for a in self.options if a !=self.value])
+            if self.options:
+                self.value = self.options[0]
+            else:
+                self.options = ['default']
+            change = {'name': 'value',
+                      'new': None,
+                      'old': None,
+                      'type': 'change'}
+            #self.notify_change(change)
+        self.DeleteButton.on_click(on_DeleteButton_clicked)
+
+        self.AddButton = ipywidgets.widgets.Button(description='Create',
+                                            tooltip='Create ROI with New Name')
+        def on_AddButton_clicked(b):
+            if self.TextInput.value and (self.TextInput.value not in self.options):
+                self.options = self.options + (self.TextInput.value,)
+                self.value = self.TextInput.value
+        self.AddButton.on_click(on_AddButton_clicked)
+
+        self.HorizBox = ipywidgets.widgets.HBox([self, 
+                                                 self.DeleteButton, 
+                                                 self.TextInput, 
+                                                 self.AddButton])
+
 def distance_sqrd_P2segment(P, P0, P1):
     '''distance squared of P from finite line segment P0->P1
 
@@ -26,9 +63,7 @@ def distance_sqrd_P2segment(P, P0, P1):
     Pb = P0 + b*v
     return numpy.sum((P-Pb)**2)
 
-def DrawROIMultiSclice(scn, roilabel_start='polygon_default'):
-    if not roilabel_start.startswith('polygon_'):
-        raise ValueError('roilabels need to start with "polygon_" by convention')
+def DrawROIMultiSclice(scn, roilabel_start=None):
     data = scn.pdata[0].data
     fig, ax = plt.subplots()
     nr_slices = data.shape[2]
@@ -86,30 +121,41 @@ def DrawROIMultiSclice(scn, roilabel_start='polygon_default'):
     def store_ROI(verts_2_save):
         roi_label = imageref.get_figure().canvas.__CurrentRoiLabel
         currentslice = imageref.get_figure().canvas.__CurrentSlice
-        adata = scn.adata.get(roi_label)
+        adata = scn.adata.get('polygon_'+roi_label)
         if adata is None:
 		# create new dictionary
             vert_data = {currentslice: verts_2_save}
         else:
             vert_data = adata.data
             vert_data[currentslice] = verts_2_save
-        scn.store_adata(key=roi_label, force=True, data=vert_data)
+        scn.store_adata(key='polygon_'+roi_label, force=True, data=vert_data)
         
-    def f(n, roi_label, windowing, cmap):
-        # update image display
-        imageref.set_data(data[:,:,n])
-        imageref.set_clim(vmin=windowing[0], vmax=windowing[1])
-        imageref.set_cmap(cmap)
+    def ROIplotUpdater(change):
+        # there appear to be a lot of events on the widgets not all of which
+        # warrant a response here ...
+        curslice = SliceWidget.value
         # remember which slice we're on now
-        imageref.get_figure().canvas.__CurrentSlice = n
+        imageref.get_figure().canvas.__CurrentSlice = curslice
+        imageref.set_data(data[:,:,curslice])
+        imageref.set_clim(vmin=WindowingWidget.value[0], 
+                          vmax=WindowingWidget.value[1])
+        imageref.set_cmap(CmapWidget.value)
+        # remember which ROI we're on now
+        if not RoiLabelWidget.options:
+            RoiLabelWidget.options=['default']
+        roi_label = RoiLabelWidget.value
         imageref.get_figure().canvas.__CurrentRoiLabel = roi_label
         # load vertices for current slice
-        vert_data = scn.adata.get(roi_label) # return None if not there
+        vert_data = scn.adata.get('polygon_'+roi_label) # return None if not there
         # show vertices
-        if (vert_data is None) or (n not in vert_data.data):
+        if (vert_data is None) or (curslice not in vert_data.data):
             lasso.setverts(numpy.array([[], []]).T)
         else:
-            lasso.setverts(vert_data.data[n])
+            lasso.setverts(vert_data.data[curslice])
+        # is there a ROI that needs deleting?
+        if RoiLabelWidget.ROI2Delete:
+            scn.rm_adata('polygon_'+RoiLabelWidget.ROI2Delete)
+            RoiLabelWidget.ROI2Delete= False
 
     def press(event):
         '''handler of keypresses in lasso widget'''
@@ -137,35 +183,52 @@ def DrawROIMultiSclice(scn, roilabel_start='polygon_default'):
                 store_ROI(updated_verts)
 
     fig.canvas.mpl_connect('key_press_event', press)
-
-    # get me all polygon adata:
-    roi_labels = [i for i in scn.adata if i.startswith('polygon_')]
-    if not roi_labels:
-        roi_labels = [roilabel_start]
     lasso = MyPolygonSelector(ax, onselect)
 
     SliceWidget = ipywidgets.widgets.IntSlider(min=0, max=nr_slices-1,
                                                value = nr_slices//2,
                                                description = 'Slice #')
-    RoiLabelWidget = ipywidgets.widgets.Dropdown(options = roi_labels, 
-							value=roilabel_start, 
-							description = 'ROI labels:')
-    WindowingWidget = ipywidgets.widgets.FloatRangeSlider(
-    		value=[numpy.percentile(data, 5), numpy.percentile(data, 95)],
-    		min=data.min(), max=data.max(),
-    		description='windowing:',
-    		continuous_update=True,
-    		orientation='horizontal',
-    		readout=True,
-    		layout=ipywidgets.Layout(width='90%'))
-    CmapWidget = ipywidgets.widgets.Dropdown(
-                options = ['Greys', 'gray', 'viridis', 'plasma', 'PiYG'],
-                value = 'gray',
-                description = 'Colormap')
+    SliceWidget.observe(ROIplotUpdater, 'value')
 
-    my_plts = ipywidgets.widgets.interactive(f,
-                                         n=SliceWidget,
-                                         roi_label=RoiLabelWidget,
-                                         windowing=WindowingWidget,
-                                         cmap=CmapWidget)
-    display(my_plts)
+    # get me all polygon adata and remove 'polygon_' from label:
+    roilabels = [i[len('polygon_'):] for i in scn.adata if i.startswith('polygon_')]
+    if roilabel_start is None and not(roilabels):
+        roilabels = ['default']
+    if roilabel_start in roilabels:
+        roi_firstchoice = roilabel_start
+    elif roilabel_start is None:
+        roi_firstchoice = roilabels[0]
+    else: #need to add the supplied label to the choices
+        roilabels.append(roilabel_start)
+    RoiLabelWidget = CompoundDropdownWidgetClass(options = roilabels,
+                                                 value = roi_firstchoice,
+                                                 description = 'Current ROI')
+    RoiLabelWidget.observe(ROIplotUpdater,'value')
+
+    WindowingWidget = ipywidgets.widgets.FloatRangeSlider(
+        value=[numpy.percentile(data, 5), numpy.percentile(data, 95)],
+        min=data.min(),
+        max=data.max(),
+        description='windowing:',
+        continuous_update=True,
+        orientation='horizontal',
+        readout=True,
+        readout_format='.1f',
+        layout=ipywidgets.Layout(width='100%')
+    )
+    WindowingWidget.observe(ROIplotUpdater,'value')
+
+    CmapWidget = ipywidgets.widgets.Dropdown(
+                    options = ['Greys', 'gray', 'viridis', 'plasma', 'PiYG'],
+                    value = 'gray',
+                    description = 'Colormap')
+    CmapWidget.observe(ROIplotUpdater,'value')
+
+    my_combo_widget = ipywidgets.widgets.VBox([SliceWidget,
+                                              RoiLabelWidget.HorizBox,
+                                              WindowingWidget,
+                                              CmapWidget])
+    # initial call to handler so that widget defaults and display are in sync
+    ROIplotUpdater(None)
+    display(my_combo_widget)
+
