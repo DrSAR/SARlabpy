@@ -29,9 +29,7 @@ class CompoundDropdownWidgetClass(ipywidgets.widgets.Dropdown):
                       'new': None,
                       'old': None,
                       'type': 'change'}
-            #self.notify_change(change)
         self.DeleteButton.on_click(on_DeleteButton_clicked)
-
         self.AddButton = ipywidgets.widgets.Button(description='Create',
                                             tooltip='Create ROI with New Name')
         def on_AddButton_clicked(b):
@@ -39,7 +37,6 @@ class CompoundDropdownWidgetClass(ipywidgets.widgets.Dropdown):
                 self.options = self.options + (self.TextInput.value,)
                 self.value = self.TextInput.value
         self.AddButton.on_click(on_AddButton_clicked)
-
         self.HorizBox = ipywidgets.widgets.HBox([self, 
                                                  self.DeleteButton, 
                                                  self.TextInput, 
@@ -74,6 +71,7 @@ def DrawROIMultiSclice(scn, roilabel_start=None):
             super().__init__(ax, fhandle)
             self.__showverts = True
             self.__max_ds = max_ds
+            self.__showing_mask = False
 
         def get_ind_under_cursor(self, event):
             'get the index of the vertex under cursor if within max_ds tolerance'
@@ -110,11 +108,18 @@ def DrawROIMultiSclice(scn, roilabel_start=None):
             self._polygon_completed = True
             self._draw_polygon()
 
+    x, y = numpy.meshgrid(numpy.arange(data.shape[1]), numpy.arange(data.shape[0]))
+    pix = numpy.vstack((x.flatten(), y.flatten())).T
+
     def onselect(verts):
         # Select elements in original array bounded by selector path:
         p = Path(verts)
         # append first point to end to close polygon
         verts_2_save = numpy.append(verts, [verts[0]], axis=0)
+        ind = p.contains_points(pix, radius=0)
+        selected = numpy.zeros_like(data[:,:,0])
+        selected.flat[ind] = numpy.max(data)
+        lasso.__mask = selected
         fig.canvas.draw_idle()
         store_ROI(verts_2_save)
 
@@ -165,7 +170,7 @@ def DrawROIMultiSclice(scn, roilabel_start=None):
             SliceWidget.value -= 1
         elif event.key =='t':
             lasso._MyPolygonSelector__showverts = not(lasso._MyPolygonSelector__showverts)
-            lasso.line.set_visible(lasso._MyPolygonSelector__showverts)
+            lasso.artists[1].set_visible(lasso._MyPolygonSelector__showverts)
         elif event.key =='d':
             if len(lasso.verts) > 3:
                 ind = lasso.get_ind_under_cursor(event)
@@ -181,6 +186,16 @@ def DrawROIMultiSclice(scn, roilabel_start=None):
                 updated_verts = numpy.insert(updated_verts, inds+1, coords, axis=0)
                 lasso.setverts(updated_verts)
                 store_ROI(updated_verts)
+        elif event.key == 'm':
+            # make vertices and markers (in)visible
+            lasso._MyPolygonSelector__showing_mask = not(lasso._MyPolygonSelector__showing_mask)
+            for a in lasso.artists:
+                    a.set_visible(not(lasso._MyPolygonSelector__showing_mask))
+            lasso._MyPolygonSelector__showverts = not(lasso._MyPolygonSelector__showing_mask)
+            if lasso._MyPolygonSelector__showing_mask:
+                imageref.set_data(lasso.__mask)
+            else:
+                imageref.set_data(data[:,:,imageref.get_figure().canvas.__CurrentSlice])
 
     fig.canvas.mpl_connect('key_press_event', press)
     lasso = MyPolygonSelector(ax, onselect)
