@@ -215,6 +215,7 @@ def DrawROIMultiSclice(scn, roilabel_start=None):
         roi_firstchoice = roilabels[0]
     else: #need to add the supplied label to the choices
         roilabels.append(roilabel_start)
+        roi_firstchoice = roilabel_start
     RoiLabelWidget = CompoundDropdownWidgetClass(options = roilabels,
                                                  value = roi_firstchoice,
                                                  description = 'Current ROI')
