@@ -116,7 +116,7 @@ def DrawROIMultiSclice(scn, roilabel_start=None):
         p = Path(verts)
         # append first point to end to close polygon
         verts_2_save = numpy.append(verts, [verts[0]], axis=0)
-        ind = p.contains_points(pix, radius=0)
+        ind = p.contains_points(pix, radius=-1)
         selected = numpy.zeros_like(data[:,:,0])
         selected.flat[ind] = numpy.max(data)
         lasso.__mask = selected
