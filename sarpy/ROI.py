@@ -29,5 +29,8 @@ def PolygonFromMask(mask):
                                     cv2.CHAIN_APPROX_TC89_L1,
 #                                    cv2.CHAIN_APPROX_SIMPLE,
                                     )
-    return contours[0].squeeze() 
+    if contours:
+        return contours[0].squeeze() 
+    else:
+        return None
 
