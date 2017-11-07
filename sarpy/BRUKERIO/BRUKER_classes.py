@@ -1063,7 +1063,7 @@ class Experiment(StudyCollection):
             for k in list(conf.keys()):
                 if k != 'General':
                     bare_experiment.patients[k] = collections.OrderedDict()
-                    for stdy_str in conf[k]:
+                    for stdy_str in (s for s in conf[k] if s.startswith('study ')):
                         short_stdy_str = stdy_str.split()[1]
                         long_stdy_str = k+'.'+short_stdy_str
                         study = Study(long_stdy_str)
@@ -1076,7 +1076,7 @@ class Experiment(StudyCollection):
                                 bare_experiment.labels[kk]=list()
                             bare_experiment.labels[kk].append(sclbs[kk])
                         bare_experiment.patients[k].update(sclbs)
-        bare_experiment.root='masterlistname'
+        bare_experiment.root=masterlistname
         return bare_experiment # not so bare by now since we have added studies
     
     def __repr__(self):
