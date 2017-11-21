@@ -156,11 +156,25 @@ def generate(**kwargs):
                 
                 #TODO: this statement is here because of **row_conf in imshow
                 row_conf.pop('type', None)
-                clim_min = row_conf.pop('clim_min',None)
-                clim_max = row_conf.pop('clim_max',None)
-    
+                vmin = row_conf.pop('vmin',None)
+                vmax = row_conf.pop('vmax',None)
                 scn = sarpy.Scan(lbl_scan_name)
                 adata_key = row_conf.pop('adata', None)
+
+                if adata_key is not None and 'OEdraft' in adata_key: # Add limits specific to per scan for OE maps
+
+                    try:
+                        vmin = scn.adata['OEdraft_lowerlimit'].data
+                        vmax = scn.adata['OEdraft_upperlimit'].data
+                    except KeyError:
+                        vmin = -10
+                        vmax = 10
+
+                if vmin is not None:
+                    vmin = numpy.float(vmin)
+
+                if vmax is not None:
+                    vmax = numpy.float(vmax)
 
                 ## Add an option to mask out the background 
                 roi_mask = row_conf.pop('roi_adata', None)
@@ -193,17 +207,17 @@ def generate(**kwargs):
                         continue
                         
                     # Set the image limits for adata
-                    if (clim_min is None) and (clim_max is None):
-                        (clim_min, clim_max) = sarpy.analysis.getters.get_image_clims(data)
+                    if (vmin is None) and (vmax is None):
+                        (vmin, vmax) = sarpy.analysis.getters.get_image_clims(data)
                     else: #TODO This else statement (maybe) does NOTHING, get rid of it?
-                        (clim_min, clim_max) = (clim_min,clim_max)
+                        (vmin, vmax) = (vmin,vmax)
 
-                    # When clim_min is negative, it makes sense to invert the colorbar so that 
+                    # When vmin is negative, it makes sense to invert the colorbar so that 
                     # the more negative values appear red and the values that are 0 appear blue
                     #
                     # See Github issue: https://github.com/DrSAR/SARlabpy/issues/275
 
-                    #if clim_min <= 0:
+                    #if vmin <= 0:
                     #    cm = row_conf.pop('type', 'jet')
                     #    cm = cm + '_r'
 
@@ -260,9 +274,12 @@ def generate(**kwargs):
 
                             t = pylab.imshow(img_bgd_RGB)    
                         else:
-                            t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
-                                             bbox[2]:bbox[3],col_idx],
-                                             **row_conf)           
+                            mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],col_idx]
+                            if numpy.nansum(mapsToShow.data)==0: # check for no roi in that slice
+                                zlike = numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],2])
+                                t=pylab.imshow(zlike,**row_conf)
+                            else:
+                                t=pylab.imshow(mapsToShow,**row_conf)
                     else:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                          bbox[2]:bbox[3]],
@@ -276,7 +293,7 @@ def generate(**kwargs):
                     else:
                         newcmap.set_bad('k',1.)
                     t.set_cmap(newcmap)         
-                    t.set_clim(clim_min, clim_max)
+                    t.set_clim(vmin, vmax)
     
                     pylab.axis('off')
                     
@@ -371,33 +388,41 @@ def generate(**kwargs):
                     data = scn.pdata[0]
                     
                 xdata = data.data
+
+                if adata_key =='OEdraftEC':
+                    fig.add_subplot(G[row_idx,1:])
+                    pylab.plot(xdata)
+                    pylab.xlabel('Reps')
+                    pylab.ylabel('a.u')
+
+                else:
     
-                for col_idx in range(min(n_cols, xdata.shape[0])):
-                    fig.add_subplot(G[row_idx,col_idx+1])
-                    pylab.plot(xdata[col_idx,0,:],xdata[col_idx,1,:])  
-    
-                    pylab.xlim(0,numpy.nanmax(xdata[:,0,:]))
-                    pylab.ylim(0,numpy.nanmax(xdata[:,1,:]*1.3))
-                    pylab.locator_params(axis='both',which='both',
-                                         nbins=3) 
-                    pylab.xlabel('Time (ms)',size='xx-small')
-                    pylab.ylabel('Enhancement (au)',size='xx-small')                
-                    
-                    ax = pylab.gca()
-                    
-                    if row_idx == 0:
-                        pylab.title('{0}'.format(col_idx+1))
-                    if col_idx != 0:
-                        ax.axes.get_yaxis().set_visible([])
-                        ax.axes.get_xaxis().set_visible([])
-                    
-    #TODO: finda way to put the axis labels on the INSIDE of the plot
-                    
-                    for label in ax.get_xticklabels():
-                        label.set_fontsize(15)
-    
-                    for label in ax.get_yticklabels():
-                        label.set_fontsize(15)
+                    for col_idx in range(min(n_cols, xdata.shape[0])):
+                        fig.add_subplot(G[row_idx,col_idx+1])
+                        pylab.plot(xdata[col_idx,0,:],xdata[col_idx,1,:])  
+        
+                        pylab.xlim(0,numpy.nanmax(xdata[:,0,:]))
+                        pylab.ylim(0,numpy.nanmax(xdata[:,1,:]*1.3))
+                        pylab.locator_params(axis='both',which='both',
+                                             nbins=3) 
+                        pylab.xlabel('Time (ms)',size='xx-small')
+                        pylab.ylabel('Enhancement (au)',size='xx-small')                
+                        
+                        ax = pylab.gca()
+                        
+                        if row_idx == 0:
+                            pylab.title('{0}'.format(col_idx+1))
+                        if col_idx != 0:
+                            ax.axes.get_yaxis().set_visible([])
+                            ax.axes.get_xaxis().set_visible([])
+                        
+                    #TODO: finda way to put the axis labels on the INSIDE of the plot
+                        
+                        for label in ax.get_xticklabels():
+                            label.set_fontsize(15)
+        
+                        for label in ax.get_yticklabels():
+                            label.set_fontsize(15)
     
                 row_idx += 1
     
@@ -441,8 +466,8 @@ def generate(**kwargs):
             pylab.savefig(filename, bbox_inches=0, dpi=300)
             pylab.close('all')
     
-    testPDF.close()
-
+    #testPDF.close()
+    pylab.clf()
     import time
     print('File is opened and ready to use')
     print((time.strftime("%c")))

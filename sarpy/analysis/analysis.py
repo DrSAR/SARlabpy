@@ -246,7 +246,7 @@ def h_enhancement_curve(scn_to_analyse=None,
     for slc in range(num_slices):
         
         enhancement_curve[slc,0,:] = time
-        enhancement_curve[slc,1,:] = scipy.stats.nanmean(scipy.stats.nanmean(masked_data[:,:,slc,:], axis=0), axis =0)   
+        enhancement_curve[slc,1,:] = scipy.nanmean(scipy.nanmean(masked_data[:,:,slc,:], axis=0), axis =0)   
 
     return {'':enhancement_curve}
 
@@ -2158,7 +2158,15 @@ def h_fit_T2star(scn_to_analyse=None,
 ###
 ##################### 
 
-def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=True):
+def analyse_ica(scn_to_analyse,
+                data,
+                Ncomponents,
+                switchTimes=None,
+                bbox=None,
+                roi_label=None,
+                viz=True,
+                algorithm = 'deflation',
+                colours='PiYG_r'):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -2166,7 +2174,7 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
     
     datashape = data.shape
     reps = datashape[-1]
-    assert scan_object.method.PVM_NRepetitions==reps
+    #assert scan_object.method.PVM_NRepetitions==reps
 
     import datetime
     format = "%Hh%Mm%Ss%fms"
@@ -2214,7 +2222,7 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
     n_samples = flatter_array.shape[0]
     X = flatter_array
     ncpts = Ncomponents
-    ica = FastICA(n_components=ncpts, algorithm='deflation', random_state=3141,max_iter=1000,tol=1E-3)
+    ica = FastICA(n_components=ncpts, algorithm=algorithm, random_state=3141,max_iter=1000)
     S_ = ica.fit_transform(X)  # Reconstruct signals
     A_ = ica.mixing_  # Get estimated mixing matrix
 
@@ -2235,8 +2243,13 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
     A_reshaped = A_reshaped_prime.reshape(list(datashape[0:3])+[ncpts])
 
     # Limit and OE component
-    switchArray = 0.4*h_get_switchArray(scn_to_analyse,[0, 3, 6, 9, 12]) - 0.2
-    OEcomponent, limit = choose_OE_component(scn_to_analyse,S_,A_reshaped,switchArray,viz=False)
+
+    #if switchArray is None:
+    #    switchArray = 0.4*h_get_switchArray(scn_to_analyse,[0, 3, 6, 9, 12]) - 0.2
+
+    if switchTimes is None:
+        switchTimes = [0,2,4,6,8,10,12]
+    OEcomponent, limit = choose_OE_component(scn_to_analyse,S_,A_reshaped,switchTimes,viz=False)
 
     # Show an image of the area being considered if asked for
 
@@ -2248,7 +2261,7 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
         for sl in range(datashape[-2]):
 
             pylab.subplot(2,5,sl+1)
-            pylab.imshow(data[:,:,sl,0],vmin=1200,vmax=3000)
+            pylab.imshow(data[:,:,sl,0])
             pylab.title('Slice {0}'.format(sl))
             pylab.xlim(bbox[2],bbox[3])
             pylab.ylim(bbox[1],bbox[0])
@@ -2257,6 +2270,8 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
         # Now plot the ICA analysis results
         pylab.figure(figsize=(15,20))
         for ii in range(ncpts):
+
+            slc = int(datashape[-2]/2)
             # Plots
             pylab.subplot(ncpts,2,2*ii+1)
             pylab.plot(numpy.arange(0,datashape[-1])*time_per_rep,S_[:,ii],'o-')
@@ -2265,10 +2280,14 @@ def analyse_ica(scn_to_analyse,data,Ncomponents,bbox=None,roi_label=None,viz=Tru
 
             # Maps
             pylab.subplot(ncpts,2,2*ii+2)
-            pylab.imshow(A_reshaped[:,:,int(datashape[-2]/2),ii],vmin=-limit,vmax=limit,cmap='RdGy_r')
-            pylab.xlim(bbox[2],bbox[3])
-            pylab.ylim(bbox[1],bbox[0])
-            pylab.colorbar()
+            if numpy.nansum(A_reshaped[:,:,slc,OEcomponent]) == 0:
+                pylab.axis('off')
+                continue
+            else:
+                pylab.imshow(A_reshaped[:,:,slc,ii],vmin=-limit/2,vmax=limit,cmap=colours)
+                pylab.xlim(bbox[2],bbox[3])
+                pylab.ylim(bbox[1],bbox[0])
+                pylab.colorbar()
 
     return S_, A_reshaped
 
@@ -2279,18 +2298,38 @@ def h_invertICA(s,a):
             a[:,cmp] = -a[:,cmp]
     return s,a
 
-def choose_OE_component(scn_to_analyse,S,A,switchArray,bbox=None,viz=False):
+def choose_OE_component(scn_to_analyse,
+                        S,A,
+                        switchTimes,
+                        forceComponent=None,
+                        bbox=None,
+                        viz=False,
+                        colours='PiYG_r'):
 
     scan_object = sarpy.Scan(scn_to_analyse)
-    switchArray = 0.4*sarpy.analysis.analysis.h_get_switchArray(scn_to_analyse) - 0.2
+    reps = S[:,0].shape[0]
+
+    import datetime
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(scan_object.method.PVM_ScanTimeStr,format)
+    total_time =  (t - datetime.datetime(1900,1,1)).total_seconds()
+
+    time_per_rep = numpy.divide(total_time,reps)
 
     # Choose component to correlate with
     res = []
 
     for cmp in range(S.shape[1]):
-        res.append(numpy.correlate(S[:,cmp], switchArray)[0])
+        tempswitchArray = h_get_switchArray(scn_to_analyse,switchTimes) + numpy.mean(S[0:10,cmp])/2
+        res.append(numpy.correlate(S[:,cmp], tempswitchArray)[0])
 
-    OEcomponent = numpy.argmax(res)
+    if forceComponent is None:
+        OEcomponent = numpy.argmax(res)
+    else:
+        OEcomponent = forceComponent
+
+    # set the final switch array based on the OEcomponent
+    switchArray = h_get_switchArray(scn_to_analyse,switchTimes) + numpy.mean(S[0:10,OEcomponent])/2
 
     tmp = A[:,:,:,OEcomponent].flatten()
     tmp = tmp[numpy.isfinite(tmp)]
@@ -2303,39 +2342,76 @@ def choose_OE_component(scn_to_analyse,S,A,switchArray,bbox=None,viz=False):
     if bbox is None:
         try:
             bbox = scan_object.adata['bbox'].data
-        except KeyError:       
+        except KeyError:
+            datashape = numpy.shape(scan_object.pdata[0].data)   
             bbox = numpy.array([0,datashape[0],0,datashape[1]])
 
     if viz:
-        pylab.figure(figsize=(50,5))
-        for slc in range(num_slices):            
-            pylab.subplot(1,num_slices+1,slc+1)
-            pylab.imshow(A[:,:,slc,OEcomponent],vmin=0,vmax=limit,cmap='Reds')
-            #pylab.colorbar()
-            pylab.xlim(bbox[2],bbox[3])
-            pylab.ylim(bbox[1],bbox[0])
-            pylab.axis('off')
-            pylab.title('Slice {0}'.format(slc+1))
+        pylab.figure(figsize=(50,10))
 
-        pylab.subplot(1,num_slices+1,num_slices+1)
-        pylab.plot(S[:,OEcomponent],'o--')
+        #Histogram
+        pylab.subplot(2,num_slices+1,2*num_slices+2)
+        tempFlatten = A[:,:,:,OEcomponent].copy().flatten()
+        tempFlatten = tempFlatten[numpy.isfinite(tempFlatten)]
+        n,bins,pat = pylab.hist(tempFlatten,20)
+        pylab.title('Histogram of all Slices')
+        pylab.axvline(-limit/2)
+        pylab.axvline(limit)
+
+        # OE Maps
+        for slc in range(num_slices):
+            # Maps          
+            pylab.subplot(2,num_slices+1,slc+1)
+
+            if numpy.nansum(A[:,:,slc,OEcomponent]) ==0:
+                pylab.axis('off')
+                continue
+            else: 
+                pylab.imshow(A[:,:,slc,OEcomponent],vmin=-limit/2,vmax=limit,cmap=colours)
+                pylab.colorbar(ticks=[-limit/2, 0, limit], orientation='horizontal')
+                pylab.xlim(bbox[2],bbox[3])
+                pylab.ylim(bbox[1],bbox[0])
+                pylab.axis('off')
+                pylab.title('Slice {0}'.format(slc+1))
+
+                # Histograms
+                pylab.subplot(2,num_slices+1,num_slices+slc+2)
+                tempFlatten = A[:,:,slc,OEcomponent].copy().flatten()
+                tempFlatten = tempFlatten[numpy.isfinite(tempFlatten)]
+                pylab.hist(tempFlatten,bins=bins)
+                pylab.title('Slice {0} Histogram'.format(slc+1))
+                pylab.axvline(-limit/2)
+                pylab.axvline(limit)
+
+        # ICA component Plot
+        pylab.subplot(2,num_slices+1,num_slices+1)
+        pylab.plot(numpy.arange(0,reps)*time_per_rep,S[:,OEcomponent],'o--')
+        try:
+            pylab.plot(numpy.arange(0,reps)*time_per_rep,switchArray[1:])
+        except ValueError:
+            pylab.plot(numpy.arange(0,reps)*time_per_rep,switchArray)
+
         pylab.title('Oxygen Enhancing Component')
 
         pylab.suptitle('Animal {0}'.format(scn_to_analyse))
 
-        #pylab.tight_layout()
-        #fname = scn_to_analyse.replace('/','_') + ' OEmaps.pdf'
-        #pylab.savefig(fname,dpi=1000)
+        pylab.tight_layout()
+        fname = scn_to_analyse.replace('/','_') + ' OEmaps.png'
+        #pylab.savefig(fname,dpi=500)
+        #pylab.clf()
 
     return OEcomponent, limit
 
-def h_get_switchArray(scn_to_analyse, switchTimes = [0, 3, 6, 9, 12]):
+def h_get_switchArray(scn_to_analyse, switchTimes = None):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
+    if switchTimes is None:
+        switchTimes = [0, 3, 6, 9, 12]
+
     ## This bit of code calculates the time_per_rep
     reps = scan_object.pdata[0].data.shape[-1]
-    assert scan_object.method.PVM_NRepetitions==reps
+    #assert scan_object.method.PVM_NRepetitions==reps
 
     import datetime
     format = "%Hh%Mm%Ss%fms"
@@ -2352,4 +2428,4 @@ def h_get_switchArray(scn_to_analyse, switchTimes = [0, 3, 6, 9, 12]):
         switchArray[numpy.where(time_axis > ts*60)] = O2
         O2 = 1 if O2==0 else 0
 
-    return 0.4*switchArray - 0.2
+    return 0.2*(switchArray-0.5)
