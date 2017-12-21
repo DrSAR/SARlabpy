@@ -258,11 +258,16 @@ def determine_averages(data_scn_to_analyze,
                        maxSlices):
     
     data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
-    
-    BAT = sarpy.Scan(data_scn_to_analyze).adata[BAT_adata_label].data
-    roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
-    
-    data_roi = data*roi*BAT
+
+    if BAT_adata_label is None:
+        roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
+        data_roi = data*roi       
+
+    else:
+        BAT = sarpy.Scan(data_scn_to_analyze).adata[BAT_adata_label].data
+        roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
+        
+        data_roi = data*roi*BAT
     weights = sarpy.analysis.getters.get_roi_weights(roi)
     weights = list(weights)
     avg = []
