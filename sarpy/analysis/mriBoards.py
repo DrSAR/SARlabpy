@@ -23,6 +23,7 @@ import scipy
 import copy
 import re
 import scipy
+import sarpy.analysis.getters
 from scipy import ndimage
 print(scipy.__version__)
 #import sarpy.analysis.analysis
@@ -205,7 +206,13 @@ def generate(**kwargs):
                         row_idx += 1
                         print(('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key)))
                         continue
-                        
+                    except OSError:
+                        pylab.text(0.85,0.5,'Data not available',
+                           horizontalalignment='center')                        
+                        # to deal with: sarpy.Scan('HerS10Do09.l11/4').adata['bbox']
+                        row_idx += 1
+                        print(('Adata Scan failed for {0},{1} \n \n'.format(k,adata_key)))
+                        continue                        
                     # Set the image limits for adata
                     if (vmin is None) and (vmax is None):
                         (vmin, vmax) = sarpy.analysis.getters.get_image_clims(data)
@@ -276,8 +283,15 @@ def generate(**kwargs):
                         else:
                             mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],col_idx]
                             if numpy.nansum(mapsToShow.data)==0: # check for no roi in that slice
-                                zlike = numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],2])
+                                
+                                # TODO: NEED TO FIX THIS BLOODY ERROR.
+                                for i in range(8):
+                                    mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i]
+                                    if numpy.nansum(mapsToShow.data)>0:
+                                        break
+                                zlike = 1E100+numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i])
                                 t=pylab.imshow(zlike,**row_conf)
+
                             else:
                                 t=pylab.imshow(mapsToShow,**row_conf)
                     else:
