@@ -287,7 +287,7 @@ def generate(**kwargs):
                                 # TODO: NEED TO FIX THIS BLOODY ERROR.
                                 for i in range(8):
                                     mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i]
-                                    if numpy.nansum(mapsToShow.data)>0:
+                                    if numpy.nansum(numpy.abs(mapsToShow.data))>0:
                                         break
                                 zlike = 1E100+numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i])
                                 t=pylab.imshow(zlike,**row_conf)
