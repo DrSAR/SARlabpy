@@ -2402,7 +2402,7 @@ def choose_OE_component(scn_to_analyse,
 
     return OEcomponent, limit
 
-def h_get_switchArray(scn_to_analyse, switchTimes = None):
+def h_get_switchArray(scn_to_analyse, switchTimes = None,output_time_axis=False):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -2428,4 +2428,7 @@ def h_get_switchArray(scn_to_analyse, switchTimes = None):
         switchArray[numpy.where(time_axis > ts*60)] = O2
         O2 = 1 if O2==0 else 0
 
-    return 0.2*(switchArray-0.5)
+    if output_time_axis:
+        return 0.2*(switchArray-0.5),time_axis
+    else:
+        return 0.2*(switchArray-0.5)
