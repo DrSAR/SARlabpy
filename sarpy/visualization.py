@@ -179,6 +179,17 @@ def DrawROIMultiSclice(scn, roilabel_start=None):
                     updated_verts = numpy.append(updated_verts, [updated_verts[0]], axis=0)
                     lasso.setverts(updated_verts)
                     store_ROI(updated_verts)
+        elif event.key =='x':
+            if len(lasso.verts) > 3:
+                lasso.setverts([])
+                store_ROI([])
+        elif event.key =='n':
+            if len(lasso.verts) == 0:
+                xy = lasso.ax.transData.inverted().transform((event.x, event.y))
+                updated_verts = [(xy[0]-5,xy[1]+5),(xy[0]+5,xy[1]+5),
+                                 (xy[0],xy[1]-7), (xy[0]-5,xy[1]+5)] 
+                lasso.setverts(updated_verts)
+                store_ROI(updated_verts)
         elif event.key =='i':
             inds, coords = lasso.get_segment_under_cursor(event)
             if inds is not None:
