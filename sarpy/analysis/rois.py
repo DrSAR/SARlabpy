@@ -9,6 +9,9 @@ Created on Thu May 30 17:49:35 2013
 
 import sarpy.analysis.getters
 
+import logging
+logger=logging.getLogger(__name__)
+
 def export_roi(masterlist_name,
                roi_scan_label = None,
                roi_suffix = None,

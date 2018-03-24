@@ -140,12 +140,12 @@ def adata_roi_average(scn_to_analyze,
             for slice in range(maxSlices): # Zero filling non-existent slices
 
                 if slice < maxSlices:
-                    avg.append(scipy.stats.nanmean(data_roi[:,:,slice].flatten()))
+                    avg.append(numpy.nanmean(data_roi[:,:,slice].flatten()))
                 else:
                     avg.append(numpy.inf)
                     weights.append(0)
         else:
-            avg.append(scipy.stats.nanmean(data_roi[:,:].flatten()))
+            avg.append(numpy.nanmean(data_roi[:,:].flatten()))
 
         # Removing infs and nans from the avg to get a proper weighted avg
         # Also removing 0 weights                    
@@ -258,11 +258,16 @@ def determine_averages(data_scn_to_analyze,
                        maxSlices):
     
     data = sarpy.Scan(data_scn_to_analyze).adata[adata_label].data
-    
-    BAT = sarpy.Scan(data_scn_to_analyze).adata[BAT_adata_label].data
-    roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
-    
-    data_roi = data*roi*BAT
+
+    if BAT_adata_label is None:
+        roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
+        data_roi = data*roi       
+
+    else:
+        BAT = sarpy.Scan(data_scn_to_analyze).adata[BAT_adata_label].data
+        roi = sarpy.Scan(roi_scn_to_analyze).adata[roi_label].data      
+        
+        data_roi = data*roi*BAT
     weights = sarpy.analysis.getters.get_roi_weights(roi)
     weights = list(weights)
     avg = []
@@ -279,12 +284,12 @@ def determine_averages(data_scn_to_analyze,
         for slc in range(maxSlices): # Zero filling non-existent slices
 
             if slc < totalSlices:
-                avg.append(scipy.stats.nanmean(data_roi[:,:,slc].flatten()))
+                avg.append(numpy.nanmean(data_roi[:,:,slc].flatten()))
             else:
                 avg.append(numpy.inf)
                 weights.append(0)
     else:
-        avg.append(scipy.stats.nanmean(data_roi[:,:].flatten()))
+        avg.append(numpy.nanmean(data_roi[:,:].flatten()))
         
     # Removing infs and nans from the avg to get a proper weighted avg
     # Also removing 0 weights                    
