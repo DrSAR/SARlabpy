@@ -612,10 +612,12 @@ def h_within_bounds(params,bounds):
 
 
 def h_func_T1_FAind(params,t_data):
-    a,b,T1_eff,phi = params
+    #a,b,T1_eff,phi = params
+    a,b,T1_eff = params
     #print type(a), type(b), type(n), type(phi), type(T1_eff)
 
-    res = a*(1-(1-b)*numpy.exp(-t_data/T1_eff))*numpy.exp(1j*phi)
+    #res = a*(1-(1-b)*numpy.exp(-t_data/T1_eff))*numpy.exp(1j*phi)
+    res = a*(1-(1-b)*numpy.exp(-t_data/T1_eff))
 
     if numpy.isfinite(res).all():
         return res
@@ -727,7 +729,8 @@ def h_fitpx_T1_LL_FAassumed(scn_to_analyse=None,
     else:
         print(('fit type {0} not implemented yet'.format(fit_algorithm)))
 
-    [a,b,T1_eff,phi] = fit_params
+    #[a,b,T1_eff,phi] = fit_params
+    [a,b,T1_eff] = fit_params
 
     # Step 2: Calculate T1 from T1_eff using equation relating T1, T1_eff and cos(a)
 
@@ -757,7 +760,8 @@ def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
     scan_object = sarpy.Scan(scn_to_analyse)
    
     ## Setting parameters
-    data = scan_object.fftfid
+    #data = scan_object.fftfid
+    data = scan_object.pdata[0].data
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
 
     x_size = data.shape[0]
@@ -775,7 +779,7 @@ def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
     a_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     b_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     T1_eff_arr = numpy.empty_like(data_after_fitting)+numpy.nan
-    phi_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    #phi_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     T1_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     t_data_arr = numpy.empty_like(data_after_fitting,dtype='object')
 
@@ -807,12 +811,13 @@ def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
                                                                                    slc=slc,
                                                                                    fit_algorithm=fit_algorithm)
 
-                [a,b,T1_eff,phi] = res_fit_params
+                #[a,b,T1_eff,phi] = res_fit_params
+                [a,b,T1_eff] = res_fit_params
 
                 a_arr[x,y,slc] = a
                 b_arr[x,y,slc] = b
                 T1_eff_arr[x,y,slc] = T1_eff
-                phi_arr[x,y,slc] = phi
+                #phi_arr[x,y,slc] = phi
                 T1_arr[x,y,slc] = T1
                 t_data_arr[x,y,slc] = t_data
 
@@ -829,8 +834,8 @@ def h_fit_T1_LL_FAassumed(scn_to_analyse=None,
 
     fit_params1 = {'a': a_arr,
                    'b': b_arr,
-                   'T1_eff': T1_eff_arr,
-                   'phi': phi_arr}
+                   'T1_eff': T1_eff_arr,}
+                   #'phi': phi_arr}
 
     if fit_algorithm == 'leastsq':
 
@@ -920,7 +925,8 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
     else:
         print(('fit type {0} not implemented yet'.format(fit_algorithm)))
 
-    [a,b,T1_eff,phi] = fit_params
+    #[a,b,T1_eff,phi] = fit_params
+    [a,b,T1_eff] = fit_params
 
     # Step 2: Calculate M(N-1)/M(inf) from Eq.1 from Koretsky paper
     # Divide both sides by M(inf) and then use M(0)/M(inf) -> step1
@@ -949,16 +955,19 @@ def h_fitpx_T1_LL_FAind(scn_to_analyse=None,
         return infodict,mesg,ier,fit_params, T1,t_data
 
     else:
-        return a,b,T1_eff,phi,T1, t_data
+        #return a,b,T1_eff,phi,T1, t_data
+        return a,b,T1_eff,T1, t_data
 
 def h_fit_T1_LL_FAind_initial_params_guess(y_data,t_data):
 
-    params = numpy.ones(4)  
+    #params = numpy.ones(4)
+    params = numpy.ones(3)
 
     ## Guesses at parameters if none provided
-    params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
+    #params[3] = numpy.angle(numpy.mean(y_data[-5:])) #phi
     params[0] = numpy.abs(numpy.mean(y_data[-5:])) #a
-    params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
+    #params[1] = numpy.real(numpy.divide(y_data[0]*numpy.exp(-1j*params[3]),params[0])) #b
+    params[1] = numpy.real(numpy.divide(y_data[0],params[0])) #b
 
     # Getting a good guess for T1eff by finding the zero crossing
     yp = y_data[0:5]
@@ -984,7 +993,8 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     scan_object = sarpy.Scan(scn_to_analyse)
    
     ## Setting parameters
-    data = scan_object.fftfid
+    #data = scan_object.fftfid
+    data=scan_object.pdata[0].data
     num_slices = getters.get_num_slices(scn_to_analyse,pdata_num)                                        
 
     x_size = data.shape[0]
@@ -1002,7 +1012,7 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     a_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     b_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     T1_eff_arr = numpy.empty_like(data_after_fitting)+numpy.nan
-    phi_arr = numpy.empty_like(data_after_fitting)+numpy.nan
+    #phi_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     T1_arr = numpy.empty_like(data_after_fitting)+numpy.nan
     t_data_arr = numpy.empty_like(data_after_fitting,dtype='object')
 
@@ -1020,44 +1030,45 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     # Start the fitting process
 
     for slc in range(num_slices):          
-	    for x in range(bbox[0],bbox[1]):
-	        for y in range(bbox[2],bbox[3]):
-	            # Deal with scans that have only one slice
-	            if num_slices > 1:
-	                y_data = data[x,y,slc,:]
-	            else:
-	                y_data = data[x,y,:]
+        for x in range(bbox[0],bbox[1]):
+            for y in range(bbox[2],bbox[3]):
+                # Deal with scans that have only one slice
+                if num_slices > 1:
+                    y_data = data[x,y,slc,:]
+                else:
+                    y_data = data[x,y,:]
 
-	            [infodict,mesg,ier,res_fit_params,T1,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
-	                                                                               y_data=y_data,
-	                                                                               slc=slc,
-	                                                                               fit_algorithm=fit_algorithm)
+                [infodict,mesg,ier,res_fit_params,T1,t_data] = h_fitpx_T1_LL_FAind(scn_to_analyse,
+                                                                                   y_data=y_data,
+                                                                                   slc=slc,
+                                                                                   fit_algorithm=fit_algorithm)
 
-	            [a,b,T1_eff,phi] = res_fit_params
+                #[a,b,T1_eff,phi] = res_fit_params
+                [a,b,T1_eff] = res_fit_params
 
-	            a_arr[x,y,slc] = a
-	            b_arr[x,y,slc] = b
-	            T1_eff_arr[x,y,slc] = T1_eff
-	            phi_arr[x,y,slc] = phi
-	            T1_arr[x,y,slc] = T1
-	            t_data_arr[x,y,slc] = t_data
-	            test = numpy.ndarray([10,10,10],dtype='object')
+                a_arr[x,y,slc] = a
+                b_arr[x,y,slc] = b
+                T1_eff_arr[x,y,slc] = T1_eff
+                #phi_arr[x,y,slc] = phi
+                T1_arr[x,y,slc] = T1
+                t_data_arr[x,y,slc] = t_data
+                test = numpy.ndarray([10,10,10],dtype='object')
 
-	            data_after_fitting[x,y,slc] = T1
+                data_after_fitting[x,y,slc] = T1
 
-	            if fit_algorithm == 'leastsq':   
-	                infodict1[x,y,slc] = infodict
-	                mesg1[x,y,slc] = mesg
-	                goodness_of_fit1[x,y,slc] = h_goodness_of_fit(y_data,infodict)  
+                if fit_algorithm == 'leastsq':   
+                    infodict1[x,y,slc] = infodict
+                    mesg1[x,y,slc] = mesg
+                    goodness_of_fit1[x,y,slc] = h_goodness_of_fit(y_data,infodict)  
 
-	            ier1[x,y,slc] = ier
+                ier1[x,y,slc] = ier
 
 ## Moved the entire T1 fitting process into a separate function
 
     fit_params1 = {'a': a_arr,
                    'b': b_arr,
-                   'T1_eff': T1_eff_arr,
-                   'phi': phi_arr}
+                   'T1_eff': T1_eff_arr,}
+                   #'phi': phi_arr}
 
     if fit_algorithm == 'leastsq':
 
