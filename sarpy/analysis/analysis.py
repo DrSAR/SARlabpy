@@ -2164,9 +2164,10 @@ def analyse_ica(scn_to_analyse,
                 switchTimes=None,
                 bbox=None,
                 roi_label=None,
-                viz=True,
+                viz = True,
                 algorithm = 'deflation',
-                colours='PiYG_r'):
+                colours='PiYG_r',
+                sliceViz=True):
 
     scan_object = sarpy.Scan(scn_to_analyse)
 
@@ -2250,23 +2251,25 @@ def analyse_ica(scn_to_analyse,
     if switchTimes is None:
         switchTimes = [0,2,4,6,8,10,12]
     OEcomponent, limit = choose_OE_component(scn_to_analyse,S_,A_reshaped,switchTimes,viz=False)
+    print(limit)
 
     # Show an image of the area being considered if asked for
 
-    if viz:
+    if sliceViz:
         
         import pylab
         pylab.figure(figsize=(16,4))
 
         for sl in range(datashape[-2]):
 
-            pylab.subplot(2,5,sl+1)
+            pylab.subplot(3,6,sl+1)
             pylab.imshow(data[:,:,sl,0])
             pylab.title('Slice {0}'.format(sl))
             pylab.xlim(bbox[2],bbox[3])
             pylab.ylim(bbox[1],bbox[0])
 
     if viz:
+        import pylab        
         # Now plot the ICA analysis results
         pylab.figure(figsize=(15,20))
         for ii in range(ncpts):
@@ -2284,7 +2287,7 @@ def analyse_ica(scn_to_analyse,
                 pylab.axis('off')
                 continue
             else:
-                pylab.imshow(A_reshaped[:,:,slc,ii],vmin=-limit/2,vmax=limit,cmap=colours)
+                pylab.imshow(A_reshaped[:,:,slc,ii],vmin=-limit,vmax=limit,cmap=colours)
                 pylab.xlim(bbox[2],bbox[3])
                 pylab.ylim(bbox[1],bbox[0])
                 pylab.colorbar()
@@ -2335,7 +2338,7 @@ def choose_OE_component(scn_to_analyse,
     tmp = tmp[numpy.isfinite(tmp)]
 
     # Find the colormap limit
-    limit = round(numpy.percentile(tmp,97))
+    limit = numpy.percentile(tmp,97)
     num_slices = A[:,:,:,OEcomponent].shape[-1]
 
     # Constrain the data being analysed
@@ -2355,7 +2358,7 @@ def choose_OE_component(scn_to_analyse,
         tempFlatten = tempFlatten[numpy.isfinite(tempFlatten)]
         n,bins,pat = pylab.hist(tempFlatten,20)
         pylab.title('Histogram of all Slices')
-        pylab.axvline(-limit/2)
+        pylab.axvline(-limit)
         pylab.axvline(limit)
 
         # OE Maps
@@ -2367,8 +2370,8 @@ def choose_OE_component(scn_to_analyse,
                 pylab.axis('off')
                 continue
             else: 
-                pylab.imshow(A[:,:,slc,OEcomponent],vmin=-limit/2,vmax=limit,cmap=colours)
-                pylab.colorbar(ticks=[-limit/2, 0, limit], orientation='horizontal')
+                pylab.imshow(A[:,:,slc,OEcomponent],vmin=-limit,vmax=limit,cmap=colours)
+                pylab.colorbar(ticks=[-limit, 0, limit], orientation='horizontal')
                 pylab.xlim(bbox[2],bbox[3])
                 pylab.ylim(bbox[1],bbox[0])
                 pylab.axis('off')
@@ -2380,7 +2383,7 @@ def choose_OE_component(scn_to_analyse,
                 tempFlatten = tempFlatten[numpy.isfinite(tempFlatten)]
                 pylab.hist(tempFlatten,bins=bins)
                 pylab.title('Slice {0} Histogram'.format(slc+1))
-                pylab.axvline(-limit/2)
+                pylab.axvline(-limit)
                 pylab.axvline(limit)
 
         # ICA component Plot
@@ -2389,7 +2392,8 @@ def choose_OE_component(scn_to_analyse,
         try:
             pylab.plot(numpy.arange(0,reps)*time_per_rep,switchArray[1:])
         except ValueError:
-            pylab.plot(numpy.arange(0,reps)*time_per_rep,switchArray)
+            pass
+
 
         pylab.title('Oxygen Enhancing Component')
 
