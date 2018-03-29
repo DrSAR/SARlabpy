@@ -575,6 +575,8 @@ def readfid(fptr=None,
                 acqp['NSLICES']*acqp['ACQ_n_echo_images']*
                 acqp['ACQ_n_movie_frames'] * NR )
 
+    n_stored_datapoints = int(n_stored_datapoints)
+
     fid_size =  n_stored_datapoints * int(datatype[1]) * 2 
     file_size = os.stat(fidname).st_size
     # load data
@@ -635,20 +637,23 @@ def readfid(fptr=None,
 # ==============================================================================
 
         # reshape into a large 2D array with dimensions
+        t_fid_shape = int(n_stored_datapoints/ACQ_size[0])
 
-        fid = fid.reshape(n_stored_datapoints/ACQ_size[0], ACQ_size[0])
+        fid = fid.reshape(t_fid_shape, ACQ_size[0])
         # Now is the time to lop off any spurious zero-filling added on disk
         # due to  parameter acqp['GO_block_size'] == 'Standard_KBlock_Format'
         # If this is set, blocks of 1k bytes make up the read lines (and might
         # be zerofilled if not long enough...)
-        tempfid = fid[:,0:(acqp['ACQ_size'][0]/2)]
+        integerified_index = int(acqp['ACQ_size'][0]/2)
+        tempfid = fid[:,0:integerified_index]
 
         # ACQ_size - might 1, 2, or thre elements depnding on ACQ_dim
         # append 1 to make it 3D
         ACQ_size = numpy.hstack([acqp['ACQ_size'], 
                                  numpy.tile(1,3-acqp['ACQ_dim'])])
-        
-        fid_reorder = numpy.ndarray((ACQ_size[0]/2, 
+        ACQ_size = [int(i) for i in ACQ_size]
+       
+        fid_reorder = numpy.ndarray((int(ACQ_size[0]/2), 
                         ACQ_size[1], 
                         ACQ_size[2], 
                         acqp['NSLICES'], # caveat: in 3D this is usually =1
@@ -677,10 +682,10 @@ def readfid(fptr=None,
         echo_sequence = numpy.array(acqp['ACQ_obj_order'][
                                                 0:acqp['ACQ_n_echo_images']])
         echo_idx = numpy.tile(echo_sequence,
-                              n_datapoints/(ACQ_size[0]*acqp['ACQ_n_echo_images']))
+                              int(n_datapoints/(ACQ_size[0]*acqp['ACQ_n_echo_images'])))
 
         PE2_idx = numpy.tile(numpy.repeat(Enc2Steps,
-                                          n_datapoints/(NR*ACQ_size[0]*ACQ_size[2])),
+                                          int(n_datapoints/(NR*ACQ_size[0]*ACQ_size[2]))),
                              NR)
         #ACQ_obj_order lists echoes and slices and movie frames!
         slice_sequence = numpy.array(acqp['ACQ_obj_order'][
@@ -688,14 +693,14 @@ def readfid(fptr=None,
                                      :acqp['ACQ_n_echo_images']],
                                     dtype=int)//(acqp['ACQ_n_echo_images'])
         slice_idx = numpy.tile(numpy.tile(slice_sequence,
-                                          n_datapoints/(NR*ACQ_size[0]*
-                                                        acqp['NSLICES'])),
+                                          int(n_datapoints/(NR*ACQ_size[0]*
+                                                        acqp['NSLICES']))),
                                NR)
         mov_idx = numpy.tile(numpy.repeat(numpy.arange(acqp['ACQ_n_movie_frames']), 
                                            acqp['NSLICES']),
-                              n_datapoints/(ACQ_size[0]*
+                              int(n_datapoints/(ACQ_size[0]*
                                             acqp['NSLICES']*
-                                            acqp['ACQ_n_movie_frames']))
+                                            acqp['ACQ_n_movie_frames'])))
                                
                              
         NR_idx = numpy.repeat(numpy.arange(NR), n_datapoints/(ACQ_size[0]*NR))
