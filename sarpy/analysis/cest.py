@@ -53,7 +53,7 @@ def h_zspectrum_N(params,freqs):
             raise ValueError('Values for Lorentzian gives problems {} {} {}'.format(A,w,p))
         arr += newpeak
 
-    return arr + DCoffset
+    return 100-arr + DCoffset
 
 def h_zspectrum_N_residuals(params,freqs, data):
     return h_zspectrum_N(params, freqs) - data
@@ -250,7 +250,7 @@ def process_cest(scn_to_analyse, xval, yval, pdata_num = 0):
     ppm_filtered_ind = [freq_list.index(c) for c in ppm_filtered]  
 
     # Normalize the data
-    tmp = scn.pdata[0].data[xval,yval,:][ppm_filtered_ind] / scn.pdata[0].data[xval,yval,normalizeTo]
+    tmp = 100*(1 - scn.pdata[0].data[xval,yval,:][ppm_filtered_ind] / scn.pdata[0].data[xval,yval,normalizeTo])
     
     # get the freqs that'll be used for water fit
     water_fit_freqs = [f for f in ppm_filtered if (numpy.abs(f)< 3.)]
