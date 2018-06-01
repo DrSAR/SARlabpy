@@ -74,7 +74,7 @@ def generate(**kwargs):
     pdfPath = os.path.expanduser(os.path.join('~/sdata',exp_name,args.output,pdfName+'.pdf'))
     testPDF = PdfPages(pdfPath)
 
-    sepFiles = False
+    sepFiles = True
     import sarpy
  #   reload(sarpy) # this looks hacky. Is it?
     # if we really need this: importlib.reload for Python 3.4 and above
@@ -165,7 +165,7 @@ def generate(**kwargs):
                 if adata_key is not None and 'OEdraft' in adata_key: # Add limits specific to per scan for OE maps
 
                     try:
-                        vmin = scn.adata['OEdraft_lowerlimit'].data
+                        vmin = -scn.adata['OEdraft_upperlimit'].data
                         vmax = scn.adata['OEdraft_upperlimit'].data
                     except KeyError:
                         vmin = -10
@@ -289,7 +289,7 @@ def generate(**kwargs):
                                     mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i]
                                     if numpy.nansum(numpy.abs(mapsToShow.data))>0:
                                         break
-                                zlike = 1E100+numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i])
+                                zlike = 0.1+numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i])
                                 t=pylab.imshow(zlike,**row_conf)
 
                             else:
