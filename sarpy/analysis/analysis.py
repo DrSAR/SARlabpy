@@ -860,8 +860,8 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     # Start the fitting process
 
     for slc in range(num_slices):          
-        for x in range(bbox[2],bbox[3]):
-            for y in range(bbox[0],bbox[1]):
+        for x in range(bbox[0],bbox[1]):
+            for y in range(bbox[2],bbox[3]):
                 # Deal with scans that have only one slice
                 if num_slices > 1:
                     y_data = data[x,y,slc,:]
