@@ -60,27 +60,25 @@ def browse_CEST(scn_to_view,adata_label=None,doFit = False, displayFit = False):
         #### Plot the CEST Spectrum
         pylab.subplot(122)
         # Raw Data
-        freqdata,zdata = sarpy.analysis.cest.process_cest(scn.shortdirname,x,y)
+        freqdata,zdata,wateroffset = sarpy.analysis.cest.process_cest(scn.shortdirname,x,y,shiftWaterPeak=True)
         
-        
-        pylab.plot(freqdata,zdata,'--',label='raw')
+        pylab.plot(freqdata,zdata,'x',label='raw')
         pylab.xlim(5,-5)
-        pylab.title('Curve', fontsize=18)
-        pylab.axvline(0,linestyle='--')
+        pylab.title('CEST Curve \n Water Offset:{0}'.format(wateroffset), fontsize=18)
+        #pylab.axvline(0,linestyle='--')
 
         pylab.legend()
         # Fit Data
         
         if displayFit is True:
-
             if doFit is True: 
-                cestParams, acqfreqs, data = sarpy.analysis.cest.fit_px_cest(scn_to_view,x,y)
+                output = sarpy.analysis.cest.fit_px_cest(scn_to_view,x,y)
             else:
-                cestParams = scn.adata[adata_label].data
-            sarpy.analysis.cest.plotCestPeaks(cestParams,x,y)
+                output = scn.adata[adata_label].data
+            sarpy.analysis.cest.plotPeaks(output,freqdata,params=None)
           
-    interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=bbox[0],max=bbox[1],step=1),
-                         y=ipywidgets.IntSlider(description='Y-axis:',min=bbox[2],max=bbox[3],step=1))
+    interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=bbox[0],max=bbox[1],step=1,continuous_update=False),
+                         y=ipywidgets.IntSlider(description='Y-axis:',min=bbox[2],max=bbox[3],step=1,continuous_update=False))
 
 def browse_LLfit(llscn_name,filtereddata):
     
@@ -144,3 +142,39 @@ def browse_LLfit(llscn_name,filtereddata):
     interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=bbox[0],max=bbox[1],step=1),
                          y=ipywidgets.IntSlider(description='Y-axis:',min=bbox[2],max=bbox[3],step=1),
                          slc=ipywidgets.IntSlider(description='Slice:',min=0,max=dataShape[2],step=1))
+
+def browse_OEMRI(scn_name):
+
+#expStem = 'AARTS3', OEscnString = 'OE'):
+    '''
+    This function takes in the data and simply plots it with some slider bars for
+    x,y,slice and puts a cursor location at the pixel.
+    '''
+
+    import sarpy.analysis.analysis
+    import pylab
+    
+    scn = sarpy.Scan(scn_name)
+    #scans = sarpy.Experiment.from_masterlist(expStem+'.config').labels[OEscnString]
+    datashape = scn.pdata[0].data.shape
+    switchTimes = [0,2.1,4.5,6.5,8.5,10.5,12.5,14.1]    
+
+    def view_image(NComponents, startidx, endidx):
+        pylab.figure(figsize=(20,5))
+                       
+        s,a = sarpy.analysis.analysis.analyse_ica(scn_name,
+                scn.pdata[0].data[:,:,:,startidx:endidx],
+                NComponents,
+                switchTimes=switchTimes,
+                bbox=None,
+                roi_label='transferred_roi',
+                viz=True,
+                colours='PiYG_r',
+                sliceViz=False)
+        print(scn_name)
+
+
+    interact(view_image, #scnnum = ipywidgets.IntSlider(description='Scan Number',min=0,max=len(scans)-1,step=1,continuous_update=False),
+                         NComponents = ipywidgets.IntSlider(description='NComponents:',min=3,max=21,step=1,value=5,continuous_update=False),
+                         startidx = ipywidgets.IntSlider(description='Start idx:',min=0,max=datashape[-1]-1,step=1,value=5,continuous_update=False),
+                         endidx = ipywidgets.IntSlider(description='End idx:',min=10,max=datashape[-1]-1,step=1,value=datashape[-1],continuous_update=False))    

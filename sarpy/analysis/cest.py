@@ -5,13 +5,9 @@
 test
 
 """
-
-
-
 import numpy
 import sarpy
 import sarpy.analysis.getters as getters
-
 import scipy.integrate
 import scipy.optimize
 import scipy.fftpack
@@ -24,6 +20,10 @@ import collections
 import imp
 import lmfit
 
+from lmfit.models import ConstantModel, LorentzianModel
+
+
+
 ################################################
 
 ####### Fitting & Processing Functions #######    
@@ -31,7 +31,7 @@ import lmfit
 ################################################
 
 def h_lorentzian(A,w,p,freqs):
-    return numpy.divide(-A,(1+4*((freqs-p)/w)**2))
+    return numpy.divide(A,(1+4*((freqs-p)/w)**2))
 
 def h_zspectrum_N(params,freqs):
     ''' Updated Zspectrum N function to now require a Params object'''
@@ -55,185 +55,117 @@ def h_zspectrum_N(params,freqs):
 
     return 100-arr + DCoffset
 
-def h_zspectrum_N_residuals(params,freqs, data):
-    return h_zspectrum_N(params, freqs) - data
-
-
-def h_peak_N(params,freqs,peak):
-    ''' Zspectrum N function to only return one peak'''
-
-    # First get the water peak as a super lorentzian
-    #DCoffset =  params['DCoffset']
-    DCoffset =  params['DCoffset']
-    A = params['A_%i' % peak]
-    w = params['w_%i' % peak]
-    p = params['p_%i' % peak]
-
-    ########################################
-    #  Need to fix this.
-    return h_lorentzian(A,w,p,freqs) + DCoffset   
-
-def fit_water_peak(data,offset_freqs,allParams = False):
+def fit_water_peak(data,offset_freqs,shiftWaterPeak = False):
 
     """
-    Fits a Super Lorentzian to the data, and 
+    Fits a Lorentzian to the data, and 
     returns the water offset frequency
-
     """
-    params = lmfit.Parameters()
+    ## First set the weights so that the ones around the peak are the most important
+    # Weights 
+    # Get the index at the maximum value which represents 0ppm roughly
+    pk_1_idx = [i for i, j in enumerate(data) if j == max(data)][0]
 
-    # add with tuples: (NAME VALUE VARY MIN  MAX  EXPR  BRUTE_STEP)    
-    params.add_many(('DCoffset', 1, True, None, None, None),
-                    ('A_0', 0.8, True, None, None, None),
-                    ('w_0', 1.3, True, None, None, None),
-                    ('p_0', 0.01, True, None, None, None),
-    )        
+    # create an array of 0s the right shape
+    waterweights = numpy.array(offset_freqs.copy())*0
 
-    try:
-        out = lmfit.minimize(h_zspectrum_N_residuals, params, args=(numpy.array(offset_freqs), data))
-        return numpy.array(out.params['p_0'].value)
-    except ValueError: # when the data given is nonsense
-        return numpy.array(0)
+    # Set the 6 points around 0 to be utmost importance 100, everything else to be 1
+    waterweights[pk_1_idx-3:pk_1_idx+3] = 100
+    waterweights[pk_1_idx-10:pk_1_idx+10] = 1
 
-def fit_px_cest(scn_to_analyse, xval, yval, pdata_num = 0):
-    scn = sarpy.Scan(scn_to_analyse)
-    params = lmfit.Parameters()
-    params.add('DCoffset',  value = 1)
+    # In case you only want to give it a subset of data:
+    xtofit = offset_freqs[pk_1_idx-5:pk_1_idx+15]
+    ytofit = data[pk_1_idx-5:pk_1_idx+15]
+    waterweightstofit = waterweights[pk_1_idx-5:pk_1_idx+15]
 
-    ampls = [.84, .11, .09, .17, .05]
-    amplsmax = [0.9, 0.3,0.3,0.3,0.3]
-    width = [1.1, 1.98, 1.34, 4.2, 1.2]
+    # Set up the model
+    lmodel = ConstantModel()+LorentzianModel(prefix='p1_')
 
-    peaks =    [.05, 2.2, 3.6, -3.67, -3.86]
-    peaksmin = [-1.5, 1.8, 2.5, -3.8, -4]
-    peaksmax = [1, 2.5, 5, -2, -3]
+    # Set up the initial parameters
+    pars = lmodel.make_params(c=5)
 
-    for i in numpy.arange(0,5):
-            # add with tuples: (NAME VALUE VARY MIN  MAX  EXPR  BRUTE_STEP)    
-            params.add_many(('A_%i' % i, ampls[i], True, 0, amplsmax[i], None),
-                            ('w_%i' % i, width[i], True, None, None, None),
-                            ('p_%i' % i, peaks[i], True, None, None, None),
-            )    
+    iwidth = [1, 1]
+    width_min = [0,0,]
+    width_max = [2000,2000]
 
-    acqfreqs, data = process_cest(scn.shortdirname,xval,yval)
+    icentre = [-.5, 0]
+    centre_min = [-2,-4]
+    centre_max = [2,4]
 
-    fitoutput = lmfit.minimize(h_zspectrum_N_residuals, params, args=(numpy.array(acqfreqs), data))
+    iamplitude = [300, 130]
+    amplitude_min = [0,0]
+    amplitude_max = [5000,5000]
+
+    for i in range(1):
+        pref = 'p%i_' % (i+1)
+        amp, cen, wid = iamplitude[i], icentre[i], iwidth[i]
+        amp_min, cen_min, wid_min = amplitude_min[i], centre_min[i], width_min[i]
+        amp_max, cen_max, wid_max = amplitude_max[i], centre_max[i], width_max[i]
+        
+        pars['%scenter' % pref].set(value=cen, min=cen_min, max=cen_max)    
+        pars['%samplitude' % pref].set(value=amp, min=amp_min, max=amp_max)
+        pars['%ssigma'% pref].set(value=wid, min=wid_min, max=wid_max)
     
-    return fitoutput,acqfreqs, data 
+    # Perform the fit    
+    out  = lmodel.fit(ytofit, pars, x=xtofit,weights = waterweightstofit)
+    pkloc = out.best_values['p1_center']
 
-def fit_5_peaks_cest(scn_to_analyse):
+    if shiftWaterPeak is False:
+        return pkloc
+    else:
+        shifted_data = numpy.interp(numpy.array(offset_freqs), numpy.array(offset_freqs)-pkloc, numpy.array(data))
+        return pkloc, shifted_data
 
-    scn = sarpy.Scan(scn_to_analyse)
-    pdata_num = 0
 
-    try:
-        roi = scn.adata['roi'].data
-    except KeyError:
-        roi = scn.pdata[0].data[:,:,0]*0+1
+def fit_px_cest(scn_to_analyse, xval, yval):
 
-    # Get the bbox so that the whole image isn't fit
-    try:
-        bbox = scn.adata['bbox'].data
-    except KeyError:       
-        bbox = numpy.array([0,x_size-1,0,y_size-1])   
+    # Get the processed data
 
-    datashape = roi.shape
-    roi_reshaped = numpy.reshape(roi,[roi.shape[0],roi.shape[1],1])
-    cestscan_roi = scn.pdata[0].data * roi_reshaped       
+    freqdata,zdata,wateroffset = sarpy.analysis.cest.process_cest(scn_to_analyse,xval,yval,shiftWaterPeak=True)
 
-    # Fit multiple peaks, need some empty arrays
-    offst = numpy.empty_like(roi) + numpy.nan
-    pk1_amp = numpy.empty_like(roi) + numpy.nan
-    pk1_pos = numpy.empty_like(roi) + numpy.nan
-    pk1_width = numpy.empty_like(roi) + numpy.nan
+    # Set up the model
 
-    pk2_amp = numpy.empty_like(roi) + numpy.nan
-    pk2_pos = numpy.empty_like(roi) + numpy.nan
-    pk2_width = numpy.empty_like(roi) + numpy.nan
+    lmodel =  (LorentzianModel(prefix='p1_')
+              + LorentzianModel(prefix='p2_')  + LorentzianModel(prefix='p3_')
+              + LorentzianModel(prefix='p4_')  + LorentzianModel(prefix='p5_'))
 
-    pk3_amp = numpy.empty_like(roi) + numpy.nan
-    pk3_pos = numpy.empty_like(roi) + numpy.nan
-    pk3_width = numpy.empty_like(roi) + numpy.nan
+    pars = lmodel.make_params()
 
-    pk4_amp = numpy.empty_like(roi) + numpy.nan
-    pk4_pos = numpy.empty_like(roi) + numpy.nan
-    pk4_width = numpy.empty_like(roi) + numpy.nan
+    icentre =    [-3.2,-1.5,0,2.0,3.6]
+    centre_min = [ic - 0.4 for ic in icentre]
+    centre_max = [ic + 0.4 for ic in icentre]
 
-    water_amp = numpy.empty_like(roi) + numpy.nan
-    water_pos = numpy.empty_like(roi) + numpy.nan
-    water_width = numpy.empty_like(roi) + numpy.nan
+    iwidth =    [2,25,0.5,1, 1,1.5]
+    width_min = [0,0,0,0,0]
+    width_max = [8,100,5,2,2]
 
-    fit_quality = numpy.empty_like(roi) + numpy.nan
+    iamplitude =    [50,500,150,30,20]
+    amplitude_min = [0,10,0,0,0]
+    amplitude_max = [200,1000,200,100,100]
 
-    newstruct = numpy.zeros(roi.shape, dtype=[('DCoffset', 'float64'),
-       ('A_0', 'float64'),('w_0', 'float64'),('p_0', 'float64'),
-       ('A_1', 'float64'),('w_1', 'float64'),('p_1', 'float64'),
-       ('A_2', 'float64'),('w_2', 'float64'),('p_2', 'float64'),
-       ('A_3', 'float64'),('w_3', 'float64'),('p_3', 'float64'),
-       ('A_4', 'float64'),('w_4', 'float64'),('p_4', 'float64')])
+    for i in range(5):
+        pref = 'p%i_' % (i+1)
+        amp, cen, wid = iamplitude[i], icentre[i], iwidth[i]
+        amp_min, cen_min, wid_min = amplitude_min[i], centre_min[i], width_min[i]
+        amp_max, cen_max, wid_max = amplitude_max[i], centre_max[i], width_max[i]
+        
+        pars['%scenter' % pref].set(value=cen, min=cen_min, max=cen_max)    
+        pars['%samplitude' % pref].set(value=amp, min=amp_min, max=amp_max)
+        pars['%ssigma'% pref].set(value=wid, min=wid_min, max=wid_max)
 
-    # Nan the array so there are no zeroes anywhere
-    newstruct[:] = numpy.nan
+    out  = lmodel.fit(zdata, pars, x=freqdata,fit_kws={'maxfev': 50000})
+  
+    return out
 
-    for xval in range(bbox[0],bbox[1]):    
-        for yval in range(bbox[2],bbox[3]):
-            
-            output, acqfreqs, data = fit_px_cest(scn.shortdirname,xval,yval)
-
-            offst[xval,yval] = output.params['DCoffset'].value
-
-            water_amp[xval,yval] =  output.params['A_0'].value
-            water_width[xval,yval] =  output.params['w_0'].value
-            water_pos[xval,yval] =  output.params['p_0'].value
-
-            pk1_amp[xval,yval] = output.params['A_1'].value
-            pk1_width[xval,yval] = output.params['w_1'].value
-            pk1_pos[xval,yval] = output.params['p_1'].value
-
-            pk2_amp[xval,yval] = output.params['A_2'].value
-            pk2_width[xval,yval] = output.params['w_2'].value
-            pk2_pos[xval,yval] = output.params['p_2'].value
-
-            pk3_amp[xval,yval] = output.params['A_3'].value
-            pk3_width[xval,yval] = output.params['w_3'].value
-            pk3_pos[xval,yval] = output.params['p_3'].value
-
-            pk4_amp[xval,yval] =  output.params['A_4'].value
-            pk4_width[xval,yval] = output.params['w_4'].value
-            pk4_pos[xval,yval] =  output.params['p_4'].value
-            
-            fit_quality[xval,yval] = output.chisqr
-
-    # Save the data as a structured array
-
-    newstruct['DCoffset'] = offst
-    newstruct['A_1'] = pk1_amp
-    newstruct['w_1'] = pk1_width
-    newstruct['p_1'] = pk1_pos
-    newstruct['A_2'] = pk2_amp
-    newstruct['w_2'] = pk2_width
-    newstruct['p_2'] = pk2_pos
-    newstruct['A_3'] = pk3_amp
-    newstruct['w_3'] = pk3_width
-    newstruct['p_3'] = pk3_pos
-    newstruct['A_4'] = pk4_amp
-    newstruct['w_4'] = pk4_width
-    newstruct['p_4'] = pk4_pos
-    newstruct['A_0'] = water_amp
-    newstruct['w_0'] = water_width
-    newstruct['p_0'] = water_pos
-
-    return {'':newstruct,'fit_quality':fit_quality} 
-
-def process_cest(scn_to_analyse, xval, yval, pdata_num = 0):
+def process_cest(scn_to_analyse, xval, yval, shiftWaterPeak = False, pdata_num = 0):
     
     scn = sarpy.Scan(scn_to_analyse)
     
     # Defining parameters
     freq_list = scn.method.CEST_FreqListPPM
 
-    ppm_limit_min = -50
-    ppm_limit_max = 50
+    ppm_limit_min = -55
+    ppm_limit_max = 55
     exclude_ppm = 200
     normalize_to_ppm = 66.6
 
@@ -251,51 +183,70 @@ def process_cest(scn_to_analyse, xval, yval, pdata_num = 0):
 
     # Normalize the data
     tmp = 100*(1 - scn.pdata[0].data[xval,yval,:][ppm_filtered_ind] / scn.pdata[0].data[xval,yval,normalizeTo])
-    
-    # get the freqs that'll be used for water fit
-    water_fit_freqs = [f for f in ppm_filtered if (numpy.abs(f)< 3.)]
-    water_fit_freqs_ind = sorted([ppm_filtered.index(c) for c in water_fit_freqs])
-    
-    # First do the water fit and shift the data so water is at 0  
-    waterShift = fit_water_peak(tmp[water_fit_freqs_ind],water_fit_freqs)
 
-    # Interpolating the Y-data so that it gets shifted to the acquired offsets!
-    s_shifted_back = scipy.interp(ppm_filtered, ppm_filtered-waterShift, tmp)
-    #print('watershift is: {0}'.format(waterShift))
+    if shiftWaterPeak is False:
+        return ppm_filtered, tmp
+    else:
+        waterOffset, shiftedData = fit_water_peak(tmp,ppm_filtered,shiftWaterPeak = True)
+        return ppm_filtered,shiftedData,waterOffset
 
-    if ~numpy.isfinite(numpy.sum(s_shifted_back)):
-        print('\n \n Look here: {} \n \n',scn_to_analyse, xval,yval)
-    
-    return ppm_filtered, s_shifted_back
-
-
+def find_nearest(array, value):
+    array = numpy.asarray(array)
+    idx = (numpy.abs(array - value)).argmin()
+    return idx,array[idx]
 ################################################
 
 ####### Displaying and Plotting Functions #######    
 
 ################################################
 
-def plotCestPeaks(cestParams,x,y):
-    ''' This function takes in a full fit and returns a plot of the individual peaks plotted on the flipped axis'''
+def fitsanity(out):
+    
+    properPeaks = ['NOE (-3.2)','MT (-1.5)','Water (0)','Amine (2.0)','Amide (3.6)']
+   
+    # first get all the centres so we can figure out which peak is which
+    names = ['p{0}'.format(i)+'_' for i in range(1,6)]
+    actualcentres = [-3.2,-1.5,0,2,3.6]
+    centres = [out.values[n+'center'] for n in names]
+
+    # this gets the actual idx of the peaks in case they move around
+    actualidx = []
+    for ctr in actualcentres:
+        a,b = find_nearest(centres,ctr)
+        actualidx.append(a+1)
+
+    # Redo getting the names and centres so that the peak order is maintained
+    names = ['p{0}'.format(i)+'_' for i in actualidx]
+    centres = [out.values[n+'center'] for n in names]
+    amps = [out.values[n+'amplitude'] for n in names]
+    widths = [out.values[n+'sigma'] for n in names]                  
+
+    for i,pk in enumerate(properPeaks):
+                   
+        print('=======',pk,'=======')
+        print('Centre: {0:.2f} \nWidth {1:.2f} \t \nAmplitude {2:.2f}'.format(centres[i],widths[i],amps[i]))
+    print('\n')
+
+def plotPeaks(output,xvals,params=None,peaksToPlot = [1,2,3,4,5]):
+
     import pylab
+    
+    if params is None:
+        comps = output.eval_components()
+    else:
+        comps = output.eval_components(params=params)
 
-    freqs = numpy.arange(-20,20,0.1)
-
-    try:
-
-        for i in numpy.arange(0,int(len(cestParams[x,y])/3)-1):
-            pylab.plot(freqs,1-sarpy.analysis.cest.h_peak_N(cestParams[x,y],freqs,i))
-
-    except:
-        for i in numpy.arange(0,int(len(cestParams.params)/3)):
-            pylab.plot(freqs,1-sarpy.analysis.cest.h_peak_N(cestParams.params,freqs,i))
-
-    pylab.axvline(2.2,ymin=0,label='2.2 amine',color='y', alpha=0.4)
-    pylab.axvline(3.5,ymin=0,label='3.5 amide',color='r', alpha=0.4)
-    pylab.axvline(-3.25,ymin=0,label='-3.25 aliphatic',color='g', alpha=0.4)
-    pylab.axvline(-3.0,ymin=0,label='-3.0')    
+    pylab.plot(xvals, output.best_fit, 'r-',label='fit')
+        
+    for count in peaksToPlot:       
+        peaknum = 'p'+str(count)+'_'
+        pylab.plot(xvals, comps[peaknum],label=peaknum[0:-1])
+    pylab.axvline(2.0,ymin=0,label='2.0 amine',color='y', alpha=0.4)
+    pylab.axvline(3.6,ymin=0,label='3.6 amide',color='r', alpha=0.4)
+    pylab.axvline(-3.2,ymin=0,label='-3.2 NOE',color='g', alpha=0.4)
+    pylab.legend()
+    #pylab.axvline(-1.5,ymin=0,label='MT')    
     #pylab.axvline(1.5,ymin=0.6,label='1.5 OH',color='b', alpha=0.4)
-
 
 def generate_offset_list(additionalDict = None,
                          manuallyInsertedOffsets = None,
