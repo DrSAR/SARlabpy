@@ -829,7 +829,10 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
         bbox = scan_object.adata['bbox'].data
         roi = scan_object.adata[roi_adata_label].data
     except KeyError:       
-        bbox = numpy.array([0,x_size-1,0,y_size-1])   
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
+
+        # This may fail for single slice LookLockers
+        roi = numpy.empty_like(scan_object.pdata[0].data[:,:,:,0])*0+1
 
     ## Calculate filtered (using NLM) data if the mask is set that way
 
@@ -857,8 +860,8 @@ def h_fit_T1_LL_FAind(scn_to_analyse=None,
     # Start the fitting process
 
     for slc in range(num_slices):          
-        for x in range(bbox[0],bbox[1]):
-            for y in range(bbox[2],bbox[3]):
+        for x in range(bbox[2],bbox[3]):
+            for y in range(bbox[0],bbox[1]):
                 # Deal with scans that have only one slice
                 if num_slices > 1:
                     y_data = data[x,y,slc,:]
