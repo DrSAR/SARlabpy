@@ -2033,6 +2033,8 @@ def analyse_ica(scn_to_analyse,
             bbox = scan_object.adata['bbox'].data
         except KeyError:       
             bbox = numpy.array([0,datashape[0],0,datashape[1]])
+    else:
+        bbox = scan_object.adata[bbox].data
 
     if bbox is 'all':
         bbox = numpy.array([0,datashape[0],0,datashape[1]])
@@ -2040,9 +2042,13 @@ def analyse_ica(scn_to_analyse,
     # ROI or bbox
     if roi_label:
         roi = scan_object.adata[roi_label].data
+        #if roi.shape[2]>10:
+        #    roi[:,:,8:] = numpy.nan
+        #    print('WARNING: ONLY SLICES 0:8 considered!!')
     else: # use the whole mouse
-        tmp = numpy.zeros(shape=datashape)*0 + 1
+        tmp = numpy.zeros(shape=datashape)*0
         roi = tmp[:,:,:,0]
+        roi[bbox[0]:bbox[1],bbox[2]:bbox[3],:] = 1
 
     # get me a flat index
     nonNaNidx = numpy.where(numpy.isfinite(roi.flatten())) # tumour roi
@@ -2053,6 +2059,7 @@ def analyse_ica(scn_to_analyse,
     # step through time in a loop - not elegant but fits my brain.
     for i in range(datashape[-1]):
         if data is None:
+            raise NotImplementedError
             tmp = numpy.mean(scn.pdata[0].data[:,:,:,0:3,i],axis=3)
         else:
             tmp = data[:,:,:,i]
@@ -2067,9 +2074,11 @@ def analyse_ica(scn_to_analyse,
     n_samples = flatter_array.shape[0]
     X = flatter_array
     ncpts = Ncomponents
-    ica = FastICA(n_components=ncpts, algorithm=algorithm, random_state=3141,max_iter=1000)
+    ica = FastICA(n_components=ncpts, algorithm=algorithm, random_state=3141,max_iter=2000)
     S_ = ica.fit_transform(X)  # Reconstruct signals
     A_ = ica.mixing_  # Get estimated mixing matrix
+    #n_iter = ica.n_iter # does NOT WORK
+    #print('Number of iterations: {0}'.format(n_iter))
 
     # Process the maps and components
     S_,A_ = h_invertICA(S_,A_)
@@ -2136,7 +2145,7 @@ def analyse_ica(scn_to_analyse,
                 pylab.ylim(bbox[1],bbox[0])
                 pylab.colorbar()
 
-    return S_, A_reshaped
+    return S_, A_reshaped,A_
 
 def h_invertICA(s,a):
     for cmp in range(s.shape[-1]):
@@ -2280,3 +2289,61 @@ def h_get_switchArray(scn_to_analyse, switchTimes = None,output_time_axis=False)
         return 0.2*(switchArray-0.5),time_axis
     else:
         return 0.2*(switchArray-0.5)
+
+#########
+# Convert SI to dT1
+#
+#########
+
+def smooth(x,window_len=11,window='hanning'):
+        if x.ndim != 1:
+                raise ValueError# "smooth only accepts 1 dimension arrays."
+        if x.size < window_len:
+                raise ValueError# "Input vector needs to be bigger than window size."
+        if window_len<3:
+                return x
+        if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+                raise ValueError# "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+        s=numpy.r_[2*x[0]-x[window_len-1::-1],x,2*x[-1]-x[-1:-window_len:-1]]
+        if window == 'flat': #moving average
+                w=numpy.ones(window_len,'d')
+        else:  
+                w=eval('numpy.'+window+'(window_len)')
+        y=numpy.convolve(w/w.sum(),s,mode='same')
+        return y[window_len:-window_len+1]
+
+def convertSItodT1(oescn,t1mapscn,roi_label='transferred_roi',t1_adata_label = 'T1_LL',baseline_timepoints=10):
+    
+    def T1(nSIval,T10,TR,alpha):
+
+        E10 = numpy.exp(-TR/T10)
+        b = numpy.cos(numpy.radians(alpha))
+        B = (1-E10) / (1-b*E10)
+        A = B*nSIval
+
+        return 1/(-1/TR*numpy.log( (1-A) / (1-b*A)))    
+    oe = sarpy.Scan(oescn)
+    t1 = sarpy.Scan(t1mapscn)
+    
+    newOEdata = numpy.empty_like(oe.pdata[0].data)*numpy.nan
+    datashape = oe.pdata[0].data.shape
+    roi = oe.adata[roi_label].data
+    
+    TR = oe.method.PVM_RepetitionTime
+    alpha = oe.acqp.ACQ_flip_angle
+    t1map = t1.adata[t1_adata_label].data
+
+    for x in range(datashape[0]):
+        for y in range(datashape[1]):
+            for sl in range(datashape[2]):
+                if roi[x,y,sl] == 1:
+                    T10 = t1map[x,y,sl]
+
+                    smootheddata = smooth(oe.pdata[0].data[x,y,sl,0:],window_len=5)
+                    nsmootheddata = smootheddata / numpy.mean(smootheddata[0:12])
+                    res = T1(nsmootheddata,T10,TR=TR,alpha=alpha)
+                    newOEdata[x,y,sl,:] = res
+
+    newmask = numpy.where(numpy.isnan(numpy.sum(newOEdata,axis=-1)),numpy.nan,1)
+    
+    return {'':newOEdata,'newmask':newmask}
