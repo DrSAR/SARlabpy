@@ -14,6 +14,8 @@ import configparser
 import os
 import matplotlib
 matplotlib.use('Agg',warn=False)# where did I come from !?
+from matplotlib_scalebar.scalebar import ScaleBar
+
 import pylab
 import numpy
 #import sarpy
@@ -26,6 +28,7 @@ import scipy
 import sarpy.analysis.getters
 from scipy import ndimage
 print(scipy.__version__)
+
 #import sarpy.analysis.analysis
 #import sarpy.analysis.colormaps as cmaps
 
@@ -291,13 +294,37 @@ def generate(**kwargs):
                                         break
                                 zlike = 0.1+numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i])
                                 t=pylab.imshow(zlike,**row_conf)
+                                scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
+                                                    units='um',
+                                                    fixed_value=1,
+                                                    fixed_units='mm',
+                                                    location='lower left',label_formatter = lambda x, y:'',
+                                                    frameon=False,
+                                                    color='w',sep=-10,height_fraction=0.02)                                
+                                pylab.gca().add_artist(scalebar)
 
                             else:
                                 t=pylab.imshow(mapsToShow,**row_conf)
+                                scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
+                                                    units='um',
+                                                    fixed_value=1,
+                                                    fixed_units='mm',
+                                                    location='lower left',label_formatter = lambda x, y:'',
+                                                    frameon=False,
+                                                    color='w',sep=-10,height_fraction=0.02)                                
+                                pylab.gca().add_artist(scalebar)                                
                     else:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                          bbox[2]:bbox[3]],
-                                         **row_conf)                
+                                         **row_conf)
+                        scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
+                                            units='um',
+                                            fixed_value=1,
+                                            fixed_units='mm',
+                                            location='lower left',label_formatter = lambda x, y:'',
+                                            frameon=False,
+                                            color='w',sep=-10,height_fraction=0.02)
+                        pylab.gca().add_artist(scalebar)
                     # Use black to show nan values
                     # Source: http://stackoverflow.com/questions/2578752/how-can-i-plot-nan-values-as-a-special-color-with-imshow-in-matplotlib
                     newcmap = copy.copy(t.get_cmap())
