@@ -2028,16 +2028,16 @@ def analyse_ica(scn_to_analyse,
     time_per_rep = numpy.divide(total_time,reps)
 
     # Constrain the data being analysed
-    if bbox is None:
+
+    if bbox is 'all':
+        bbox = numpy.array([0,datashape[0],0,datashape[1]])    
+    elif bbox is None:
         try:
             bbox = scan_object.adata['bbox'].data
         except KeyError:       
             bbox = numpy.array([0,datashape[0],0,datashape[1]])
     else:
         bbox = scan_object.adata[bbox].data
-
-    if bbox is 'all':
-        bbox = numpy.array([0,datashape[0],0,datashape[1]])
 
     # ROI or bbox
     if roi_label:

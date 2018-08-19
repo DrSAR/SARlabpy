@@ -2,6 +2,8 @@
 
 import ipywidgets
 from ipywidgets import interact
+from ipywidgets import interact, interactive, fixed, interact_manual
+from IPython.display import display, clear_output
 import sarpy
 import sarpy.analysis.cest
 import pylab
@@ -35,7 +37,43 @@ def browse_MRimages(data):
                          y=ipywidgets.IntSlider(description='Y-axis:',min=0,max=datashape[0]-1,step=1),
                          i=ipywidgets.IntSlider(description='Slice:',min=0,max=datashape[2]-1,step=1))
 
-def browse_CEST(scn_to_view,adata_label=None,doFit = False, displayFit = False):
+def browse_MRbbox(scn_to_view):
+    '''
+    This function takes in the data and simply plots it with some slider bars for
+    x,y,slice and puts a cursor location at the pixel.
+    '''
+    import pylab
+
+    scn = sarpy.Scan(scn_to_view)
+    data = scn.pdata[0].data[:,:,:,0]
+    datashape = data.shape
+    
+    def view_image(bbox_0,bbox_1,bbox_2,bbox_3, i):
+        pylab.figure(figsize=(16,5))
+        pylab.imshow(data[:,:,i])
+        pylab.ylim(bbox_1,bbox_0)
+        pylab.xlim(bbox_2,bbox_3)
+
+        # Creating and Displaying button
+        button = ipywidgets.Button(description="Store adata")
+        display(button)
+
+        def store_bbox(b):
+            clear_output()
+            print('Result of button click: [{0},{1},{2},{3}]'.format(bbox_0,bbox_1,bbox_2,bbox_3))
+            bbox = [bbox_0,bbox_1,bbox_2,bbox_3]
+            scn.store_adata(key='bbox_temp',data=numpy.array(bbox),force=True)
+
+        # Defining callback function
+        button.on_click(store_bbox)          
+        
+    interact(view_image, bbox_0=ipywidgets.IntSlider(description='bbox_0:',min=0,max=datashape[0]-1,value=0,step=1),
+                         bbox_1=ipywidgets.IntSlider(description='bbox_1:',min=0,max=datashape[0]-1,value=datashape[0],step=1),
+                         bbox_2=ipywidgets.IntSlider(description='bbox_2:',min=0,max=datashape[1]-1,value=0,step=1),
+                         bbox_3=ipywidgets.IntSlider(description='bbox_3:',min=0,max=datashape[1]-1,value=datashape[1],step=1),
+                         i = ipywidgets.IntSlider(description='Slice:',min=0,max=datashape[2]-1,step=1))
+
+def browse_CEST(scn_to_view,base_adata=None,adata_label=None,doFit = False, displayFit = False):
     
     scn = sarpy.Scan(scn_to_view)
     dataShape = scn.pdata[0].data.shape
@@ -50,7 +88,12 @@ def browse_CEST(scn_to_view,adata_label=None,doFit = False, displayFit = False):
         
         #### Create the image
         pylab.subplot(121)
-        pylab.imshow(scn.pdata[0].data[:,:,0],interpolation='None')
+        if base_adata is None:
+            pylab.imshow(scn.pdata[0].data[:,:,0],interpolation='None')
+        else:
+            tmp = scn.adata[adata_label].data[base_adata]
+            pylab.imshow(tmp,interpolation=None)
+            pylab.colorbar()
         pylab.axvline(y,color='w')
         pylab.axhline(x,color='w')
         
@@ -75,7 +118,7 @@ def browse_CEST(scn_to_view,adata_label=None,doFit = False, displayFit = False):
                 output = sarpy.analysis.cest.fit_px_cest(scn_to_view,x,y)
             else:
                 output = scn.adata[adata_label].data
-            sarpy.analysis.cest.plotPeaks(output,freqdata,params=None)
+            sarpy.analysis.cest.plotPeaks(output[x,y],freqdata)
           
     interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=bbox[0],max=bbox[1],step=1,continuous_update=False),
                          y=ipywidgets.IntSlider(description='Y-axis:',min=bbox[2],max=bbox[3],step=1,continuous_update=False))
@@ -138,18 +181,13 @@ def browse_LLfit(llscn_name,filtereddata):
         pylab.axvline(T1)
         pylab.legend()        
                 
-          
     interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=bbox[0],max=bbox[1],step=1),
                          y=ipywidgets.IntSlider(description='Y-axis:',min=bbox[2],max=bbox[3],step=1),
                          slc=ipywidgets.IntSlider(description='Slice:',min=0,max=dataShape[2],step=1))
 
-def browse_OEMRI(scn_name):
-
-#expStem = 'AARTS3', OEscnString = 'OE'):
-    '''
-    This function takes in the data and simply plots it with some slider bars for
-    x,y,slice and puts a cursor location at the pixel.
-    '''
+def browse_OEMRI(scn_name,inputdata=None,
+                 bbox_adata_label=None,roi_label='transferred_roi',
+                 algorithm='deflation'):
 
     import sarpy.analysis.analysis
     import pylab
@@ -161,20 +199,41 @@ def browse_OEMRI(scn_name):
 
     def view_image(NComponents, startidx, endidx):
         pylab.figure(figsize=(20,5))
+
+        if inputdata is None:
+            data = scn.pdata[0].data[:,:,:,startidx:endidx]
+        else:
+            data = inputdata[:,:,:,startidx:endidx]
                        
-        s,a = sarpy.analysis.analysis.analyse_ica(scn_name,
-                scn.pdata[0].data[:,:,:,startidx:endidx],
-                NComponents,
+        s,a,x = sarpy.analysis.analysis.analyse_ica(scn_name,
+                data=data,
+                Ncomponents=NComponents,
                 switchTimes=switchTimes,
-                bbox=None,
-                roi_label='transferred_roi',
+                bbox=bbox_adata_label,
+                algorithm = algorithm,
+                roi_label=roi_label,
                 viz=True,
                 colours='PiYG_r',
                 sliceViz=False)
         print(scn_name)
 
-
     interact(view_image, #scnnum = ipywidgets.IntSlider(description='Scan Number',min=0,max=len(scans)-1,step=1,continuous_update=False),
-                         NComponents = ipywidgets.IntSlider(description='NComponents:',min=3,max=21,step=1,value=5,continuous_update=False),
-                         startidx = ipywidgets.IntSlider(description='Start idx:',min=0,max=datashape[-1]-1,step=1,value=5,continuous_update=False),
-                         endidx = ipywidgets.IntSlider(description='End idx:',min=10,max=datashape[-1]-1,step=1,value=datashape[-1],continuous_update=False))    
+                         NComponents = ipywidgets.IntSlider(description='NComponents:',min=3,max=21,step=1,value=3,continuous_update=False),
+                         startidx = ipywidgets.IntSlider(description='Start idx:',min=0,max=datashape[-1]-1,step=1,value=1,continuous_update=False),
+                         endidx = ipywidgets.IntSlider(description='End idx:',min=10,max=datashape[-1]-1,step=1,value=datashape[-1],continuous_update=False))
+
+def make_1mm_scale(scn_name):
+
+    from matplotlib_scalebar.scalebar import ScaleBar
+
+    scn = sarpy.Scan(scn_name)
+
+    scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
+                        units='um',
+                        fixed_value=1,
+                        fixed_units='mm',
+                        location='lower right',label_formatter = lambda x, y:'',
+                        frameon=False,
+                        color='k',label_loc='bottom',sep=-10,height_fraction=0.02)
+
+    pylab.gca().add_artist(scalebar)
