@@ -30,30 +30,35 @@ from lmfit.models import ConstantModel, LorentzianModel
 
 ################################################
 
-def h_lorentzian(A,w,p,freqs):
-    return numpy.divide(A,(1+4*((freqs-p)/w)**2))
+# def h_old_lorentzian(A,w,p,freqs):
+#     return numpy.divide(A,(1+4*((freqs-p)/w)**2))
 
-def h_zspectrum_N(params,freqs):
-    ''' Updated Zspectrum N function to now require a Params object'''
+def h_lorentzian(amplitude,sigma,center,freqs=None):
+    if freqs is None:
+        freqs=numpy.arange(-50,50,0.1)
+    return freqs,(amplitude/numpy.pi)*numpy.divide(sigma,(freqs-center)**2 + sigma**2)
 
-    arr = numpy.zeros_like(freqs)
+# def h_zspectrum_N(params,freqs):
+#     ''' Updated Zspectrum N function to now require a Params object'''
 
-    # First get the global DC offset
-    DCoffset =  params['DCoffset']
+#     arr = numpy.zeros_like(freqs)
 
-    # Now get the other peaks as regular lorentzians
-    for i in numpy.arange(0,int(len(params.values())/3)):
-        A = params['A_%i' % i]
-        w = params['w_%i' % i]
-        p = params['p_%i' % i]
+#     # First get the global DC offset
+#     DCoffset =  params['DCoffset']
 
-        newpeak = h_lorentzian(A,w,p,freqs)
+#     # Now get the other peaks as regular lorentzians
+#     for i in numpy.arange(0,int(len(params.values())/3)):
+#         A = params['A_%i' % i]
+#         w = params['w_%i' % i]
+#         p = params['p_%i' % i]
 
-        if numpy.isnan(numpy.sum(newpeak)):
-            raise ValueError('Values for Lorentzian gives problems {} {} {}'.format(A,w,p))
-        arr += newpeak
+#         newpeak = h_lorentzian(A,w,p,freqs)
 
-    return 100-arr + DCoffset
+#         if numpy.isnan(numpy.sum(newpeak)):
+#             raise ValueError('Values for Lorentzian gives problems {} {} {}'.format(A,w,p))
+#         arr += newpeak
+
+#     return 100-arr + DCoffset
 
 def fit_water_peak(data,offset_freqs,shiftWaterPeak = False):
 
@@ -74,9 +79,9 @@ def fit_water_peak(data,offset_freqs,shiftWaterPeak = False):
     waterweights[pk_1_idx-10:pk_1_idx+10] = 1
 
     # In case you only want to give it a subset of data:
-    xtofit = offset_freqs[pk_1_idx-5:pk_1_idx+15]
-    ytofit = data[pk_1_idx-5:pk_1_idx+15]
-    waterweightstofit = waterweights[pk_1_idx-5:pk_1_idx+15]
+    xtofit = offset_freqs[pk_1_idx-10:pk_1_idx+10]
+    ytofit = data[pk_1_idx-10:pk_1_idx+10]
+    waterweightstofit = waterweights[pk_1_idx-10:pk_1_idx+10]
 
     # Set up the model
     lmodel = ConstantModel()+LorentzianModel(prefix='p1_')
@@ -84,9 +89,9 @@ def fit_water_peak(data,offset_freqs,shiftWaterPeak = False):
     # Set up the initial parameters
     pars = lmodel.make_params(c=5)
 
-    iwidth = [1, 1]
-    width_min = [0,0,]
-    width_max = [2000,2000]
+    isigma = [1, 1]
+    sigma_min = [0,0,]
+    sigma_max = [2000,2000]
 
     icentre = [-.5, 0]
     centre_min = [-2,-4]
@@ -98,9 +103,9 @@ def fit_water_peak(data,offset_freqs,shiftWaterPeak = False):
 
     for i in range(1):
         pref = 'p%i_' % (i+1)
-        amp, cen, wid = iamplitude[i], icentre[i], iwidth[i]
-        amp_min, cen_min, wid_min = amplitude_min[i], centre_min[i], width_min[i]
-        amp_max, cen_max, wid_max = amplitude_max[i], centre_max[i], width_max[i]
+        amp, cen, wid = iamplitude[i], icentre[i], isigma[i]
+        amp_min, cen_min, wid_min = amplitude_min[i], centre_min[i], sigma_min[i]
+        amp_max, cen_max, wid_max = amplitude_max[i], centre_max[i], sigma_max[i]
         
         pars['%scenter' % pref].set(value=cen, min=cen_min, max=cen_max)    
         pars['%samplitude' % pref].set(value=amp, min=amp_min, max=amp_max)
@@ -135,9 +140,9 @@ def fit_px_cest(scn_to_analyse, xval, yval):
     centre_min = [ic - 0.4 for ic in icentre]
     centre_max = [ic + 0.4 for ic in icentre]
 
-    iwidth =    [2,25,0.5,1, 1,1.5]
-    width_min = [0,0,0,0,0]
-    width_max = [8,100,5,2,2]
+    isigma =    [2,25,0.5,1, 1,1.5]
+    sigma_min = [0,0,0,0,0]
+    sigma_max = [8,100,5,2,2]
 
     iamplitude =    [50,500,150,30,20]
     amplitude_min = [0,10,0,0,0]
@@ -145,17 +150,157 @@ def fit_px_cest(scn_to_analyse, xval, yval):
 
     for i in range(5):
         pref = 'p%i_' % (i+1)
-        amp, cen, wid = iamplitude[i], icentre[i], iwidth[i]
-        amp_min, cen_min, wid_min = amplitude_min[i], centre_min[i], width_min[i]
-        amp_max, cen_max, wid_max = amplitude_max[i], centre_max[i], width_max[i]
+        amp, cen, wid = iamplitude[i], icentre[i], isigma[i]
+        amp_min, cen_min, wid_min = amplitude_min[i], centre_min[i], sigma_min[i]
+        amp_max, cen_max, wid_max = amplitude_max[i], centre_max[i], sigma_max[i]
         
         pars['%scenter' % pref].set(value=cen, min=cen_min, max=cen_max)    
         pars['%samplitude' % pref].set(value=amp, min=amp_min, max=amp_max)
         pars['%ssigma'% pref].set(value=wid, min=wid_min, max=wid_max)
 
     out  = lmodel.fit(zdata, pars, x=freqdata,fit_kws={'maxfev': 50000})
-  
+
     return out
+
+def fit_cest(scn_to_analyse=None,roi_adata_label = None):
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+
+    # Data
+    cestdata = scan_object.pdata[0].data
+
+    x_size = cestdata.shape[0]
+    y_size = cestdata.shape[1]
+    
+    # Deal with bounding boxes
+    ## Check for bbox traits and create bbox_mask to output only partial data
+
+    try:
+        bbox = scan_object.adata['bbox'].data
+    except KeyError:       
+        bbox = numpy.array([0,x_size-1,0,y_size-1])
+
+    if roi_adata_label:
+        roi = scan_object.adata[roi_adata_label].data
+    else:
+        roi = numpy.empty_like(cestdata[:,:,0])*0 + 1
+
+    # Fit multiple peaks, need some empty arrays
+    p1_amplitude = numpy.empty_like(roi) + numpy.nan
+    p1_center = numpy.empty_like(roi) + numpy.nan
+    p1_sigma = numpy.empty_like(roi) + numpy.nan
+
+    p2_amplitude = numpy.empty_like(roi) + numpy.nan
+    p2_center = numpy.empty_like(roi) + numpy.nan
+    p2_sigma = numpy.empty_like(roi) + numpy.nan
+
+    p3_amplitude = numpy.empty_like(roi) + numpy.nan
+    p3_center = numpy.empty_like(roi) + numpy.nan
+    p3_sigma = numpy.empty_like(roi) + numpy.nan
+
+    p4_amplitude = numpy.empty_like(roi) + numpy.nan
+    p4_center = numpy.empty_like(roi) + numpy.nan
+    p4_sigma = numpy.empty_like(roi) + numpy.nan
+
+    p5_amplitude = numpy.empty_like(roi) + numpy.nan
+    p5_center = numpy.empty_like(roi) + numpy.nan
+    p5_sigma = numpy.empty_like(roi) + numpy.nan
+
+    fit_redchi = numpy.empty_like(roi) + numpy.nan
+    fit_report = numpy.empty_like(roi,dtype='object')
+
+    newstruct = numpy.zeros(roi.shape, dtype=[
+       ('p1_amplitude', 'float64'),('p1_sigma', 'float64'),('p1_center', 'float64'),
+       ('p2_amplitude', 'float64'),('p2_sigma', 'float64'),('p2_center', 'float64'),
+       ('p3_amplitude', 'float64'),('p3_sigma', 'float64'),('p3_center', 'float64'),
+       ('p4_amplitude', 'float64'),('p4_sigma', 'float64'),('p4_center', 'float64'),
+       ('p5_amplitude', 'float64'),('p5_sigma', 'float64'),('p5_center', 'float64')])
+
+    # Nan the array so there are no zeroes anywhere
+    newstruct[:] = numpy.nan
+
+    for xval in range(0,x_size):    
+        for yval in range(0,y_size):
+            if roi[xval,yval] == 1:
+                
+                try:
+                    output = fit_px_cest(scn_to_analyse,xval,yval)
+                except (ValueError,TypeError) as e:
+                    continue
+                p1_amplitude[xval,yval] = output.best_values['p1_amplitude']
+                p1_sigma[xval,yval] = output.best_values['p1_sigma']
+                p1_center[xval,yval] = output.best_values['p1_center']
+
+                p2_amplitude[xval,yval] = output.best_values['p2_amplitude']
+                p2_sigma[xval,yval] = output.best_values['p2_sigma']
+                p2_center[xval,yval] = output.best_values['p2_center']
+
+                p3_amplitude[xval,yval] = output.best_values['p3_amplitude']
+                p3_sigma[xval,yval] = output.best_values['p3_sigma']
+                p3_center[xval,yval] = output.best_values['p3_center']
+
+                p4_amplitude[xval,yval] =  output.best_values['p4_amplitude']
+                p4_sigma[xval,yval] = output.best_values['p4_sigma']
+                p4_center[xval,yval] =  output.best_values['p4_center']
+
+                p5_amplitude[xval,yval] =  output.best_values['p5_amplitude']
+                p5_sigma[xval,yval] =  output.best_values['p5_sigma']
+                p5_center[xval,yval] =  output.best_values['p5_center']
+                
+                fit_redchi[xval,yval] = output.redchi
+
+                fit_report[xval,yval] = output.fit_report()
+
+    # Save the data as a structured array
+
+    newstruct['p1_amplitude'] = p1_amplitude
+    newstruct['p1_sigma'] = p1_sigma
+    newstruct['p1_center'] = p1_center
+    newstruct['p2_amplitude'] = p2_amplitude
+    newstruct['p2_sigma'] = p2_sigma
+    newstruct['p2_center'] = p2_center
+    newstruct['p3_amplitude'] = p3_amplitude
+    newstruct['p3_sigma'] = p3_sigma
+    newstruct['p3_center'] = p3_center
+    newstruct['p4_amplitude'] = p4_amplitude
+    newstruct['p4_sigma'] = p4_sigma
+    newstruct['p4_center'] = p4_center
+    newstruct['p5_amplitude'] = p5_amplitude
+    newstruct['p5_sigma'] = p5_sigma
+    newstruct['p5_center'] = p5_center
+
+    return {'':newstruct,'fit_redchi':fit_redchi,'fit_report':fit_report}
+
+def h_fitoutput_to_struct(fitoutput):
+
+    newstruct = numpy.zeros((1), dtype=[
+   ('p1_amplitude', 'float64'),('p1_sigma', 'float64'),('p1_center', 'float64'),
+   ('p2_amplitude', 'float64'),('p2_sigma', 'float64'),('p2_center', 'float64'),
+   ('p3_amplitude', 'float64'),('p3_sigma', 'float64'),('p3_center', 'float64'),
+   ('p4_amplitude', 'float64'),('p4_sigma', 'float64'),('p4_center', 'float64'),
+   ('p5_amplitude', 'float64'),('p5_sigma', 'float64'),('p5_center', 'float64')])
+
+    newstruct['p1_amplitude'] = fitoutput.best_values['p1_amplitude']
+    newstruct['p1_sigma'] = fitoutput.best_values['p1_sigma']
+    newstruct['p1_center'] = fitoutput.best_values['p1_center']
+
+    newstruct['p2_amplitude'] = fitoutput.best_values['p2_amplitude']
+    newstruct['p2_sigma'] = fitoutput.best_values['p2_sigma']
+    newstruct['p2_center'] = fitoutput.best_values['p2_center']
+
+    newstruct['p3_amplitude'] = fitoutput.best_values['p3_amplitude']
+    newstruct['p3_sigma'] = fitoutput.best_values['p3_sigma']
+    newstruct['p3_center'] = fitoutput.best_values['p3_center']
+
+    newstruct['p4_amplitude'] =  fitoutput.best_values['p4_amplitude']
+    newstruct['p4_sigma'] = fitoutput.best_values['p4_sigma']
+    newstruct['p4_center'] =  fitoutput.best_values['p4_center']
+
+    newstruct['p5_amplitude'] =  fitoutput.best_values['p5_amplitude']
+    newstruct['p5_sigma'] =  fitoutput.best_values['p5_sigma']
+    newstruct['p5_center'] =  fitoutput.best_values['p5_center']
+
+    return newstruct
 
 def process_cest(scn_to_analyse, xval, yval, shiftWaterPeak = False, pdata_num = 0):
     
@@ -219,33 +364,35 @@ def fitsanity(out):
     names = ['p{0}'.format(i)+'_' for i in actualidx]
     centres = [out.values[n+'center'] for n in names]
     amps = [out.values[n+'amplitude'] for n in names]
-    widths = [out.values[n+'sigma'] for n in names]                  
+    sigmas = [out.values[n+'sigma'] for n in names]                  
 
     for i,pk in enumerate(properPeaks):
                    
         print('=======',pk,'=======')
-        print('Centre: {0:.2f} \nWidth {1:.2f} \t \nAmplitude {2:.2f}'.format(centres[i],widths[i],amps[i]))
+        print('Centre: {0:.2f} \nsigma {1:.2f} \t \nAmplitude {2:.2f}'.format(centres[i],sigmas[i],amps[i]))
     print('\n')
 
-def plotPeaks(output,xvals,params=None,peaksToPlot = [1,2,3,4,5]):
+def plotPeaks(output,xvals,peaksToPlot = [1,2,3,4,5],allPeaks=True):
 
     import pylab
     
-    if params is None:
-        comps = output.eval_components()
-    else:
-        comps = output.eval_components(params=params)
-
-    pylab.plot(xvals, output.best_fit, 'r-',label='fit')
-        
+    sumpk = numpy.array([0]*1000,dtype=object)
     for count in peaksToPlot:       
         peaknum = 'p'+str(count)+'_'
-        pylab.plot(xvals, comps[peaknum],label=peaknum[0:-1])
+
+        freqs,tmppk = sarpy.analysis.cest.h_lorentzian(output[peaknum+'amplitude'],
+                                                 output[peaknum+'sigma'],
+                                                 output[peaknum+'center'])
+        pylab.plot(freqs, tmppk,label=peaknum[0:-1])
+
+        sumpk +=tmppk
+
     pylab.axvline(2.0,ymin=0,label='2.0 amine',color='y', alpha=0.4)
     pylab.axvline(3.6,ymin=0,label='3.6 amide',color='r', alpha=0.4)
     pylab.axvline(-3.2,ymin=0,label='-3.2 NOE',color='g', alpha=0.4)
+    pylab.axvline(-1.5,ymin=0,label='MT')    
     pylab.legend()
-    #pylab.axvline(-1.5,ymin=0,label='MT')    
+    pylab.plot(freqs,sumpk,label='Sum')
     #pylab.axvline(1.5,ymin=0.6,label='1.5 OH',color='b', alpha=0.4)
 
 def generate_offset_list(additionalDict = None,
