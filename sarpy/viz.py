@@ -12,30 +12,55 @@ import sys
 
 ####### Visualization Functions #######
 
-def browse_MRimages(data):
-	'''
-	This function takes in the data and simply plots it with some slider bars for
-	x,y,slice and puts a cursor location at the pixel.
-	'''
+def browse_MR(scn_to_view):
+    '''
+    This function takes in the data and simply plots it with some slider bars for
+    x,y,slice and puts a cursor location at the pixel.
+    '''
 
-	import pylab
+    import pylab
 
-	datashape = data.shape
-	def view_image(x, y, i):
-		pylab.figure(figsize=(16,5))
+    scn = sarpy.Scan(scn_to_view)
 
-		pylab.subplot(121)
-		pylab.imshow(data[:,:,i,0])
-		pylab.axvline(x,color='w')
-		pylab.axhline(y,color='w')
+    datashape = scn.pdata[0].data.shape
+    data = scn.pdata[0].data
 
-		pylab.subplot(122)
-		pylab.plot(data[y,x,i,:],'--')
-		pylab.title('Curve', fontsize=18)
+    if len(datashape) ==3:
 
-	interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=0,max=datashape[1]-1,step=1),
-                         y=ipywidgets.IntSlider(description='Y-axis:',min=0,max=datashape[0]-1,step=1),
-                         i=ipywidgets.IntSlider(description='Slice:',min=0,max=datashape[2]-1,step=1))
+        def view_image(x, y, i):
+            pylab.figure(figsize=(16,5))
+
+            pylab.subplot(121)
+            pylab.imshow(data[:,:,i])
+            pylab.axvline(x,color='w')
+            pylab.axhline(y,color='w')
+
+            pylab.subplot(122)
+            pylab.title('No Time Data available', fontsize=18)
+
+        interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=0,max=datashape[1]-1,step=1),
+                             y=ipywidgets.IntSlider(description='Y-axis:',min=0,max=datashape[0]-1,step=1),
+                             i=ipywidgets.IntSlider(description='Slice:',min=0,max=datashape[2]-1,step=1))        
+
+    elif len(datashape) == 4:
+
+        def view_image(x, y, i,t):
+            pylab.figure(figsize=(16,5))
+
+            pylab.subplot(121)
+            pylab.imshow(data[:,:,i,t])
+            pylab.axvline(x,color='w')
+            pylab.axhline(y,color='w')
+
+            pylab.subplot(122)
+            pylab.plot(data[y,x,i,:],'--')
+            pylab.title('Curve', fontsize=18)        
+
+        interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=0,max=datashape[1]-1,step=1),
+                             y=ipywidgets.IntSlider(description='Y-axis:',min=0,max=datashape[0]-1,step=1),
+                             i=ipywidgets.IntSlider(description='Slice:',min=0,max=datashape[2]-1,step=1),
+                             t=ipywidgets.IntSlider(description='Reps:',min=0,max=datashape[3]-1,step=1))
+
 
 def browse_MRbbox(scn_to_view):
     '''
