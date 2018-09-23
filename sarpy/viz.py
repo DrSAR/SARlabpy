@@ -140,10 +140,11 @@ def browse_CEST(scn_to_view,base_adata=None,adata_label=None,doFit = False, disp
         
         if displayFit is True:
             if doFit is True: 
-                output = sarpy.analysis.cest.fit_px_cest(scn_to_view,x,y)
+                fitoutput = sarpy.analysis.cest.fit_px_cest(scn_to_view,x,y)
+                output = sarpy.analysis.cest.h_fitoutput_to_struct(fitoutput)
             else:
-                output = scn.adata[adata_label].data
-            sarpy.analysis.cest.plotPeaks(output[x,y],freqdata)
+                output = scn.adata[adata_label].data[x,y]
+            sarpy.analysis.cest.plotPeaks(output,freqdata)
           
     interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=bbox[0],max=bbox[1],step=1,continuous_update=False),
                          y=ipywidgets.IntSlider(description='Y-axis:',min=bbox[2],max=bbox[3],step=1,continuous_update=False))
