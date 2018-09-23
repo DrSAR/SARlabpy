@@ -77,7 +77,7 @@ def generate(**kwargs):
     pdfPath = os.path.expanduser(os.path.join('~/sdata',exp_name,args.output,pdfName+'.pdf'))
     testPDF = PdfPages(pdfPath)
 
-    sepFiles = True
+    sepFiles = False
     import sarpy
  #   reload(sarpy) # this looks hacky. Is it?
     # if we really need this: importlib.reload for Python 3.4 and above
@@ -507,7 +507,7 @@ def generate(**kwargs):
             pylab.savefig(filename, bbox_inches=0, dpi=300)
             pylab.close('all')
     
-    #testPDF.close()
+    testPDF.close()
     pylab.clf()
     import time
     print('File is opened and ready to use')
