@@ -12,7 +12,7 @@ import sys
 
 ####### Visualization Functions #######
 
-def browse_MR(scn_to_view):
+def browse_MR(scn_to_view = None,data = None):
     '''
     This function takes in the data and simply plots it with some slider bars for
     x,y,slice and puts a cursor location at the pixel.
@@ -20,10 +20,14 @@ def browse_MR(scn_to_view):
 
     import pylab
 
-    scn = sarpy.Scan(scn_to_view)
 
-    datashape = scn.pdata[0].data.shape
-    data = scn.pdata[0].data
+
+    if data is None and scn_to_view is None:
+        scn = sarpy.Scan(scn_to_view)
+        data = scn.pdata[0].data
+        datashape = scn.pdata[0].data.shape
+    else:
+        datashape = data.shape
 
     if len(datashape) ==3:
 
@@ -221,7 +225,7 @@ def browse_OEMRI(scn_name,inputdata=None,
     scn = sarpy.Scan(scn_name)
     #scans = sarpy.Experiment.from_masterlist(expStem+'.config').labels[OEscnString]
     datashape = scn.pdata[0].data.shape
-    switchTimes = [0,2.1,4.5,6.5,8.5,10.5,12.5,14.1]    
+    #switchTimes = [0,2.1,4.5,6.5,8.5,10.5,12.5,14.1]    
 
     def view_image(NComponents, startidx, endidx):
         pylab.figure(figsize=(20,5))
@@ -234,7 +238,7 @@ def browse_OEMRI(scn_name,inputdata=None,
         s,a,x = sarpy.analysis.analysis.analyse_ica(scn_name,
                 data=data,
                 Ncomponents=NComponents,
-                switchTimes=switchTimes,
+                #switchTimes=switchTimes,
                 bbox=bbox_adata_label,
                 algorithm = algorithm,
                 roi_label=roi_label,
