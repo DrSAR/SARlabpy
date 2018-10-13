@@ -2094,9 +2094,7 @@ def analyse_ica(scn_to_analyse,
         A_reshaped_one_component[nonNaNidx] = A_[:,i]
         A_reshaped_prime[:,i] = A_reshaped_one_component
 
-    A_reshaped = A_reshaped_prime.reshape(list(datashape[0:3])+[ncpts])
-
-    # Limit and OE component
+    A_reshaped = A_reshaped_prime.reshape(list(datashape[0:3])+[ncpts]) 
 
     #if switchArray is None:
     #    switchArray = 0.4*h_get_switchArray(scn_to_analyse,[0, 3, 6, 9, 12]) - 0.2
@@ -2127,6 +2125,12 @@ def analyse_ica(scn_to_analyse,
         pylab.figure(figsize=(15,20))
         for ii in range(ncpts):
 
+            # Approximate the Limit of the visualization
+            tmp = A_reshaped[:,:,:,ii].flatten()
+            tmp = tmp[numpy.isfinite(tmp)]
+
+            limit = numpy.percentile(tmp,97)              
+
             slc = int(datashape[-2]/2)
             # Plots
             pylab.subplot(ncpts,2,2*ii+1)
@@ -2136,7 +2140,7 @@ def analyse_ica(scn_to_analyse,
 
             # Maps
             pylab.subplot(ncpts,2,2*ii+2)
-            if numpy.nansum(A_reshaped[:,:,slc,OEcomponent]) == 0:
+            if numpy.nansum(A_reshaped[:,:,slc,ii]) == 0:
                 pylab.axis('off')
                 continue
             else:
