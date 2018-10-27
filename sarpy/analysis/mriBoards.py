@@ -234,7 +234,12 @@ def generate(**kwargs):
                 else:
                     data = scn.pdata[0].data
                                     
-                xdata = data
+                
+                if len(data.shape)>3:
+                    print('THIS SCAN DATA WAS chopped off; wrong dimensions, check!')
+                    xdata = data[:,:,:,0]
+                else:
+                    xdata = data
                 xdata_slices = sarpy.analysis.getters.get_num_slices(scn.shortdirname)
     
                 # Used masked arrays to show nan values as black
@@ -268,6 +273,10 @@ def generate(**kwargs):
                             roi2 = scn.adata[adata_key].data
                             xdata_mask = scn.pdata[0].data
 
+                            if len(roi2.shape)>3 or len(xdata_mask.shape)>3 :
+                                print('THIS SCAN DATA WAS chopped off; wrong dimensions, check!')
+                                xdata_mask = xdata_mask[:,:,:,0]
+
                             # Stefan's NEW method
                             sx = ndimage.sobel(numpy.nan_to_num(roi2[:,:,col_idx]), axis=0, mode='constant')
                             sy = ndimage.sobel(numpy.nan_to_num(roi2[:,:,col_idx]), axis=1, mode='constant')
@@ -285,34 +294,34 @@ def generate(**kwargs):
                             t = pylab.imshow(img_bgd_RGB)    
                         else:
                             mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],col_idx]
-                            if numpy.nansum(mapsToShow.data)==0: # check for no roi in that slice
+                            # if numpy.nansum(mapsToShow.data)==0: # check for no roi in that slice
                                 
-                                # TODO: NEED TO FIX THIS BLOODY ERROR.
-                                for i in range(8):
-                                    mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i]
-                                    if numpy.nansum(numpy.abs(mapsToShow.data))>0:
-                                        break
-                                zlike = 0.1+numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i])
-                                t=pylab.imshow(zlike,**row_conf)
-                                scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
-                                                    units='um',
-                                                    fixed_value=1,
-                                                    fixed_units='mm',
-                                                    location='lower left',label_formatter = lambda x, y:'',
-                                                    frameon=False,
-                                                    color='w',sep=-10,height_fraction=0.02)                                
-                                pylab.gca().add_artist(scalebar)
+                            #     # TODO: NEED TO FIX THIS BLOODY ERROR.
+                            #     for i in range(xdata_slices):
+                            #         mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i]
+                            #         if numpy.nansum(numpy.abs(mapsToShow.data))>0:
+                            #             break
+                            #     zlike = 0.1+numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i])
+                            #     t=pylab.imshow(zlike,**row_conf)
+                            #     scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
+                            #                         units='um',
+                            #                         fixed_value=1,
+                            #                         fixed_units='mm',
+                            #                         location='lower left',label_formatter = lambda x, y:'',
+                            #                         frameon=False,
+                            #                         color='w',sep=-10,height_fraction=0.02)                                
+                            #     pylab.gca().add_artist(scalebar)
 
-                            else:
-                                t=pylab.imshow(mapsToShow,**row_conf)
-                                scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
-                                                    units='um',
-                                                    fixed_value=1,
-                                                    fixed_units='mm',
-                                                    location='lower left',label_formatter = lambda x, y:'',
-                                                    frameon=False,
-                                                    color='w',sep=-10,height_fraction=0.02)                                
-                                pylab.gca().add_artist(scalebar)                                
+                            # else:
+                            t=pylab.imshow(mapsToShow,**row_conf)
+                            scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
+                                                units='um',
+                                                fixed_value=1,
+                                                fixed_units='mm',
+                                                location='lower left',label_formatter = lambda x, y:'',
+                                                frameon=False,
+                                                color='w',sep=-10,height_fraction=0.02)                                
+                            pylab.gca().add_artist(scalebar)                                
                     else:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                          bbox[2]:bbox[3]],
