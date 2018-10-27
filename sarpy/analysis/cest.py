@@ -372,10 +372,11 @@ def fitsanity(out):
         print('Centre: {0:.2f} \nsigma {1:.2f} \t \nAmplitude {2:.2f}'.format(centres[i],sigmas[i],amps[i]))
     print('\n')
 
-def plotPeaks(output,xvals,peaksToPlot = [1,2,3,4,5],allPeaks=True):
+def plotPeaks(output,peaksToPlot = [1,2,3,4,5]):
 
     import pylab
     
+    print(peaksToPlot)
     sumpk = numpy.array([0]*1000,dtype=object)
     for count in peaksToPlot:       
         peaknum = 'p'+str(count)+'_'
@@ -394,6 +395,7 @@ def plotPeaks(output,xvals,peaksToPlot = [1,2,3,4,5],allPeaks=True):
     pylab.legend()
     pylab.plot(freqs,sumpk,label='Sum')
     #pylab.axvline(1.5,ymin=0.6,label='1.5 OH',color='b', alpha=0.4)
+    return freqs,sumpk
 
 def generate_offset_list(additionalDict = None,
                          manuallyInsertedOffsets = None,
