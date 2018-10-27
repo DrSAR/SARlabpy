@@ -675,10 +675,10 @@ def readfid(fptr=None,
                                           acqp['NSLICES']*
                                           acqp['ACQ_n_echo_images']*
                                           acqp['ACQ_n_movie_frames']),
-                             n_datapoints/(ACQ_size[0]*ACQ_size[1]*
+                             int(n_datapoints/(ACQ_size[0]*ACQ_size[1]*
                                            acqp['NSLICES']*
                                            acqp['ACQ_n_echo_images']*
-                                           acqp['ACQ_n_movie_frames']))
+                                           acqp['ACQ_n_movie_frames'])))
         echo_sequence = numpy.array(acqp['ACQ_obj_order'][
                                                 0:acqp['ACQ_n_echo_images']])
         echo_idx = numpy.tile(echo_sequence,

@@ -178,11 +178,11 @@ def get_fid_enhancement(scan_string):
     x = data.shape[0]
     y = data.shape[1]
     
-    xmin = numpy.round(x*0.3)
-    xmax = numpy.round(x*0.8)
+    xmin = int(numpy.round(x*0.3))
+    xmax = int(numpy.round(x*0.8))
     
-    ymin = numpy.round(y*0.3)
-    ymax = numpy.round(y*0.8)
+    ymin = int(numpy.round(y*0.3))
+    ymax = int(numpy.round(y*0.8))
     
 
     mean = numpy.mean(numpy.mean(data[xmin:xmax,ymin:ymax,3,:],0),0)
