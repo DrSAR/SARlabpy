@@ -67,7 +67,6 @@ def generate(**kwargs):
     # determine the layout
     rows = [row for row in config.sections() if not((row=='Defaults'))]
     n_rows = len(rows)
-    ref_lbl = config.get(args.ref_row,'label')
     
     # Start a PDF file of all the animals
     
@@ -86,12 +85,18 @@ def generate(**kwargs):
 
     # for every patient we will create the same board
     for k in sorted(exp.patients.keys()):
+        ref_lbl = config.get(args.ref_row,'label')
+
         try:
             ref_scan_name = exp.patients[k][ref_lbl]
             ref_scn = sarpy.Scan(ref_scan_name)
         except(AttributeError,IOError,KeyError):
-            print(('Ref Scan failed for {0},{1} \n \n'.format(k,ref_lbl)))
-            continue
+            #print(('Ref Scan failed for {0},{1}. Trying alternate ref scan \n \n'.format(k,ref_lbl)))
+            #$)#$I()
+            ref_lbl = config.get(args.alternate_ref_row,'label')
+            #raise NotImplementedError
+            ref_scan_name = exp.patients[k][ref_lbl]
+            ref_scn = sarpy.Scan(ref_scan_name)
         try:
             ref_data = ref_scn.adata[config.get(args.ref_row,'adata')]
         except configparser.NoOptionError:
