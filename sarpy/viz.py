@@ -92,10 +92,14 @@ def browse_MRbbox(scn_to_view):
             print('Result of button click: [{0},{1},{2},{3}]'.format(bbox_0,bbox_1,bbox_2,bbox_3))
             bbox = [bbox_0,bbox_1,bbox_2,bbox_3]
             scn.store_adata(key='bbox_temp',data=numpy.array(bbox),force=True)
+            pylab.figure(figsize=(16,5))
+            pylab.imshow(data[:,:,i])
+            pylab.ylim(bbox_1,bbox_0)
+            pylab.xlim(bbox_2,bbox_3)
 
         # Defining callback function
-        button.on_click(store_bbox)          
-        
+        button.on_click(store_bbox)
+
     interact(view_image, bbox_0=ipywidgets.IntSlider(description='bbox_0:',min=0,max=datashape[0]-1,value=0,step=1),
                          bbox_1=ipywidgets.IntSlider(description='bbox_1:',min=0,max=datashape[0]-1,value=datashape[0],step=1),
                          bbox_2=ipywidgets.IntSlider(description='bbox_2:',min=0,max=datashape[1]-1,value=0,step=1),
@@ -148,7 +152,7 @@ def browse_CEST(scn_to_view,base_adata=None,adata_label=None,doFit = False, disp
                 output = sarpy.analysis.cest.h_fitoutput_to_struct(fitoutput)
             else:
                 output = scn.adata[adata_label].data[x,y]
-            sarpy.analysis.cest.plotPeaks(output,freqdata)
+            sarpy.analysis.cest.plotPeaks(output)
           
     interact(view_image, x=ipywidgets.IntSlider(description='X-axis:',min=bbox[0],max=bbox[1],step=1,continuous_update=False),
                          y=ipywidgets.IntSlider(description='Y-axis:',min=bbox[2],max=bbox[3],step=1,continuous_update=False))
@@ -235,7 +239,7 @@ def browse_OEMRI(scn_name,inputdata=None,
         else:
             data = inputdata[:,:,:,startidx:endidx]
                        
-        s,a,x = sarpy.analysis.analysis.analyse_ica(scn_name,
+        sarpy.analysis.analysis.analyse_ica(scn_name,
                 data=data,
                 Ncomponents=NComponents,
                 #switchTimes=switchTimes,
