@@ -294,25 +294,7 @@ def generate(**kwargs):
                             t = pylab.imshow(img_bgd_RGB)    
                         else:
                             mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],col_idx]
-                            # if numpy.nansum(mapsToShow.data)==0: # check for no roi in that slice
-                                
-                            #     # TODO: NEED TO FIX THIS BLOODY ERROR.
-                            #     for i in range(xdata_slices):
-                            #         mapsToShow = xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i]
-                            #         if numpy.nansum(numpy.abs(mapsToShow.data))>0:
-                            #             break
-                            #     zlike = 0.1+numpy.zeros_like(xdata_mask[bbox[0]:bbox[1],bbox[2]:bbox[3],i])
-                            #     t=pylab.imshow(zlike,**row_conf)
-                            #     scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
-                            #                         units='um',
-                            #                         fixed_value=1,
-                            #                         fixed_units='mm',
-                            #                         location='lower left',label_formatter = lambda x, y:'',
-                            #                         frameon=False,
-                            #                         color='w',sep=-10,height_fraction=0.02)                                
-                            #     pylab.gca().add_artist(scalebar)
 
-                            # else:
                             t=pylab.imshow(mapsToShow,**row_conf)
                             scalebar = ScaleBar(dx=scn.method.PVM_SpatResol[0]*1000,
                                                 units='um',
