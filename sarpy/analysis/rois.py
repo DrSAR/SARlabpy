@@ -154,6 +154,9 @@ def import_roi(masterlist_name,
                 roi = nibabel.load(fname).get_data()[:,:,:,0]
             except IndexError:
                 roi = nibabel.load(fname).get_data()[:,:,:]
+            except FileNotFoundError:
+                print('Expected ROI file {0} not found, check! to ensure this is not a problem'.format(fname))
+                continue
 
             # Hack for CEST EPI scans because you cannot really draw ROI on any other image
             # So basically I had to export the CEST EPI scan with 1 slice and ~80 freqs as the ROI source
