@@ -119,6 +119,14 @@ def adata2df(scn_name,adatadict,infodict):
     # Function to turn adata into dataframes
     # See http://localhost:8889/user/fmoosvi/notebooks/OxygenMRI/q-dOE-MRI/adata2dataframe.ipynb
 
+    '''s='OEP8Cs12.Q21/7'
+        Usage example:
+        sarpy.helpers.adata2df(scn_name=s,adatadict={'dOE1':'OEdraft2',
+                                     'dOE2':'OEdraft2',
+                                     'dOE3':'OEdraft2'}, infodict={'AnimalID':s.split('.')[0],
+                                                                   'Treatment':'Ctrl',
+                                                                   'Loaction':'sc'}) '''
+
     def array2df(arr, columname=None):
         idx = numpy.where(numpy.isfinite(arr))
         # if arr is a 3D array then we can recreate the tuples by 
