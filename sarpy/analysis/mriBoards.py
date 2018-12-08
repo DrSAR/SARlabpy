@@ -76,7 +76,7 @@ def generate(**kwargs):
     pdfPath = os.path.expanduser(os.path.join('~/sdata',exp_name,args.output,pdfName+'.pdf'))
     testPDF = PdfPages(pdfPath)
 
-    sepFiles = False
+    sepFiles = True
     import sarpy
  #   reload(sarpy) # this looks hacky. Is it?
     # if we really need this: importlib.reload for Python 3.4 and above
@@ -98,12 +98,15 @@ def generate(**kwargs):
             ref_scan_name = exp.patients[k][ref_lbl]
             ref_scn = sarpy.Scan(ref_scan_name)
         try:
-            ref_data = ref_scn.adata[config.get(args.ref_row,'adata')]
+            ref_data = ref_scn.adata[config.get(args.ref_row,'adata')].data
         except configparser.NoOptionError:
-            ref_data = ref_scn.pdata[0]
-        ref_filename = tempfile.mktemp(suffix='.nii')
-        ref_data.export2nii(ref_filename)
-        n_cols=ref_data.data.shape[2]
+            ref_data = ref_scn.pdata[0].data
+        except KeyError:
+            ref_data = ref_scn.pdata[0].data
+
+        #ref_filename = tempfile.mktemp(suffix='.nii')
+        #ref_data.export2nii(ref_filename)
+        n_cols=ref_data.shape[2]
 
         aspect = numpy.true_divide(n_rows,n_cols)
         fig_size = (n_cols*1.3, n_cols*aspect)    
@@ -125,6 +128,13 @@ def generate(**kwargs):
                 lbl_scan_name = ''
 
             subtitle = row_conf.pop('subtitle','')
+
+            # added to account for different Bboxes for diff rois (E.g., IM and SC in OEP8)
+            alternate_bbox = row_conf.pop('alternate_bbox','bbox')
+            #try:
+            #    alternate_bbox = row_conf.pop(args.alternate_bbox,'bbox')
+            #except AttributeError:
+            #    alternate_bbox = 'bbox'
 
             ax = fig.add_subplot(G[row_idx, 0])
             pylab.axis('off')
@@ -267,7 +277,7 @@ def generate(**kwargs):
                     fig.add_subplot(G[row_idx,col_idx+1])
                     # Get the bbox as an adata 
                     try: 
-                        bbox = scn.adata['bbox'].data
+                        bbox = scn.adata[alternate_bbox].data
                     except KeyError:
                         print('bbox import failed')
                         bbox = [0,scn.pdata[0].data.shape[0],0,scn.pdata[0].data.shape[1]]
@@ -341,7 +351,7 @@ def generate(**kwargs):
             
             elif row_conf.get('type', None) == 'vtc':
 
-                sepFiles = True
+                sepFiles = False
                 
                 scn = sarpy.Scan(lbl_scan_name)
                 adata_key = row_conf.pop('adata', None)                
@@ -426,7 +436,7 @@ def generate(**kwargs):
                     
                 xdata = data.data
 
-                if adata_key =='OEdraftEC':
+                if 'OEdraftEC' in adata_key:
                     fig.add_subplot(G[row_idx,1:])
                     pylab.plot(xdata)
                     pylab.xlabel('Reps')
@@ -500,7 +510,7 @@ def generate(**kwargs):
         if sepFiles:
             # Saving Figure    
             filename = os.path.expanduser(os.path.join('~/sdata',exp_name,args.output,k + '.png'))
-            pylab.savefig(filename, bbox_inches=0, dpi=300)
+            pylab.savefig(filename, bbox_inches='tight', dpi=300)
             pylab.close('all')
     
     testPDF.close()
