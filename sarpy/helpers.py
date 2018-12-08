@@ -11,6 +11,9 @@ import collections
 from collections import defaultdict
 import json
 import numpy
+import pandas
+import sarpy
+
 
 def flatten_list(l):
 
@@ -110,6 +113,48 @@ def smooth_SG(y, window_size, order, deriv=0, rate=1):
     lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
     y = np.concatenate((firstvals, y, lastvals))
     return np.convolve( m[::-1], y, mode='valid')
+
+def adata2df(scn_name,adatadict,infodict):
+
+    # Function to turn adata into dataframes
+    # See http://localhost:8889/user/fmoosvi/notebooks/OxygenMRI/q-dOE-MRI/adata2dataframe.ipynb
+
+    def array2df(arr, columname=None):
+        idx = numpy.where(numpy.isfinite(arr))
+        # if arr is a 3D array then we can recreate the tuples by 
+        # using zip(idx[0],idx[1],idx[2]) but that breakes down for
+        # arrays that are less than 3D
+        df = pandas.DataFrame(arr[idx], index=[tuple(x) for x in numpy.array(idx).transpose()],
+                             columns=[columname])
+        # the 'name' of the returned column will be '0' - not too descriptive, I know.
+        return df
+    
+    scn = sarpy.Scan(scn_name)
+   
+    assert type(adatadict) is dict
+    assert type(infodict) is dict
+    
+    # append all the adatas into a list
+    adata_arrayList = []
+    df_list = []
+
+    for colName,adataName in adatadict.items():
+        adata_arrayList.append(scn.adata[adataName].data)
+        df_list.append(array2df(adata_arrayList[-1],columname=colName))
+
+    # now iterate through the dfs and then merge them
+    if len(df_list)==1:
+        mergeddf = df_list[0]
+    else:
+        mergeddf = df_list[0]
+        for idf in range(1,len(df_list)):
+            mergeddf=pandas.merge(mergeddf,df_list[idf],left_index=True, right_index=True,how='outer')     
+
+    # Now add all the other information like treatments, animal name etc...        
+    finaldf = pandas.concat([mergeddf,pandas.DataFrame(infodict,index=mergeddf.index)], axis=1) 
+    
+    return finaldf
+
 
 
 
