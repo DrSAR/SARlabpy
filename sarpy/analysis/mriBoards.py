@@ -183,8 +183,8 @@ def generate(**kwargs):
                 if adata_key is not None and 'OEdraft' in adata_key: # Add limits specific to per scan for OE maps
 
                     try:
-                        vmin = -scn.adata['OEdraft_upperlimit'].data
-                        vmax = scn.adata['OEdraft_upperlimit'].data
+                        vmin = -0.2
+                        vmax = 0.2
                     except KeyError:
                         vmin = -10
                         vmax = 10
@@ -317,8 +317,8 @@ def generate(**kwargs):
                                                 fixed_units='mm',
                                                 location='lower left',label_formatter = lambda x, y:'',
                                                 frameon=False,
-                                                color='w',sep=-10,height_fraction=0.02)                                
-                            pylab.gca().add_artist(scalebar)                                
+                                                color='w',sep=-10,height_fraction=0.02)
+                            pylab.gca().add_artist(scalebar)
                     else:
                         t=pylab.imshow(xdata_mask[bbox[0]:bbox[1],
                                          bbox[2]:bbox[3]],
@@ -436,7 +436,7 @@ def generate(**kwargs):
                     
                 xdata = data.data
 
-                if 'OEdraftEC' in adata_key:
+                if ('OEdraft' in adata_key) and ('EC' in adata_key) :
                     fig.add_subplot(G[row_idx,1:])
                     pylab.plot(xdata)
                     pylab.xlabel('Reps')

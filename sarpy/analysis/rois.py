@@ -102,7 +102,7 @@ def import_roi(masterlist_name,
 
     # Quick check to see if the name of the roi matches convention
     if roi_suffix is not None:
-        assert(type(roi_suffix) is str and len(roi_suffix)<3)
+        assert(type(roi_suffix) is str and len(roi_suffix)<5)
     else:
         roi_suffix = '' # AA Don't want to set this to 'a' for backwards compatibility
 
