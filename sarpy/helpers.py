@@ -114,7 +114,7 @@ def smooth_SG(y, window_size, order, deriv=0, rate=1):
     y = np.concatenate((firstvals, y, lastvals))
     return np.convolve( m[::-1], y, mode='valid')
 
-def adata2df(scn_name,adatadict,infodict):
+def adata2df(scn_name,adatadict,infodict,roi_adata=None):
 
     # Function to turn adata into dataframes
     # See http://localhost:8889/user/fmoosvi/notebooks/OxygenMRI/q-dOE-MRI/adata2dataframe.ipynb
@@ -138,6 +138,10 @@ def adata2df(scn_name,adatadict,infodict):
         return df
     
     scn = sarpy.Scan(scn_name)
+    if roi_adata: #in case we need to mask out a region (e.g muscle vs tumour)
+        roi = scn.adata[roi_adata].data
+    else:
+        roi=1
    
     assert type(adatadict) is dict
     assert type(infodict) is dict
@@ -147,7 +151,7 @@ def adata2df(scn_name,adatadict,infodict):
     df_list = []
 
     for colName,adataName in adatadict.items():
-        adata_arrayList.append(scn.adata[adataName].data)
+        adata_arrayList.append(roi*scn.adata[adataName].data)
         df_list.append(array2df(adata_arrayList[-1],columname=colName))
 
     # now iterate through the dfs and then merge them
@@ -162,7 +166,3 @@ def adata2df(scn_name,adatadict,infodict):
     finaldf = pandas.concat([mergeddf,pandas.DataFrame(infodict,index=mergeddf.index)], axis=1) 
     
     return finaldf
-
-
-
-
