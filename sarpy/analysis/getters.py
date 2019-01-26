@@ -13,6 +13,7 @@ import os
 import numpy
 import copy
 import pylab
+import datetime
 
 def get_roi_weights(roi):
 
@@ -335,3 +336,16 @@ def get_rescaled_data(data,minVal=None,maxVal=None,std_modifier=None):
     rescaled_data =  numpy.true_divide((maxVal-minVal)*(data-minVal),
                                        (maxVal-minVal)) + minVal
     return rescaled_data
+
+def get_time_per_rep(scan_object_name):
+
+    scn = sarpy.Scan(scan_object_name)
+    assert len(scn.pdata[0].data.shape)>3
+    reps = scn.pdata[0].data.shape[-1]
+    
+    total_time = scn.method.PVM_ScanTimeStr
+    format = "%Hh%Mm%Ss%fms"
+    t=datetime.datetime.strptime(total_time,format)
+    total_time = (3600*t.hour) + (60*t.minute) + (t.second) + t.microsecond*1E-6
+
+    return numpy.divide(total_time,reps)

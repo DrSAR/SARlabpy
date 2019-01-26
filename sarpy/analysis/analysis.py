@@ -2018,14 +2018,9 @@ def analyse_ica(scn_to_analyse,
     
     datashape = data.shape
     reps = datashape[-1]
-    #assert scan_object.method.PVM_NRepetitions==reps
+    #assert scan_object.method.PVM_NRepetitions==reps  
 
-    import datetime
-    format = "%Hh%Mm%Ss%fms"
-    t=datetime.datetime.strptime(scan_object.method.PVM_ScanTimeStr,format)
-    total_time =  (t - datetime.datetime(1900,1,1)).total_seconds()
-
-    time_per_rep = numpy.divide(total_time,reps)
+    time_per_rep = getters.get_time_per_rep(scn_to_analyse)
 
     # Constrain the data being analysed
 
@@ -2132,11 +2127,6 @@ def analyse_ica(scn_to_analyse,
             limit = numpy.percentile(tmp,97)              
 
             slc = int(datashape[-2]/2)
-            # Plots
-            pylab.subplot(ncpts,2,2*ii+1)
-            pylab.plot(numpy.arange(0,datashape[-1])*time_per_rep,S_[:,ii],'o-')
-            pylab.xlabel('time (s)')
-            pylab.text(10,-0.15,ii,fontsize=20)
 
             # Maps
             pylab.subplot(ncpts,2,2*ii+2)
@@ -2148,6 +2138,13 @@ def analyse_ica(scn_to_analyse,
                 pylab.xlim(bbox[2],bbox[3])
                 pylab.ylim(bbox[1],bbox[0])
                 pylab.colorbar()
+
+            # Plots
+            pylab.subplot(ncpts,2,2*ii+1)
+            pylab.plot(numpy.arange(0,datashape[-1]),S_[:,ii],'o-')
+            pylab.xlabel('reps')
+            pylab.text(10,-0.15,ii,fontsize=20)
+
 
     return S_, A_reshaped,A_
 
