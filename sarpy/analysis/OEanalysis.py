@@ -16,10 +16,13 @@ import lmfit
 
 def definite(x,A,mean,sigma):
     # This is the lognormal definite and indefinite integral
+    # https://www.wolframalpha.com/input/?i=integrate+(A_0%2F2)*erfc(+(log(z%2Fx)+-+u)%2F(s_0*sqrt(2)))+dz
+    # this is the result of eq'n 8 integrated dz. This is from the john hudson paper : 
+    # QUANTIFICATION OF FLOW USING ULTRASOUND AND MICROBUBBLES: A DISRUPTION REPLENISHMENT MODEL BASED ON PHYSICAL PRINCIPLES
     def indefiniteIntegral(x,A,mean,sigma,z):
         
         part1 = z*scipy.special.erfc((numpy.log(z/x)-mean)/(numpy.sqrt(2)*sigma))
-        part2 = x*numpy.exp(mean+sigma**2/2)*scipy.special.erf((2*numpy.log(z/x)-2*mean-2*sigma**2)/(2*numpy.sqrt(2)*sigma))
+        part2 = x*numpy.exp(mean+sigma**2/2)*scipy.special.erf((numpy.log(z/x)-mean-sigma**2)/(numpy.sqrt(2)*sigma))
     
         return A/2*(part1+part2)
     
@@ -102,7 +105,6 @@ def fit_dOEMRI_EC(scn_to_analyze,
         print(result.fit_report())
     
     return result
-
 
 def display_dOEMRI_fit(fitresult,time_per_rep):
     
