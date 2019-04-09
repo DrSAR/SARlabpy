@@ -9,7 +9,7 @@ import sarpy.analysis.cest
 import pylab
 import numpy
 import sys
-
+import sarpy.analysis.getters
 ####### Visualization Functions #######
 
 def browse_MR(scn_to_view = None,data = None):
@@ -20,9 +20,7 @@ def browse_MR(scn_to_view = None,data = None):
 
     import pylab
 
-
-
-    if data is None and scn_to_view is None:
+    if data is None:
         scn = sarpy.Scan(scn_to_view)
         data = scn.pdata[0].data
         datashape = scn.pdata[0].data.shape
@@ -106,6 +104,54 @@ def browse_MRbbox(scn_to_view):
                          bbox_3=ipywidgets.IntSlider(description='bbox_3:',min=0,max=datashape[1]-1,value=datashape[1],step=1),
                          i = ipywidgets.IntSlider(description='Slice:',min=0,max=datashape[2]-1,step=1))
 
+import ipywidgets
+from ipywidgets import interact
+from ipywidgets import interact, interactive, fixed, interact_manual
+from IPython.display import display, clear_output
+
+def store_fitStart(scn_to_view,component_adata_label,fitStartadata_label='fitStart'):
+    '''
+    This function takes in the data and simply plots it with some slider bars for
+    x,y,slice and puts a cursor location at the pixel.
+    '''
+    import pylab
+
+    scn = sarpy.Scan(scn_to_view)
+    component = scn.adata[component_adata_label].data
+    datashape=component.shape
+    time_per_rep = sarpy.analysis.getters.get_time_per_rep(scn_to_view)
+    
+    timeaxis = numpy.arange(0,datashape[-1])*time_per_rep
+    
+    startingValue = sarpy.helpers.find_o2_inj_point(component)
+    
+    def plotComponent(fitStart):
+        
+        pylab.figure(figsize=(15,2))
+        pylab.plot(timeaxis,component,'o--')
+        pylab.axvline(int(120/time_per_rep))
+        
+        pylab.axvline(fitStart*time_per_rep,color='r')
+        
+        pylab.xlim(0,datashape[0]*time_per_rep)
+
+        # Creating and Displaying button
+        button = ipywidgets.Button(description="Store as {0}".format(fitStartadata_label))
+        display(button)
+
+        def store_fitStart(b):
+            clear_output()
+            print(fitStart)
+            
+            scn.store_adata(key=fitStartadata_label,data=fitStart,force=True)
+            #print('fitStart:'.format(fitStart)),
+        # Defining callback function
+        button.on_click(store_fitStart)
+
+    interact(plotComponent,fitStart = ipywidgets.IntSlider(description='Slice:',
+                                                           min=0,max=datashape[0],value=startingValue,step=1),continuousUpdate=False)
+    
+    
 def browse_CEST(scn_to_view,base_adata=None,adata_label=None,doFit = False, displayFit = False):
     
     scn = sarpy.Scan(scn_to_view)
@@ -221,7 +267,8 @@ def browse_LLfit(llscn_name,filtereddata):
 
 def browse_OEMRI(scn_name,inputdata=None,
                  bbox_adata_label=None,roi_label='transferred_roi',
-                 algorithm='deflation'):
+                 algorithm='deflation',fixEndpointBug = False,
+                 switchLength=120,skipdata=1):
 
     import sarpy.analysis.analysis
     import pylab
@@ -229,32 +276,40 @@ def browse_OEMRI(scn_name,inputdata=None,
     scn = sarpy.Scan(scn_name)
     #scans = sarpy.Experiment.from_masterlist(expStem+'.config').labels[OEscnString]
     datashape = scn.pdata[0].data.shape
-    #switchTimes = [0,2.1,4.5,6.5,8.5,10.5,12.5,14.1]    
+
+    if fixEndpointBug:
+        #This minor bug was discovered by Firas in January 2019 when he realized that the slider only 
+        # went to thr N-1th point for "endidx". To maintain backwards compatibility with scans up to OEP9,
+        # this flag was added
+        endpoint = datashape[-1]
+    else:
+        endpoint = datashape[-1] -1
 
     def view_image(NComponents, startidx, endidx):
         pylab.figure(figsize=(20,5))
 
         if inputdata is None:
-            data = scn.pdata[0].data[:,:,:,startidx:endidx]
+            override_data = None
         else:
-            data = inputdata[:,:,:,startidx:endidx]
-                       
+            override_data = inputdata[:,:,:,startidx:endidx:skipdata]                       
         sarpy.analysis.analysis.analyse_ica(scn_name,
-                data=data,
+                dataSourceTuple=(startidx,endidx,skipdata),
                 Ncomponents=NComponents,
-                #switchTimes=switchTimes,
+                override_data = override_data,
                 bbox=bbox_adata_label,
                 algorithm = algorithm,
                 roi_label=roi_label,
                 viz=True,
                 colours='PiYG_r',
-                sliceViz=False)
+                switchLength=switchLength)
+
         print(scn_name)
+
 
     interact(view_image, #scnnum = ipywidgets.IntSlider(description='Scan Number',min=0,max=len(scans)-1,step=1,continuous_update=False),
                          NComponents = ipywidgets.IntSlider(description='NComponents:',min=3,max=21,step=1,value=3,continuous_update=False),
                          startidx = ipywidgets.IntSlider(description='Start idx:',min=0,max=datashape[-1]-1,step=1,value=1,continuous_update=False),
-                         endidx = ipywidgets.IntSlider(description='End idx:',min=10,max=datashape[-1]-1,step=1,value=datashape[-1],continuous_update=False))
+                         endidx = ipywidgets.IntSlider(description='End idx:',min=10,max=endpoint,step=1,value=datashape[-1],continuous_update=False))
 
 def make_1mm_scale(scn_name):
 

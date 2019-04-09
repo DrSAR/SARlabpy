@@ -166,3 +166,18 @@ def adata2df(scn_name,adatadict,infodict,roi_adata=None):
     finaldf = pandas.concat([mergeddf,pandas.DataFrame(infodict,index=mergeddf.index)], axis=1) 
     
     return finaldf
+
+def find_o2_inj_point(data):
+    import sarpy.helpers
+    filtered_data = sarpy.helpers.smooth_SG(data,7,3)
+    
+    diff = numpy.diff(filtered_data)
+    std =  numpy.std(diff)
+    
+    possiblePoints = []
+    
+    for i in range(len(diff)):
+        if diff[i]>numpy.std(diff):
+            possiblePoints.append(i)
+            
+    return possiblePoints[0]

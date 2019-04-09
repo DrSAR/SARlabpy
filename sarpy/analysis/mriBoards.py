@@ -180,21 +180,22 @@ def generate(**kwargs):
                 scn = sarpy.Scan(lbl_scan_name)
                 adata_key = row_conf.pop('adata', None)
 
-                if adata_key is not None and 'OEdraft' in adata_key: # Add limits specific to per scan for OE maps
-
-                    try:
-                        vmin = -0.2
-                        vmax = 0.2
-                    except KeyError:
-                        vmin = -10
-                        vmax = 10
+                    # try:
+                    #     vmin = -0.2
+                    #     vmax = 0.2
+                    # except KeyError:
+                    #     vmin = -10
+                    #     vmax = 10
 
                 if vmin is not None:
                     vmin = numpy.float(vmin)
+                elif adata_key is not None and 'OEdraft' in adata_key: # Add limits specific to per scan for OE maps
+                    vmin = -0.2
 
                 if vmax is not None:
                     vmax = numpy.float(vmax)
-
+                elif adata_key is not None and 'OEdraft' in adata_key: # Add limits specific to per scan for OE maps
+                    vmax = 0.2
                 ## Add an option to mask out the background 
                 roi_mask = row_conf.pop('roi_adata', None)
                 bat_adata = row_conf.pop('bat_adata', None)

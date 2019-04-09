@@ -2001,7 +2001,7 @@ def h_fit_T2star(scn_to_analyse=None,
 ###
 ##################### 
 
-def analyse_ica(scn_to_analyse,
+def analyse_ica_legacy(scn_to_analyse,
                 data,
                 Ncomponents,
                 #switchTimes=None,
@@ -2145,8 +2145,157 @@ def analyse_ica(scn_to_analyse,
             pylab.xlabel('reps')
             pylab.text(10,-0.15,ii,fontsize=20)
 
+    return S_, A_reshaped,A_
+
+def analyse_ica(scn_to_analyse,
+                dataSourceTuple,
+                Ncomponents,
+                override_data = None,
+                bbox=None,
+                roi_label=None,
+                viz = True,
+                algorithm = 'deflation',
+                colours='PiYG_r',
+                switchLength=120):
+
+    scan_object = sarpy.Scan(scn_to_analyse)
+
+    if override_data is None:
+
+        data = scan_object.pdata[0].data[:,:,:,dataSourceTuple[0]:dataSourceTuple[1]:dataSourceTuple[2]]
+    else:
+        data = override_data[:,:,:,dataSourceTuple[0]:dataSourceTuple[1]:dataSourceTuple[2]]
+        print('WARNING: DOUBLE CHECK TO MAKE SURE INPUTDATA IS FROM THE CORRECT SCAN')
+
+    datashape = data.shape
+    reps = datashape[-1]
+    time_per_rep = getters.get_time_per_rep(scn_to_analyse)
+
+    # Constrain the data being analysed
+
+    if bbox is 'all':
+        bbox = numpy.array([0,datashape[0],0,datashape[1]])    
+    elif bbox is None:
+        try:
+            bbox = scan_object.adata['bbox'].data
+        except KeyError:       
+            bbox = numpy.array([0,datashape[0],0,datashape[1]])
+    else:
+        bbox = scan_object.adata[bbox].data
+
+    # ROI or bbox
+    if roi_label:
+        roi = scan_object.adata[roi_label].data
+        #if roi.shape[2]>10:
+        #    roi[:,:,8:] = numpy.nan
+        #    print('WARNING: ONLY SLICES 0:8 considered!!')
+    else: # use the whole mouse
+        tmp = numpy.zeros(shape=datashape)*0
+        roi = tmp[:,:,:,0]
+        roi[bbox[0]:bbox[1],bbox[2]:bbox[3],:] = 1
+
+    # get me a flat index
+    nonNaNidx = numpy.where(numpy.isfinite(roi.flatten())) # tumour roi
+
+    # create an empy array to accept the 2D array which has time in 1st D and all locations in 2nd D
+    flatter_array = numpy.zeros(shape=(datashape[-1], numpy.size(nonNaNidx)))
+    
+    # step through time in a loop - not elegant but fits my brain.
+    for i in range(datashape[-1]):
+        if data is None:
+            raise NotImplementedError
+            #tmp = numpy.mean(scn.pdata[0].data[:,:,:,0:3,i],axis=3)
+        else:
+            tmp = data[:,:,:,i]
+        flatter_array[i, :] = tmp.flatten()[nonNaNidx]
+
+    ####
+    # Set up the ICA analysis
+    ####
+    from scipy import signal
+    from sklearn.decomposition import FastICA, PCA
+
+    n_samples = flatter_array.shape[0]
+    X = flatter_array
+    ncpts = Ncomponents
+    ica = FastICA(n_components=ncpts, algorithm=algorithm, random_state=3141,max_iter=2000)
+    S_ = ica.fit_transform(X)  # Reconstruct signals
+    A_ = ica.mixing_  # Get estimated mixing matrix
+    #n_iter = ica.n_iter # does NOT WORK
+    #print('Number of iterations: {0}'.format(n_iter))
+
+    # Process the maps and components
+    S_,A_ = h_invertICA(S_,A_)
+
+    ####
+    # Recover the maps
+    ####
+    A_reshaped_prime = numpy.zeros(shape=(numpy.prod(datashape[0:3]), ncpts))+numpy.nan
+
+    # we still have nonNaNidx to fill the array as needed
+    for i in range(ncpts):
+        A_reshaped_one_component = numpy.zeros(shape=(numpy.prod(datashape[0:3])))+numpy.nan
+        A_reshaped_one_component[nonNaNidx] = A_[:,i]
+        A_reshaped_prime[:,i] = A_reshaped_one_component
+
+    A_reshaped = A_reshaped_prime.reshape(list(datashape[0:3])+[ncpts]) 
+
+    # Show an image of the components
+
+    if viz:
+        import pylab
+        pylab.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=None)
+
+        repaxis = numpy.arange(0,datashape[-1])
+        
+        # Now plot the ICA analysis results
+        fig = pylab.figure(figsize=(15,20))
+        gs = fig.add_gridspec(ncols=3,nrows=ncpts)
+
+        for ii in range(ncpts):
+
+            # Approximate the Limit of the visualization
+            tmp = A_reshaped[:,:,:,ii].flatten()
+            tmp = tmp[numpy.isfinite(tmp)]
+
+            limit = numpy.percentile(tmp,97)              
+
+            slc = int(datashape[-2]/2)
+
+            # Maps
+            fig.add_subplot(gs[ii,2])
+            ######pylab.subplot(ncpts,2,2*ii+2)
+            if numpy.nansum(A_reshaped[:,:,slc,ii]) == 0:
+                pylab.axis('off')
+                continue
+            else:
+                pylab.imshow(A_reshaped[:,:,slc,ii],vmin=-limit,vmax=limit,cmap=colours)
+                pylab.xlim(bbox[2],bbox[3])
+                pylab.ylim(bbox[1],bbox[0])
+                pylab.axis('off')
+                pylab.colorbar()
+
+            # Plots
+            ######pylab.subplot(ncpts,2,2*ii+1)
+            fig.add_subplot(gs[ii,0:2])
+            pylab.locator_params(axis='y',nbins=2)
+
+            if ii < ncpts:
+                pylab.tick_params(axis='x',labelbottom='off')
+            lstyles = ['-','--']*10
+            lcolors = ['b','r']*10
+            repStart = int(switchLength/time_per_rep)
+
+            for j in range(0,20):
+                pylab.axvline(repStart*(1+j),linewidth=2,linestyle=lstyles[j],color=lcolors[j],zorder=0)
+            pylab.plot(repaxis,S_[:,ii],'o-')
+            pylab.xlabel('reps')
+            pylab.xlim(repaxis[0],repaxis[-1])
+            pylab.text(10,-0.15,ii,fontsize=20)
+        pylab.subplots_adjust(hspace=0,wspace=0)
 
     return S_, A_reshaped,A_
+
 
 def h_invertICA(s,a):
     for cmp in range(s.shape[-1]):
