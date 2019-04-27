@@ -19,10 +19,14 @@ def definite(x,A,mean,sigma):
     # https://www.wolframalpha.com/input/?i=integrate+(A_0%2F2)*erfc(+(log(z%2Fx)+-+u)%2F(s_0*sqrt(2)))+dz
     # this is the result of eq'n 8 integrated dz. This is from the john hudson paper : 
     # QUANTIFICATION OF FLOW USING ULTRASOUND AND MICROBUBBLES: A DISRUPTION REPLENISHMENT MODEL BASED ON PHYSICAL PRINCIPLES
+    # bear://x-callback-url/open-note?id=F0BE0087-CB51-4236-BCB0-F8DC97A53F06-331-000013EDCE1953C1
+
     def indefiniteIntegral(x,A,mean,sigma,z):
         
         part1 = z*scipy.special.erfc((numpy.log(z/x)-mean)/(numpy.sqrt(2)*sigma))
         part2 = x*numpy.exp(mean+sigma**2/2)*scipy.special.erf((numpy.log(z/x)-mean-sigma**2)/(numpy.sqrt(2)*sigma))
+        # P.S. according to wolfram alpha, the negative sign on part 2 is in a different place inside the erf. but erf is an odd function so erf(-x) = -erf(x)
+        # https://en.wikipedia.org/wiki/Error_function
     
         return A/2*(part1+part2)
     
