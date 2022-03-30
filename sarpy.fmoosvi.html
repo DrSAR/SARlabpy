@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Documenting and Testing sarpy &#8212; sarpy 5.0beta documentation</title>
+    <title>fmoosvi Package &#8212; sarpy 5.0beta documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -17,8 +17,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Examples for BRUKERIO" href="BRUKERIOexamples.html" />
-    <link rel="prev" title="Suggested Workflow for the Code Repository" href="Workflow.html" /> 
+    <link rel="next" title="setup Module" href="setup.html" />
+    <link rel="prev" title="DCE Package" href="sarpy.DCE.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -30,13 +30,15 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
+          <a href="setup.html" title="setup Module"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
+          <a href="sarpy.DCE.html" title="DCE Package"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Documenting and Testing sarpy</a></li> 
+          <li class="nav-item nav-item-1"><a href="modules.html" >sarpy Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="sarpy.html" accesskey="U">sarpy Package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fmoosvi Package</a></li> 
       </ul>
     </div>  
 
@@ -45,20 +47,22 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="documenting-and-testing-sarpy">
-<h1>Documenting and Testing sarpy<a class="headerlink" href="#documenting-and-testing-sarpy" title="Permalink to this headline">¶</a></h1>
-<p>To make this code usable, it needs to be documented. The easiest and at the same time most helpful way to write documentation are a few examples (copied verbatim from your interactive session) into the docstring. The amazing thing is that this docstring can be parsed by the doctest module in order to <strong>automatically</strong> run those examples and compare them to the expected output.</p>
-<p>We should do more of that!</p>
-<section id="inner-workings">
-<h2>Inner Workings<a class="headerlink" href="#inner-workings" title="Permalink to this headline">¶</a></h2>
-<p>The documentation in this package makes use of Sphinx, the automated documentation project. Essentially it harvests the
-docstrings of all modules and puts it together in a nice and appetizing way. The instruction for this automated
-compilation of HTML documentation is in the <strong>doc</strong> folder (Makefile, config.py and some static pre-written, global
-document pages). Simply going to that directory and issuing <em>make html</em> will recreate the documentation and store it in
-the <strong>html</strong> folder. The <strong>html</strong> folder is bizarrely the working copy of a different, special (orphan) branch named
-gh-pages. When we push the html pages to github they are processed and will be hosted on the <a class="reference external" href="https://DrSAR.github.com/SARlabpy">github pages
-https://DrSAR.github.com/SARlabpy</a>. That domain is also pointed to from our own
-domain <a class="reference external" href="https://code.sarlab.ca">code.sarlab.ca</a></p>
+  <section id="fmoosvi-package">
+<h1>fmoosvi Package<a class="headerlink" href="#fmoosvi-package" title="Permalink to this headline">¶</a></h1>
+<section id="bsanalysis-module">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">BSanalysis</span></code> Module<a class="headerlink" href="#bsanalysis-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="analysis-module">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">analysis</span></code> Module<a class="headerlink" href="#analysis-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="getters-module">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">getters</span></code> Module<a class="headerlink" href="#getters-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="test-suite-module">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">test_suite</span></code> Module<a class="headerlink" href="#test-suite-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="wrappers-module">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">wrappers</span></code> Module<a class="headerlink" href="#wrappers-module" title="Permalink to this headline">¶</a></h2>
 </section>
 </section>
 
@@ -72,8 +76,12 @@ domain <a class="reference external" href="https://code.sarlab.ca">code.sarlab.c
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Documenting and Testing sarpy</a><ul>
-<li><a class="reference internal" href="#inner-workings">Inner Workings</a></li>
+<li><a class="reference internal" href="#">fmoosvi Package</a><ul>
+<li><a class="reference internal" href="#bsanalysis-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">BSanalysis</span></code> Module</a></li>
+<li><a class="reference internal" href="#analysis-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">analysis</span></code> Module</a></li>
+<li><a class="reference internal" href="#getters-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">getters</span></code> Module</a></li>
+<li><a class="reference internal" href="#test-suite-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test_suite</span></code> Module</a></li>
+<li><a class="reference internal" href="#wrappers-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">wrappers</span></code> Module</a></li>
 </ul>
 </li>
 </ul>
@@ -81,18 +89,18 @@ domain <a class="reference external" href="https://code.sarlab.ca">code.sarlab.c
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="Workflow.html"
-                          title="previous chapter">Suggested Workflow for the Code Repository</a></p>
+    <p class="topless"><a href="sarpy.DCE.html"
+                          title="previous chapter">DCE Package</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="BRUKERIOexamples.html"
-                          title="next chapter">Examples for BRUKERIO</a></p>
+    <p class="topless"><a href="setup.html"
+                          title="next chapter">setup Module</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/Documenting-Testing.rst.txt"
+      <li><a href="_sources/sarpy.fmoosvi.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -125,13 +133,15 @@ domain <a class="reference external" href="https://code.sarlab.ca">code.sarlab.c
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
+          <a href="setup.html" title="setup Module"
              >next</a> |</li>
         <li class="right" >
-          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
+          <a href="sarpy.DCE.html" title="DCE Package"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Documenting and Testing sarpy</a></li> 
+          <li class="nav-item nav-item-1"><a href="modules.html" >sarpy Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="sarpy.html" >sarpy Package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fmoosvi Package</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

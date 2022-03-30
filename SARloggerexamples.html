@@ -1,33 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>How to use Module Logging &#8212; sarpy 5.0beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
-    <title>How to use Module Logging &mdash; sarpy 5.0beta documentation</title>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '5.0beta',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="sarpy 5.0beta documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="sarpy Documentation" href="modules.html" />
     <link rel="prev" title="Examples for BRUKERIO" href="BRUKERIOexamples.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -43,7 +35,8 @@
         <li class="right" >
           <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">How to use Module Logging</a></li> 
       </ul>
     </div>  
 
@@ -52,74 +45,76 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="how-to-use-module-logging">
+  <section id="how-to-use-module-logging">
 <h1>How to use Module Logging<a class="headerlink" href="#how-to-use-module-logging" title="Permalink to this headline">¶</a></h1>
 <p>Modules in this package (should) provide a thin layer to the python
 logging module. The idea is to emit messages inside the library and
 let the user of said library decide on whether they want to see it.</p>
-<div class="section" id="module-setup">
+<section id="module-setup">
 <h2>Module setup<a class="headerlink" href="#module-setup" title="Permalink to this headline">¶</a></h2>
 <p>Any module interested in logging should include the following header:</p>
-<div class="highlight-py"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="n">logger</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
 </pre></div>
 </div>
 <p>Inside the module being watch, statements of the kind:</p>
-<div class="highlight-py"><div class="highlight"><pre><span></span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Variable x={0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Variable x=</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;File not found, using random data instead. Good luck&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>will lead to debug messages. With the default setting the first will be swallowed
 (since it is not severe enough, i.e. low enough log level), while the second should
 be visible.</p>
-</div>
-<div class="section" id="configuration-by-the-module-user">
+</section>
+<section id="configuration-by-the-module-user">
 <h2>Configuration by the Module User<a class="headerlink" href="#configuration-by-the-module-user" title="Permalink to this headline">¶</a></h2>
 <p>The importer of the module (e.g. BRUKERIO) needs to issue the following
 statement in addition to the actual import statement:</p>
-<div class="highlight-py"><div class="highlight"><pre><span></span><span class="c1">#make the SARlogger features available</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1">#make the SARlogger features available</span>
 <span class="kn">from</span> <span class="nn">sarpy</span> <span class="kn">import</span> <span class="n">SARlogger</span>
 <span class="c1">#test logging for BRUKERIO</span>
 <span class="kn">import</span> <span class="nn">BRUKERIO</span>
 <span class="n">SARlogger</span><span class="o">.</span><span class="n">initiate_logging</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>At this point, a console handler that issues anything that&#8217;s a WARNING or
+<p>At this point, a console handler that issues anything that’s a WARNING or
 more sever will be written to to the console.
-Without the call to <a class="reference internal" href="sarpy.BRUKERIO.html#sarpy.BRUKERIO.SARlogger.initiate_logging" title="sarpy.BRUKERIO.SARlogger.initiate_logging"><code class="xref py py-meth docutils literal"><span class="pre">sarpy.BRUKERIO.SARlogger.initiate_logging()</span></code></a>, logging messages will be ignored alltogether.</p>
+Without the call to <code class="xref py py-meth docutils literal notranslate"><span class="pre">sarpy.io.SARlogger.initiate_logging()</span></code>, logging messages will be ignored alltogether.</p>
 <p>If you desire output to a file, another convenience function in SARlogger can be used
 to attach another handler (with another log level and formatter):</p>
-<div class="highlight-py"><div class="highlight"><pre><span></span><span class="n">SARlogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">SARlogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">BRUKERIO</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By default, this will lead to logging at the DEBUG level to file /tmp/SARlabpy.log.</p>
-</div>
-<div class="section" id="log-levels">
+</section>
+<section id="log-levels">
 <h2>Log levels<a class="headerlink" href="#log-levels" title="Permalink to this headline">¶</a></h2>
 <p>Log levels can be changed both at the logger level and the handler level. Note that no
 log messages are handed on to the handlers if they are above the logger log level.
 Each individual handler in turn decides whether to publish a received log message or
 not. This way it is possible to reduce console output to the more severe messages
 and log every little fart in a log file.</p>
-</div>
-<div class="section" id="more-sophisticated-log-control">
+</section>
+<section id="more-sophisticated-log-control">
 <h2>More sophisticated log control<a class="headerlink" href="#more-sophisticated-log-control" title="Permalink to this headline">¶</a></h2>
 <p>Since the module will expose access to the logger through module attribute <cite>logger</cite>,
 logging is as configurable as the python logging module itself. You can attach
 further handlers, change the levels, come up with new formatters and filters
-as you desire....</p>
-</div>
-</div>
+as you desire….</p>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">How to use Module Logging</a><ul>
 <li><a class="reference internal" href="#module-setup">Module setup</a></li>
 <li><a class="reference internal" href="#configuration-by-the-module-user">Configuration by the Module User</a></li>
@@ -129,16 +124,21 @@ as you desire....</p>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="BRUKERIOexamples.html"
-                        title="previous chapter">Examples for BRUKERIO</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="modules.html"
-                        title="next chapter">sarpy Documentation</a></p>
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="BRUKERIOexamples.html"
+                          title="previous chapter">Examples for BRUKERIO</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="modules.html"
+                          title="next chapter">sarpy Documentation</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/SARloggerexamples.txt"
+      <li><a href="_sources/SARloggerexamples.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -176,12 +176,13 @@ as you desire....</p>
         <li class="right" >
           <a href="BRUKERIOexamples.html" title="Examples for BRUKERIO"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">How to use Module Logging</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2013, SARlab members.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+        &#169; Copyright 2013, SARlab members.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>

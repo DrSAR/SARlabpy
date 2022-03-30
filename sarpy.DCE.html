@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Package Organization for sarpy &#8212; sarpy 5.0beta documentation</title>
+    <title>DCE Package &#8212; sarpy 5.0beta documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -17,8 +17,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Suggested Workflow for the Code Repository" href="Workflow.html" />
-    <link rel="prev" title="SARpy’s documentation!" href="index.html" /> 
+    <link rel="next" title="fmoosvi Package" href="sarpy.fmoosvi.html" />
+    <link rel="prev" title="BRUKERIO Package" href="sarpy.BRUKERIO.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -30,13 +30,15 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
+          <a href="sarpy.fmoosvi.html" title="fmoosvi Package"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="SARpy’s documentation!"
+          <a href="sarpy.BRUKERIO.html" title="BRUKERIO Package"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Package Organization for sarpy</a></li> 
+          <li class="nav-item nav-item-1"><a href="modules.html" >sarpy Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="sarpy.html" accesskey="U">sarpy Package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">DCE Package</a></li> 
       </ul>
     </div>  
 
@@ -45,29 +47,11 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="package-organization-for-sarpy">
-<h1>Package Organization for sarpy<a class="headerlink" href="#package-organization-for-sarpy" title="Permalink to this headline">¶</a></h1>
-<p>The code is organized in a standard python package layout as <a class="reference external" href="http://guide.python-distribute.org/creation.html">discussed here</a>. More handy tips on organizing this can be had from <a class="reference external" href="http://infinitemonkeycorps.net/docs/pph/">infinite monkeys</a>.</p>
-<p>The root directory contains</p>
-<ul>
-<li><p><em>doc</em>: directory of files used for the automated documenation creation,</p></li>
-<li><dl class="simple">
-<dt><em>html</em>: directory that contains the orphan branch hg-pages which is pushed to the</dt><dd><p>documentation that’s hosted on <a class="reference external" href="http://code.sarlab.ca">code.sarlab.ca</a></p>
-</dd>
-</dl>
-</li>
-<li><p><em>sarpy</em> contains:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>__init__.py which is used to initialize the packageo (see <a class="reference external" href="http://docs.python.org/2/tutorial/modules.html#packages">here for more information</a>)</p></li>
-<li><p><strong>test</strong> a directory containing unit tests for code in all the other directories</p></li>
-<li><p><strong>io</strong> – input output routines to read BRUKER data and other things</p></li>
-<li><p><strong>fmoosvi</strong> Firas’ sandbox</p></li>
-<li><p><strong>DCE</strong> DCE fitting and AIF simulations - mostly Tammo’s work</p></li>
-</ul>
-</div></blockquote>
-</li>
-</ul>
+  <section id="dce-package">
+<h1>DCE Package<a class="headerlink" href="#dce-package" title="Permalink to this headline">¶</a></h1>
+<section id="tammo-lib-module">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">tammo_lib</span></code> Module<a class="headerlink" href="#tammo-lib-module" title="Permalink to this headline">¶</a></h2>
+</section>
 </section>
 
 
@@ -78,19 +62,29 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">DCE Package</a><ul>
+<li><a class="reference internal" href="#tammo-lib-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tammo_lib</span></code> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="index.html"
-                          title="previous chapter">SARpy’s documentation!</a></p>
+    <p class="topless"><a href="sarpy.BRUKERIO.html"
+                          title="previous chapter">BRUKERIO Package</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="Workflow.html"
-                          title="next chapter">Suggested Workflow for the Code Repository</a></p>
+    <p class="topless"><a href="sarpy.fmoosvi.html"
+                          title="next chapter">fmoosvi Package</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/sarpy-layout.rst.txt"
+      <li><a href="_sources/sarpy.DCE.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -123,13 +117,15 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Workflow.html" title="Suggested Workflow for the Code Repository"
+          <a href="sarpy.fmoosvi.html" title="fmoosvi Package"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="SARpy’s documentation!"
+          <a href="sarpy.BRUKERIO.html" title="BRUKERIO Package"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Package Organization for sarpy</a></li> 
+          <li class="nav-item nav-item-1"><a href="modules.html" >sarpy Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="sarpy.html" >sarpy Package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">DCE Package</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

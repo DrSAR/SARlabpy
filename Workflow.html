@@ -1,33 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Suggested Workflow for the Code Repository &#8212; sarpy 5.0beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
-    <title>Suggested Workflow for the Code Repository &mdash; sarpy 5.0beta documentation</title>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '5.0beta',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="sarpy 5.0beta documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Documenting and Testing sarpy" href="Documenting-Testing.html" />
     <link rel="prev" title="Package Organization for sarpy" href="sarpy-layout.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -43,7 +35,8 @@
         <li class="right" >
           <a href="sarpy-layout.html" title="Package Organization for sarpy"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Suggested Workflow for the Code Repository</a></li> 
       </ul>
     </div>  
 
@@ -52,16 +45,15 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="suggested-workflow-for-the-code-repository">
+  <section id="suggested-workflow-for-the-code-repository">
 <h1>Suggested Workflow for the Code Repository<a class="headerlink" href="#suggested-workflow-for-the-code-repository" title="Permalink to this headline">¶</a></h1>
 <p><em>Wherein I lay down the law on how to git it done.</em></p>
 <p>There are a great many good suggested workflows, e.g. the <a class="reference external" href="http://nvie.com/posts/a-successful-git-branching-model/">Successful git branching model</a>. A slightly opposing view is discussed by Randy Fay where he favours <a class="reference external" href="http://randyfay.com/content/rebase-workflow-git">a Rebase workflow</a>. One might want to look at both article and try to understand them.</p>
 <p>I have come to believe in the rebase workflow and hence I suggest we do the following:</p>
 <ul>
-<li><p class="first">Branch master is a branch that should in most situations have (almost) fully functional code. This branch can have tags attached so that you can go back and reproduce your work. &#8211; Currently only the central integrator (SAR) can push to it.</p>
-</li>
-<li><p class="first">Any given feature, bugfix, enhancement should be worked on in a (local) branch. Feel free to push them to the central repo (as that branch) but nobody has any right to expect to find workable code in there.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>git checkout master
+<li><p>Branch master is a branch that should in most situations have (almost) fully functional code. This branch can have tags attached so that you can go back and reproduce your work. – Currently only the central integrator (SAR) can push to it.</p></li>
+<li><p>Any given feature, bugfix, enhancement should be worked on in a (local) branch. Feel free to push them to the central repo (as that branch) but nobody has any right to expect to find workable code in there.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git checkout master
 git checkout -b mynewfeature <span class="c1"># same as git branch mynewfeature ; git checkout mynewfeature</span>
 <span class="c1"># do work ...</span>
 git commit <span class="c1"># maybe even a few times</span>
@@ -69,45 +61,50 @@ git push origin mynewfeature  <span class="c1"># if you want a backup</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">The objective here is that your code will at somepoint work with the rest of the code (which, of course, is also evolving). Hence to effect that merge at some future date, you need to stay on top of things. You do this by &#8216;rebasing&#8217; all your as yet unmerged changes on the most recent version of master.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>git fetch
+<li><p>The objective here is that your code will at somepoint work with the rest of the code (which, of course, is also evolving). Hence to effect that merge at some future date, you need to stay on top of things. You do this by ‘rebasing’ all your as yet unmerged changes on the most recent version of master.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git fetch
 git rebase origin/master <span class="c1"># you do this while still checked out on mynewfeature</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">If time comes to make the feature, bugfix, whatever available, <strong>tell me</strong>. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>git checkout master
+<li><p>If time comes to make the feature, bugfix, whatever available, <strong>tell me</strong>. Make sure your branch is (a) rebased on top of recent master (b) pushed to the central repo so I can get to it. This is what I will do:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git checkout master
 git merge --no-ff mynewfeature
 git push
 </pre></div>
 </div>
 </li>
-<li><p class="first">As a convention for the use of branches I suggest:</p>
+<li><p>As a convention for the use of branches I suggest:</p>
 <ul class="simple">
-<li><em>master</em> the slighlty more sacrosanct branch</li>
-<li><em>hg-pages</em> do not touch! this is a special orphan branch that is used for auto-documentation</li>
-<li><em>firas/xxx</em> replace firas with your name or initials and xxx if you find that there is a feature that you are working on at the moment. A branch that is labelled with a name is totally off-limits for anyone else to force push to! We have log files. And we will find you.</li>
+<li><p><em>master</em> the slighlty more sacrosanct branch</p></li>
+<li><p><em>hg-pages</em> do not touch! this is a special orphan branch that is used for auto-documentation</p></li>
+<li><p><em>firas/xxx</em> replace firas with your name or initials and xxx if you find that there is a feature that you are working on at the moment. A branch that is labelled with a name is totally off-limits for anyone else to force push to! We have log files. And we will find you.</p></li>
 </ul>
 </li>
 </ul>
-</div>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="sarpy-layout.html"
-                        title="previous chapter">Package Organization for sarpy</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Documenting-Testing.html"
-                        title="next chapter">Documenting and Testing sarpy</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="sarpy-layout.html"
+                          title="previous chapter">Package Organization for sarpy</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Documenting-Testing.html"
+                          title="next chapter">Documenting and Testing sarpy</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/Workflow.txt"
+      <li><a href="_sources/Workflow.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -145,12 +142,13 @@ git push
         <li class="right" >
           <a href="sarpy-layout.html" title="Package Organization for sarpy"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Suggested Workflow for the Code Repository</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2013, SARlab members.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+        &#169; Copyright 2013, SARlab members.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>

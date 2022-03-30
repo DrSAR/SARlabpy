@@ -1,6 +1,14 @@
 BRUKERIO Package
 ================
 
+:mod:`lowlevel` Module
+----------------------
+
+.. automodule:: sarpy.BRUKERIO.lowlevel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`AData_classes` Module
 ---------------------------
 
@@ -9,10 +17,10 @@ BRUKERIO Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`lowlevel` Module
-------------------------
+:mod:`BRUKERIO` Module
+----------------------
 
-.. automodule:: sarpy.BRUKERIO.lowlevel
+.. automodule:: sarpy.BRUKERIO
     :members:
     :undoc-members:
     :show-inheritance:
@@ -21,14 +29,6 @@ BRUKERIO Package
 ----------------------------
 
 .. automodule:: sarpy.BRUKERIO.BRUKER_classes
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`SARlogger` Module
------------------------
-
-.. automodule:: sarpy.BRUKERIO.SARlogger
     :members:
     :undoc-members:
     :show-inheritance:
