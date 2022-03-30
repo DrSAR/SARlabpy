@@ -1,11 +1,21 @@
-DCE Package
-===========
+sarpy.DCE package
+=================
 
-:mod:`tammo_lib` Module
------------------------
+Submodules
+----------
 
-.. .. automodule:: sarpy.DCE.tammo_lib
-    :members:
-    :undoc-members:
-    :show-inheritance:
+sarpy.DCE.tammo\_lib module
+---------------------------
 
+.. automodule:: sarpy.DCE.tammo_lib
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: sarpy.DCE
+   :members:
+   :undoc-members:
+   :show-inheritance:
