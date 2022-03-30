@@ -1,43 +1,53 @@
-fmoosvi Package
-===============
+sarpy.fmoosvi package
+=====================
 
-:mod:`BSanalysis` Module
-------------------------
+Submodules
+----------
 
-.. .. automodule:: sarpy.fmoosvi.BSanalysis
-    :members:
-    :undoc-members:
-    :show-inheritance:
+sarpy.fmoosvi.PKlib module
+--------------------------
 
-:mod:`analysis` Module
-----------------------
+.. automodule:: sarpy.fmoosvi.PKlib
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. .. automodule:: sarpy.fmoosvi.analysis
-    :members:
-    :undoc-members:
-    :show-inheritance:
+sarpy.fmoosvi.VTC\_test module
+------------------------------
 
-:mod:`getters` Module
----------------------
+.. automodule:: sarpy.fmoosvi.VTC_test
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. .. automodule:: sarpy.fmoosvi.getters
-    :members:
-    :undoc-members:
-    :show-inheritance:
+sarpy.fmoosvi.roipoly module
+----------------------------
 
-:mod:`test_suite` Module
-------------------------
+.. automodule:: sarpy.fmoosvi.roipoly
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. .. automodule:: sarpy.fmoosvi.test_suite
-    :members:
-    :undoc-members:
-    :show-inheritance:
+sarpy.fmoosvi.test\_suite module
+--------------------------------
 
-:mod:`wrappers` Module
-----------------------
+.. automodule:: sarpy.fmoosvi.test_suite
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. .. automodule:: sarpy.fmoosvi.wrappers
-    :members:
-    :undoc-members:
-    :show-inheritance:
+sarpy.fmoosvi.wrappers module
+-----------------------------
 
+.. automodule:: sarpy.fmoosvi.wrappers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: sarpy.fmoosvi
+   :members:
+   :undoc-members:
+   :show-inheritance:
