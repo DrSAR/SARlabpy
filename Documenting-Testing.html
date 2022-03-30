@@ -53,12 +53,20 @@
 <h2>Inner Workings<a class="headerlink" href="#inner-workings" title="Permalink to this headline">¶</a></h2>
 <p>The documentation in this package makes use of Sphinx, the automated documentation project. Essentially it harvests the
 docstrings of all modules and puts it together in a nice and appetizing way. The instruction for this automated
-compilation of HTML documentation is in the <strong>doc</strong> folder (Makefile, config.py and some static pre-written, global
-document pages). Simply going to that directory and issuing <em>make html</em> will recreate the documentation and store it in
-the <strong>html</strong> folder. The <strong>html</strong> folder is bizarrely the working copy of a different, special (orphan) branch named
-gh-pages. When we push the html pages to github they are processed and will be hosted on the <a class="reference external" href="https://DrSAR.github.com/SARlabpy">github pages
-https://DrSAR.github.com/SARlabpy</a>. That domain is also pointed to from our own
-domain <a class="reference external" href="https://code.sarlab.ca">code.sarlab.ca</a></p>
+compilation of HTML documentation is in the <code class="docutils literal notranslate"><span class="pre">doc</span></code> folder (<code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, <code class="docutils literal notranslate"><span class="pre">config.py</span></code> and some static pre-written, global
+document pages). Simply going to that directory and issuing <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> will recreate the documentation and store it in
+the <code class="docutils literal notranslate"><span class="pre">html</span></code> folder. The <code class="docutils literal notranslate"><span class="pre">html</span></code> folder is bizarrely the working copy of a different, special (orphan) branch named
+gh-pages. When we push the html pages to github they are processed and will be hosted on (github pages
+https://DrSAR.github.com/SARlabpy)[https://DrSAR.github.com/SARlabpy]. That domain is also pointed to from our own
+domain https://code.sarlab.ca.</p>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> will write a lot of stuff into _build/html.
+One way to publish this by hand is</p>
+<ul class="simple">
+<li><p>to checkout gh-pages,</p></li>
+<li><p>to wipe the entire tree (without getting rid of the <code class="docutils literal notranslate"><span class="pre">.git</span></code> directory and <code class="docutils literal notranslate"><span class="pre">CNAME</span></code>),</p></li>
+<li><p>to copy the content of html (temporarily stashed somewhere?) into the project root directory, and, finally,</p></li>
+<li><p>to (force-?)push to gh-pages upstream.</p></li>
+</ul>
 </section>
 </section>
 
@@ -92,7 +100,7 @@ domain <a class="reference external" href="https://code.sarlab.ca">code.sarlab.c
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/Documenting-Testing.rst.txt"
+      <li><a href="_sources/Documenting-Testing.md.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>

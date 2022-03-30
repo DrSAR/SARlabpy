@@ -1,0 +1,471 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sarpy.PKanalysis package &#8212; sarpy 5.0beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="sarpy.analysis package" href="sarpy.analysis.html" />
+    <link rel="prev" title="sarpy.ImageProcessing package" href="sarpy.ImageProcessing.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sarpy.analysis.html" title="sarpy.analysis package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sarpy.ImageProcessing.html" title="sarpy.ImageProcessing package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >sarpy Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="sarpy.html" accesskey="U">sarpy package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">sarpy.PKanalysis package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="sarpy-pkanalysis-package">
+<h1>sarpy.PKanalysis package<a class="headerlink" href="#sarpy-pkanalysis-package" title="Permalink to this headline">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="sarpy-pkanalysis-pkmodels-module">
+<h2>sarpy.PKanalysis.PKModels module<a class="headerlink" href="#sarpy-pkanalysis-pkmodels-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-sarpy.PKanalysis.PKfitlib">
+<span id="sarpy-pkanalysis-pkfitlib-module"></span><h2>sarpy.PKanalysis.PKfitlib module<a class="headerlink" href="#module-sarpy.PKanalysis.PKfitlib" title="Permalink to this headline">¶</a></h2>
+<p>Functions around modelling of contrast agent uptiake in tissue
+mostly inspired by the 2-Comparment eXchange Model (2CXM) paper by 
+Sourbron and Buckley paper.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.AIC_from_SSE">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">AIC_from_SSE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SSE</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.AIC_from_SSE" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://en.wikipedia.org/wiki/Akaike_information_criterion">AIC is formally defined</a>
+as 2k - 2ln(L)</p>
+<p>Assumption of gaussian noise around measured values leads to minimizing SSE 
+as the best strategy to maximize the likelihood of obtaining the optimal 
+parameters in nonlinear regression.</p>
+<dl class="simple">
+<dt>Hence, AIC becomes:</dt><dd><p>AIC = N ln (SSE/N) + 2k
+N … number of data points
+SSE … sum square of errors
+k … number of fit parameters + 1 (since you’re also estimating SSE)</p>
+</dd>
+</dl>
+<p>Note: this seems to imply that L = (SSE/N)^(-N/2) for Gaussian error</p>
+<dl class="simple">
+<dt>The 2nd-order corrected AIC (for finite sample sizes)</dt><dd><p>AICc= AIC + 2K(K+1) / (N-K-1)</p>
+</dd>
+</dl>
+<p>Note: You need at least 3 more data points than parameters.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.AIF_factory">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">AIF_factory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Lyng'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.AIF_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arterial Input Function factory</p>
+<p>Sets up a function that will correspond to one of several possible 
+(literature) AIFs. Model (default=’Lyng’) determines the choice of AIF:</p>
+<dl>
+<dt>Model<span class="classifier">String</span></dt><dd><p>‘Lyng’          … from Lyng 1998 - mice, same Gd</p>
+<p>‘Checkley’      … from Checkley ???</p>
+<p>‘Pickup’        … from Pickup 2004 - mice</p>
+<p>‘Fritz-Hansen’  … not sure and hence not implemented FIXME</p>
+</dd>
+</dl>
+<dl>
+<dt>(f, vfunc)<span class="classifier">2-tupel of functions</span></dt><dd><p>A function that accepts 1D float parameters (time).
+and a function that accepts a vector of floats</p>
+<p>Will raise a TypeError exception on unkown AIFs</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">=</span><span class="n">AIF_factory</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;Lyng&#39;</span><span class="p">)</span>
+<span class="go">choosing Lyng AIF    </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">6.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">array([ 6.5       ,  6.0893048 ,  5.70760869])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.AIF_model">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">AIF_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.AIF_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create AIF with linear upslope and single exponential decay.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.TwoCXM_factory">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">TwoCXM_factory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AIFmodel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.TwoCXM_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>2CXM</p>
+<p>Sourbron provides an analytical solution in 
+<a class="reference external" href="http://onlinelibrary.wiley.com/doi/10.1002/mrm.22005/abstract">Quantification of cerebral blood flow, cerebral blood volume, and 
+blood-brain-barrier leakage with DCE-MRI
+Sourbron et al, Magnetic Resonance in Medicine
+Volume 62, Issue 1, pp 205</a></p>
+<dl>
+<dt>time_axis: float array</dt><dd><p>time points for which to calculate concentrations</p>
+</dd>
+<dt>t0: int</dt><dd><p>time of contrast arrival - AIF needs to be shifted by that much</p>
+</dd>
+<dt>AIFmodel: string(None)</dt><dd><p>used by AIF_factory</p>
+</dd>
+<dt>params: 4-element float array </dt><dd><p>[Em, Kp, Km, Fp]</p>
+<p>!! not supplied to this factory function but needed in calls to the 
+returned function handle - just thought we should mention this here</p>
+</dd>
+</dl>
+<dl>
+<dt>conc: function handle </dt><dd><p>2XCM function evaluated at the locations of time_axis, t, with params as
+parameters (see comment above):</p>
+<blockquote>
+<div><p>conc(params, t) = Fp * numpy.convolve(res(t), AIF(t), mode=’valid’)</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.aif">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">aif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aifchoice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zeropad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.aif" title="Permalink to this definition">¶</a></dt>
+<dd><p>arterial input function by Lyng</p>
+<dl>
+<dt>t: scalar or vector</dt><dd><p>time in min</p>
+</dd>
+<dt>t0: scalar (default = 0)</dt><dd><p>shift (+ to the left) of start, units of t</p>
+</dd>
+<dt>aifchoice<span class="classifier">String</span></dt><dd><p>‘Lyng’          … from Lyng 1998 - mice, same Gd</p>
+<p>‘Checkley’      … from Checkley D et al “Use of dynamic contrast-enhanced MRI to evaluate acute treatment with ZD6474, a VEGF signalling inhibitor, in PC-3 prostate tumours. Br J Cancer, 89(10), 1889–1895. Retrieved from <a class="reference external" href="http://dx.doi.org/10.1038/sj.bjc.6601386">http://dx.doi.org/10.1038/sj.bjc.6601386</a></p>
+<p>‘Pickup’        … from Pickup 2004 - mice</p>
+<p>‘Fritz-Hansen’  … not sure and hence not implemented FIXME</p>
+</dd>
+<dt>zeropad: boolean (default = False)</dt><dd><p>return zero-padded AIF to the left with len(t)-1 zeros</p>
+</dd>
+</dl>
+<p>returns a tupel of the AIF and (if requested) a zeropadded AIF</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.bounds_penalty">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">bounds_penalty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.bounds_penalty" title="Permalink to this definition">¶</a></dt>
+<dd><p>implementation of a check to see whether a list of parameters is within the 
+given bounds. A bound is a 2D array</p>
+<p>Interesting observation that the awkward loop is faster (by a lot!) than
+if numpy.any(parms&lt;bounds[0]) or numpy.any(parms&gt;bounds[1]):</p>
+<blockquote>
+<div><p>return 1e9</p>
+</div></blockquote>
+<dl class="simple">
+<dt>else:</dt><dd><p>return 0.0</p>
+</dd>
+</dl>
+<p>The performance is even worse if you start messing with numpy.sign</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.conc_2CXM">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">conc_2CXM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.conc_2CXM" title="Permalink to this definition">¶</a></dt>
+<dd><p>concentration time curve (see eqn [8]) from 2 parameter exchange model</p>
+<p>t: time (vector)</p>
+<p>modelparams: (PS, Fpl, ve, vp) (4-tupel)</p>
+<p>ca: arterial input function (vector), should have length of 2*len(t)-1 
+to allow ‘valid’ convolution with impulse response function</p>
+<p>concentration time curve for time points t</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.conc_Tofts">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">conc_Tofts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.conc_Tofts" title="Permalink to this definition">¶</a></dt>
+<dd><p>concentration time curve (see eqn [1]) from simple Tofts model</p>
+<p>t: time (vector)</p>
+<p>modelparams: (Ktrans, ve) (2-tupel)</p>
+<p>ca: arterial input function (vector), should have length of 2*len(t)-1 
+to allow ‘valid’ convolution with impulse response function</p>
+<p>concentration time curve for time points t</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.conc_XTofts">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">conc_XTofts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.conc_XTofts" title="Permalink to this definition">¶</a></dt>
+<dd><p>concentration time curve (see eqn [2]) from extended Tofts model. The 
+ad-hoc vascular term is included in addition to the convolution with the 
+Tofts residue, tissue response function.</p>
+<p>t: time (vector)</p>
+<p>modelparams: (Ktrans, ve, vp) (3-tupel)</p>
+<p>ca: arterial input function (vector), should have length of 2*len(t)-1 
+to allow ‘valid’ convolution with impulse response function</p>
+<p>concentration time curve for time points t</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.create_model_AIF">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">create_model_AIF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modify_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_arriv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.create_model_AIF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create AIF for different rates (alphas), and fixed parameters
+from fit of data with AIF_model function.</p>
+<p>coopyright Tammo Rukat, 2013</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.fit_2CXM">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">fit_2CXM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.fit_2CXM" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit the 2CXM with its four parameters to some data</p>
+<p>t: time (vector)</p>
+<dl class="simple">
+<dt>ca: AIF (vector) note that len(ca)=2*len(t)-1 for ‘valid’ convolution</dt><dd><dl class="simple">
+<dt>e.g.     </dt><dd><p>ca = aif(t,aifchoice=’Lyng’)
+ca = numpy.concatenate((numpy.zeros(len(t)-1), ca))</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>data: concentration time curve (vector)</p>
+<p>p0: starting guess (4-tupel)</p>
+<p>modelparameters: (ve, vp, PS, Fpl) (4-tupel</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.fit_double_2CXM">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">fit_double_2CXM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.fit_double_2CXM" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit the 2CXM with its four parameters to some data that has been 
+acquired with two(!) contrast agents</p>
+<p>t: time (vector)</p>
+<p>ca1, ca2: AIF for Gd-DTPA and HPG-Gd
+data1: concentration measured (Gd-DTPA)</p>
+<p>data2: concentration measured (HPG-Gd)</p>
+<p>p0: starting guess (4-tupel)</p>
+<p>modelparameters: (ve, vp, PS, Fpl) (4-tupel)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.fit_generic">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">fit_generic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">pargs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.fit_generic" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit a generic function</p>
+<p>t: time (vector)
+data: concentration time curve (vector)
+model: function handle
+p0: starting guess</p>
+<p><a href="#id1"><span class="problematic" id="id2">*</span></a>pargs
+ca: AIF (vector) note that len(ca)=2*len(t)-1 for ‘valid’ convolution
+e.g.    ca = aif(t,aifchoice=’Lyng’)</p>
+<blockquote>
+<div><p>ca = numpy.concatenate((numpy.zeros(len(t)-1), ca))</p>
+</div></blockquote>
+<p><a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs
+fit_subset: vector (or slice) to define the subset of model results to</p>
+<blockquote>
+<div><p>be evaluated (default: slice(None))</p>
+</div></blockquote>
+<p>modelparameters: tupel depending on model
+success:         as handed back from optimize.leastsq()
+fit:             best fit
+ss_err:          sum-of-squares
+rsquare:         R**2
+Tip: 
+—-
+Always consult docs: <a class="reference external" href="http://wiki.scipy.org/Cookbook/FittingData">http://wiki.scipy.org/Cookbook/FittingData</a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.fit_generic_array">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">fit_generic_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">pargs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.fit_generic_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrapper for fit_generic but data is a 4D array instead of a 
+one-dimensional vector
+:mask: describes a 3D mask
+:data: is a 4D array with the first three dimensions matched by</p>
+<blockquote>
+<div><p>the data</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.fit_scn">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">fit_scn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scn_to_analyse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_stitch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_ID</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Tofts'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AIF_ID</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Checkley'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi_mask_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auc60_roi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gd_conc_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gd_conc'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.fit_scn" title="Permalink to this definition">¶</a></dt>
+<dd><p>routine for remote running.
+allowed AIFs = ‘Moroz’,’Checkley’,’Lyng’ and whatever else is defined in modeule PKfitlib
+Required modules are</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.heaviside">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">heaviside</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.heaviside" title="Permalink to this definition">¶</a></dt>
+<dd><p>Heaviside function for use in AIF model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.hierarchical_fit_2CXM">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">hierarchical_fit_2CXM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.hierarchical_fit_2CXM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Follow the suggestion by Sourbron &amp; Buckley wrt fitting 
+models of increasing complexity</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.paramconv_modeltosoln">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">paramconv_modeltosoln</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.paramconv_modeltosoln" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert models used to set up the model (PS, Fpl, ve, vp) into 
+parameters more useful in the solution (Fp, Fm, Kp, Km)</p>
+<p>function paramconv_solntomodel() is the inversion</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.paramconv_solntomodel">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">paramconv_solntomodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.paramconv_solntomodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert models used to set up the model (PS, Fpl, ve, vp) into 
+parameters more useful in the solution (Fp, Fm, Kp, Km)</p>
+<p>this is the inverse of paramconf_modeltosoln()</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.rel_prob_from_AIC">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">rel_prob_from_AIC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AICs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.rel_prob_from_AIC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Relative probabilities for models whose AIC values are given</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>AICs</strong> (<em>ndarray</em>) – array that contains the calculated AIC for every model under
+consideration</p></li>
+<li><p><strong>axis</strong> (<em>int</em>) – axis along which the model AIC are organized in the AICs array 
+default: -1 (last value)</p></li>
+</ul>
+</dd>
+</dl>
+<p>The model with a minimum AIC will have a rel likelihood of 1. The other
+models will have a likelihood indicating the probability (relative to the
+minimum one) to minimize the information loss due to using a candidate model
+to represent the “true” model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.residual_2CXM">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">residual_2CXM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.residual_2CXM" title="Permalink to this definition">¶</a></dt>
+<dd><p>tissue response function
+params = (Fp, Fm, Kp, Km)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.PKanalysis.PKfitlib.residual_Tofts">
+<span class="sig-prename descclassname"><span class="pre">sarpy.PKanalysis.PKfitlib.</span></span><span class="sig-name descname"><span class="pre">residual_Tofts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/PKanalysis/PKfitlib.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.PKanalysis.PKfitlib.residual_Tofts" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple Tofts tissue response function - see equation [37] and [38]i</p>
+<p>params = (Ktrans, ve)</p>
+</dd></dl>
+
+</section>
+<section id="sarpy-pkanalysis-pkfitlib-testdrive-module">
+<h2>sarpy.PKanalysis.PKfitlib_testdrive module<a class="headerlink" href="#sarpy-pkanalysis-pkfitlib-testdrive-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="sarpy-pkanalysis-visualize-2cxm-module">
+<h2>sarpy.PKanalysis.visualize_2CXM module<a class="headerlink" href="#sarpy-pkanalysis-visualize-2cxm-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-sarpy.PKanalysis">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sarpy.PKanalysis" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">sarpy.PKanalysis package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#sarpy-pkanalysis-pkmodels-module">sarpy.PKanalysis.PKModels module</a></li>
+<li><a class="reference internal" href="#module-sarpy.PKanalysis.PKfitlib">sarpy.PKanalysis.PKfitlib module</a></li>
+<li><a class="reference internal" href="#sarpy-pkanalysis-pkfitlib-testdrive-module">sarpy.PKanalysis.PKfitlib_testdrive module</a></li>
+<li><a class="reference internal" href="#sarpy-pkanalysis-visualize-2cxm-module">sarpy.PKanalysis.visualize_2CXM module</a></li>
+<li><a class="reference internal" href="#module-sarpy.PKanalysis">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="sarpy.ImageProcessing.html"
+                          title="previous chapter">sarpy.ImageProcessing package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="sarpy.analysis.html"
+                          title="next chapter">sarpy.analysis package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/sarpy.PKanalysis.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<h4><a href="https://github.com/DrSAR/SARlabpy">Link to Github repository</a></h4>
+<h4><a href="https://github.com/DrSAR/SARlabpy/issues">Issues, Milestones, Bugs</a></h4>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sarpy.analysis.html" title="sarpy.analysis package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sarpy.ImageProcessing.html" title="sarpy.ImageProcessing package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >sarpy Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="sarpy.html" >sarpy package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">sarpy.PKanalysis package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013, SARlab members.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+  </body>
+</html>

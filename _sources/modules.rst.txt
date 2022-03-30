@@ -6,3 +6,4 @@ sarpy Documentation
 
    sarpy
    setup
+   test

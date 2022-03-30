@@ -1,0 +1,249 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sarpy.analysis package &#8212; sarpy 5.0beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="sarpy.andrewcyung package" href="sarpy.andrewcyung.html" />
+    <link rel="prev" title="sarpy.PKanalysis package" href="sarpy.PKanalysis.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sarpy.andrewcyung.html" title="sarpy.andrewcyung package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sarpy.PKanalysis.html" title="sarpy.PKanalysis package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >sarpy Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="sarpy.html" accesskey="U">sarpy package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">sarpy.analysis package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="sarpy-analysis-package">
+<h1>sarpy.analysis package<a class="headerlink" href="#sarpy-analysis-package" title="Permalink to this headline">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="sarpy-analysis-oeanalysis-module">
+<h2>sarpy.analysis.OEanalysis module<a class="headerlink" href="#sarpy-analysis-oeanalysis-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="sarpy-analysis-analysis-module">
+<h2>sarpy.analysis.analysis module<a class="headerlink" href="#sarpy-analysis-analysis-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="sarpy-analysis-cest-module">
+<h2>sarpy.analysis.cest module<a class="headerlink" href="#sarpy-analysis-cest-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="sarpy-analysis-colormaps-module">
+<h2>sarpy.analysis.colormaps module<a class="headerlink" href="#sarpy-analysis-colormaps-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-sarpy.analysis.gather_data">
+<span id="sarpy-analysis-gather-data-module"></span><h2>sarpy.analysis.gather_data module<a class="headerlink" href="#module-sarpy.analysis.gather_data" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Aug 29 15:43:31 2013</p>
+<p>&#64;author: stefan</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.analysis.gather_data.df_from_masterlist">
+<span class="sig-prename descclassname"><span class="pre">sarpy.analysis.gather_data.</span></span><span class="sig-name descname"><span class="pre">df_from_masterlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">masterlist_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">treatment_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/analysis/gather_data.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.analysis.gather_data.df_from_masterlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take in a masterlist (which is a dict after reading from json file)
+and parse patient names into</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>patient name</p></li>
+<li><p>tumour type</p></li>
+<li><p>tumour location</p></li>
+<li><p>patient number</p></li>
+</ul>
+<p>Optional dictionary can be input that contains treatment groups
+and the patients corresponding to the groups. For e.g.:</p>
+<dl class="simple">
+<dt>tx_condition =  {</dt><dd><p>‘Ctrl’ : [‘NecS3Hs10’, ‘NecS3Hs14’],
+‘Avast’: [‘NecS3Hs11’,’NecS3Hs05’],
+‘Comb’:  [‘NecS3Hs09’,’NecS3Hs06’]}</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="module-sarpy.analysis.get_histogram">
+<span id="sarpy-analysis-get-histogram-module"></span><h2>sarpy.analysis.get_histogram module<a class="headerlink" href="#module-sarpy.analysis.get_histogram" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.analysis.get_histogram.get_histogram">
+<span class="sig-prename descclassname"><span class="pre">sarpy.analysis.get_histogram.</span></span><span class="sig-name descname"><span class="pre">get_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">masterlist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pat_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adata_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slice_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/analysis/get_histogram.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.analysis.get_histogram.get_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns histogram for a parameter map inside a given ROI</p>
+<dl class="simple">
+<dt>HerP2_dR1_HPG=get_histogram(masterlist, pat_regex=’’,</dt><dd><p>scan_regex=’’,
+adata_regex=’multiday_deltaR1_HPG’,
+slice_range=None,
+roi_label=(‘roi-24h’, ‘roi’),
+verbose=True)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="sarpy-analysis-getters-module">
+<h2>sarpy.analysis.getters module<a class="headerlink" href="#sarpy-analysis-getters-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-sarpy.analysis.histoBoard">
+<span id="sarpy-analysis-histoboard-module"></span><h2>sarpy.analysis.histoBoard module<a class="headerlink" href="#module-sarpy.analysis.histoBoard" title="Permalink to this headline">¶</a></h2>
+<p>Create tumour boards from histology data.</p>
+<p>A config file is used to describe the construction of histo boards.</p>
+<p>Copyright: SARlab members, UBC, Vancouver, 2013</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.analysis.histoBoard.generate">
+<span class="sig-prename descclassname"><span class="pre">sarpy.analysis.histoBoard.</span></span><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/analysis/histoBoard.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.analysis.histoBoard.generate" title="Permalink to this definition">¶</a></dt>
+<dd><p>create histoboards</p>
+<p>conf_file=None: name of config file as kw parameter</p>
+</dd></dl>
+
+</section>
+<section id="sarpy-analysis-mriboards-module">
+<h2>sarpy.analysis.mriBoards module<a class="headerlink" href="#sarpy-analysis-mriboards-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="sarpy-analysis-rois-module">
+<h2>sarpy.analysis.rois module<a class="headerlink" href="#sarpy-analysis-rois-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-sarpy.analysis.special_finder">
+<span id="sarpy-analysis-special-finder-module"></span><h2>sarpy.analysis.special_finder module<a class="headerlink" href="#module-sarpy.analysis.special_finder" title="Permalink to this headline">¶</a></h2>
+<p>Created on Wed Nov. 13</p>
+<p>&#64;author: fmoosvi</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.analysis.special_finder.getCumData">
+<span class="sig-prename descclassname"><span class="pre">sarpy.analysis.special_finder.</span></span><span class="sig-name descname"><span class="pre">getCumData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">day0scans</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adata_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi_label</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/analysis/special_finder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.analysis.special_finder.getCumData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sarpy.analysis.special_finder.special_finder">
+<span class="sig-prename descclassname"><span class="pre">sarpy.analysis.special_finder.</span></span><span class="sig-name descname"><span class="pre">special_finder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">masterlist_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adata_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excludePatients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/DrSAR/SARlabpy/tree/master/sarpy/analysis/special_finder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sarpy.analysis.special_finder.special_finder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="sarpy-analysis-write-csv-module">
+<h2>sarpy.analysis.write_csv module<a class="headerlink" href="#sarpy-analysis-write-csv-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-sarpy.analysis">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sarpy.analysis" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">sarpy.analysis package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#sarpy-analysis-oeanalysis-module">sarpy.analysis.OEanalysis module</a></li>
+<li><a class="reference internal" href="#sarpy-analysis-analysis-module">sarpy.analysis.analysis module</a></li>
+<li><a class="reference internal" href="#sarpy-analysis-cest-module">sarpy.analysis.cest module</a></li>
+<li><a class="reference internal" href="#sarpy-analysis-colormaps-module">sarpy.analysis.colormaps module</a></li>
+<li><a class="reference internal" href="#module-sarpy.analysis.gather_data">sarpy.analysis.gather_data module</a></li>
+<li><a class="reference internal" href="#module-sarpy.analysis.get_histogram">sarpy.analysis.get_histogram module</a></li>
+<li><a class="reference internal" href="#sarpy-analysis-getters-module">sarpy.analysis.getters module</a></li>
+<li><a class="reference internal" href="#module-sarpy.analysis.histoBoard">sarpy.analysis.histoBoard module</a></li>
+<li><a class="reference internal" href="#sarpy-analysis-mriboards-module">sarpy.analysis.mriBoards module</a></li>
+<li><a class="reference internal" href="#sarpy-analysis-rois-module">sarpy.analysis.rois module</a></li>
+<li><a class="reference internal" href="#module-sarpy.analysis.special_finder">sarpy.analysis.special_finder module</a></li>
+<li><a class="reference internal" href="#sarpy-analysis-write-csv-module">sarpy.analysis.write_csv module</a></li>
+<li><a class="reference internal" href="#module-sarpy.analysis">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="sarpy.PKanalysis.html"
+                          title="previous chapter">sarpy.PKanalysis package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="sarpy.andrewcyung.html"
+                          title="next chapter">sarpy.andrewcyung package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/sarpy.analysis.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<h4><a href="https://github.com/DrSAR/SARlabpy">Link to Github repository</a></h4>
+<h4><a href="https://github.com/DrSAR/SARlabpy/issues">Issues, Milestones, Bugs</a></h4>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sarpy.andrewcyung.html" title="sarpy.andrewcyung package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sarpy.PKanalysis.html" title="sarpy.PKanalysis package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">sarpy 5.0beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >sarpy Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="sarpy.html" >sarpy package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">sarpy.analysis package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013, SARlab members.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+  </body>
+</html>
