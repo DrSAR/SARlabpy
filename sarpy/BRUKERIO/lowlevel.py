@@ -1046,8 +1046,7 @@ def fftfid(fptr=None,
     :param PEshift: find out shifts of slice packs and apply in the 
                     PE directions (default: True)
     :param squeezed: squeeze FT array before returning (default: true)
-    :param **kwargs: handed through to readfid (only squeezed is handled 
-                    internally)
+    :param kwargs: handed through to readfid (only squeezed is handled internally)
     :return: complex-valued array from FT of fid
     :rtype: ndarray
     
