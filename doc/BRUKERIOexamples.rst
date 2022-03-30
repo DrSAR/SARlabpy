@@ -57,3 +57,28 @@ Here is a little python string kung-fu to turn this structure into a list of str
 >>> data['header']['method']['ExcPulse'].strip('()').split(',')
 ['1', ' 5400', ' 30', ' 9.02336512447152', ' 100', ' 0', ' 100', ' LIB_EXCITATION', ' < hermite.exc>', ' 5400', ' 0.1794', ' 50', ' 0.1024', ' conventional']
 
+------
+The standard way of interacting with BRUKER data is to read in a scan:
+
+>>> scn = sarpy.Scan('OES2P4s13.cZ1/7')
+>>> scn
+sarpy.BRUKERIO.BRUKER_classes.Scan("OES2P4s13.cZ1/7")
+>>> print(scn)
+Scan object: Scan("OES2P4s13.cZ1/7")
+   protocol: 07_FLASH2D.6sl-OEMRI
+   TE = [2.6696]
+   TR = [132.9832]
+   FA = 40
+   FoV = [2.88, 1.92]
+   matrix = [192, 64]
+
+All the parameters are accessible through direct attribute access (as well as dictionary access).
+
+>>> scn.method.DATE
+'Tue Mar 15 12:51:20 2022 PDT (UT-7h)'
+>>> scn.acqp.ACQ_echo_time
+[2.6696]
+
+
+
+
